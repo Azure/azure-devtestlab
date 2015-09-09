@@ -1,0 +1,58 @@
+{
+    "title": "Run Powershell(public)",
+    "description": "Use this to run a script using Powershell",
+    "type": "Microsoft.DevTestLab.Artifact.Powershell.CustomScript",
+    "properties":
+    {
+        "contentVersion": "1.0.0.0",
+        "tags":
+        [
+            "Powershell",
+            "Windows"
+        ],
+        "iconUri": "http://aka.ms/fake.jpg",
+        "extension":
+        {
+            "publisher": "Microsoft.Compute",
+            "type": "CustomScriptExtension"
+        },
+        "parameters":
+        {
+            "scriptFileUris":
+            {
+                "type": "array",
+                "metadata":
+                {
+                    "description": "file(s) to download to VM for execution"
+                }
+            },
+            "scriptToRun":
+            {
+                "type": "string",
+                "metadata":
+                {
+                    "description": "script file to run"
+                }
+            },
+            "scriptArguments":
+            {
+                "type": "string",
+                "metadata":
+                {
+                    "description": "script arguments to pass"
+                }
+            }
+        },
+        "settings":
+        {
+            "fileUris":
+            [
+                "parameters('scriptFileUris')"
+            ],
+            "commandToExecute": "[concat('powershell.exe -File', ' ', parameters('scriptToRun'), ' ', parameters('scriptArguments'))]"
+        },
+        "securedSettings":
+        {
+        }
+    }
+}
