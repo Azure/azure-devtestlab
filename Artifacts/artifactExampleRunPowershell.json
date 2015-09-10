@@ -10,7 +10,7 @@
             "Powershell",
             "Windows"
         ],
-        "iconUri": "http://aka.ms/fake.jpg",
+        "iconUri": "",
         "extension":
         {
             "publisher": "Microsoft.Compute",
