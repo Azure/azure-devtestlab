@@ -11,6 +11,7 @@
             "Windows"
         ],
         "iconUri": "",
+        "targetOsType": "Windows",
         "extension":
         {
             "publisher": "Microsoft.Compute",
