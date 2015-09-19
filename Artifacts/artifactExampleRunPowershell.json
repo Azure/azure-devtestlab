@@ -46,14 +46,8 @@
         },
         "settings":
         {
-            "fileUris":
-            [
-                "parameters('scriptFileUris')"
-            ],
+            "fileUris": "[parameters('scriptFileUris')]",
             "commandToExecute": "[concat('powershell.exe -File', ' ', parameters('scriptToRun'), ' ', parameters('scriptArguments'))]"
-        },
-        "securedSettings":
-        {
         }
     }
 }
