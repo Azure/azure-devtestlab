@@ -73,6 +73,10 @@
                 "description": {
                     "type": "string",
                     "description": "The description of the parameter"
+                },
+                "displayName": {
+                    "type": "string",
+                    "description": "The display name of the parameter"
                 }
             },
             "description": "Input parameter definitions"
