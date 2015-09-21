@@ -1,0 +1,102 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "http://schema.management.azure.com/schemas/2015-01-01/dtlArtifacts.json",
+    "type": "object",
+    "required": [ "title", "description", "targetOsType", "runAzureVMExtension" ],
+    "properties": {
+        "title": {
+            "type": "string",
+            "description": "The title of your artifact."
+        },
+        "description": {
+            "type": "string",
+            "description": "The description of your artifact."
+        },
+        "iconUri": {
+            "type": "string"
+        },
+        "tags": {
+            "type": "array",
+            "items": [
+                {
+                    "type": "string"
+                }
+            ]
+        },
+        "targetOsType": {
+            "type": "string",
+            "enum": [ "Windows", "Linux" ]
+        },
+        "runAzureVMExtension": {
+            "type": "object",
+            "properties": {               
+            }
+        },
+        "parameters": {
+            "type": "object",
+            "description": "Input parameter definitions",
+            "additionalProperties": {
+                "$ref": "#/definitions/parameter"
+            }
+        }
+    },
+
+    "definitions": {
+        "parameter": {
+            "type": "object",
+            "required": [ "type" ],
+            "properties": {
+                "type": {
+                    "$ref": "#/definitions/parameterTypes",
+                    "description": "Type of input parameter"
+                },
+                "defaultValue": {
+                    "$ref": "#/definitions/parameterValueTypes",
+                    "description": "Default value to be used if one is not provided"
+                },
+                "allowedValues": {
+                    "type": "array",
+                    "description": "Value can only be one of these values"
+                },
+                "minLength": {
+                    "type": "integer",
+                    "description": "Minimum number of characters that must be used"
+                },
+                "maxLength": {
+                    "type": "integer",
+                    "description": "Maximum number of characters that can be used"
+                },
+                "optional": {
+                    "type": "boolean",
+                    "description": "If this parameter is optional, by default false"
+                },
+                "description": {
+                    "type": "string",
+                    "description": "The description of the parameter"
+                }
+            },
+            "description": "Input parameter definitions"
+        },
+        "parameterTypes": {
+            "enum": [
+                "string",
+                "securestring",
+                "int",
+                "bool",
+                "object",
+                "array"
+            ]
+        },
+        "parameterValueTypes": {
+            "type": [
+                "string",
+                "boolean",
+                "integer",
+                "number",
+                "object",
+                "array",
+                "null"
+            ]
+        }
+    }
+}
