@@ -2,7 +2,15 @@
     "$schema": "http://json-schema.org/draft-04/schema#",
     "id": "http://schema.management.azure.com/schemas/2015-01-01/dtlArtifacts.json",
     "type": "object",
-    "required": [ "title", "description", "targetOsType", "runAzureVMExtension" ],
+    "required": [ "title", "description", "targetOsType" ],
+    "oneOf": [
+        {
+            "required": [ "runAzureVMExtension" ]
+        },
+        {
+            "required": [ "runCommand" ]
+        }
+    ],
     "properties": {
         "title": {
             "type": "string",
@@ -29,8 +37,19 @@
         },
         "runAzureVMExtension": {
             "type": "object",
-            "properties": {               
+            "properties": {
             }
+        },
+        "runCommand": {
+            "type": "object",
+            "required": [ "commandToExecute" ],
+            "properties": {
+                "commandToExecute": {
+                    "type": "string",
+                    "description": "Command to run"
+                }
+            },
+            "additionalProperties": false
         },
         "parameters": {
             "type": "object",
