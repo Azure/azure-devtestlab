@@ -9,6 +9,6 @@
     "iconUri": "",
     "targetOsType": "Linux",
     "runCommand": {
-            "commandToExecute": "['sh install_mongodb_v1.sh']"
+            "commandToExecute": "['sh linux_install_mongodb_v1.sh']"
     }
 }
