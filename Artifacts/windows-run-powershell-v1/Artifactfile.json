@@ -1,38 +1,37 @@
 {
   "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
-  "title": "Run Bash",
-  "description": "Use this to run a bash script on Linux",
+  "title": "Run PowerShell",
+  "description": "Use this to run a script using PowerShell",
   "tags": [
-    "Bash",
-    "Linux"
+    "Powershell"
   ],
   "iconUri": "",
-  "targetOsType": "Linux",
+  "targetOsType": "Windows",
   "parameters": {
     "scriptFileUris": {
       "type": "array",
       "displayName": "File URI",
-      "description": "file(s) to download to VM for execution"
+      "description": "File(s) to download to VM for execution"
     },
     "scriptToRun": {
       "type": "string",
       "displayName": "Script to Run",
-      "description": "script file to run"
+      "description": "Script file to run"
     },
     "scriptArguments": {
       "type": "string",
       "displayName": "Script Arguments",
-      "description": "script arguments to pass",
+      "description": "Script arguments to pass",
       "optional": true
     }
   },
   "runAzureVMExtension": {
-    "publisher": "Microsoft.OSTCExtensions",
-    "type": "CustomScriptForLinux",
+    "publisher": "Microsoft.Compute",
+    "type": "CustomScriptExtension",
     "typeHandlerVersion": "1.3",
     "settings": {
       "fileUris": "[parameters('scriptFileUris')]",
-      "commandToExecute": "[concat('sh', ' ', parameters('scriptToRun'), ' ', parameters('scriptArguments'))]"
+      "commandToExecute": "[concat('powershell.exe -File', ' ', parameters('scriptToRun'), ' ', parameters('scriptArguments'))]"
     }
   }
 }
