@@ -9,6 +9,6 @@
     "iconUri": "",
     "targetOsType": "Linux",
     "runCommand": {
-        "commandToExecute": "['sh install_node_v1.sh']"
+        "commandToExecute": "['sh linux_install_node_v1.sh']"
     }
 }
