@@ -5,14 +5,14 @@
     [string] $RawPackagesList,
 
     [Parameter(Mandatory=$True)]
-    [string] $username,
+    [string] $Username,
 
     [Parameter(Mandatory=$True)]
-    [string] $password
+    [string] $Password
 )
 
-$secPassword = ConvertTo-SecureString $password -AsPlainText -Force
-$credential = New-Object System.Management.Automation.PSCredential("$env:COMPUTERNAME\$($username)", $secPassword)
+$secPassword = ConvertTo-SecureString $Password -AsPlainText -Force
+$credential = New-Object System.Management.Automation.PSCredential("$env:COMPUTERNAME\$($Username)", $secPassword)
 
 $command = $file = $PSScriptRoot + "\ChocolateyPackageInstaller.ps1"
 

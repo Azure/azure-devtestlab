@@ -59,7 +59,7 @@ function GetLatestBuild
 	return $builds.value[0].id
 }
 
-function DownLoadBuildArtifacts
+function DownloadBuildArtifacts
 {
 	$headers = SetAuthHeaders
     $buildId = GetLatestBuild ( GetBuildDefinitionId )
@@ -91,5 +91,5 @@ function RunScript
 	}
 }
 
-DownLoadBuildArtifacts
+DownloadBuildArtifacts
 RunScript

@@ -26,6 +26,6 @@
     }
   },
   "runCommand": {
-      "commandToExecute": "[concat('powershell.exe -File startChocolatey.ps1', ' -RawPackagesList ', parameters('packages'), ' -username ',  parameters('installUsername'), ' -password ', parameters('installPassword'))]"
+      "commandToExecute": "[concat('powershell.exe -File startChocolatey.ps1', ' -RawPackagesList ', parameters('packages'), ' -Username ',  parameters('installUsername'), ' -Password ', parameters('installPassword'))]"
   }
 }

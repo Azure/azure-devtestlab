@@ -180,7 +180,7 @@ function InstallChocolatey
 
 #
 # Description:
-#  - Installs the specified chocolatet packages on the machine.
+#  - Installs the specified chocolatey packages on the machine.
 #
 # Parameters:
 #  - N/A.
@@ -198,9 +198,9 @@ function InstallPackages
         [ValidateNotNullOrEmpty()][string] $packagesList
     )
 
-    $Separator = @(";",",")
-    $SplitOption = [System.StringSplitOptions]::RemoveEmptyEntries
-    $packages = $packagesList.Trim().Split($Separator, $SplitOption)
+    $separators = @(";",",")
+    $splitOption = [System.StringSplitOptions]::RemoveEmptyEntries
+    $packages = $packagesList.Trim().Split($separators, $splitOption)
 
     if (0 -eq $packages.Count)
     {
