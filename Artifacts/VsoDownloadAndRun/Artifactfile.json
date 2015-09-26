@@ -1,0 +1,38 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+  "title": "Download VSO drop and run script",
+  "description": "Downloads the latest build artifact for a given build definition and then executes a script from that drop",
+  "type": "Microsoft.DevTestLab.Artifact.Powershell.CustomScript",
+  "iconUri": "http://www.visualstudio.com/favicon.ico",
+  "targetOsType": "Windows",
+  "parameters": {
+    "VsoProjectUri": {
+      "type": "string",
+      "displayName": "VSO Project Uri",
+      "description": "The URL for the VSO project that contains the build, eg https://accountName.visualstudio.com/defaultcollection/projectName"
+    },
+    "buildDefinitionName": {
+      "type": "string",
+      "displayName": "Build Definition Name",
+      "description": "Name of the build definition to be retrieved"
+    },
+    "PersonalAccessToken": {
+      "type": "securestring",
+      "displayName": "Personal Access Token",
+      "description": "Personal Access Token for accessing VSO build"
+    },
+    "relativePathToScript": {
+      "type": "string",
+      "displayName": "Relative path to script",
+      "description": "Relative path in the build drop to the script, to run after download, eg 'drop\\bin\\Debug'"
+    },
+    "scriptToExecute": {
+      "type": "string",
+      "displayName": "Script to execute",
+      "description": "Name of the script to execute"
+    }
+  },
+  "runCommand": {
+    "commandToExecute": "[concat('powershell.exe -File DownloadVsoDropAndExecuteScript.ps1', ' -accessToken ', parameters('PersonalAccessToken'), ' -buildDefinitionName ', parameters('buildDefinitionName'), ' -VsoProjectUri ', parameters('VsoProjectUri'), ' -relativePathToScript ', parameters('relativePathToScript'), ' -scriptToExecute ', parameters('scriptToExecute'))]"
+  }
+}
