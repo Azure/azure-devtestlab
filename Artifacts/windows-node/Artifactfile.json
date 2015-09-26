@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+  "title": "Install Node JS",
+  "description": "Installs Node JS using the Chocolatey package manager",
+  "tags": [
+    "Windows",
+    "Node",
+    "NodeJS",
+    "Javascript"
+  ],
+  "iconUri": "https://cdn.rawgit.com/ferventcoder/chocolatey-packages/02c21bebe5abb495a56747cbb9b4b5415c933fc0/icons/nodejs.png",
+  "targetOsType": "Windows",
+  "parameters": {
+    "installUsername": {
+      "type": "string",
+      "displayName": "Install User Name",
+      "description": "User with admin rights to install MongoDB onto the machine"
+    },
+    "installPassword": {
+      "type": "securestring",
+      "displayName": "Install Password",
+      "description": "Password for the install user"
+    }
+  },
+  "runCommand": {
+    "commandToExecute": "[concat('powershell.exe -File startChocolatey.ps1', ' -RawPackagesList ', 'nodejs', ' -username ',  parameters('installUsername'), ' -password ', parameters('installPassword'))]"
+  }
+}
