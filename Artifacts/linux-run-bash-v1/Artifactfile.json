@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
   "title": "Run Bash",
-  "description": "Use this to run a bash script on Linux",
+  "description": "Download and run a bash script",
   "tags": [
     "Bash",
     "Linux"
