@@ -7,7 +7,7 @@
         "Linux",
         "Container"
     ],
-    "iconUri": "https://www.docker.com/sites/default/files/legal/small_v.png",
+    "iconUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/Artifacts/linux-install-docker-container/dockerArtifact.png",
     "targetOsType": "Linux",
     "parameters": {
         "name": {
