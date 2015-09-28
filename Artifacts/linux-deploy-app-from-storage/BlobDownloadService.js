@@ -112,6 +112,8 @@ BlobDownloadService.prototype.downloadContainer = function (container, destinati
                             callback(err, null);
                         }
                         else if ((result.continuationToken === null) && (blobsDownloaded >= blobCount)) {
+                            // No further pages to download, all blobs in the current page have been accounted for
+                            // Time to wrap up and call the caller back.
                             callback(null, self._blobs);
                         }
                     });

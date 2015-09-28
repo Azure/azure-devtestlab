@@ -24,11 +24,11 @@
     "storageConnectionString": {
       "type": "string",
       "displayName": "Storage Connection String",
-      "description": "the connection string to the Azure storage account container containing the app."
+      "description": "The connection string to the Azure storage account container containing the app."
     },
     "deployScript": {
       "type": "string",
-      "displayName": "Deploy script file",
+      "displayName": "Deploy Script File",
       "description": "The file name of a script included in the container that will run after all files are downloaded from the container.",
       "optional": true,
       "defaultValue": ""

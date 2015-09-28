@@ -29,7 +29,7 @@ var connectionInfo = {
 // do not use this in modules, but only in applications, as otherwise we could have multiple of these bound
 process.on('uncaughtException', function (err) {
     console.error(err);
-    process.exit(127);
+    process.exit(1);
 });
 
 var downloadService = new BlobDownloadService(connectionInfo.connectionString);
