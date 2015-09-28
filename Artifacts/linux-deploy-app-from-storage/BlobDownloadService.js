@@ -27,13 +27,13 @@ var azure = require('azure-storage');
 * @param {object} [connectionInfo]  The configuration used to interact with the Azure Blob Service.
 */
 function BlobDownloadService(connectionString) {
-	this._blobSvc = azure.createBlobService(connectionString);
-	this._blobRefs = [];
-	this._blobs = [];
-	this._container = "";
-	this._options = {
-		delimiter: '\\'
-	};
+    this._blobSvc = azure.createBlobService(connectionString);
+    this._blobRefs = [];
+    this._blobs = [];
+    this._container = "";
+    this._options = {
+        delimiter: '\\'
+    };
 }
 
 // Private methods
@@ -50,22 +50,22 @@ function BlobDownloadService(connectionString) {
 *										'result' will contain a page of blob metadata.
 */
 BlobDownloadService.prototype._aggregateBlobs = function (err, result, callback) {
-	if (err) {
-		callback(err);
-	} else {
-		this._blobRefs = this._blobRefs.concat(result.entries);
+    if (err) {
+        callback(err);
+    } else {
+        this._blobRefs = this._blobRefs.concat(result.entries);
 
-		if (result.continuationToken !== null) {
-			this._blobSvc.listBlobsSegmented(
-				this._container,
-				result.continuationToken,
-				this._options,
-				this._aggregateBlobs);
-		}
-		else {
-			callback(undefined, this._blobRefs);
-		}
-	}
+        if (result.continuationToken !== null) {
+            this._blobSvc.listBlobsSegmented(
+                this._container,
+                result.continuationToken,
+                this._options,
+                this._aggregateBlobs);
+        }
+        else {
+            callback(undefined, this._blobRefs);
+        }
+    }
 };
 
 // Public methods
@@ -82,42 +82,42 @@ BlobDownloadService.prototype._aggregateBlobs = function (err, result, callback)
 *											'result' will contain a page of blob metadata.
 */
 BlobDownloadService.prototype.downloadContainer = function (container, destination, callback) {
-	var self = this;
+    var self = this;
 
-	self._blobSvc.listBlobsSegmented(container, null, this._options, function (err, result, response) {
-		self._aggregateBlobs(err, result, function (err, blobs) {
-			if (err) {
-				callback(err, null);
-			}
+    self._blobSvc.listBlobsSegmented(container, null, this._options, function (err, result, response) {
+        self._aggregateBlobs(err, result, function (err, blobs) {
+            if (err) {
+                callback(err, null);
+            }
 
-			var blobCount = blobs.length;
-			var blobsDownloaded = 0;
-			
-			for (var i = 0; i < blobCount; i += 1) {
-				var blobName = blobs[i].name;
-				var filePath = destination + '/' + blobName;
+            var blobCount = blobs.length;
+            var blobsDownloaded = 0;
 
-				mkdirp.sync(path.dirname(filePath));
-				console.log(blobName + ' -> ' + filePath);
+            for (var i = 0; i < blobCount; i += 1) {
+                var blobName = blobs[i].name;
+                var filePath = destination + '/' + blobName;
 
-				self._blobSvc.getBlobToLocalFile(
-					container,
-					blobName,
-					filePath,
-					function (err, serverBlob) {
-						blobsDownloaded += 1;
-						self._blobs.push(serverBlob);
-						
-						if (err) {
-							callback(err, null);
-						}
-						else if ((result.continuationToken === null) && (blobsDownloaded >= blobCount)) {
-							callback(null, self._blobs);
-						}
-					});
-			}
-		});
-	});
+                mkdirp.sync(path.dirname(filePath));
+                console.log(blobName + ' -> ' + filePath);
+
+                self._blobSvc.getBlobToLocalFile(
+                    container,
+                    blobName,
+                    filePath,
+                    function (err, serverBlob) {
+                        blobsDownloaded += 1;
+                        self._blobs.push(serverBlob);
+
+                        if (err) {
+                            callback(err, null);
+                        }
+                        else if ((result.continuationToken === null) && (blobsDownloaded >= blobCount)) {
+                            callback(null, self._blobs);
+                        }
+                    });
+            }
+        });
+    });
 };
 
 module.exports = BlobDownloadService;
