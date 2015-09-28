@@ -20,7 +20,7 @@ var azure = require('azure-storage');
 * from the Microsoft Azure Blob Service.
 * 
 * The following properties can be set on the blob download service:
-* connectionString		(required) The connection string used to connect to the Azure Blob Service.
+* connectionString      (required) The connection string used to connect to the Azure Blob Service.
 *
 * @constructor
 *
@@ -43,11 +43,11 @@ function BlobDownloadService(connectionString) {
 * returned from the Azure storage client.
 * @ignore
 *
-* @param {object} 			err			An error, if one has been captured.
-* @param {object} 			result		A collection of blob metadat returned from
-* 										the Azure Blob Service.
-* @param {errorOrResult} 	callback	'err' will contain information if an error occurs;
-*										'result' will contain a page of blob metadata.
+* @param {object}           err         An error, if one has been captured.
+* @param {object}           result      A collection of blob metadat returned from
+*                                       the Azure Blob Service.
+* @param {errorOrResult}    callback    'err' will contain information if an error occurs;
+*                                       'result' will contain a page of blob metadata.
 */
 BlobDownloadService.prototype._aggregateBlobs = function (err, result, callback) {
     if (err) {
@@ -75,11 +75,11 @@ BlobDownloadService.prototype._aggregateBlobs = function (err, result, callback)
 * file path.
 *
 * @this {BlobDownloadService}
-* @param {string} 			[container]     (required) The name of an Azure Blob Service container.
-* @param {string} 			[destination]   (required) A folder path on the client lab VM that will 
-*											contain application files downloaded from the Azure Blob Service.
-* @param {errorOrResult}	[callback]		'err' will contain information if an error occurs;
-*											'result' will contain a page of blob metadata.
+* @param {string}           [container]     (required) The name of an Azure Blob Service container.
+* @param {string}           [destination]   (required) A folder path on the client lab VM that will 
+*                                           contain application files downloaded from the Azure Blob Service.
+* @param {errorOrResult}    [callback]      'err' will contain information if an error occurs;
+*                                           'result' will contain a page of blob metadata.
 */
 BlobDownloadService.prototype.downloadContainer = function (container, destination, callback) {
     var self = this;
