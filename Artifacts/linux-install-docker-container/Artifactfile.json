@@ -23,7 +23,9 @@
         "commandLineArgs": {
             "type": "string",
             "displayName": "Arguments",
-            "description": "Any additional command-line arguments."
+            "description": "Any additional command-line arguments.",
+            "optional": true,
+            "defaultValue": ""
         }
     },
     "runCommand": {
