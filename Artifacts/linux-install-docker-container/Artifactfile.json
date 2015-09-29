@@ -1,7 +1,7 @@
 {
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
     "title": "Docker Container",
-    "description": "Use this to install a Docker container on Linux",
+    "description": "Install a Docker container on Linux",
     "tags": [
         "Docker",
         "Linux",
@@ -13,22 +13,31 @@
         "name": {
             "type": "string",
             "displayName": "Name",
-            "description": "The name of the container."
+            "description": "The name of the container, for example: MyMongo",
+            "allowEmpty": true,
+            "defaultValue": ""
+        },
+        "dockerOptions": {
+            "type": "string",
+            "displayName": "Docker Options",
+            "description": "Additional options that affect the way in which Docker starts the container, for example: -p 27017:27017.",
+            "allowEmpty": true,
+            "defaultValue": ""
         },
         "image": {
             "type": "string",
             "displayName": "Image",
-            "description": "The name of the Docker image to be installed, for example: Jenkins."
+            "description": "The name of the Docker image to be installed, for example: Jenkins, from Docker Hub."
         },
-        "commandLineArgs": {
+        "imageArguments": {
             "type": "string",
-            "displayName": "Arguments",
-            "description": "Any additional command-line arguments.",
-            "optional": true,
+            "displayName": "Image Command/Arguments",
+            "description": "Any additional command-line arguments that apply to the container during bootstrap, for example: --smallfiles or --storageEngine wiredTiger.",
+            "allowEmpty": true,
             "defaultValue": ""
         }
     },
     "runCommand": {
-        "commandToExecute": "[concat('sh linux_install_docker_container.sh', ' ', parameters('name'), ' ', parameters('image'), ' ', parameters('commandLineArgs'))]"
+        "commandToExecute": "[concat('sh linux_install_docker_container.sh', ' ', parameters('name'), ' \"', parameters('dockerOptions'), '\" ', parameters('image'), ' \"', parameters('imageArguments'), '\" ')]"
     }
 }
