@@ -15,10 +15,7 @@ param(
 	[string] $VsoProjectUri,
 
 	[Parameter (Mandatory=$True)]
-	[string] $relativePathToScript,
-
-	[Parameter (Mandatory=$True)]
-	[string] $scriptToExecute
+	[string] $pathToScript
 )
 
 Set-PSDebug -Strict
@@ -59,7 +56,7 @@ function GetLatestBuild
 	return $builds.value[0].id
 }
 
-function DownloadBuildArtifacts
+function DownLoadBuildArtifacts
 {
 	$headers = SetAuthHeaders
     $buildId = GetLatestBuild ( GetBuildDefinitionId )
@@ -80,16 +77,15 @@ function DownloadBuildArtifacts
  
 function RunScript
 {
-	$ScriptPath = Join-Path -Path $destination -ChildPath $relativePathToScript 
-	$FullScriptPath = Join-Path -Path $ScriptPath -ChildPath $scriptToExecute
+	$ScriptPath = Join-Path -Path $destination -ChildPath $pathToScript 
 
-	Write-Output $FullScriptPath
+	Write-Output $ScriptPath
 
-	if (Test-Path $FullScriptPath -PathType Leaf)
+	if (Test-Path $ScriptPath -PathType Leaf)
 	{
-		& $FullScriptPath 
+		& $ScriptPath 
 	}
 }
 
-DownloadBuildArtifacts
+DownLoadBuildArtifacts
 RunScript
