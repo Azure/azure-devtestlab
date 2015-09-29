@@ -24,7 +24,7 @@
             "type": "string",
             "displayName": "Arguments",
             "description": "Any additional command-line arguments.",
-            "optional": true,
+            "allowEmpty": true,
             "defaultValue": ""
         }
     },

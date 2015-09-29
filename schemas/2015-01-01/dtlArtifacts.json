@@ -85,9 +85,9 @@
                     "type": "integer",
                     "description": "Maximum number of characters that can be used"
                 },
-                "optional": {
+                "allowEmpty": {
                     "type": "boolean",
-                    "description": "If this parameter is optional, by default false"
+                    "description": "If this parameter can be empty, by default false"
                 },
                 "description": {
                     "type": "string",

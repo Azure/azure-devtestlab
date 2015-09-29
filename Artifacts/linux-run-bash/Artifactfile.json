@@ -23,7 +23,7 @@
       "type": "string",
       "displayName": "Script Arguments",
       "description": "Script arguments to pass",
-      "optional": true
+      "allowEmpty": true
     }
   },
   "runAzureVMExtension": {

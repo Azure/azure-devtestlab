@@ -30,7 +30,7 @@
       "type": "string",
       "displayName": "Deploy Script File",
       "description": "The file name of a script included in the container that will run after all files are downloaded from the container.",
-      "optional": true,
+      "allowEmpty": true,
       "defaultValue": ""
     }
   },
