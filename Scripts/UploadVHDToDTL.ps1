@@ -37,9 +37,10 @@
     Coming soon / planned work
     ==========================
     
+    - Make the authentication scenario (via Add-AzureAccount cmdlet) more robust. Handle user-cancellation, 2FA pin 
+      etc more robustly.
     - Automatically detect and convert .VHDX files into .VHD files (assuming HyperV cmdlets are 
       available).
-    - If VHD source location is local, then skip copying to the staging area. 
     - Support service principal for automation:
         - Point to MSDN docs for details on creating service principal.
         - Use parameter sets. 
@@ -64,6 +65,10 @@ Param(
     $AzureSubscriptionId,
 
     # Full path to the VHD file (that'll be uploaded to the Dev/Test lab instance).
+    # Note: Currently we only support VHDs that are available from:
+    # - local drives (e.g. c:\somefolder\somefile.ext)
+    # - UNC shares (e.g. \\someshare\somefolder\somefile.ext).
+    # - Network mapped drives (e.g. net use z: \\someshare\somefolder && z:\somefile.ext). 
     [ValidateNotNullOrEmpty()]
     [string]
     $VHDFullPath,
@@ -71,7 +76,13 @@ Param(
     # [Optional] The name that will be assigned to VHD once uploded to the Dev/Test lab instance.
     # The name should be in a "<filename>.vhd" format (E.g. "WinServer2012-VS2015.VHD"). 
     [string]
-    $VHDFriendlyName
+    $VHDFriendlyName,
+
+    # [Optional] If this switch is specified, then any VHDs copied to the staging area (if any) 
+    # will NOT be deleted.
+    # Note: The default behavior is to delete all VHDs from the staging area.
+    [switch]
+    $KeepStagingVHD = $false
 )
 
 ##################################################################################################
@@ -128,6 +139,7 @@ function DisplayArgValues
     WriteLog $("-AzureSubscriptionId : " + $AzureSubscriptionId)
     WriteLog $("-VHDFullPath : " + $VHDFullPath)
     WriteLog $("-VHDFriendlyName : " + $VHDFriendlyName)
+    WriteLog $("-KeepStagingVHD : " + $KeepStagingVHD)
     WriteLog "========== User-specified parameters =========="
     WriteLog "========== Custom configurations =============="
     WriteLog $("-UploadVHDToDTLFolder : " + $UploadVHDToDTLFolder)
@@ -263,33 +275,95 @@ function AuthenticateToAzureAD
 
 ##################################################################################################
 
+# 
+# Description:
+#  - Checks whether the specified file path refers to a local or a remote (either a UNC share or 
+#    a network-mapped drive) file.
+#
+# Parameters:
+#  - $filePath: The full path a local or remote (available from a UNC share or a network
+#    mapped drive) file.
+#
+# Return:
+#  - True if the file is remote. False otherwise.
+#
+# Notes:
+#  - Files that are served via http or https (e.g. files stored in azure storage blobs) are 
+#    intentionally not supported.
+#
+
+function IsFileRemote
+{
+    Param(
+        [ValidateNotNullOrEmpty()] [string] $filePath
+    )
+
+    # Poor man's check for UNC paths
+    if ($filePath.StartsWith("\\"))
+    {
+        return $true
+    }
+
+    # A more formal check for UNC paths
+    $uri = New-Object -TypeName System.Uri -ArgumentList @($filePath) 
+    if (($null -ne $uri) -and ($true -eq $uri.IsUnc))
+    {
+        return $true
+    }
+
+    # Check for network-mapped drives
+    $driveInfo = New-Object -TypeName System.IO.DriveInfo -ArgumentList @($filePath)
+    if (($null -ne $driveInfo) -and ($driveInfo.DriveType -eq [System.IO.DriveType]::Network))
+    {
+        return $true
+    }
+            
+    # else just assume it is local
+    return $false
+}
+
+##################################################################################################
 
 # 
 # Description:
-#  - Copies the user-specified VHD to local staging area.
+#  - If the user-specified VHD is a remote file, then this method copies the VHD to the 
+#    local staging area (this enables faster uploads to Dev/test lab).
 #
 # Parameters:
 #  - None.
 #
 # Return:
-#  - The full path to the copied VHD in the staging folder.
+#  - If copied to the local staging area, then this method returns the full path to the 
+#    copied VHD in the local staging folder.
+#  - If not copied to staging area, then this method simply returns the original full path
+#    to the local VHD. 
 #
 # Notes:
 #  - N/A.
 #
 
-function CopyVHDToStaging
+function CopyVHDToStagingIfNeeded
 {
-    $vhdFileName = Split-Path -Path $VHDFullPath -Leaf
-    $vhdStagingPath = Join-Path -Path $VHDStagingFolder -ChildPath $vhdFileName
+    $isRemoteVHD = IsFileRemote -filePath $VHDFullPath
 
-    WriteLog "Copying the VHD to the staging area (Note: This can take a while)..."
-    WriteLog $(" - Source : " + $VHDFullPath)
-    WriteLog $(" - Staging Destination : " + $vhdStagingPath)
-    Copy-Item -Path $VHDFullPath -Destination $vhdStagingPath -Force | Out-Null
-    WriteLog "Success."
+    # if this is a local VHD, then don't copy it to the staging area
+    if ($false -eq $isRemoteVHD)
+    {
+        return $VHDFullPath
+    }
+    else
+    {
+        $vhdFileName = Split-Path -Path $VHDFullPath -Leaf
+        $vhdStagingPath = Join-Path -Path $VHDStagingFolder -ChildPath $vhdFileName
 
-    return $vhdStagingPath
+        WriteLog "Copying the VHD to the staging area (Note: This can take a while)..."
+        WriteLog $(" - Source : " + $VHDFullPath)
+        WriteLog $(" - Staging Destination : " + $vhdStagingPath)
+        Copy-Item -Path $VHDFullPath -Destination $vhdStagingPath -Force | Out-Null
+        WriteLog "Success."
+
+        return $vhdStagingPath
+    }
 }
 
 ##################################################################################################
@@ -299,7 +373,7 @@ function CopyVHDToStaging
 #  - Copies the VHD from the local staging area into the lab's storage container.
 #
 # Parameters:
-#  - $vhdStagingPath: The full-path to the local copy of the VHD in the staging folder. 
+#  - $vhdLocalPath: The full-path to the local copy of the VHD. 
 #  - $labStorageAccountName: The name of the Dev/Test lab instance's default storage account.  
 #  - $labStorageAccountKey: The access key to the Dev/Test lab instance's default storage account.
 #  - $labResourceGroupName: The name of the resource group associated with the DTL lab instance.
@@ -314,7 +388,7 @@ function CopyVHDToStaging
 function UploadVHDToDTL
 {
     Param(
-        [ValidateNotNullOrEmpty()] [string] $vhdStagingPath,
+        [ValidateNotNullOrEmpty()] [string] $vhdLocalPath,
         [ValidateNotNullOrEmpty()] [string] $labStorageAccountName,
         [ValidateNotNullOrEmpty()] [string] $labStorageAccountKey,
         [ValidateNotNullOrEmpty()] [string] $labResourceGroupName
@@ -344,9 +418,9 @@ function UploadVHDToDTL
 
     # Now upload the VHD to lab's container
     WriteLog "Starting upload of VHD to lab (Note: This can take a while)..."
-    WriteLog $(" - Source: " + $vhdStagingPath)
+    WriteLog $(" - Source: " + $vhdLocalPath)
     WriteLog $(" - Destination: " + $vhdDestinationPath)
-    Add-AzureVhd -Destination $vhdDestinationPath -LocalFilePath $vhdStagingPath -ResourceGroupName $lab.ResourceGroupName -OverWrite | Out-Null
+    Add-AzureVhd -Destination $vhdDestinationPath -LocalFilePath $vhdLocalPath -ResourceGroupName $lab.ResourceGroupName -OverWrite | Out-Null
     WriteLog "Success."
 }
 
@@ -382,14 +456,13 @@ try
     # Extract the storage account associated with the Dev/Test lab instance.
     WriteLog "Extracting the lab's storage account key..."
     $labStorageAccountKey = (Get-AzureStorageAccountKey -StorageAccountName $labStorageAccountName -ResourceGroupName $lab.ResourceGroupName).Key1 
-    WriteLog $(" - Lab Storage Account Key : "  + $labStorageAccountKey)
-    WriteLog "Success."
+    WriteLog "Success. Storage account key extracted."
 
-    # Copy the VHD into the staging area
-    $vhdStagingPath = CopyVHDToStaging 
+    # Copy the VHD into the staging area if needed
+    $vhdLocalPath = CopyVHDToStagingIfNeeded 
 
     # Finally upload the VHD to the lab's storage container. 
-    UploadVHDToDTL -labStorageAccountName $labStorageAccountName -labStorageAccountKey $labStorageAccountKey -labResourceGroupName $lab.ResourceGroupName -vhdStagingPath $vhdStagingPath
+    UploadVHDToDTL -labStorageAccountName $labStorageAccountName -labStorageAccountKey $labStorageAccountKey -labResourceGroupName $lab.ResourceGroupName -vhdLocalPath $vhdLocalPath
 }
 
 catch
@@ -409,10 +482,15 @@ catch
 
 finally
 {
-    # Delete everything from the VHD staging folder
-    WriteLog "Deleting all contents from the VHD staging folder..."
-    Remove-Item -Path $(Join-Path -Path $VHDStagingFolder -ChildPath "*") -Recurse -Force
-    WriteLog "Success. Contents deleted."
+    if ($false -eq $KeepStagingVHD)
+    {
+        # Delete everything from the VHD staging folder
+        WriteLog "Deleting all contents from the VHD staging folder..."
+        Remove-Item -Path $(Join-Path -Path $VHDStagingFolder -ChildPath "*") -Recurse -Force
+        WriteLog "Success. Contents deleted."
+    }
+
+    WriteLog $("This output log has been saved to: " + $ScriptLog)
 
     WriteLog $("Exiting with " + $ExitCode)
     exit $ExitCode
