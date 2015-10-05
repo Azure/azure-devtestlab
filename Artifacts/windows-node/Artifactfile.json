@@ -14,7 +14,7 @@
     "installUsername": {
       "type": "string",
       "displayName": "Install User Name",
-      "description": "User with admin rights to install MongoDB onto the machine"
+      "description": "User with admin rights to install Node onto the machine"
     },
     "installPassword": {
       "type": "securestring",
@@ -23,6 +23,6 @@
     }
   },
   "runCommand": {
-    "commandToExecute": "[concat('powershell.exe -File startChocolatey.ps1', ' -RawPackagesList ', 'nodejs', ' -username ',  parameters('installUsername'), ' -password ', parameters('installPassword'))]"
+    "commandToExecute": "[concat('powershell.exe -File startChocolatey.ps1', ' -RawPackagesList ', 'nodejs.install', ' -username ',  parameters('installUsername'), ' -password ', parameters('installPassword'))]"
   }
 }
