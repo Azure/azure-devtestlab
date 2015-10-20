@@ -69,6 +69,10 @@
                     "$ref": "#/definitions/parameterTypes",
                     "description": "Type of input parameter"
                 },
+                "controlType": {
+                    "$ref": "#/definitions/controlTypes",
+                    "description": "Type of UI control"
+                },
                 "defaultValue": {
                     "$ref": "#/definitions/parameterValueTypes",
                     "description": "Default value to be used if one is not provided"
@@ -87,7 +91,7 @@
                 },
                 "allowEmpty": {
                     "type": "boolean",
-                    "description": "If this parameter can be empty, by default false"
+                    "description": "If an empty value is allowed, by default false"
                 },
                 "description": {
                     "type": "string",
@@ -108,6 +112,13 @@
                 "bool",
                 "object",
                 "array"
+            ]
+        },
+        "controlTypes": {
+            "enum": [
+                "textBox",
+                "passwordBox",
+                "fileContents"
             ]
         },
         "parameterValueTypes": {
