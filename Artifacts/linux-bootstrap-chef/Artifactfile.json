@@ -17,12 +17,12 @@
     "chefServerUrl": {
       "type": "string",
       "displayName": "Chef Server URL",
-      "description": "The URL for the Chef server. Example: https://api.opscode.com/organizations/my-org-name"
+      "description": "The URL for the Chef server. For example: https://api.chef.io/organizations/myorgname"
     },
     "validationClientName": {
       "type": "string",
       "displayName": "Validation Client Name",
-      "description": "The name of the validator key that is used by the client to access the Chef server during the initial client run. Example: orgname-validator"
+      "description": "The name of the validator key that is used by the client to access the Chef server during the initial client run. For example: myorgname-validator"
     },
     "validationKey": {
       "type": "securestring",
