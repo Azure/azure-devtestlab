@@ -12,7 +12,7 @@
     "chefNodeName": {
       "type": "string",
       "displayName": "Chef Node Name",
-      "description": "The name to assign to this VM as used by the Chef server. A node is any computer that is managed by a Chef server."
+      "description": "The name to assign to this VM as used by the Chef server. A node is any computer that is managed by a Chef server.",
 	  "unsupportedProperty": true
     },
     "chefServerUrl": {
