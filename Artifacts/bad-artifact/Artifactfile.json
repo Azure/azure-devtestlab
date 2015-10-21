@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
-  "title": "Bootstrap Chef Client",
-  "description": "Downloads and installs the client, registers with the specified Chef server, does an initial checkin, and applies any recipes in the run list.",
+  "title": "Bad artifact",
+  "description": "Won't pass schema validation.",
   "tags": [
     "Chef",
     "Linux"
