@@ -3,7 +3,7 @@
     "title": "Swap file",
     "description": "Configure swap file on Linux",
     "tags": [
-		"Linux"
+	   "Linux"
     ],
     "iconUri": "",
     "targetOsType": "Linux",
@@ -11,7 +11,7 @@
         "size": {
             "type": "string",
             "displayName": "Size",
-            "description": "The size of the swap file in bytes.  Suffixes k, m, g, t, p, or e correspond to KiB, MiB, GiB, etc. Exmaple: 5g = 5GiB, 100m = 100MiB",
+            "description": "The size of the swap file in bytes.  Suffixes k, m, g, t, p, or e correspond to KiB, MiB, GiB, etc. Example: 5g = 5GiB, 100m = 100MiB",
             "allowEmpty": false,
             "defaultValue": "1g"
         }
