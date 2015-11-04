@@ -1,0 +1,22 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+    "title": "Swap File",
+    "description": "Configure swap file on Linux",
+    "tags": [
+		"Linux"
+    ],
+    "iconUri": "",
+    "targetOsType": "Linux",
+    "parameters": {
+        "size": {
+            "type": "string",
+            "displayName": "Size",
+            "description": "The size of the swap file in bytes.  Suffixes k, m, or g correspond to KiB, MiB, or GiB. Example: 5g = 5GiB, 100m = 100MiB",
+            "allowEmpty": false,
+            "defaultValue": "1g"
+        }
+    },
+    "runCommand": {
+            "commandToExecute": "[concat('sh linux_swapfile.sh ', parameters('size'))]"
+    }
+}
