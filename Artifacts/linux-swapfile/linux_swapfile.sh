@@ -7,6 +7,8 @@
 #
 ###
 
+set -e
+
 # Generate a file name based on the current date to avoid naming conflicts
 SIZE="$1"
 FILENAME="$(date +%s | sha256sum | base64 | head -c 32)"
