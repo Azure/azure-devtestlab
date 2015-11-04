@@ -9,6 +9,7 @@
   "iconUri": "",
   "targetOsType": "Windows",
   "runCommand": {
-    "commandToExecute": "[concat('powershell.exe -File startChocolatey.ps1', ' -RawPackagesList ', 'putty', ' -username ',  parameters('installUsername'), ' -password ', parameters('installPassword'))]"
+    "commandToExecute": "powershell.exe -File startChocolatey.ps1 -PackageList putty"
+
   }
 }
