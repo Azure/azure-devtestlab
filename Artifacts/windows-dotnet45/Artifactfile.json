@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+  "title": "Microsoft .Net Framework 4.5",
+  "description": "Installs Microsoft .Net Framework 4.5 using the Chocolatey package manager",
+  "tags": [
+    "Windows",
+    "Fiddler"
+  ],
+  "iconUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/Artifacts/windows-dotnet45/dotnet.png",
+  "targetOsType": "Windows",
+  "parameters": {
+    "installUsername": {
+      "type": "string",
+      "displayName": "Install User Name",
+      "description": "User with admin rights to install Microsoft .Net Framework 4.5 onto the machine"
+    },
+    "installPassword": {
+      "type": "securestring",
+      "displayName": "Install Password",
+      "description": "Password for the install user"
+    }
+  },
+  "runCommand": {
+    "commandToExecute": "[concat('powershell.exe -File startChocolatey.ps1', ' -RawPackagesList ', 'dotnet45', ' -username ',  parameters('installUsername'), ' -password ', parameters('installPassword'))]"
+  }
+}

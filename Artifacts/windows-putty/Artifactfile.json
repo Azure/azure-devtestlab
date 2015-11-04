@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+  "title": "PuTTy",
+  "description": "Installs PuTTy using the Chocolatey package manager",
+  "tags": [
+    "Windows",
+    "PuTTy"
+  ],
+  "iconUri": "",
+  "targetOsType": "Windows",
+  "parameters": {
+    "installUsername": {
+      "type": "string",
+      "displayName": "Install User Name",
+      "description": "User with admin rights to install PuTTy onto the machine"
+    },
+    "installPassword": {
+      "type": "securestring",
+      "displayName": "Install Password",
+      "description": "Password for the install user"
+    }
+  },
+  "runCommand": {
+    "commandToExecute": "[concat('powershell.exe -File startChocolatey.ps1', ' -RawPackagesList ', 'putty', ' -username ',  parameters('installUsername'), ' -password ', parameters('installPassword'))]"
+  }
+}
