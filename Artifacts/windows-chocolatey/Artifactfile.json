@@ -9,16 +9,6 @@
   "iconUri": "https://github.com/chocolatey/chocolatey/raw/master/docs/logo/chocolateyicon.gif",
   "targetOsType": "Windows",
   "parameters": {
-    "installUsername": {
-      "type": "string",
-      "displayName": "Install User Name",
-      "description": "User with admin rights to install packages onto the machine"
-    },
-    "installPassword": {
-      "type": "securestring",
-      "displayName": "Install Password",
-      "description": "Password for the install user"
-    },
     "packages": {
       "type": "string",
       "displayName": "Packages",

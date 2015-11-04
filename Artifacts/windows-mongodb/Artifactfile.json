@@ -8,18 +8,6 @@
   ],
   "iconUri": "https://cdn.rawgit.com/dtgm/chocolatey-packages/8f7101024b11677be45a74b45114000b428a9c9b/icons/mongodb.png",
   "targetOsType": "Windows",
-  "parameters": {
-    "installUsername": {
-      "type": "string",
-      "displayName": "Install User Name",
-      "description": "User with admin rights to install MongoDB onto the machine"
-    },
-    "installPassword": {
-      "type": "securestring",
-      "displayName": "Install Password",
-      "description": "Password for the install user"
-    }
-  },
   "runCommand": {
       "commandToExecute": "[concat('powershell.exe -File startChocolatey.ps1', ' -RawPackagesList ', 'mongodb', ' -username ',  parameters('installUsername'), ' -password ', parameters('installPassword'))]"
   }
