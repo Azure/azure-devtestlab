@@ -119,7 +119,8 @@ try
     #
     InitializeFolders
 
-    #
+    # Let us fetch all local administrator accounts (using well known SIDs to identify these).
+    # Reference: https://support.microsoft.com/en-us/kb/243330   
 
     WriteLog "Fetching local administrator accounts..."
     $adminAccounts = Get-WmiObject Win32_UserAccount -filter "LocalAccount=True" | ? {$_.SID -Like "S-1-5-21-*-500"}
@@ -133,6 +134,7 @@ try
         WriteLog $("Success.")
     }
 
+    # Let us iterate through each admin account. Also enable them if they're disabled.
     foreach ($admin in $adminAccounts)
     {
         WriteLog $("  =====================")
