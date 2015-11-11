@@ -12,10 +12,10 @@
     "packages": {
       "type": "string",
       "displayName": "Packages",
-      "description": "Comma delimited list of package names to be installed, for example: 7Zip,Fiddler. A complete list of public packages can be found at https://chocolatey.org/packages."
+      "description": "Comma delimited list of package names to be installed, for example: 7Zip,Fiddler4. A complete list of public packages can be found at https://chocolatey.org/packages."
     }
   },
   "runCommand": {
-      "commandToExecute": "[concat('powershell.exe -File startChocolatey.ps1', ' -RawPackagesList ', parameters('packages'))]"
+      "commandToExecute": "[concat('powershell.exe -File startChocolatey.ps1', ' -packageList ', parameters('packages'))]"
   }
 }
