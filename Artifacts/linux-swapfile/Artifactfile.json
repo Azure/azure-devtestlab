@@ -11,7 +11,7 @@
         "size": {
             "type": "string",
             "displayName": "Size",
-            "description": "The size of the swap file in bytes.  Suffixes k, m, or g correspond to KiB, MiB, or GiB. Example: 5g = 5GiB, 100m = 100MiB",
+            "description": "The size of the swap file in bytes.  Suffixes k, m, or g correspond to KiB, MiB, or GiB. Exmaple: 5g = 5GiB, 100m = 100MiB",
             "allowEmpty": false,
             "defaultValue": "1g"
         }

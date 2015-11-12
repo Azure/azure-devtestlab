@@ -27,7 +27,7 @@
         "image": {
             "type": "string",
             "displayName": "Image",
-            "description": "The name of the Docker image to be installed from DockerHub, for example: Jenkins."
+            "description": "The name of the Docker image to be installed, for example: Jenkins, from Docker Hub."
         },
         "imageArguments": {
             "type": "string",

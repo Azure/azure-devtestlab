@@ -29,7 +29,7 @@
     "deployScript": {
       "type": "string",
       "displayName": "Post-Deploy Script to Run",
-      "description": "The file name of a script included in the container that will run after all files are downloaded from the container. The file path is a relative path to the script file as stored in Azure Storage, for example: myapp/config/runme.sh",
+      "description": "The file name of a script included in the container that will run after all files are downloaded from the container. The file path is a relative path to the script file as stored in the storage container.  E.g. myscript.sh or mysubfolder/myscript.sh",
       "allowEmpty": true,
       "defaultValue": ""
     }

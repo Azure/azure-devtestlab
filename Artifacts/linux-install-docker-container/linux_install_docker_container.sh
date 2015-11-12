@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 ###
 # Arguments:
 #
@@ -10,8 +12,20 @@
 #
 ###
 
-sudo apt-get -y update
-sudo apt-get -y install docker.io
+if [ -f /usr/bin/apt ] ; then
+    echo "Using APT package manager"
+
+    apt-get -y update
+    apt-get -y install docker.io
+elif [ -f /usr/bin/yum ] ; then 
+    echo "Using YUM package manager"
+
+    yum -y update
+    yum install -y docker
+
+    systemctl start docker
+    systemctl enable docker
+fi
 
 if [ -z "$1" ] ; then
     NAME_ARG=
@@ -22,7 +36,7 @@ fi
 # Docker run syntax: docker run [OPTIONS] IMAGE:TAG [COMMAND] [ARG...]
 #                               |__1-2__| |___3___| |_______ 4_______|
 
-cmd="sudo docker run $NAME_ARG $2 -d $3 $4"
+cmd="docker run $NAME_ARG $2 -d $3 $4"
 
 echo "Running command: $cmd"
 eval $cmd
