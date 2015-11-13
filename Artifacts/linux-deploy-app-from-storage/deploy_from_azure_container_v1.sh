@@ -1,20 +1,48 @@
-curl --silent --location https://deb.nodesource.com/setup_0.12 | sudo bash -
-sudo apt-get -y install nodejs
+#!/bin/bash
 
-sudo npm install azure-storage
-sudo npm install mkdirp
+###
+# Arguments:
+#
+# $1    Container name
+# $2    Destination
+# $3    Connection string
+# $4    Deployment script
+#
+###
+
+if [ -f /usr/bin/apt ] ; then
+    echo "Using APT package manager"
+
+    apt-get -y update
+    
+    curl -sL https://deb.nodesource.com/setup_4.x | sudo -E bash -
+    apt-get -y install nodejs
+    apt-get -y install npm
+    
+    nde="nodejs"
+    
+elif [ -f /usr/bin/yum ] ; then 
+    echo "Using YUM package manager"
+
+    yum -y update
+    yum clean all
+    
+    yum install -y epel-release
+    yum install -y nodejs npm
+    
+    nde="node"
+fi
+
+npm install azure-storage
+npm install mkdirp
+
+set -e
 
 # clean deployment folder prior to download
-sudo rm -d -f -r $2
+rm -d -f -r $2
 
 # download the container into the destination folder
-sudo node ./download_azure_container.js $1 $2 $3
-LAST_RESULT=$?
-
-if [ $LAST_RESULT -ne 0 ] ; then
-    echo "Exiting script with exit code $LAST_RESULT"
-    exit $LAST_RESULT
-fi
+eval "$nde ./download_azure_container.js '$1' '$2' '$3'"
 
 # run the install script if one is provided
 if [ -n "$4" ]; then
