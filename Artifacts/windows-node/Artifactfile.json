@@ -10,19 +10,8 @@
   ],
   "iconUri": "https://cdn.rawgit.com/ferventcoder/chocolatey-packages/02c21bebe5abb495a56747cbb9b4b5415c933fc0/icons/nodejs.png",
   "targetOsType": "Windows",
-  "parameters": {
-    "installUsername": {
-      "type": "string",
-      "displayName": "Install User Name",
-      "description": "User with admin rights to install Node onto the machine"
-    },
-    "installPassword": {
-      "type": "securestring",
-      "displayName": "Install Password",
-      "description": "Password for the install user"
-    }
-  },
   "runCommand": {
-    "commandToExecute": "[concat('powershell.exe -File startChocolatey.ps1', ' -RawPackagesList ', 'nodejs.install', ' -username ',  parameters('installUsername'), ' -password ', parameters('installPassword'))]"
+    "commandToExecute": "powershell.exe -File startChocolatey.ps1 -PackageList nodejs.install"
+
   }
 }
