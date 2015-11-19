@@ -1,4 +1,5 @@
-﻿Function Get-RedirectedUrl {
+﻿Function Get-RedirectedUrl
+{
     Param (
         [Parameter(Mandatory=$true)]
         [String]$URL
@@ -18,19 +19,22 @@ $url = 'http://go.microsoft.com/fwlink/?LinkID=623230'
 $codeSetupUrl = Get-RedirectedUrl -URL $url
 
 $infPath = $PSScriptRoot + "\vscode.inf"
+$vscodeSetup = "${env:Temp}\VSCodeSetup.exe"
 
-try {
-    Invoke-WebRequest -Uri $codeSetupUrl -OutFile "${env:Temp}\VSCodeSetup.exe"
+try
+{
+    Invoke-WebRequest -Uri $codeSetupUrl -OutFile $vscodeSetup
 }
-
-catch {
+catch
+{
     Write-Error "Failed to download VSCode Setup"
 }
 
-try {
-    Start-Process -FilePath "${env:Temp}\VSCodeSetup.exe" -ArgumentList "/VERYSILENT /LOADINF=$infPath"
+try
+{
+    Start-Process -FilePath $vscodeSetup -ArgumentList "/VERYSILENT /LOADINF=$infPath"
 }
-
-catch {
+catch
+{
     Write-Error 'Failed to install VSCode'
 }

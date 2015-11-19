@@ -10,6 +10,5 @@
   "targetOsType": "Windows",
   "runCommand": {
     "commandToExecute": "powershell.exe -File installVSCode.ps1"
-
   }
 }
