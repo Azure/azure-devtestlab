@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+  "title": "Visual Studio Code",
+  "description": "Installs Visual Studio Code",
+  "tags": [
+    "Windows",
+    "Node",
+    "NodeJS",
+    "Javascript"
+  ],
+  "iconUri": "https://code.visualstudio.com/Content/images/vscode.ico",
+  "targetOsType": "Windows",
+  "runCommand": {
+    "commandToExecute": "powershell.exe -File installVSCode.ps1"
+
+  }
+}

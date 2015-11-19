@@ -1,0 +1,6 @@
+[Setup]
+Lang=english
+Dir=C:\Program Files (x86)\Microsoft VS Code
+Group=Visual Studio Code
+NoIcons=0
+Tasks=desktopicon,addcontextmenufiles,addcontextmenufolders,addtopath
