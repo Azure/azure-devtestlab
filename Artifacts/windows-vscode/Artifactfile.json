@@ -9,6 +9,6 @@
   "iconUri": "https://code.visualstudio.com/Content/images/vscode.ico",
   "targetOsType": "Windows",
   "runCommand": {
-    "commandToExecute": "powershell.exe -File installVSCode.ps1"
+    "commandToExecute": "powershell.exe -executionpolicy bypass -File installVSCode.ps1"
   }
 }
