@@ -31,7 +31,7 @@
     "typeHandlerVersion": "1.3",
     "settings": {
       "fileUris": "[parameters('scriptFileUris')]",
-      "commandToExecute": "[concat('powershell.exe -File', ' ', parameters('scriptToRun'), ' ', parameters('scriptArguments'))]"
+      "commandToExecute": "[concat('powershell.exe -executionpolicy bypass -File', ' ', parameters('scriptToRun'), ' ', parameters('scriptArguments'))]"
     }
   }
 }

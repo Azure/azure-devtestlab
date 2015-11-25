@@ -9,7 +9,7 @@
   "iconUri": "https://cdn.rawgit.com/chocolatey/chocolatey-coreteampackages/e4a49519947c3cff55c17a0b08266c56b0613e64/icons/fiddler.svg",
   "targetOsType": "Windows",
   "runCommand": {
-    "commandToExecute": "powershell.exe -File startChocolatey.ps1 -PackageList fiddler4"
+    "commandToExecute": "powershell.exe -executionpolicy bypass -File startChocolatey.ps1 -PackageList fiddler4"
 
   }
 }

@@ -27,6 +27,6 @@
     }
   },
   "runCommand": {
-    "commandToExecute": "[concat('powershell.exe -File DownloadVsoDropAndExecuteScript.ps1', ' -accessToken ', parameters('PersonalAccessToken'), ' -buildDefinitionName ', parameters('buildDefinitionName'), ' -VsoProjectUri ', parameters('VsoProjectUri'), ' -pathToScript ', parameters('pathToScript'))]"
+    "commandToExecute": "[concat('powershell.exe -executionpolicy bypass -File DownloadVsoDropAndExecuteScript.ps1', ' -accessToken ', parameters('PersonalAccessToken'), ' -buildDefinitionName ', parameters('buildDefinitionName'), ' -VsoProjectUri ', parameters('VsoProjectUri'), ' -pathToScript ', parameters('pathToScript'))]"
   }
 }
