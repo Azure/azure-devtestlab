@@ -148,12 +148,20 @@ class AzureRestHelper:
             response = conn.getresponse()
 
             if response.status < 200 or response.status >= 300:
-                print '{0} request failed:'.format(verb)
-                body = json.loads(response.read())
+                print '{0} request failed: {1}'.format(verb, response.status)
 
-                if self._settings.verbose:
-                    print 'Response Body:'
-                    print json.dumps(body, indent=4)
+                bodyStr = response.read()
+
+                try:
+                    body = json.loads(bodyStr)
+
+                    if self._settings.verbose:
+                        print 'Response Body:'
+                        print json.dumps(body, indent=4)
+
+                except:
+                    if self._settings.verbose:
+                        print bodyStr
 
                 return None
 

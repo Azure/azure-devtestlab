@@ -78,6 +78,7 @@ class SubscriptionCommands:
 
         argParser.add_argument('-s', '--subscription', help='Your Azure subscription ID')
 
+
 class ActionsCommands:
     """Authenticates the principal based on provided evidence
 
@@ -299,7 +300,7 @@ class CreateVirtualMachineAction:
             None
         """
 
-        return 'createvm'
+        return 'newvm'
 
     def getActionHelpText(self):
         """Gets the textual help of the action when it is displayed in the command-line help.
@@ -411,3 +412,168 @@ class CreateVirtualMachineAction:
 
     # Consts
     _host = 'management.azure.com'
+
+
+class CreateVirutalMachineTemplateAction:
+    """Creates a lab virtual machine template using the arguments provided from the command-line
+
+    Attributes:
+        None
+
+    """
+
+    def getActionName(self):
+        """Gets the name of the action as it is displayed in the command-line help.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+        return 'newvmtemplate'
+
+    def getActionHelpText(self):
+        """Gets the textual help of the action when it is displayed in the command-line help.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+
+        return 'Creates a new virtual machine template from an existing virtual machine in the lab.'
+
+    def buildArguments(self, argParser):
+        """Constructs the command-line arguments used to support this command.
+
+        Args:
+            argParser (ArgumentParser) - the arguments parser used to parse the command-line.
+
+        Returns:
+            None
+        """
+
+        argParser.add_argument('-l', '--labname',
+                               help='The name of the lab',
+                               required=True)
+        argParser.add_argument('-vid', '--vmid',
+                               help='The id of the new virtual machine',
+                               required=True)
+        argParser.add_argument('-tn', '--templatename',
+                               help='The name of the template to create',
+                               required=True)
+        argParser.add_argument('-d', '--desc',
+                               help='The description of the new virtual machine template')
+        argParser.add_argument('-vb', '--verbose',
+                               dest='verbose',
+                               action='store_true',
+                               help='Log verbose output to stdout')
+        argParser.add_argument('-q', '--quiet',
+                               dest='quiet',
+                               action='store_true',
+                               help='When set, suppresses tool messages from printing')
+
+        return
+
+    def invoke(self, settings):
+        """ Creates a virtual machine template from an existing virtual machine using the LabService.
+
+        Args:
+            settings (dict) - A collection of system-level settings, including the parsed command-line.
+
+        Returns:
+           0 if successful, 1 otherwise.
+        """
+
+        printService = dtlprint.PrintService(settings.quiet, settings.verbose)
+        labSvc = dtllabservice.LabService(settings, printService)
+        templateFilePath = './templates/201-dtl-create-vmtemplate/azuredeploy.json'
+
+        return labSvc.createVmTemplate(settings.labname,
+                                       settings.subscription,
+                                       settings.vmid,
+                                       settings.templatename,
+                                       settings.desc,
+                                       templateFilePath)
+
+
+class VirtualMachinesAction:
+    """Lists a filtered set of virtual machines from your lab.
+
+    Attributes:
+        None
+
+    """
+
+    def getActionName(self):
+        """Gets the name of the action as it is displayed in the command-line help.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+        return 'vms'
+
+    def getActionHelpText(self):
+        """Gets the textual help of the action when it is displayed in the command-line help.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+
+        return 'Lists a filtered set of virtual machines created in your lab.'
+
+    def buildArguments(self, argParser):
+        """Constructs the command-line arguments used to support this command.
+
+        Args:
+            argParser (ArgumentParser) - the arguments parser used to parse the command-line.
+
+        Returns:
+            None
+        """
+
+        argParser.add_argument('-l', '--labname',
+                               help='The name of the lab',
+                               required=True)
+        argParser.add_argument('-vb', '--verbose',
+                               dest='verbose',
+                               action='store_true',
+                               help='Log verbose output to stdout')
+        argParser.add_argument('-q', '--quiet',
+                               dest='quiet',
+                               action='store_true',
+                               help='When set, suppresses tool messages from printing')
+
+        return
+
+    def invoke(self, settings):
+        """ Creates a virtual machine template from an existing virtual machine using the LabService.
+
+        Args:
+            settings (dict) - A collection of system-level settings, including the parsed command-line.
+
+        Returns:
+           0 if successful, 1 otherwise.
+        """
+
+        printService = dtlprint.PrintService(settings.quiet, settings.verbose)
+        labSvc = dtllabservice.LabService(settings, printService)
+
+        vms = labSvc.getVirtualMachinesForLab(settings.subscription, settings.labname)
+
+        if len(vms) > 0:
+            printService.info('Virtual machine(s):')
+            printService.dumps(vms)
+        else:
+            printService.error('No virtual machines found.')
+            return 1
+
+        return 0

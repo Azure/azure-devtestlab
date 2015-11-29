@@ -25,10 +25,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+from datetime import datetime
 import azurerest
 import json
 import re
 import time
+import urllib
 
 
 class LabService:
@@ -153,7 +155,7 @@ class LabService:
             vmSshKey (string) - The SSH public key for use when connecting to the virtual machine.
 
         Returns:
-            0 if successful, 1 othwerise.
+            0 if successful, 1 otherwise.
         """
 
         lab = self.getLabByName(labName)
@@ -162,15 +164,7 @@ class LabService:
             self._printService.error('Lab {0} does not exist or is not accessible.'.format(labName))
             return 1
 
-        deplName = vmName + '_depl'
         rgName = self.__getResourceGroupFromLab(lab["id"])
-
-        url = '/subscriptions/{0}/resourceGroups/{1}/providers/microsoft.resources/deployments/{2}?api-version={3}'.format(
-            subscriptionId,
-            rgName,
-            deplName,
-            self._crpApiVersion
-        )
 
         with open(vmTemplateFileName) as data_file:
             template = json.load(data_file)
@@ -194,11 +188,172 @@ class LabService:
                 vmUserName
             ))
 
+        return self.__deployArmTemplate(subscriptionId, rgName, fullTemplate)
+
+    def createVmTemplate(self, labName, subscriptionId, vmId, newTemplateName, newTemplateDesc, armTemplateFilePath):
+        """Creates a lab virtual machine template based on the specified subscription, template, and other misc parameters.
+
+        Args:
+            subscriptionId (string) - The subscription ID used to create the virtual machine.
+            vmId (string) - The ID of the virtual machine to capture.
+            newTemplateName (string) - The name of the new virtual machine template.
+            newTemplateDesc (string) - The description of the new virtual machine template.
+
+        Returns:
+            0 if successful, 1 otherwise.
+
+        """
+
+        vms = self.getVirtualMachinesForLab(subscriptionId, labName)
+
+        if len(vms) <= 0:
+            self._printService.error(
+                'No virtual machines found in lab {0} and subscription {1}'.format(labName, subscriptionId))
+            return 1
+
+        for vm in vms:
+            if vm['id'] == vmId:
+                self._printService.info(
+                    'Creating a new virtual machine template based on the following: vmId = {0}, templateName = {1}, description = {2}, ARM template = {3}'.format(
+                        vmId,
+                        newTemplateName,
+                        newTemplateDesc,
+                        armTemplateFilePath
+                    ))
+
+                lab = self.getLabByName(labName)
+
+                if lab is None:
+                    self._printService.error('Lab {0} does not exist or is not accessible.'.format(labName))
+                    return 1
+
+                labId = lab["id"]
+                rgName = self.__getResourceGroupFromLab(labId)
+
+                with open(armTemplateFilePath) as data_file:
+                    template = json.load(data_file)
+
+                paramData = self.__getNewVmTemplateParams(labName, vmId, newTemplateName, newTemplateDesc)
+
+                fullTemplate = {
+                    'properties': {
+                        'mode': 'Incremental',
+                        'template': template,
+                        'parameters': paramData
+                    }
+                }
+
+                return self.__deployArmTemplate(subscriptionId, rgName, fullTemplate)
+
+        self._printService.error('Cannot find virtual machine with id {0}'.format(vmId))
+        return 0
+
+    def getVirtualMachinesForLab(self, subscriptionId, labName):
+        """Retrieves the list of virtual machines in environments within the specified lab for the specified subscription.
+
+        Args:
+            subscriptionId (string) - The subscription ID to a corresponding subscription containing the specified lab.
+            labName (string) - The name used to identify the lab in which to filter the results.
+        Returns:
+            A list of virtual machine objects representing the virtual machines included in the specified lab.
+
+        Result format examples:
+        [
+            {
+                "userName": "<someuser>",
+                "artifactDeploymentStatus": {
+                    "artifactsApplied": 0,
+                    "totalArtifacts": 0
+                },
+                "name": "<somevmname>",
+                "fqdn": "<somevmname>.westus.cloudapp.azure.com",
+                "builtInUserName": "<someuser>",
+                "vmTemplateName": "Ubuntu Server 14_04 LTS",
+                "size": "Standard_A0"
+            }
+        ]
+        """
+        lab = self.getLabByName(labName)
+
+        if lab is None:
+            self._printService.error('Lab {0} does not exist or is not accessible.'.format(labName))
+            return []
+
+        labId = lab["id"]
+        rgName = self.__getResourceGroupFromLab(labId)
+        envs = self.__getEnvironmentsForLab(subscriptionId, rgName, labName)
+
+        allVms = []
+
+        for env in envs['value']:
+            vms = env['properties']['vms']
+
+            for vm in vms:
+                # Fetching and setting the resource ID may be removed once the GET environments API returns the ID in
+                # the payload.
+                resource = self.__getVirtualMachineResourceId(subscriptionId,
+                                                                 self._computeResourceName,
+                                                                 vm['name'])
+
+                if resource is not None:
+                    vm['id'] = resource['id']
+                    allVms.append(vm)
+
+        return allVms
+
+    def __getVirtualMachineResourceId(self, subscriptionId, resourceType, resourceName):
+
+        self._printService.info(
+            'Retrieving the resource ID for type {0} and name {1}'.format(resourceType, resourceName))
+
+        url = '/subscriptions/{0}/resourceGroups/{1}/providers/{2}/{1}/?api-version={3}'.format(
+            subscriptionId,
+            resourceName,
+            resourceType,
+            self._crpVirtualMachineApiVersion
+        )
+
+        api = azurerest.AzureRestHelper(self._settings, self._settings.accessToken, self._host)
+        results = api.get(url, self._crpVirtualMachineApiVersion)
+
+        if results is None:
+            self._printService.error(
+                'No resource can be found with resource type {0} and name {1} in the provided subscription {2}'.format(
+                    resourceType,
+                    resourceName,
+                    subscriptionId))
+            return None
+
+        return results
+
+    def __getEnvironmentsForLab(self, subscriptionId, resourceGroupName, labName):
+
+        url = '/subscriptions/{0}/providers/microsoft.devtestlab/environments/?$filter=tolower(Properties/LabId)%20eq%20tolower(%27/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.DevTestLab/labs/{2}%27)&api-version={3}'.format(
+            subscriptionId,
+            resourceGroupName,
+            labName,
+            self._apiVersion
+        )
+
+        api = azurerest.AzureRestHelper(self._settings, self._settings.accessToken, self._host)
+        return api.get(url, self._apiVersion)
+
+    def __deployArmTemplate(self, subscriptionId, resourceGroupName, armTemplate):
+
+        deplName = resourceGroupName + '_' + datetime.utcnow().strftime('%m%d%Y_%H%M%S%f')
+
+        url = '/subscriptions/{0}/resourceGroups/{1}/providers/microsoft.resources/deployments/{2}?api-version={3}'.format(
+            subscriptionId,
+            resourceGroupName,
+            deplName,
+            self._crpApiVersion
+        )
+
         api = azurerest.AzureRestHelper(self._settings, self._settings.accessToken, self._host)
 
         self._printService.info('Creating Azure deployment...')
 
-        if api.put(url, json.dumps(fullTemplate), self._crpApiVersion) is None:
+        if api.put(url, json.dumps(armTemplate), self._crpApiVersion) is None:
             self._printService.error('Azure deployment could not be created')
             return 1
 
@@ -207,7 +362,7 @@ class LabService:
         # Poll the service for completion of our deployment
         opUrl = '/subscriptions/{0}/resourceGroups/{1}/providers/microsoft.resources/deployments/{2}?api-version={3}'.format(
             subscriptionId,
-            rgName,
+            resourceGroupName,
             deplName,
             self._crpApiVersion)
 
@@ -224,7 +379,7 @@ class LabService:
 
                     opUrl = '/subscriptions/{0}/resourceGroups/{1}/providers/microsoft.resources/deployments/{2}/operations?api-version={3}'.format(
                         subscriptionId,
-                        rgName,
+                        resourceGroupName,
                         deplName,
                         self._crpApiVersion)
 
@@ -278,9 +433,29 @@ class LabService:
 
         return data
 
+    def __getNewVmTemplateParams(self, labName, vmId, newTemplateName, newTemplateDesc):
+        data = {
+            'existingLabName': {
+                'value': '{0}'.format(labName)
+            },
+            'existingVMResourceId': {
+                'value': '{0}'.format(vmId),
+            },
+            'TemplateName': {
+                'value': '{0}'.format(newTemplateName),
+            },
+            'TemplateDescription': {
+                'value': '{0}'.format(newTemplateDesc)
+            }
+        }
+
+        return data
+
     # Consts
-    _crpApiVersion = '2015-01-01'
+    _crpApiVersion = '2015-11-01'
+    _crpVirtualMachineApiVersion = '2015-05-01-preview'
     _apiVersion = '2015-05-21-preview'
+    _computeResourceName = 'Microsoft.Compute/virtualMachines'
     _host = 'management.azure.com'
     _getLabsBaseUrl = '/subscriptions/{0}/providers/Microsoft.DevTestLab/labs/?api-version={1}'
     _rgRegex = '\/subscriptions\/[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}\/resourceGroups\/([A-Za-z0-9].*)\/providers\/Microsoft.DevTestLab\/labs\/([A-Za-z0-9].*)'

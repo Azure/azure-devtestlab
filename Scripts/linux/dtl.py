@@ -126,8 +126,10 @@ class DevTestLabsMain:
 
         self._actions = [
             dtlcommands.AuthorizeCommandAction(),
+            dtlcommands.CreateVirtualMachineAction(),
+            dtlcommands.CreateVirutalMachineTemplateAction(),
             dtlcommands.LabsCommandAction(),
-            dtlcommands.CreateVirtualMachineAction()
+            dtlcommands.VirtualMachinesAction()
         ]
 
         self.__generateArgsMap(self._argParser, self._commands)

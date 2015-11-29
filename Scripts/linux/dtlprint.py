@@ -26,7 +26,9 @@
 # SOFTWARE.
 
 from __future__ import print_function
+import json
 import sys
+
 
 class PrintService:
     """Provides console output services to provide a consistent style output
@@ -105,12 +107,25 @@ class PrintService:
         """Writes the specified error to stderr.
 
         Args:
-            error (string) - The error to write to stderr
+            error (string) - The error to write to stderr.
         Returns:
             None
 
         """
         print(error, file=sys.stderr)
+
+        return
+
+    def warning(self, warning):
+        """Writes the specified warning to stdout as a warning.
+
+        Args:
+            warning (string) - The warning to write to stdout.
+        Returns:
+            None
+
+        """
+        self.info(self._amberForeground  + 'WARNING: {0}'.format(warning) + self._resetForeground)
 
         return
 
@@ -128,5 +143,20 @@ class PrintService:
 
         return
 
+    def dumps(self, obj):
+        """Writes the specified object as a json string.
+
+        Args:
+            obj (dict) - The object to write.
+        Returns:
+            None
+
+        """
+
+        print(json.dumps(obj, indent=4))
+
     _greenForeground = '\033[92m'
+    _amberForeground = '\033[93m'
     _resetForeground = '\033[0m'
+    _BOLD = '\033[1m'
+    _UNDERLINE = '\033[4m'
