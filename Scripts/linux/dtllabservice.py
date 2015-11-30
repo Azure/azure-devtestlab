@@ -122,26 +122,6 @@ class LabService:
 
         return
 
-    def __getResourceGroupFromLab(self, labId):
-        """Retrieves the resource group name from the lab service based on the lab with the specified labName.
-
-        Args:
-           labId (string) - The URI that uniquely identifies the lab
-        Returns:
-            A string value containing the name of the resource group which contains the lab with the specified labName.
-            For example:
-
-            "myresourcegroup"
-        """
-        p = re.compile(self._rgRegex)
-        m = p.match(labId)
-
-        if m is None:
-            self._printService.error("The lab URI as returned by the lab is invalid.")
-            return None
-
-        return m.group(1)
-
     def createVm(self, subscriptionId, vmTemplateFileName, labName, vmName, templateName, size, vmUserName, vmPassword,
                  vmSshKey):
         """Creates a lab virtual machine based on the specified subscription, template, and other misc parameters.
@@ -150,6 +130,8 @@ class LabService:
             subscriptionId (string) - The subscription ID used to create the virtual machine.
             vmTemplateFileName (string) - The path to an Azure RM template representing the configuration of the new virtual machine.
             labName (string) - The name of the lab used to create the virtual machine.
+            templateName (string) - The name of the virtual machine template to use as a base.
+            size (string) - The Azure size value denoting the size of the new virtual machine.
             vmUserName (string) - The user name, if provided, of the administrative user account created on the virtual machine.
             vmPassword (string) - The password, if provided, of the administrative user account created on the virtual machine.
             vmSshKey (string) - The SSH public key for use when connecting to the virtual machine.
@@ -291,40 +273,41 @@ class LabService:
             for vm in vms:
                 # Fetching and setting the resource ID may be removed once the GET environments API returns the ID in
                 # the payload.
-                resource = self.__getVirtualMachineResourceId(subscriptionId,
-                                                                 self._computeResourceName,
-                                                                 vm['name'])
+                resourceId = self.__getVirtualMachineResourceId(env['id'], self._computeResourceName)
 
-                if resource is not None:
-                    vm['id'] = resource['id']
+                if resourceId is not None:
+                    vm['id'] = resourceId
                     allVms.append(vm)
 
         return allVms
 
-    def __getVirtualMachineResourceId(self, subscriptionId, resourceType, resourceName):
+    def __getResourceGroupFromLab(self, labId):
+        """Retrieves the resource group name from the lab service based on the lab with the specified labName.
 
-        self._printService.info(
-            'Retrieving the resource ID for type {0} and name {1}'.format(resourceType, resourceName))
+        Args:
+           labId (string) - The URI that uniquely identifies the lab
+        Returns:
+            A string value containing the name of the resource group which contains the lab with the specified labName.
+            For example:
 
-        url = '/subscriptions/{0}/resourceGroups/{1}/providers/{2}/{1}/?api-version={3}'.format(
-            subscriptionId,
-            resourceName,
-            resourceType,
-            self._crpVirtualMachineApiVersion
-        )
+            "myresourcegroup"
+        """
+        p = re.compile(self._rgRegex)
+        m = p.match(labId)
 
-        api = azurerest.AzureRestHelper(self._settings, self._settings.accessToken, self._host)
-        results = api.get(url, self._crpVirtualMachineApiVersion)
-
-        if results is None:
-            self._printService.error(
-                'No resource can be found with resource type {0} and name {1} in the provided subscription {2}'.format(
-                    resourceType,
-                    resourceName,
-                    subscriptionId))
+        if m is None:
+            self._printService.error("The lab URI as returned by the lab is invalid.")
             return None
 
-        return results
+        return m.group(1)
+
+    def __getVirtualMachineResourceId(self, environmentId, computeResourceType):
+
+        p = re.compile(self._envRegex)
+
+        vmId = p.sub(computeResourceType, environmentId)
+
+        return vmId
 
     def __getEnvironmentsForLab(self, subscriptionId, resourceGroupName, labName):
 
@@ -385,8 +368,9 @@ class LabService:
 
                     op = api.get(opUrl, self._crpApiVersion)
 
-                    if op is not None:
-                        self._printService.info(json.dumps(op["properties"]["statusMessage"], indent=4))
+                    if op is not None and len(op['value']) > 0:
+                        currentOp = op['value'][0]
+                        self._printService.dumps(currentOp["properties"]["statusMessage"])
 
                     return 1
 
@@ -459,4 +443,5 @@ class LabService:
     _host = 'management.azure.com'
     _getLabsBaseUrl = '/subscriptions/{0}/providers/Microsoft.DevTestLab/labs/?api-version={1}'
     _rgRegex = '\/subscriptions\/[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}\/resourceGroups\/([A-Za-z0-9].*)\/providers\/Microsoft.DevTestLab\/labs\/([A-Za-z0-9].*)'
+    _envRegex = 'Microsoft.DevTestLab\/environments'
     _sleepTime = 60

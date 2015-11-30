@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 # Copyright (c) Microsoft Corporation
 # All rights reserved.
 #
@@ -43,13 +45,13 @@ class DevTestLabsMain:
     Examples:
 
         # Retrieve an access token for use when making requests to Azure resources in the lab
-        python dtl.py <principal id> <my tenant ID> <my secret> <my subscription> auth
+        dtl <principal id> <my tenant ID> <my secret> <my subscription> auth
 
         # Get information about my lab
-        python dtl.py <principal id> <my tenant ID> <my secret> <my subscription> labs -l=TestLab
+        dtl <principal id> <my tenant ID> <my secret> <my subscription> labs -l=TestLab
 
         # Create a new lab virtual machine
-        python dtl.py <principal id> <my tenant ID> <my secret> <my subscription> createvm -l=TestLab -n=MyNewVm -tn="Ubuntu Server 14_04 LTS" -s="Standard_A1"
+        dtl <principal id> <my tenant ID> <my secret> <my subscription> createvm -l=TestLab -n=MyNewVm -tn="Ubuntu Server 14_04 LTS" -s="Standard_A1"
 
     """
 
@@ -145,7 +147,7 @@ class DevTestLabsMain:
         return
 
     # Private consts
-    _usage = 'dtl.py <principal> <tenant ID> <secret> <subscription ID> action'
+    _usage = 'dtl <principal> <tenant ID> <secret> <subscription ID> action'
     _description = 'Provides command-line access to Azure DevTest Labs'
     _version = '0.1.0'
 
