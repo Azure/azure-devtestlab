@@ -147,7 +147,7 @@ class DevTestLabsMain:
         return
 
     # Private consts
-    _usage = 'dtl <principal> <tenant ID> <secret> <subscription ID> action'
+    _usage = 'dtl <credentials> action [options]'
     _description = 'Provides command-line access to Azure DevTest Labs'
     _version = '0.1.0'
 

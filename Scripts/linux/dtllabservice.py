@@ -30,7 +30,6 @@ import azurerest
 import json
 import re
 import time
-import urllib
 
 
 class LabService:
@@ -170,7 +169,12 @@ class LabService:
                 vmUserName
             ))
 
-        return self.__deployArmTemplate(subscriptionId, rgName, fullTemplate)
+        result, output = self.__deployArmTemplate(subscriptionId, rgName, fullTemplate)
+
+        if result == 0:
+            self._printService.dumps(self.getVirtualMachine(subscriptionId, output['vmId']['value']))
+
+        return result
 
     def createVmTemplate(self, labName, subscriptionId, vmId, newTemplateName, newTemplateDesc, armTemplateFilePath):
         """Creates a lab virtual machine template based on the specified subscription, template, and other misc parameters.
@@ -228,7 +232,7 @@ class LabService:
                 return self.__deployArmTemplate(subscriptionId, rgName, fullTemplate)
 
         self._printService.error('Cannot find virtual machine with id {0}'.format(vmId))
-        return 0
+        return 1
 
     def getVirtualMachinesForLab(self, subscriptionId, labName):
         """Retrieves the list of virtual machines in environments within the specified lab for the specified subscription.
@@ -280,6 +284,18 @@ class LabService:
                     allVms.append(vm)
 
         return allVms
+
+    def getVirtualMachine(self, subscriptionId, vmId):
+
+        url = '/subscriptions/{0}/providers/microsoft.devtestlab/environments/?$filter=tolower(Id)%20eq%20tolower(%27{1}%27)&api-version={2}'.format(
+            subscriptionId,
+            vmId,
+            self._apiVersion
+        )
+
+        api = azurerest.AzureRestHelper(self._settings, self._settings.accessToken, self._host)
+        return api.get(url, self._apiVersion)
+
 
     def __getResourceGroupFromLab(self, labId):
         """Retrieves the resource group name from the lab service based on the lab with the specified labName.
@@ -340,7 +356,8 @@ class LabService:
             self._printService.error('Azure deployment could not be created')
             return 1
 
-        self._printService.info('Azure deployment {0} created, waiting for completion'.format(deplName))
+        self._printService.info(
+            'Azure deployment {0} created, waiting for completion (Job status == Succeeded)'.format(deplName))
 
         # Poll the service for completion of our deployment
         opUrl = '/subscriptions/{0}/resourceGroups/{1}/providers/microsoft.resources/deployments/{2}?api-version={3}'.format(
@@ -348,6 +365,8 @@ class LabService:
             resourceGroupName,
             deplName,
             self._crpApiVersion)
+
+        output = {}
 
         while True:
             statusPayload = api.get(opUrl, self._crpApiVersion)
@@ -376,13 +395,14 @@ class LabService:
 
                 if statusCode == 'Succeeded':
                     if statusPayload["properties"]["outputs"] is not None:
-                        self._printService.dumpp(statusPayload["properties"]["outputs"])
+                        output = statusPayload["properties"]["outputs"]
+                        self._printService.dumpp(output)
                     break
 
             self._printService.verbose('Sleeping for {0} second(s)...'.format(self._sleepTime))
             time.sleep(self._sleepTime)
 
-        return 0
+        return 0, output
 
     def __getTemplateParams(self, labName, vmName, templateName, size, userName, password, sshPublicKey):
         data = {

@@ -47,13 +47,16 @@ class AuthenticationCommands:
             None
         """
         argParser.add_argument_group('Authentication')
-        argParser.add_argument('-sp', '--principal',
+        argParser.add_argument('-c',
+                               dest='clientID',
                                required=False,
                                help='Your Azure Application/Client ID')
-        argParser.add_argument('-p', '--secret',
+        argParser.add_argument('-S',
+                               dest='secret',
                                help='Your Client secret.',
                                required=False)
-        argParser.add_argument('-t', '--tenant',
+        argParser.add_argument('-t',
+                               dest='tenant',
                                help='Your tenant ID. See https://msdn.microsoft.com/en-us/library/azure/dn790557.aspx for more information.',
                                required=False)
         return
@@ -76,11 +79,11 @@ class SubscriptionCommands:
             None
         """
 
-        argParser.add_argument('-s', '--subscription', help='Your Azure subscription ID')
+        argParser.add_argument('-s', dest='subscription', help='Your Azure subscription ID')
 
 
 class ActionsCommands:
-    """Authenticates the principal based on provided evidence
+    """Authenticates the clientID based on provided evidence
 
     Attributes:
         None
@@ -131,7 +134,7 @@ class ActionsCommands:
 
 
 class AuthorizeCommandAction:
-    """ Requests an authorization token from the authorization service on the provided principals' behalf.
+    """ Requests an authorization token from the authorization service on the provided clientIDs' behalf.
 
     Attributes:
         None
@@ -160,7 +163,7 @@ class AuthorizeCommandAction:
         return 'Authorizes access to Azure resources'
 
     def invoke(self, settings):
-        """ Returns the authorization token for the current principal.
+        """ Returns the authorization token for the current clientID.
 
         Args:
             settings (dict) - A collection of system-level settings, including the parsed command-line.
@@ -243,7 +246,7 @@ class LabsCommandAction:
             lab = labSvc.getLabByName(settings.labname)
 
             if lab is not None:
-                printService.info(json.dumps(lab, indent=4))
+                printService.dumps(lab)
             else:
                 printService.info('Lab {0} not found.'.format(settings.labname))
                 return 1
@@ -251,7 +254,7 @@ class LabsCommandAction:
             labs = labSvc.getLabs()
 
             if labs is not None:
-                printService.info(json.dumps(labs, indent=4))
+                printService.dumps(labs)
             else:
                 printService.error('Cannot retrieve labs from the lab service.')
                 return 1
@@ -543,6 +546,9 @@ class VirtualMachinesAction:
         argParser.add_argument('-l', '--labname',
                                help='The name of the lab',
                                required=True)
+        argParser.add_argument('-n', '--name',
+                               help='The name of the virtual machine to retrieve.',
+                               required=False)
         argParser.add_argument('-vb', '--verbose',
                                dest='verbose',
                                action='store_true',
@@ -567,7 +573,10 @@ class VirtualMachinesAction:
         printService = dtlprint.PrintService(settings.quiet, settings.verbose)
         labSvc = dtllabservice.LabService(settings, printService)
 
-        vms = labSvc.getVirtualMachinesForLab(settings.subscription, settings.labname)
+        if settings.name is not None:
+            vms = labSvc.getVirtualMachine(settings.subscription, settings.name)
+        else:
+            vms = labSvc.getVirtualMachinesForLab(settings.subscription, settings.labname)
 
         if len(vms) > 0:
             printService.info('Virtual machine(s):')

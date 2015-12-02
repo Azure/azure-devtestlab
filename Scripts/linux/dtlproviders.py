@@ -40,7 +40,7 @@ class AuthorizeTokenProvider:
     """
 
     def provide(self, settings):
-        """Retrieves an authorization token for the principal and evidence provided from the command-line.
+        """Retrieves an authorization token for the client ID and evidence provided from the command-line.
 
         Args:
             settings (dict) - A collection of system-level settings, including the parsed command-line.
@@ -57,7 +57,7 @@ class AuthorizeTokenProvider:
 
         payload = {
             'resource': 'https://management.core.windows.net/',
-            'client_id': settings.principal,
+            'client_id': settings.clientID,
             'client_secret': settings.secret,
             'grant_type': 'client_credentials'
         }
