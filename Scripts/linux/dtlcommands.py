@@ -27,7 +27,7 @@
 
 import dtllabservice
 import dtlprint
-import json
+import os
 
 
 class AuthenticationCommands:
@@ -411,7 +411,7 @@ class CreateVirtualMachineAction:
         else:
             templatePath = '101-dtl-create-vm-builtin-user'
 
-        return './templates/{0}/azuredeploy.json'.format(templatePath)
+        return os.getcwd() + '/templates/{0}/azuredeploy.json'.format(templatePath)
 
     # Consts
     _host = 'management.azure.com'
@@ -492,7 +492,7 @@ class CreateVirutalMachineTemplateAction:
 
         printService = dtlprint.PrintService(settings.quiet, settings.verbose)
         labSvc = dtllabservice.LabService(settings, printService)
-        templateFilePath = './templates/201-dtl-create-vmtemplate/azuredeploy.json'
+        templateFilePath = os.getcwd() + '/templates/201-dtl-create-vmtemplate/azuredeploy.json'
 
         return labSvc.createVmTemplate(settings.labname,
                                        settings.subscription,
