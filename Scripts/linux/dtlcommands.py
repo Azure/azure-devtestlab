@@ -411,7 +411,7 @@ class CreateVirtualMachineAction:
         else:
             templatePath = '101-dtl-create-vm-builtin-user'
 
-        return os.getcwd() + '/templates/{0}/azuredeploy.json'.format(templatePath)
+        return os.path.dirname(os.path.realpath(__file__)) + '/templates/{0}/azuredeploy.json'.format(templatePath)
 
     # Consts
     _host = 'management.azure.com'
@@ -492,7 +492,8 @@ class CreateVirutalMachineTemplateAction:
 
         printService = dtlprint.PrintService(settings.quiet, settings.verbose)
         labSvc = dtllabservice.LabService(settings, printService)
-        templateFilePath = os.getcwd() + '/templates/201-dtl-create-vmtemplate/azuredeploy.json'
+        templateFilePath = os.path.dirname(
+            os.path.realpath(__file__)) + '/templates/201-dtl-create-vmtemplate/azuredeploy.json'
 
         return labSvc.createVmTemplate(settings.labname,
                                        settings.subscription,
