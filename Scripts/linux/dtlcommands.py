@@ -550,6 +550,10 @@ class VirtualMachinesAction:
         argParser.add_argument('-n', '--name',
                                help='The name of the virtual machine to retrieve.',
                                required=False)
+        argParser.add_argument('-vid',
+                               dest='vmid',
+                               help='The id of the virtual machine to retrieve.',
+                               required=False)
         argParser.add_argument('-vb', '--verbose',
                                dest='verbose',
                                action='store_true',
@@ -575,9 +579,15 @@ class VirtualMachinesAction:
         labSvc = dtllabservice.LabService(settings, printService)
 
         if settings.name is not None:
-            vms = labSvc.getVirtualMachine(settings.subscription, settings.name)
+            vms = labSvc.getVirtualMachine(settings.subscription, name=settings.name)
+        elif settings.vmid is not None:
+            vms = labSvc.getVirtualMachine(settings.subscription, vmId=settings.vmid)
         else:
             vms = labSvc.getVirtualMachinesForLab(settings.subscription, settings.labname)
+
+        # Coalesce the two different results into a list of virtual machines.
+        if 'value' in vms:
+            vms = vms['value']
 
         if len(vms) > 0:
             printService.info('Virtual machine(s):')

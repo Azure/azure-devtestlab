@@ -180,10 +180,12 @@ class LabService:
         """Creates a lab virtual machine template based on the specified subscription, template, and other misc parameters.
 
         Args:
+            labName (string) - The name of the lab in which to filter.
             subscriptionId (string) - The subscription ID used to create the virtual machine.
             vmId (string) - The ID of the virtual machine to capture.
             newTemplateName (string) - The name of the new virtual machine template.
             newTemplateDesc (string) - The description of the new virtual machine template.
+            armTemplateFilePath (string) - The file path of an ARM template to run.
 
         Returns:
             0 if successful, 1 otherwise.
@@ -287,17 +289,67 @@ class LabService:
 
         return allVms
 
-    def getVirtualMachine(self, subscriptionId, vmId):
+    def getVirtualMachine(self, subscriptionId, vmId=None, name=None):
+        """Gets a virtual machine resource from the DevTest Labs resource provider using one of the specified filters.
 
-        url = '/subscriptions/{0}/providers/microsoft.devtestlab/environments/?$filter=tolower(Id)%20eq%20tolower(%27{1}%27)&api-version={2}'.format(
+        Args:
+            subscriptionId (string) - The subscription in which to filter.
+            vmId (string) [optional] - The ID of a virtual machine resource.
+            name (string) [optional] - The name of tha virtual machine.  Note, you may have multiple virtual machines
+                                       with the same name in the same lab.
+
+        Returns:
+            The virtual machine that matches the provided filter, or None.
+
+        Example retun data:
+
+        [
+            {
+                "properties": {
+                    "notes": "",
+                    "labId": "/subscriptions/<somesubscription>/resourceGroups/<someresourcegroup>/providers/Microsoft.DevTestLab/labs/<somelabname>",
+                    "vms": [
+                        {
+                            "userName": "<someuser>",
+                            "artifactDeploymentStatus": {
+                                "artifactsApplied": 0,
+                                "totalArtifacts": 0
+                            },
+                            "name": "<somename>",
+                            "fqdn": "<somename>.westus.cloudapp.azure.com",
+                            "computeId": "/subscriptions/<somesubscription/resourceGroups/ent2012/providers/Microsoft.Compute/virtualMachines/<somename>",
+                            "builtInUserName": "<someuser>",
+                            "vmTemplateName": "Windows Server 2012 R2 Datacenter",
+                            "size": "Standard_DS2"
+                        }
+                    ],
+                    "ownerObjectId": "<someobjectid>",
+                    "provisioningState": "Succeeded"
+                },
+                "location": "West US",
+                "type": "Microsoft.DevTestLab/environments",
+                "id": "/subscriptions/<somesubscription>/resourceGroups/<someresourcegroup>/providers/Microsoft.DevTestLab/environments/<somename>",
+                "name": "<somename>"
+            }
+        ]
+        """
+
+        if vmId is not None:
+            fieldName = 'Id'
+            fieldValue = vmId
+        else:
+            fieldName = 'Name'
+            fieldValue = name
+
+        url = '/subscriptions/{0}/providers/microsoft.devtestlab/environments/?$filter=tolower({1})%20eq%20tolower(%27{2}%27)&api-version={3}'.format(
             subscriptionId,
-            vmId,
+            fieldName,
+            fieldValue,
             self._apiVersion
         )
 
         api = azurerest.AzureRestHelper(self._settings, self._settings.accessToken, self._host)
         return api.get(url, self._apiVersion)
-
 
     def __getResourceGroupFromLab(self, labId):
         """Retrieves the resource group name from the lab service based on the lab with the specified labName.
