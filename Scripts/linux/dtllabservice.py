@@ -229,9 +229,9 @@ class LabService:
                     }
                 }
 
-                result = self.__deployArmTemplate(subscriptionId, rgName, fullTemplate)
+                result, output = self.__deployArmTemplate(subscriptionId, rgName, fullTemplate)
 
-                return 0
+                return result
 
         self._printService.error('Cannot find virtual machine with id {0}'.format(vmId))
         return 1
