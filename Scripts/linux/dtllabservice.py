@@ -30,6 +30,7 @@ import azurerest
 import json
 import re
 import time
+import urllib
 
 
 class LabService:
@@ -289,6 +290,36 @@ class LabService:
 
         return allVms
 
+    def getVirtualMachineTemplates(self, subscriptionId, labName, templateName=None):
+
+        lab = self.getLabByName(labName)
+
+        if lab is None:
+            self._printService.error('Lab {0} does not exist or is not accessible.'.format(labName))
+            return []
+
+        labId = lab["id"]
+        rgName = self.__getResourceGroupFromLab(labId)
+
+        if templateName is not None:
+            url = '/subscriptions/{0}/resourceGroups/{1}/providers/microsoft.devtestlab/labs/{2}/vmtemplates/{3}?api-version={4}'.format(
+                subscriptionId,
+                rgName,
+                labName,
+                urllib.quote(templateName),
+                self._apiVersion
+            )
+        else:
+            url = '/subscriptions/{0}/resourceGroups/{1}/providers/microsoft.devtestlab/labs/{2}/vmtemplates/?api-version={3}'.format(
+                subscriptionId,
+                rgName,
+                labName,
+                self._apiVersion
+            )
+
+        api = azurerest.AzureRestHelper(self._settings, self._settings.accessToken, self._host)
+        return api.get(url, self._apiVersion)
+
     def getVirtualMachine(self, subscriptionId, vmId=None, name=None):
         """Gets a virtual machine resource from the DevTest Labs resource provider using one of the specified filters.
 
@@ -445,7 +476,7 @@ class LabService:
                         currentOp = op['value'][0]
                         self._printService.dumps(currentOp["properties"]["statusMessage"])
 
-                    return 1
+                    return 1, output
 
                 if statusCode == 'Succeeded':
                     if statusPayload["properties"]["outputs"] is not None:

@@ -491,6 +491,13 @@ class CreateVirutalMachineTemplateAction:
         """
 
         printService = dtlprint.PrintService(settings.quiet, settings.verbose)
+        templateNameMaxLen = 27
+
+        if len(settings.templatename) > templateNameMaxLen:
+            printService.error(
+                'Template name must be a valid string with a maximum length of {0}'.format(templateNameMaxLen))
+            return 1
+
         labSvc = dtllabservice.LabService(settings, printService)
         templateFilePath = os.path.dirname(
             os.path.realpath(__file__)) + '/templates/201-dtl-create-vmtemplate/azuredeploy.json'
@@ -594,6 +601,89 @@ class VirtualMachinesAction:
             printService.dumps(vms)
         else:
             printService.error('No virtual machines found.')
+            return 1
+
+        return 0
+
+
+class VirtualMachineTemplatesAction:
+    """Lists a filtered set of virtual machine templates from your lab.
+
+    Attributes:
+        None
+
+    """
+
+    def getActionName(self):
+        """Gets the name of the action as it is displayed in the command-line help.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+        return 'vmtemplate'
+
+    def getActionHelpText(self):
+        """Gets the textual help of the action when it is displayed in the command-line help.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+
+        return 'Lists a filtered set of virtual machine templates created in your lab.'
+
+    def buildArguments(self, argParser):
+        """Constructs the command-line arguments used to support this command.
+
+        Args:
+            argParser (ArgumentParser) - the arguments parser used to parse the command-line.
+
+        Returns:
+            None
+        """
+
+        argParser.add_argument('-l', '--labname',
+                               help='The name of the lab',
+                               required=True)
+        argParser.add_argument('-n', '--name',
+                               help='The name of the virtual machine template to retrieve.',
+                               required=False)
+        argParser.add_argument('-vb', '--verbose',
+                               dest='verbose',
+                               action='store_true',
+                               help='Log verbose output to stdout')
+        argParser.add_argument('-q', '--quiet',
+                               dest='quiet',
+                               action='store_true',
+                               help='When set, suppresses tool messages from printing')
+
+        return
+
+    def invoke(self, settings):
+        """ Lists virtual machine templates using the LabService.
+
+        Args:
+            settings (dict) - A collection of system-level settings, including the parsed command-line.
+
+        Returns:
+           0 if successful, 1 otherwise.
+        """
+
+        printService = dtlprint.PrintService(settings.quiet, settings.verbose)
+        labSvc = dtllabservice.LabService(settings, printService)
+
+        templates = labSvc.getVirtualMachineTemplates(settings.subscription, settings.labname, settings.name)
+
+        if templates is not None and len(templates) > 0:
+            printService.info('Virtual machine template(s):')
+            printService.dumps(templates)
+        else:
+            printService.error('No virtual machine templates found.')
             return 1
 
         return 0
