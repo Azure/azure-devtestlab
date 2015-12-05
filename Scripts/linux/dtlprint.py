@@ -27,6 +27,7 @@
 
 from __future__ import print_function
 import json
+import os
 import sys
 
 
@@ -112,6 +113,10 @@ class PrintService:
             None
 
         """
+
+        if self.__isColorEnabled():
+            error = self._redForeground + error + self._resetForeground
+
         print(error, file=sys.stderr)
 
         return
@@ -125,7 +130,11 @@ class PrintService:
             None
 
         """
-        self.info(self._amberForeground  + 'WARNING: {0}'.format(warning) + self._resetForeground)
+
+        if self.__isColorEnabled():
+            warning = self._amberForeground + warning + self._resetForeground
+
+        self.info(warning)
 
         return
 
@@ -139,7 +148,10 @@ class PrintService:
 
         """
 
-        self.info(self._greenForeground + text + self._resetForeground)
+        if self.__isColorEnabled():
+            text = self._greenForeground + text + self._resetForeground
+
+        self.info(text)
 
         return
 
@@ -155,6 +167,10 @@ class PrintService:
 
         print(json.dumps(obj, indent=4))
 
+    def __isColorEnabled(self):
+        return os.name != 'nt'
+
+    _redForeground = '\033[91m'
     _greenForeground = '\033[92m'
     _amberForeground = '\033[93m'
     _resetForeground = '\033[0m'
