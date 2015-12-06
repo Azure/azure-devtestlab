@@ -25,9 +25,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import utils.auth.auth_const as auth_const
 import dtllabservice
 import dtlprint
 import os
+import utils.auth.authentication_context
 
 
 class AuthenticationCommands:
@@ -687,3 +689,80 @@ class VirtualMachineTemplatesAction:
             return 1
 
         return 0
+
+class LoginAction:
+    """Authenticates the user interactively.
+
+    Attributes:
+        None
+
+    """
+
+    def getActionName(self):
+        """Gets the name of the action as it is displayed in the command-line help.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+        return 'login'
+
+    def getActionHelpText(self):
+        """Gets the textual help of the action when it is displayed in the command-line help.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+
+        return 'Authenticates the current user and device with the lab service.'
+
+    def buildArguments(self, argParser):
+        """Constructs the command-line arguments used to support this command.
+
+        Args:
+            argParser (ArgumentParser) - the arguments parser used to parse the command-line.
+
+        Returns:
+            None
+        """
+
+        argParser.add_argument('-vb', '--verbose',
+                               dest='verbose',
+                               action='store_true',
+                               help='Log verbose output to stdout')
+        argParser.add_argument('-q', '--quiet',
+                               dest='quiet',
+                               action='store_true',
+                               help='When set, suppresses tool messages from printing')
+
+        return
+
+    def invoke(self, settings):
+        """ Authenticates the user interactively using ADAL3 device code authentication
+
+        Args:
+            settings (dict) - A collection of system-level settings, including the parsed command-line.
+
+        Returns:
+           0 if successful, 1 otherwise.
+        """
+
+        print_service = dtlprint.PrintService(settings.quiet, settings.verbose)
+        authority_url = 'https://login.microsoftonline.com/{0}'.format(self._tenant_id)
+        context = utils.auth.authentication_context.AuthenticationContext(print_service, authority_url)
+
+        success, response = context.acquire_user_code(self._resource_id, '', 'en-us')
+
+        if not success:
+            token_response = context.acquire_token_with_device_code(self._resource_id, '', response)
+            print_service.dumps(token_response)
+
+        return 0
+
+    _tenant_id = 'common'
+    _resource_id = '00000002-0000-0000-c000-000000000000'

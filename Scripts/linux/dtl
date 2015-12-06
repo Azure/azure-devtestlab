@@ -33,7 +33,6 @@ import dtlcommands
 import dtlprint
 import dtlproviders
 
-
 class DevTestLabsMain:
     """The boostrap used to instantiate the DTL CLI
 
@@ -64,7 +63,7 @@ class DevTestLabsMain:
         Returns:
             0 if successful, 1 otherwise.
         """
-        self.__ensureAuthenticated()
+        #self.__ensureAuthenticated()
 
         returnValue = self._parsedArgs.func(self._parsedArgs)
 
@@ -132,7 +131,8 @@ class DevTestLabsMain:
             dtlcommands.CreateVirutalMachineTemplateAction(),
             dtlcommands.LabsCommandAction(),
             dtlcommands.VirtualMachinesAction(),
-            dtlcommands.VirtualMachineTemplatesAction()
+            dtlcommands.VirtualMachineTemplatesAction(),
+            dtlcommands.LoginAction()
         ]
 
         self.__generateArgsMap(self._argParser, self._commands)
