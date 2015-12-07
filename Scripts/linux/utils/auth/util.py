@@ -109,7 +109,7 @@ class DefaultRequestHandler:
 
     @staticmethod
     def __is_http_success(status_code):
-        return status_code >= 200 and status_code < 300
+        return 200 <= status_code < 300
 
 
 class Request:

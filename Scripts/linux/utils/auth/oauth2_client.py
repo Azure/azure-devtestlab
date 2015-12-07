@@ -44,6 +44,18 @@ class OAuth2Client:
         return
 
     def get_token_with_polling(self, oauth_parameters, interval, expires_in):
+        max_times_for_retry = int(expires_in / interval)
+
+        token_url = self.__create_token_url()
+        url_encoded_token_request_form = urllib.urlencode(oauth_parameters)
+        post_options = self.__create_post_option(token_url, url_encoded_token_request_form)
+        options_for_retry = {
+            'times': max_times_for_retry,
+            'interva': interval * 1000
+        }
+
+        
+
         raise NotImplementedError()
 
     def get_user_code_info(self, oauth_parameters):
