@@ -29,6 +29,11 @@ import urlparse
 
 
 class Authority:
+    """
+    Attributes:
+        token_endpoint (string) - Gets the endpoint used to acquire a token
+        device_code_endpoint (string) - Gets the url used by the user to complete their login
+    """
     def __init__(self, authority_url, validate_authority):
         self._url = authority_url
         self._parsed_url = urlparse.urlparse(self._url)
@@ -40,8 +45,9 @@ class Authority:
         self.__parse_authority()
 
         self._authorization_endpoint = None
-        self._token_endpoint = None
-        self._device_code_endpoint = None
+
+        self.token_endpoint = None
+        self.device_code_endpoint = None
 
         return
 

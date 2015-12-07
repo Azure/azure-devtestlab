@@ -52,8 +52,8 @@ class AuthorizeTokenProvider:
         api = azurerest.AzureRestHelper(settings,
                                         host=self._host,
                                         headers={
-                                           'Content-Type': 'application/x-www-form-urlencoded'
-                                       })
+                                            'Content-Type': 'application/x-www-form-urlencoded'
+                                        })
 
         payload = {
             'resource': 'https://management.core.windows.net/',

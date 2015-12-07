@@ -83,3 +83,26 @@ class OAuth2:
             return
 
         OPENID = 'openid'
+
+    class AdalIdParameters:
+        def __init__(self):
+            return
+
+        SKU = 'x-client-SKU'
+        VERSION = 'x-client-Ver'
+        OS = 'x-client-OS'
+        CPU = 'x-client-CPU'
+        NODE_SKU = 'Node'
+
+    class DeviceCodeResponseParameters:
+        def __init__(self):
+            return
+
+        USER_CODE = 'user_code',
+        DEVICE_CODE = 'device_code',
+        VERIFICATION_URL = 'verification_url',
+        EXPIRES_IN = 'expires_in',
+        INTERVAL = 'interval',
+        MESSAGE = 'message',
+        ERROR = 'error',
+        ERROR_DESCRIPTION = 'error_description'
