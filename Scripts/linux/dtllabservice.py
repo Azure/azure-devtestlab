@@ -320,7 +320,7 @@ class LabService:
         api = azurerest.AzureRestHelper(self._settings, self._settings.accessToken, self._host)
         return api.get(url, self._apiVersion)
 
-    def getVirtualMachine(self, subscriptionId, vmId=None, name=None):
+    def getVirtualMachine(self, subscriptionId, name=None, vmId=None):
         """Gets a virtual machine resource from the DevTest Labs resource provider using one of the specified filters.
 
         Args:
@@ -381,6 +381,90 @@ class LabService:
 
         api = azurerest.AzureRestHelper(self._settings, self._settings.accessToken, self._host)
         return api.get(url, self._apiVersion)
+
+    def deleteVirtualMachine(self, subscriptionId, labName, name=None, vmId=None):
+        """Deletes the environment including virtual machine of the environment with the specified name in the specified
+           lab.  If there is more than one environment with name in labName, an error will be thrown.
+
+        Args:
+            subscriptionId (string) - The subscription in which to filter.
+            labName (string)        - The ID of the lab in which to filter.
+            name (string)           - The name of tha virtual machine.  If there are more than one virtual machine with
+                                      the same name in the specified lab, you must use the vmId parameter instead.
+            vmId (string)           - The resource ID of the virtual machine.
+        Returns:
+            0 if successful, 1 otherwise.
+        """
+
+        vms = self.getVirtualMachine(subscriptionId, name, vmId)
+
+        if vms is None or len(vms['value']) == 0:
+            self._printService.error('No virtual machines found.')
+            return 1
+        elif vms is not None and len(vms['value']) > 1:
+            self._printService.dumps(vms['value'])
+            self._printService.error(
+                'More than one virtual machine named {0} found in the lab.  Use virtual machine ID instead'.format(
+                    name))
+            return 1
+
+        if name is not None:
+            lab = self.getLabByName(labName)
+
+            if lab is None:
+                self._printService.error('Lab {0} does not exist or is not accessible.'.format(labName))
+                return []
+
+            labId = lab["id"]
+            rgName = self.__getResourceGroupFromLab(labId)
+
+            url = '/subscriptions/{0}/resourceGroups/{1}/providers/microsoft.devtestlab/environments/{2}?api-version={3}'.format(
+                subscriptionId,
+                rgName,
+                name,
+                self._apiVersion
+            )
+        else:
+            url = vmId + '?api-version={0}'.format(self._apiVersion)
+
+        api = azurerest.AzureRestHelper(self._settings, self._settings.accessToken, self._host)
+        success, response, responsePayload = api.delete(url, self._apiVersion)
+
+        if not success:
+            self._printService.dumps(responsePayload)
+            self._printService.error('Failed to delete virtual machine')
+            return 1
+
+        if response.status == 204:
+            # Resource deleted already or does not exist
+            self._printService.verbose('Resource to be deleted not found, returning success.')
+            return 0
+
+        # The operation status URL is returned via a special Location header in the response
+        statusUrl = response.getheader('Location', None)
+
+        if statusUrl is None:
+            self._printService.error('After DELETE request submission, unable to determine operation status URL.')
+            return 1
+
+        return self.__retryOperation(statusUrl,
+                                     lambda body: body['status'] == 'Succeeded',
+                                     lambda body: body['status'] == 'Failed')
+
+    def __retryOperation(self, url, successFunc, failureFunc):
+        api = azurerest.AzureRestHelper(self._settings, self._settings.accessToken, self._host)
+
+        while True:
+            statusPayload = api.get(url, self._crpApiVersion)
+
+            if statusPayload is not None:
+                if successFunc(statusPayload):
+                    return 0
+                elif failureFunc(statusPayload):
+                    return 1
+
+            self._printService.verbose('Sleeping for {0} second(s)...'.format(self._sleepTime))
+            time.sleep(self._sleepTime)
 
     def __getResourceGroupFromLab(self, labId):
         """Retrieves the resource group name from the lab service based on the lab with the specified labName.
