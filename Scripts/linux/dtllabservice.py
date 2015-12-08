@@ -332,55 +332,55 @@ class LabService:
         Returns:
             The virtual machine that matches the provided filter, or None.
 
-        Example retun data:
+        Example return data:
 
         [
             {
-                "properties": {
-                    "notes": "",
-                    "labId": "/subscriptions/<somesubscription>/resourceGroups/<someresourcegroup>/providers/Microsoft.DevTestLab/labs/<somelabname>",
-                    "vms": [
-                        {
-                            "userName": "<someuser>",
-                            "artifactDeploymentStatus": {
-                                "artifactsApplied": 0,
-                                "totalArtifacts": 0
-                            },
-                            "name": "<somename>",
-                            "fqdn": "<somename>.westus.cloudapp.azure.com",
-                            "computeId": "/subscriptions/<somesubscription/resourceGroups/ent2012/providers/Microsoft.Compute/virtualMachines/<somename>",
-                            "builtInUserName": "<someuser>",
-                            "vmTemplateName": "Windows Server 2012 R2 Datacenter",
-                            "size": "Standard_DS2"
-                        }
-                    ],
-                    "ownerObjectId": "<someobjectid>",
-                    "provisioningState": "Succeeded"
+                "userName": "<someuser>",
+                "artifactDeploymentStatus": {
+                    "artifactsApplied": 0,
+                    "totalArtifacts": 0
                 },
-                "location": "West US",
-                "type": "Microsoft.DevTestLab/environments",
-                "id": "/subscriptions/<somesubscription>/resourceGroups/<someresourcegroup>/providers/Microsoft.DevTestLab/environments/<somename>",
-                "name": "<somename>"
+                "name": "<somename>",
+                "environmentId": "/subscriptions/<somesubscription>/resourceGroups/<someresourcegroup>/providers/Microsoft.DevTestLab/environments/<somename>",
+                "fqdn": "<somename>.westus.cloudapp.azure.com",
+                "computeId": "/subscriptions/<somesubscription/resourceGroups/ent2012/providers/Microsoft.Compute/virtualMachines/<somename>",
+                "builtInUserName": "<someuser>",
+                "vmTemplateName": "Windows Server 2012 R2 Datacenter",
+                "size": "Standard_DS2"
             }
         ]
         """
 
         if vmId is not None:
-            fieldName = 'Id'
+            fieldName = 'computeId'
             fieldValue = vmId
         else:
-            fieldName = 'Name'
+            fieldName = 'name'
             fieldValue = name
 
-        url = '/subscriptions/{0}/providers/microsoft.devtestlab/environments/?$filter=tolower({1})%20eq%20tolower(%27{2}%27)&api-version={3}'.format(
+        url = '/subscriptions/{0}/providers/microsoft.devtestlab/environments/?api-version={1}'.format(
             subscriptionId,
-            fieldName,
-            fieldValue,
             self._apiVersion
         )
 
         api = azurerest.AzureRestHelper(self._settings, self._settings.accessToken, self._host)
-        return api.get(url, self._apiVersion)
+        environments = api.get(url, self._apiVersion)
+
+        if environments is None:
+            return None
+
+        environments = environments['value']
+        vms = []
+
+        for environment in environments:
+            for vm in environment['properties']['vms']:
+                if vm[fieldName] == fieldValue:
+                    vm['environmentId'] = environment['id']
+                    vms.append(vm)
+                    continue
+
+        return vms
 
     def deleteVirtualMachine(self, subscriptionId, labName, name=None, vmId=None):
         """Deletes the environment including virtual machine of the environment with the specified name in the specified
@@ -398,11 +398,11 @@ class LabService:
 
         vms = self.getVirtualMachine(subscriptionId, name, vmId)
 
-        if vms is None or len(vms['value']) == 0:
+        if vms is None or len(vms) == 0:
             self._printService.error('No virtual machines found.')
             return 1
-        elif vms is not None and len(vms['value']) > 1:
-            self._printService.dumps(vms['value'])
+        elif vms is not None and len(vms) > 1:
+            self._printService.dumps(vms)
             self._printService.error(
                 'More than one virtual machine named {0} found in the lab.  Use virtual machine ID instead'.format(
                     name))
