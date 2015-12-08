@@ -561,7 +561,7 @@ class VirtualMachinesAction:
                                dest='vmid',
                                help='The id of the virtual machine to retrieve.',
                                required=False)
-        argParser.add_argument('--d', '--delete',
+        argParser.add_argument('-d', '--delete',
                                dest='deletevm',
                                action='store_true',
                                help='Deletes the virtual machine resource from the lab.',
