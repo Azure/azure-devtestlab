@@ -51,10 +51,12 @@ $secPassword = ConvertTo-SecureString $password -AsPlainText -Force
 $credential = New-Object System.Management.Automation.PSCredential("$env:COMPUTERNAME\$($username)", $secPassword)
 
 $command = $PSScriptRoot + "\GitEnlister.ps1"
+$scriptContent = Get-Content -Path $command -Delimiter (char[0])
+$scriptBlock = [scriptblock]::Create($scriptContent)
 
 # Run Chocolatey as the artifactInstaller user
 Enable-PSRemoting –force
-Invoke-Command -FilePath $command -Credential $credential -ComputerName $env:COMPUTERNAME -ArgumentList $GitRepoLocation, $GitLocalRepoLocation, $GitBranch, $PersonalAccessToken
+Invoke-Command -ScriptBlock $scriptBlock -Credential $credential -ComputerName $env:COMPUTERNAME -ArgumentList @($GitRepoLocation, $GitLocalRepoLocation, $GitBranch, $PersonalAccessToken, $PSScriptRoot)
 Disable-PSRemoting -Force
 
 # Delete the artifactInstaller user

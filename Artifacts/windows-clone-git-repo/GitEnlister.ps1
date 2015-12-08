@@ -47,22 +47,25 @@
 ##################################################################################################>
 
 #
-# Optional arguments to this script file.
+# Arguments to this script file.
 #
 
-Param(
-    #
-    $GitRepoLocation, 
+#
+$GitRepoLocation = $args[0]
 
-    #
-    $GitLocalRepoLocation = $($env:SystemDrive + "\Repos"),
+#
+$GitLocalRepoLocation  = $args[1] 
 
-    #
-    $GitBranch = "master",
+#
+$GitBranch = $args[2]
 
-    #
-    $PersonalAccessToken
-)
+#
+$PersonalAccessToken = $args[3]
+
+# The location where this script resides. 
+# Note: We cannot use $PSScriptRoot or $MyInvocation inside a script block. Hence passing 
+# the location explicitly.
+$ScriptRoot = $args[4]
 
 ##################################################################################################
 
@@ -80,7 +83,7 @@ $ErrorActionPreference = "stop"
 #
 
 $GitStableVersion = "1.9.5.20150320"
-$GitEnlisterFolder = Join-Path $PSScriptRoot -ChildPath $("GitEnlister-" + [System.DateTime]::Now.ToString("yyyy-MM-dd-HH-mm-ss"))
+$GitEnlisterFolder = Join-Path $ScriptRoot -ChildPath $("GitEnlister-" + [System.DateTime]::Now.ToString("yyyy-MM-dd-HH-mm-ss"))
 
 # Location of the log files
 $ScriptLogFolder = Join-Path $GitEnlisterFolder -ChildPath "Logs"
@@ -93,6 +96,7 @@ $GitConfigStdErr = Join-Path -Path $ScriptLogFolder -ChildPath "GitConfig.err"
 
 # Default exit code
 $ExitCode = 0
+
 
 ##################################################################################################
 
