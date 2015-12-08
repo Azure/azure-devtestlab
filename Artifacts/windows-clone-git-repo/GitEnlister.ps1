@@ -52,19 +52,15 @@
 
 Param(
     #
-    [ValidateNotNullOrEmpty()]
     $GitRepoLocation, 
 
     #
-    [ValidateNotNullOrEmpty()] 
     $GitLocalRepoLocation = $($env:SystemDrive + "\Repos"),
 
     #
-    [ValidateNotNullOrEmpty()] 
     $GitBranch = "master",
 
     #
-    [ValidateNotNullOrEmpty()] 
     $PersonalAccessToken
 )
 
