@@ -94,10 +94,6 @@ $GitCloneStdErr = Join-Path -Path $ScriptLogFolder -ChildPath "GitClone.err"
 $GitConfigStdOut = Join-Path -Path $ScriptLogFolder -ChildPath "GitConfig.log"
 $GitConfigStdErr = Join-Path -Path $ScriptLogFolder -ChildPath "GitConfig.err"
 
-# Default exit code
-$ExitCode = 0
-
-
 ##################################################################################################
 
 # 
@@ -177,8 +173,7 @@ function WriteLog
         <# Can be null or empty #> $message
     )
 
-    $timestampedMessage = $("[" + [System.DateTime]::Now + "] " + $message) | % {  
-        Write-Host -Object $_
+    $timestampedMessage = $("[" + [System.DateTime]::Now + "] " + $message) | % {
         Out-File -InputObject $_ -FilePath $ScriptLog -Append
     }
 }
@@ -708,7 +703,10 @@ try
     CreateUrlDesktopShortcut -gitRepoLocation $GitRepoLocation -gitRepoLeaf $gitRepoLeaf
 
     # Create a .lnk desktop shortcut to the local repo (opens in file explorer).
-    CreateFileExplorerDesktopShortcut -gitLocalRepoLocation $GitLocalRepoLocation -gitRepoLeaf $gitRepoLeaf        
+    CreateFileExplorerDesktopShortcut -gitLocalRepoLocation $GitLocalRepoLocation -gitRepoLeaf $gitRepoLeaf
+
+    # all done. Let's return will exit code 0.
+    return 0
 }
 
 catch
@@ -723,13 +721,5 @@ catch
     # Important note: Throwing a terminating error (using $ErrorActionPreference = "stop") still returns exit 
     # code zero from the powershell script. The workaround is to use try/catch blocks and return a non-zero 
     # exit code from the catch block. 
-    $ExitCode = -1
-}
-
-finally
-{
-    WriteLog $("This output log has been saved to: " + $ScriptLog)
-
-    WriteLog $("Exiting with " + $ExitCode)
-    exit $ExitCode
+    return -1
 }
