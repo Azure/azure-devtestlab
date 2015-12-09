@@ -65,4 +65,4 @@ $cn.Delete("User", $userName)
 # Delete the artifactInstaller user profile
 gwmi win32_userprofile | where { $_.LocalPath -like "*$userName*" } | foreach { $_.Delete() }
 
-return $exitCode
+exit $exitCode
