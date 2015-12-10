@@ -408,24 +408,13 @@ class LabService:
                     name))
             return 1
 
-        if name is not None:
-            lab = self.getLabByName(labName)
+        vm = vms[0]
 
-            if lab is None:
-                self._printService.error('Lab {0} does not exist or is not accessible.'.format(labName))
-                return []
+        self._printService.info('Deleting virtual machine: ' + vm['name'])
 
-            labId = lab["id"]
-            rgName = self.__getResourceGroupFromLab(labId)
+        environmentId = vm['environmentId']
 
-            url = '/subscriptions/{0}/resourceGroups/{1}/providers/microsoft.devtestlab/environments/{2}?api-version={3}'.format(
-                subscriptionId,
-                rgName,
-                name,
-                self._apiVersion
-            )
-        else:
-            url = vmId + '?api-version={0}'.format(self._apiVersion)
+        url = environmentId + '?api-version={0}'.format(self._apiVersion)
 
         api = azurerest.AzureRestHelper(self._settings, self._settings.accessToken, self._host)
         success, response, responsePayload = api.delete(url, self._apiVersion)
