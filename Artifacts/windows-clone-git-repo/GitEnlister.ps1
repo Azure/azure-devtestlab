@@ -634,7 +634,7 @@ function CreateFileExplorerDesktopShortcut
 
     # now prep the lnk shortcut to the local repo (opens in file explorer)
     $lnkFileExplorerShortcutPath = $($desktopFolder + "\" + $gitRepoLeaf + ".lnk")
-            
+
     # create the shortcut only if it doesn't already exist.
     if ($false -eq (Test-Path -Path $lnkFileExplorerShortcutPath))
     {
