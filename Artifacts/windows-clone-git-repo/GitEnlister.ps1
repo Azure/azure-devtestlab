@@ -243,10 +243,7 @@ function GetGitRepoLeaf
     # If appended by ".git", strip that out
     if ($gitRepoLeaf -like "*.git")
     {
-        $replace = ""
-
-        # replace last occurrence
-        $gitRepoLeaf = $gitRepoLeaf -replace "(.*).git(.*)", "`$1$replace`$2"
+        $gitRepoLeaf = $gitRepoLeaf -replace "\.git$", ""
     }
 
     return $gitRepoLeaf
