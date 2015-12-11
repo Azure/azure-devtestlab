@@ -4,24 +4,24 @@ This extension does the following –
 
  - Installs Chocolatey.
  - Installs Git.
- - Clones specified git repo (hosted on Visual Studio Online or Github) to specified destination on the VM.
- - Creates the necessary desktop shorts to the local repo and VSO/github page.  
+ - Clones specified git repository (hosted on Visual Studio Online or Github) to specified destination on the VM.
+ - Creates the necessary desktop shortcuts to the local repository and VSO/github page.  
 
 Parameters
 ==========
 
-**Git Repo URI**
+**Git clone URI**
 
-- The url of the Git repo to clone (Only HTTPS urls are supported).
+- The url of the Git repository to clone (Only HTTPS urls are supported).
 - Examples:
   - https://github.com/myProject.git
   - https://myproject.visualstudio.com/DefaultCollection/_git/SomeProject
 
 **Destination**
 
- - A parent directory into which your repo will be cloned. 
- - E.g. - If you specify your destination as C:\Repos, then a new sub-directory (C:\Repos\{your local repo}) will be created and your repo will be cloned into it.
- - Note: Cloning into an existing directory is only allowed if the directory is empty. In above example, if C:\Repos\{your local repo} already exists, then the clone operation will fail.
+ - A parent directory into which your repository will be cloned. 
+ - E.g. - If you specify your destination as C:\Repos, then a new sub-directory (C:\Repos\{your local repo}) will be created and your repository will be cloned into it.
+ - Note: Cloning into an existing directory is only allowed if the directory is empty. In above example, if C:\Repos\{your local repository} already exists, then the clone operation will fail.
 
 **Branch / Tag**	
 
@@ -29,7 +29,7 @@ Parameters
 
 **Personal Access Token**
 
- - Personal Access Token for accessing the Git repo.
+ - Personal Access Token for accessing the Git repository.
 
 Logs
 ====
