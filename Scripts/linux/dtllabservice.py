@@ -375,7 +375,7 @@ class LabService:
 
         for environment in environments:
             for vm in environment['properties']['vms']:
-                if vm[fieldName] == fieldValue:
+                if vm[fieldName].lower() == fieldValue.lower():
                     vm['environmentId'] = environment['id']
                     vms.append(vm)
                     continue

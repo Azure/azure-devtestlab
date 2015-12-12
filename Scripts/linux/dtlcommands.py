@@ -160,7 +160,7 @@ class AuthorizeCommandAction:
         Returns:
             None
         """
-        return 'Authorizes access to Azure resources'
+        return 'Provides an access token for making custom REST calls to the lab endpoint.'
 
     def invoke(self, settings):
         """ Returns the authorization token for the current clientID.

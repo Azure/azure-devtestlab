@@ -111,8 +111,7 @@ class AzureRestHelper:
         verb = 'POST'
         headers = self.__getHeaders(apiVersion)
 
-        result, response, bodyStr = self.__webrequest(verb, url, headers, apiVersion, body)
-        return self.__deserializeBody(bodyStr)
+        return self.__webrequest(verb, url, headers, apiVersion, body)
 
     def put(self, url, body, apiVersion):
         """Performs an HTTP PUT operation
