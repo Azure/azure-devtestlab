@@ -33,7 +33,8 @@ import dtlcommands
 import dtlprint
 import dtlproviders
 
-class DevTestLabsMain:
+
+class Program:
     """The boostrap used to instantiate the DTL CLI
 
     Attributes:
@@ -54,55 +55,6 @@ class DevTestLabsMain:
 
     """
 
-    def run(self):
-        """Runs the CLI main entry-point, invoking the action provided by the argument parser.
-
-        Args:
-            None
-
-        Returns:
-            0 if successful, 1 otherwise.
-        """
-        #self.__ensureAuthenticated()
-
-        returnValue = self._parsedArgs.func(self._parsedArgs)
-
-        if returnValue != 0:
-            sys.exit(returnValue)
-        else:
-            self._printService.success('Action completed successfully')
-
-        return
-
-    def __generateSubArgsMap(self, argumentParser, actions):
-
-        subParsers = argumentParser.add_subparsers(title='Actions')
-
-        for action in actions:
-            parser = subParsers.add_parser(action.getActionName(), help=action.getActionHelpText())
-            action.buildArguments(parser)
-            parser.set_defaults(func=action.invoke)
-
-        return
-
-    def __generateArgsMap(self, argumentParser, commands):
-
-        for command in commands:
-            command.buildArguments(argumentParser)
-
-        return
-
-    def __ensureAuthenticated(self):
-        """Retrieves an authorization token for the principal"""
-        provider = dtlproviders.AuthorizeTokenProvider()
-
-        accessKey = provider.provide(self._parsedArgs)
-
-        if self._parsedArgs.verbose:
-            self._printService.info('Setting the authorization token')
-
-        self._parsedArgs.accessToken = accessKey
-
     def __init__(self, *args, **kwargs):
         """Initializes the DevTestLabMain class
 
@@ -112,9 +64,9 @@ class DevTestLabsMain:
         Returns:
             None
         """
-        self._argParser = argparse.ArgumentParser(usage=self._usage,
-                                                  description=self._description,
-                                                  version=self._version)
+        self._arg_parser = argparse.ArgumentParser(usage=self._usage,
+                                                   description=self._description,
+                                                   version=self._version)
 
         #
         # Add new command definitions to the commands list below:
@@ -135,17 +87,71 @@ class DevTestLabsMain:
             dtlcommands.LoginAction()
         ]
 
-        self.__generateArgsMap(self._argParser, self._commands)
-        self.__generateSubArgsMap(self._argParser, self._actions)
+        self.__generate_args_map(self._arg_parser, self._commands)
+        self.__generate_sub_args_map(self._arg_parser, self._actions)
 
-        self._parsedArgs = self._argParser.parse_args()
+        self._parsed_args = self._arg_parser.parse_args()
 
-        self._printService = dtlprint.PrintService(self._parsedArgs.quiet, self._parsedArgs.verbose)
+        self._print_service = dtlprint.PrintService(self._parsed_args.quiet, self._parsed_args.verbose)
 
-        self._printService.verbose('Parsed argument(s):')
-        self._printService.verbose(self._parsedArgs)
+        self._print_service.verbose('Parsed argument(s):')
+        self._print_service.verbose(self._parsed_args)
 
         return
+
+    def run(self):
+        """Runs the CLI main entry-point, invoking the action provided by the argument parser.
+
+        Args:
+            None
+
+        Returns:
+            0 if successful, 1 otherwise.
+        """
+        # self.__ensureAuthenticated()
+
+        try:
+            return_value = self._parsed_args.func(self._parsed_args)
+
+            if return_value != 0:
+                sys.exit(return_value)
+            else:
+                self._print_service.success('Action completed successfully')
+
+        except Exception as e:
+            self._print_service.error('CLI ERROR: {0}'.format(e.message))
+            self._print_service.traceback()
+
+        return 0
+
+    def __generate_sub_args_map(self, arg_parser, actions):
+
+        sub_parsers = arg_parser.add_subparsers(title='Actions')
+
+        for action in actions:
+            parser = sub_parsers.add_parser(action.getActionName(), help=action.getActionHelpText())
+            action.buildArguments(parser)
+            parser.set_defaults(func=action.invoke)
+
+        return
+
+    def __generate_args_map(self, arg_parser, commands):
+
+        for command in commands:
+            command.buildArguments(arg_parser)
+
+        return
+
+    def __ensure_authenticated(self):
+        """Retrieves an authorization token for the principal"""
+        provider = dtlproviders.AuthorizeTokenProvider()
+
+        access_key = provider.provide(self._parsed_args)
+
+        if self._parsed_args.verbose:
+            self._print_service.info('Setting the authorization token')
+
+        self._parsed_args.accessToken = access_key
 
     # Private consts
     _usage = 'dtl <credentials> action [options]'
@@ -153,5 +159,5 @@ class DevTestLabsMain:
     _version = '0.1.0'
 
 
-main = DevTestLabsMain()
-main.run()
+Program().run()
+

@@ -25,7 +25,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import utils.auth.auth_const as auth_const
 import dtllabservice
 import dtlprint
 import os
@@ -38,6 +37,9 @@ class AuthenticationCommands:
     Attributes:
         None
     """
+
+    def __init__(self):
+        return
 
     def buildArguments(self, argParser):
         """Constructs the command-line arguments used to support this command.
@@ -71,6 +73,9 @@ class SubscriptionCommands:
         None
     """
 
+    def __init__(self):
+        return
+
     def buildArguments(self, argParser):
         """Constructs the command-line arguments used to support this command.
 
@@ -90,6 +95,9 @@ class ActionsCommands:
     Attributes:
         None
     """
+
+    def __init__(self):
+        return
 
     def buildArguments(self, argParser):
         """Constructs the command-line arguments used to support this command.
@@ -141,6 +149,9 @@ class AuthorizeCommandAction:
     Attributes:
         None
     """
+
+    def __init__(self):
+        return
 
     def getActionName(self):
         """Gets the name of the action as it is displayed in the command-line help.
@@ -205,6 +216,9 @@ class AuthorizeCommandAction:
 
 
 class LabsCommandAction:
+    def __init__(self):
+        return
+
     def getActionName(self):
         """Gets the name of the action as it is displayed in the command-line help.
 
@@ -294,6 +308,9 @@ class CreateVirtualMachineAction:
     Attributes:
         None
     """
+
+    def __init__(self):
+        return
 
     def getActionName(self):
         """Gets the name of the action as it is displayed in the command-line help.
@@ -427,6 +444,9 @@ class CreateVirutalMachineTemplateAction:
 
     """
 
+    def __init__(self):
+        return
+
     def getActionName(self):
         """Gets the name of the action as it is displayed in the command-line help.
 
@@ -497,12 +517,12 @@ class CreateVirutalMachineTemplateAction:
 
         if len(settings.templatename) > templateNameMaxLen:
             printService.error(
-                'Template name must be a valid string with a maximum length of {0}'.format(templateNameMaxLen))
+                    'Template name must be a valid string with a maximum length of {0}'.format(templateNameMaxLen))
             return 1
 
         labSvc = dtllabservice.LabService(settings, printService)
         templateFilePath = os.path.dirname(
-            os.path.realpath(__file__)) + '/templates/201-dtl-create-vmtemplate/azuredeploy.json'
+                os.path.realpath(__file__)) + '/templates/201-dtl-create-vmtemplate/azuredeploy.json'
 
         return labSvc.createVmTemplate(settings.labname,
                                        settings.subscription,
@@ -519,6 +539,9 @@ class VirtualMachinesAction:
         None
 
     """
+
+    def __init__(self):
+        return
 
     def getActionName(self):
         """Gets the name of the action as it is displayed in the command-line help.
@@ -616,6 +639,9 @@ class VirtualMachineTemplatesAction:
 
     """
 
+    def __init__(self):
+        return
+
     def getActionName(self):
         """Gets the name of the action as it is displayed in the command-line help.
 
@@ -690,6 +716,7 @@ class VirtualMachineTemplatesAction:
 
         return 0
 
+
 class LoginAction:
     """Authenticates the user interactively.
 
@@ -697,6 +724,9 @@ class LoginAction:
         None
 
     """
+
+    def __init__(self):
+        return
 
     def getActionName(self):
         """Gets the name of the action as it is displayed in the command-line help.
@@ -756,13 +786,19 @@ class LoginAction:
         authority_url = 'https://login.microsoftonline.com/{0}'.format(self._tenant_id)
         context = utils.auth.authentication_context.AuthenticationContext(print_service, authority_url)
 
-        success, response = context.acquire_user_code(self._resource_id, '', 'en-us')
+        success, response = context.acquire_user_code(self._resource_id, self._client_id, 'en-us')
 
         if not success:
-            token_response = context.acquire_token_with_device_code(self._resource_id, '', response)
-            print_service.dumps(token_response)
+            if response is not None:
+                print_service.dumperrors(response)
+                return 1
+
+        print_service.dumps(response)
+        token_response = context.acquire_token_with_device_code(self._resource_id, '', response)
+        print_service.dumps(token_response)
 
         return 0
 
     _tenant_id = 'common'
     _resource_id = '00000002-0000-0000-c000-000000000000'
+    _client_id = '04b07795-8ddb-461a-bbee-02f9e1bf7b46'

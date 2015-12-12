@@ -35,11 +35,12 @@ import util
 class OAuth2Client:
     def __init__(self, print_service, call_context, authority):
         self._print_service = print_service
-        self._call_context = call_context
         self._authority = authority
         self._token_endpoint = authority.token_endpoint
         self._device_code_endpoint = authority.device_code_endpoint
         self._cancel_long_polling_request = False
+
+        self.call_context = call_context
 
         return
 
@@ -51,10 +52,8 @@ class OAuth2Client:
         post_options = self.__create_post_option(token_url, url_encoded_token_request_form)
         options_for_retry = {
             'times': max_times_for_retry,
-            'interva': interval * 1000
+            'interval': interval * 1000
         }
-
-        
 
         raise NotImplementedError()
 
@@ -69,21 +68,23 @@ class OAuth2Client:
                                         util.DefaultRequestHandler('Get Device Code', self._print_service))
 
         if result:
-            self.__handle_get_device_code_response(response)
+            result, response = self.__handle_get_device_code_response(response)
 
-        return
+        return result, response
 
     def __create_device_code_url(self):
-        parsed = urlparse.urlparse(self._device_code_endpoint)
+        # parsed = urlparse.urlparse(self._device_code_endpoint)
 
-        parameters = {const.OAuth2.Parameters.AAD_API_VERSION: '1.0'}
-        parsed.query = urllib.urlencode(parameters)
+        parsed = urlparse.urlsplit(self._device_code_endpoint)
+        parsed_qs = urlparse.parse_qs(parsed.query)
+        parsed_qs[const.OAuth2.Parameters.AAD_API_VERSION] = '1.0'
 
-        return parsed
+        new_qs = urllib.urlencode(parsed_qs, doseq=True)
+        return urlparse.urlunsplit((parsed.scheme, parsed.netloc, parsed.path, new_qs, parsed.fragment))
 
     def __create_post_option(self, post_url, url_encoded_request_form):
         options_data = {
-            'url': urlparse.urlunparse(post_url),
+            'url': post_url,
             'body': url_encoded_request_form,
             'headers': {
                 'Content-Type': 'application/x-www-form-urlencoded'
@@ -99,9 +100,9 @@ class OAuth2Client:
             device_code_response = self.__validate_device_code_response(body)
         except Exception as ex:
             self._print_service.error('Error validating get user code response: ' + ex.message)
-            return None
+            return False, None
 
-        return device_code_response
+        return True, device_code_response
 
     def __validate_device_code_response(self, body):
         device_code_response = {}
@@ -129,6 +130,14 @@ class OAuth2Client:
         self.__map_fields(wire_response, device_code_response, self.DEVICE_CODE_RESPONSE_MAP)
 
         return device_code_response
+
+    def __create_token_url(self):
+        token_url = urlparse.urlparse(self._token_endpoint)
+
+        parameters = {const.OAuth2.Parameters.AAD_API_VERSION: '1.0'}
+
+        token_url.query = urllib.urlencode(parameters)
+        return token_url
 
     @staticmethod
     def __map_fields(in_obj, out_obj, map):

@@ -29,6 +29,7 @@ from __future__ import print_function
 import json
 import os
 import sys
+import traceback
 
 
 class PrintService:
@@ -89,18 +90,21 @@ class PrintService:
 
         return
 
-    def verbose(self, text):
+    def verbose(self, text, no_new_line=False):
         """If in verbose mode, writes the specified text to stdout.
 
         Args:
             text (string) - the text to write to stdout
+            no_new_line (bool) - True to keep the cursor on the current line after write, false to add a newline.`
         Returns:
             None
 
         """
-
         if self._verbose:
-            print(text)
+            if no_new_line:
+                sys.stdout.write(text)
+            else:
+                print(text)
 
         return
 
@@ -166,6 +170,28 @@ class PrintService:
         """
 
         print(json.dumps(obj, indent=4))
+
+    def dumperrors(self, obj):
+        """Writes the specified object as a json string to stderr.
+
+        Args:
+            obj (dict) - The object to write.
+        Returns:
+            None
+
+        """
+
+        self.error(json.dumps(obj, indent=4))
+
+    def traceback(self):
+        print(self._redForeground)
+
+        try:
+            print('-' * 60)
+            traceback.print_exc(file=sys.stdout)
+            print('-' * 60)
+        finally:
+            print(self._resetForeground)
 
     def __isColorEnabled(self):
         return os.name != 'nt'

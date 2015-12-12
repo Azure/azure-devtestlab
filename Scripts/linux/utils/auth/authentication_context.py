@@ -25,9 +25,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import auth_const
-import token_request
 import authority as auth
+import auth_const
+import code_request
+import token_request
 
 
 class AuthenticationContext:
@@ -37,13 +38,12 @@ class AuthenticationContext:
     turned off via the validateAuthority parameter below.
 
     Attributes:
-        None
+        authority (string) - The authority used to represent the context.
 
     """
 
     def __init__(self, print_service, authority, validate_authority=True, cache=None):
         self._print_service = print_service
-        self._authority = auth.Authority(authority, validate_authority)
         self._oath2_client = None
         self._correlation_id = None
         self._cache = cache
@@ -53,6 +53,7 @@ class AuthenticationContext:
             }
         }
         self._token_request_with_user_code = {}
+        self.authority = auth.Authority(self._print_service, authority, validate_authority)
 
         return
 
@@ -67,20 +68,26 @@ class AuthenticationContext:
 
         """
 
-        code_request = code_request.CodeRequest(self._call_context, self, client_id, resource)
-        response = code_request.get_user_code_info(language)
+        success, result = self.authority.validate(self._call_context)
 
-        return True, response
+        if not success:
+            self._print_service.error(result)
+            return False, result
+
+        request = code_request.CodeRequest(self._print_service, self._call_context, self, client_id, resource)
+        success, response = request.get_user_code_info(language)
+
+        return success, response
 
     def acquire_token_with_device_code(self, resource, client_id, user_code_info):
         self.__validate_user_code_info(user_code_info)
+        self.authority.validate(self._call_context)
 
         request = token_request.TokenRequest(self._print_service, self._call_context, self, client_id, resource, None)
-        self._token_request_with_user_code[user_code_info[auth_const.OAuth2.UserCodeResponseFields.DEVICE_CODE]] = token_request
+        self._token_request_with_user_code[
+            user_code_info[auth_const.OAuth2.UserCodeResponseFields.DEVICE_CODE]] = token_request
 
-        request.get_token_with_device_code(user_code_info)
-
-        return
+        return request.get_token_with_device_code(user_code_info)
 
     @staticmethod
     def __validate_user_code_info(user_code_info):
@@ -97,3 +104,5 @@ class AuthenticationContext:
             raise StandardError('Missing required value for expires_in')
 
         return
+
+    authority = ''

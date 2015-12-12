@@ -42,7 +42,7 @@ def create_request_options(context_provider, options):
     if options is not None:
         merged_options.update(options)
 
-    if context_provider.call_context.options is not None and context_provider.call_context.options.http is not None:
+    if 'options' not in context_provider.call_context and 'http' not in context_provider.call_context['options']:
         merged_options.update(context_provider.options.http)
 
     add_default_request_headers(context_provider, merged_options)
@@ -100,10 +100,10 @@ class DefaultRequestHandler:
         return True, body_str
 
     def __log_return_correlation_id(self, response):
-        if response is not None and 'headers' in response and response['headers']['client-request-id'] is not None:
+        if response is not None and 'client-request-id' in response.msg.headers:
             self._print_service.info('{1}: Server returned this correlation ID: {1}'.format(
-                self._operation_message,
-                response.headers['client-request-id']
+                    self._operation_message,
+                    response.headers['client-request-id']
             ))
         return
 
@@ -117,18 +117,29 @@ class Request:
         self._print_service = print_service
         return
 
+    def get(self, url, get_options, callback):
+        return self.__web_request('GET', get_options, callback, url=url)
+
     def post(self, post_options, callback):
         return self.__web_request('POST', post_options, callback)
 
-    def __web_request(self, verb, options, callback):
+    def __web_request(self, verb, options, callback, url=None):
 
         parsed = urlparse.urlparse(options['url'])
         conn = httplib.HTTPSConnection(parsed.hostname, 443)
 
+        if url is not None:
+            request_url = url
+        else:
+            request_url = options['url']
+
         try:
-            conn.request(verb, options['url'], options['body'], headers=options['headers'])
+            self._print_service.verbose('{0} {1}'.format(verb, request_url), no_new_line=True)
+            conn.request(verb, request_url, options['body'], headers=options['headers'])
 
             response = conn.getresponse()
+
+            self._print_service.verbose(' >>> {0} {1}'.format(response.status, response.reason))
             return callback(response)
         except:
             return False, None

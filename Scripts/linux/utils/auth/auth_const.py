@@ -98,11 +98,25 @@ class OAuth2:
         def __init__(self):
             return
 
-        USER_CODE = 'user_code',
-        DEVICE_CODE = 'device_code',
-        VERIFICATION_URL = 'verification_url',
-        EXPIRES_IN = 'expires_in',
-        INTERVAL = 'interval',
-        MESSAGE = 'message',
-        ERROR = 'error',
+        USER_CODE = 'user_code'
+        DEVICE_CODE = 'device_code'
+        VERIFICATION_URL = 'verification_url'
+        EXPIRES_IN = 'expires_in'
+        INTERVAL = 'interval'
+        MESSAGE = 'message'
+        ERROR = 'error'
         ERROR_DESCRIPTION = 'error_description'
+
+    class AADConstants:
+        def __init__(self):
+            return
+
+        WORLD_WIDE_AUTHORITY = 'login.windows.net'
+        WELL_KNOWN_AUTHORITY_HOSTS = ['login.windows.net',
+                                      'login.microsoftonline.com',
+                                      'login.chinacloudapi.cn',
+                                      'login.cloudgovapi.us']
+        INSTANCE_DISCOVERY_ENDPOINT_TEMPLATE = 'https://{authorize_host}/common/discovery/instance?authorization_endpoint={authorize_endpoint}&api-version=1.0'
+        AUTHORIZE_ENDPOINT_PATH = '/oauth2/authorize'
+        TOKEN_ENDPOINT_PATH = '/oauth2/token'
+        DEVICE_ENDPOINT_PATH = '/oauth2/devicecode'

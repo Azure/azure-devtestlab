@@ -28,6 +28,7 @@
 import auth_const
 import oauth2_client
 
+
 class CodeRequest:
     def __init__(self, print_service, call_context, authentication_context, client_id, resource):
         self._print_service = print_service
@@ -49,7 +50,8 @@ class CodeRequest:
         return self.__get_user_code_info(oauth_parameters)
 
     def __get_user_code_info(self, oauth_parameters):
-        client = oauth2_client.OAuth2Client(self._print_service, self._call_context, self._authentication_context.authority)
+        client = oauth2_client.OAuth2Client(self._print_service, self._call_context,
+                                            self._authentication_context.authority)
 
         return client.get_user_code_info(oauth_parameters)
 
