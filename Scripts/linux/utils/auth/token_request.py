@@ -79,20 +79,20 @@ class TokenRequest:
             raise StandardError('invalid refresh interval')
 
         try:
-            token_response = self.__oauth_get_token_by_polling(oauth_parameters, interval, expires_in)
+            success, token_response = self.__oauth_get_token_by_polling(oauth_parameters, interval, expires_in)
         except Exception as ex:
             self._print_service.verbose('Token polling request returned with err.')
             raise StandardError(ex)
 
         self.__add_token_into_cache(token_response)
-        return
+        return success, token_response
 
     def __create_oauth_parameters(self, grant_type):
         def __add_parameter_if_available(parameters, key, value):
             if value:
                 parameters[key] = value
 
-        oauth_parameters = {auth_const.GrantType: grant_type}
+        oauth_parameters = {auth_const.OAuth2.Parameters.GRANT_TYPE: grant_type}
 
         if (auth_const.GrantType.AUTHORIZATION_CODE != grant_type and
                 auth_const.GrantType.CLIENT_CREDENTIALS != grant_type and
@@ -112,10 +112,10 @@ class TokenRequest:
             self._call_context,
             self._authentication_context.authority)
 
-        client.get_token_with_polling(oauth_parameters, interval, expires_in)
+        success, response = client.get_token_with_polling(oauth_parameters, interval, expires_in)
         self._polling_client = client
 
-        return self._polling_client
+        return success, response
 
     def __add_token_into_cache(self, token_response):
         return

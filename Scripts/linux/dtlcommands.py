@@ -794,8 +794,12 @@ class LoginAction:
                 return 1
 
         print_service.dumps(response)
-        token_response = context.acquire_token_with_device_code(self._resource_id, '', response)
-        print_service.dumps(token_response)
+        success, token_response = context.acquire_token_with_device_code(self._resource_id, self._client_id, response)
+
+        if success:
+            print_service.dumps(token_response)
+        else:
+            print_service.error('Could not acquire access token')
 
         return 0
 

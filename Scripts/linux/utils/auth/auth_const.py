@@ -44,6 +44,13 @@ class OAuth2:
     def __init__(self):
         return
 
+    IdTokenMap = {
+        'tid': 'tenantId',
+        'given_name': 'givenName',
+        'family_name': 'familyName',
+        'idp': 'identityProvider'
+    }
+
     class Parameters:
         def __init__(self):
             return
@@ -64,6 +71,22 @@ class OAuth2:
         REFRESH_TOKEN = 'refresh_token'
         LANGUAGE = 'mkt'
         DEVICE_CODE = 'device_code'
+
+    class ResponseParameters:
+        def __init__(self):
+            return
+
+        CODE = 'code'
+        TOKEN_TYPE = 'token_type'
+        ACCESS_TOKEN = 'access_token'
+        ID_TOKEN = 'id_token'
+        REFRESH_TOKEN = 'refresh_token'
+        CREATED_ON = 'created_on'
+        EXPIRES_ON = 'expires_on'
+        EXPIRES_IN = 'expires_in'
+        RESOURCE = 'resource'
+        ERROR = 'error'
+        ERROR_DESCRIPTION = 'error_description'
 
     class UserCodeResponseFields:
         def __init__(self):
@@ -93,6 +116,32 @@ class OAuth2:
         OS = 'x-client-OS'
         CPU = 'x-client-CPU'
         NODE_SKU = 'Node'
+
+    class IdTokenFields:
+        def __init__(self):
+            return
+
+        USER_ID = 'userId'
+        IS_USER_ID_DISPLAYABLE = 'isUserIdDisplayable'
+        TENANT_ID = 'tenantId'
+        GIVE_NAME = 'givenName'
+        FAMILY_NAME = 'familyName'
+        IDENTITY_PROVIDER = 'identityProvider'
+
+    class TokenResponseFields:
+        def __init__(self):
+            return
+
+        TOKEN_TYPE = 'tokenType'
+        ACCESS_TOKEN = 'accessToken'
+        REFRESH_TOKEN = 'refreshToken'
+        CREATED_ON = 'createdOn'
+        EXPIRES_ON = 'expiresOn'
+        EXPIRES_IN = 'expiresIn'
+        RESOURCE = 'resource'
+        USER_ID = 'userId'
+        ERROR = 'error'
+        ERROR_DESCRIPTION = 'errorDescription'
 
     class DeviceCodeResponseParameters:
         def __init__(self):

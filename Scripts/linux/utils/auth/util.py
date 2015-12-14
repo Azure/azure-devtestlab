@@ -26,10 +26,10 @@
 # SOFTWARE.
 
 import auth_const
+import base64
 import httplib
 import json
 import platform
-import urllib
 import urlparse
 
 ADAL_VERSION = '0.1.0'
@@ -69,6 +69,10 @@ def add_default_request_headers(context_provider, options):
     headers[auth_const.OAuth2.AdalIdParameters.CPU] = platform.architecture()[0]
 
     return
+
+
+def base64_decode_string_url_safe(text):
+    return base64.b64decode(text).decode('utf-8')
 
 
 class DefaultRequestHandler:
