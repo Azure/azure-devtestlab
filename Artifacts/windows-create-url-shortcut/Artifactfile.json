@@ -30,6 +30,6 @@
     }
   },
   "runCommand": {
-    "commandToExecute": "[concat('powershell.exe -executionpolicy bypass -File CreateUrlShortcut.ps1', ' -ShortcutName ', replace(parameters('ShortcutName'), ' ', '^'), ' -ShortcutFolder ', replace(parameters('ShortcutFolder'), ' ', '^'), ' -ShortcutTargetPath ', replace(parameters('ShortcutTargetPath'), ' ', '^'))]"
+    "commandToExecute": "[concat('powershell.exe -executionpolicy bypass -File CreateUrlShortcut.ps1', ' -ShortcutName ', '\"', parameters('ShortcutName'), '\"', ' -ShortcutFolder ', '\"', parameters('ShortcutFolder'), '\"', ' -ShortcutTargetPath ', '\"', parameters('ShortcutTargetPath'), '\"')]"
   }
 }
