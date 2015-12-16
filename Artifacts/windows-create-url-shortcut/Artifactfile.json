@@ -1,0 +1,29 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+  "title": "Create a URL shortcut",
+  "description": "Creates a shortcut to an internet or intranet resource (shortcut file is created in the public desktop folder).",
+  "tags": [
+    "Windows",
+    "Url",
+    "Shortcut"
+  ],
+  "iconUri": "",
+  "targetOsType": "Windows",
+  "parameters": {
+    "ShortcutName": {
+      "type": "string",
+      "displayName": "Shortcut Name",
+      "description": "The name to assign to the shortcut file.",
+      "defaultValue": "Azure Portal - Shortcut"
+    },
+    "ShortcutTargetPath": {
+      "type": "string",
+      "displayName": "Shortcut Target",
+      "description": "The intranet or internet resource that'll be invoked by this shortcut.",
+      "defaultValue": "http://portal.azure.com"
+    }
+  },
+  "runCommand": {
+    "commandToExecute": "[concat('powershell.exe -executionpolicy bypass -File CreateUrlShortcut.ps1', ' -ShortcutName ', replace(parameters('ShortcutName'), ' ', '_'), ' -ShortcutTargetPath ', parameters('ShortcutTargetPath'))]"
+  }
+}
