@@ -24,8 +24,8 @@
     - Powershell -executionpolicy bypass -file GitEnlister.ps1 -GitRepoLocation "your repo URI" -PersonalAccessToken "access-token" -GitLocalRepoLocation "local folder location"
 
 
-    Pre-Requisites
-    ==============
+    Prerequisites
+    =============
 
     - Please ensure that this script is run elevated.
     - Please ensure that the powershell execution policy is set to unrestricted or bypass.
@@ -243,7 +243,7 @@ function GetGitRepoLeaf
     # If appended by ".git", strip that out
     if ($gitRepoLeaf -like "*.git")
     {
-        $gitRepoLeaf = $gitRepoLeaf -replace ".git", ""
+        $gitRepoLeaf = $gitRepoLeaf -replace "\.git$", ""
     }
 
     return $gitRepoLeaf
@@ -331,7 +331,7 @@ function InstallGit
     if ($false -eq ($env:Path).Contains($gitBinariesFolder))
     {
         # Add it to the path.
-        [Environment]::SetEnvironmentVariable("path", $($gitBinariesFolder + ";" + $env:Path), [System.EnvironmentVariableTarget]::Machine)    
+        [Environment]::SetEnvironmentVariable("path", $($env:Path + ";" + $gitBinariesFolder), [System.EnvironmentVariableTarget]::Machine)    
 
         WriteLog "Success."
     }
