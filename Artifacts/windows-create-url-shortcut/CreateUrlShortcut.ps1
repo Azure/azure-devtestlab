@@ -40,10 +40,6 @@ Param(
     $ShortcutName,
 
     # 
-    [ValidateNotNullOrEmpty()] 
-    $ShortcutFolder = [System.Environment]::GetFolderPath("CommonDesktopDirectory"),
-
-    # 
     [ValidateNotNullOrEmpty()]
     $ShortcutTargetPath
 )
@@ -65,6 +61,9 @@ $ErrorActionPreference = "stop"
 
 # The shortcut type
 $ShortcutType = ".url"
+
+# The location where the shortcut will be created (by default this is the public desktop).
+$ShortcutFolder = [System.Environment]::GetFolderPath("CommonDesktopDirectory"),
 
 # Location of the log files
 $ShortcutCreatorFolder = Join-Path $PSScriptRoot -ChildPath $("Url-Shortcut-Creator-" + [System.DateTime]::Now.ToString("yyyy-MM-dd-HH-mm-ss"))
