@@ -59,12 +59,6 @@ $ErrorActionPreference = "stop"
 # Custom Configurations
 #
 
-# The shortcut type
-$ShortcutType = ".url"
-
-# The location where the shortcut will be created (by default this is the public desktop).
-$ShortcutFolder = [System.Environment]::GetFolderPath("CommonDesktopDirectory"),
-
 # Location of the log files
 $ShortcutCreatorFolder = Join-Path $PSScriptRoot -ChildPath $("Url-Shortcut-Creator-" + [System.DateTime]::Now.ToString("yyyy-MM-dd-HH-mm-ss"))
 $ScriptLogFolder = Join-Path -Path $ShortcutCreatorFolder -ChildPath "Logs"
@@ -91,7 +85,6 @@ function DisplayArgValues
 {
     WriteLog "========== Configuration =========="
     WriteLog $("ShortcutName : " + $ShortcutName)
-    WriteLog $("ShortcutFolder : " + $ShortcutFolder)
     WriteLog $("ShortcutTargetPath : " + $ShortcutTargetPath) 
     WriteLog "========== Configuration =========="
 }
@@ -182,7 +175,7 @@ try
     }
 
     # now prep the shortcut 
-    $newShortcutPath = $($ShortcutFolder + "\" + $ShortcutName + $ShortcutType)
+    $newShortcutPath = $([System.Environment]::GetFolderPath("CommonDesktopDirectory") + "\" + $ShortcutName + ".url")
             
     # create the shortcut only if one doesn't already exist.
     if ($false -eq (Test-Path -Path $newShortcutPath))
