@@ -1,7 +1,6 @@
 Param(
     #
     [ValidateNotNullOrEmpty()]
-    [string]
     $ProductId
 )
 
