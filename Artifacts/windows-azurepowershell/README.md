@@ -1,10 +1,10 @@
-Azure SDK for .NET (VS 2015)
-============================
+Azure PowerShell
+================
 This extension does the following – 
 
  - Installs Chocolatey.
  - Installs WebPICmd (Web Platform Installer Command Line) via Chocolatey.
- - Installs latest available version of Microsoft Azure SDK for .NET (VS 2015) via WebPICmd.
+ - Installs latest available version of Microsoft Azure PowerShell.
 
 Logs
 ====
