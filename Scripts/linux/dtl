@@ -95,7 +95,7 @@ class DevTestLabsMain:
 
     def __ensureAuthenticated(self):
         """Retrieves an authorization token for the principal"""
-        provider = dtlproviders.AuthorizeTokenProvider()
+        provider = dtlproviders.AuthorizeTokenProvider(self._printService)
 
         accessKey = provider.provide(self._parsedArgs)
 
@@ -144,6 +144,14 @@ class DevTestLabsMain:
 
         self._printService.verbose('Parsed argument(s):')
         self._printService.verbose(self._parsedArgs)
+
+        if self._parsedArgs.clientID is None or self._parsedArgs.secret is None or self._parsedArgs.tenant is None:
+            self._printService.error('Missing required service principal credentials')
+            sys.exit(1)
+
+        if self._parsedArgs.subscription is None:
+            self._printService.error('Missing required subscription')
+            sys.exit(1)
 
         return
 

@@ -320,7 +320,7 @@ class LabService:
         api = azurerest.AzureRestHelper(self._settings, self._settings.accessToken, self._host)
         return api.get(url, self._apiVersion)
 
-    def getVirtualMachine(self, subscriptionId, vmId=None, name=None):
+    def getVirtualMachine(self, subscriptionId, name=None, vmId=None):
         """Gets a virtual machine resource from the DevTest Labs resource provider using one of the specified filters.
 
         Args:
@@ -332,55 +332,128 @@ class LabService:
         Returns:
             The virtual machine that matches the provided filter, or None.
 
-        Example retun data:
+        Example return data:
 
         [
             {
-                "properties": {
-                    "notes": "",
-                    "labId": "/subscriptions/<somesubscription>/resourceGroups/<someresourcegroup>/providers/Microsoft.DevTestLab/labs/<somelabname>",
-                    "vms": [
-                        {
-                            "userName": "<someuser>",
-                            "artifactDeploymentStatus": {
-                                "artifactsApplied": 0,
-                                "totalArtifacts": 0
-                            },
-                            "name": "<somename>",
-                            "fqdn": "<somename>.westus.cloudapp.azure.com",
-                            "computeId": "/subscriptions/<somesubscription/resourceGroups/ent2012/providers/Microsoft.Compute/virtualMachines/<somename>",
-                            "builtInUserName": "<someuser>",
-                            "vmTemplateName": "Windows Server 2012 R2 Datacenter",
-                            "size": "Standard_DS2"
-                        }
-                    ],
-                    "ownerObjectId": "<someobjectid>",
-                    "provisioningState": "Succeeded"
+                "userName": "<someuser>",
+                "artifactDeploymentStatus": {
+                    "artifactsApplied": 0,
+                    "totalArtifacts": 0
                 },
-                "location": "West US",
-                "type": "Microsoft.DevTestLab/environments",
-                "id": "/subscriptions/<somesubscription>/resourceGroups/<someresourcegroup>/providers/Microsoft.DevTestLab/environments/<somename>",
-                "name": "<somename>"
+                "name": "<somename>",
+                "environmentId": "/subscriptions/<somesubscription>/resourceGroups/<someresourcegroup>/providers/Microsoft.DevTestLab/environments/<somename>",
+                "fqdn": "<somename>.westus.cloudapp.azure.com",
+                "computeId": "/subscriptions/<somesubscription/resourceGroups/ent2012/providers/Microsoft.Compute/virtualMachines/<somename>",
+                "builtInUserName": "<someuser>",
+                "vmTemplateName": "Windows Server 2012 R2 Datacenter",
+                "size": "Standard_DS2"
             }
         ]
         """
 
         if vmId is not None:
-            fieldName = 'Id'
+            fieldName = 'computeId'
             fieldValue = vmId
         else:
-            fieldName = 'Name'
+            fieldName = 'name'
             fieldValue = name
 
-        url = '/subscriptions/{0}/providers/microsoft.devtestlab/environments/?$filter=tolower({1})%20eq%20tolower(%27{2}%27)&api-version={3}'.format(
+        url = '/subscriptions/{0}/providers/microsoft.devtestlab/environments/?api-version={1}'.format(
             subscriptionId,
-            fieldName,
-            fieldValue,
             self._apiVersion
         )
 
         api = azurerest.AzureRestHelper(self._settings, self._settings.accessToken, self._host)
-        return api.get(url, self._apiVersion)
+        environments = api.get(url, self._apiVersion)
+
+        if environments is None:
+            return None
+
+        environments = environments['value']
+        vms = []
+
+        for environment in environments:
+            for vm in environment['properties']['vms']:
+                if vm[fieldName].lower() == fieldValue.lower():
+                    vm['environmentId'] = environment['id']
+                    vms.append(vm)
+                    continue
+
+        return vms
+
+    def deleteVirtualMachine(self, subscriptionId, labName, name=None, vmId=None):
+        """Deletes the environment including virtual machine of the environment with the specified name in the specified
+           lab.  If there is more than one environment with name in labName, an error will be thrown.
+
+        Args:
+            subscriptionId (string) - The subscription in which to filter.
+            labName (string)        - The ID of the lab in which to filter.
+            name (string)           - The name of tha virtual machine.  If there are more than one virtual machine with
+                                      the same name in the specified lab, you must use the vmId parameter instead.
+            vmId (string)           - The resource ID of the virtual machine.
+        Returns:
+            0 if successful, 1 otherwise.
+        """
+
+        vms = self.getVirtualMachine(subscriptionId, name, vmId)
+
+        if vms is None or len(vms) == 0:
+            self._printService.error('No virtual machines found.')
+            return 1
+        elif vms is not None and len(vms) > 1:
+            self._printService.dumps(vms)
+            self._printService.error(
+                'More than one virtual machine named {0} found in the lab.  Use virtual machine ID instead'.format(
+                    name))
+            return 1
+
+        vm = vms[0]
+
+        self._printService.info('Deleting virtual machine: ' + vm['name'])
+
+        environmentId = vm['environmentId']
+
+        url = environmentId + '?api-version={0}'.format(self._apiVersion)
+
+        api = azurerest.AzureRestHelper(self._settings, self._settings.accessToken, self._host)
+        success, response, responsePayload = api.delete(url, self._apiVersion)
+
+        if not success:
+            self._printService.dumps(responsePayload)
+            self._printService.error('Failed to delete virtual machine')
+            return 1
+
+        if response.status == 204:
+            # Resource deleted already or does not exist
+            self._printService.verbose('Resource to be deleted not found, returning success.')
+            return 0
+
+        # The operation status URL is returned via a special Location header in the response
+        statusUrl = response.getheader('Location', None)
+
+        if statusUrl is None:
+            self._printService.error('After DELETE request submission, unable to determine operation status URL.')
+            return 1
+
+        return self.__retryOperation(statusUrl,
+                                     lambda body: body['status'] == 'Succeeded',
+                                     lambda body: body['status'] == 'Failed')
+
+    def __retryOperation(self, url, successFunc, failureFunc):
+        api = azurerest.AzureRestHelper(self._settings, self._settings.accessToken, self._host)
+
+        while True:
+            statusPayload = api.get(url, self._crpApiVersion)
+
+            if statusPayload is not None:
+                if successFunc(statusPayload):
+                    return 0
+                elif failureFunc(statusPayload):
+                    return 1
+
+            self._printService.verbose('Sleeping for {0} second(s)...'.format(self._sleepTime))
+            time.sleep(self._sleepTime)
 
     def __getResourceGroupFromLab(self, labId):
         """Retrieves the resource group name from the lab service based on the lab with the specified labName.

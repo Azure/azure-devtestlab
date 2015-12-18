@@ -39,6 +39,10 @@ class AuthorizeTokenProvider:
 
     """
 
+    def __init__(self, print_service):
+        self._print_service = print_service
+        return
+
     def provide(self, settings):
         """Retrieves an authorization token for the client ID and evidence provided from the command-line.
 
@@ -52,8 +56,8 @@ class AuthorizeTokenProvider:
         api = azurerest.AzureRestHelper(settings,
                                         host=self._host,
                                         headers={
-                                           'Content-Type': 'application/x-www-form-urlencoded'
-                                       })
+                                            'Content-Type': 'application/x-www-form-urlencoded'
+                                        })
 
         payload = {
             'resource': 'https://management.core.windows.net/',
@@ -62,19 +66,26 @@ class AuthorizeTokenProvider:
             'grant_type': 'client_credentials'
         }
 
-        tokenData = api.post(self._baseUrl.format(settings.tenant),
-                             urllib.urlencode(payload),
-                             self._apiVersion)
+        result, response, body = api.post(self._baseUrl.format(settings.tenant),
+                                          urllib.urlencode(payload),
+                                          self._apiVersion)
 
-        if tokenData is None:
-            print 'Cannot fetch authorization access token'
+        if not result:
+            self._print_service.error('Cannot fetch authorization access token')
+            self._print_service.dumps(json.loads(body))
             sys.exit(1)
 
-        if settings.verbose:
-            print 'Authorization data:'
-            print json.dumps(tokenData, indent=4)
+        token_data = json.loads(body)
 
-        return tokenData['access_token']
+        self._print_service.verbose('Authorization data:')
+
+        if settings.verbose:
+            self._print_service.dumps(token_data)
+
+        if 'access_token' not in token_data:
+            self._print_service.error('Cannot retrieve access token from response payload')
+
+        return token_data['access_token']
 
     _apiVersion = '2015-01-01'
     _host = 'login.windows.net'

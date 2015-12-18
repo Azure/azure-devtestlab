@@ -160,7 +160,7 @@ class AuthorizeCommandAction:
         Returns:
             None
         """
-        return 'Authorizes access to Azure resources'
+        return 'Provides an access token for making custom REST calls to the lab endpoint.'
 
     def invoke(self, settings):
         """ Returns the authorization token for the current clientID.
@@ -539,7 +539,7 @@ class VirtualMachinesAction:
             None
         """
 
-        return 'Lists a filtered set of virtual machines created in your lab.'
+        return 'Provides access to virtual machines in your lab.'
 
     def buildArguments(self, argParser):
         """Constructs the command-line arguments used to support this command.
@@ -560,6 +560,11 @@ class VirtualMachinesAction:
         argParser.add_argument('-vid',
                                dest='vmid',
                                help='The id of the virtual machine to retrieve.',
+                               required=False)
+        argParser.add_argument('-d', '--delete',
+                               dest='deletevm',
+                               action='store_true',
+                               help='Deletes the virtual machine resource from the lab.',
                                required=False)
         argParser.add_argument('-vb', '--verbose',
                                dest='verbose',
@@ -585,25 +590,29 @@ class VirtualMachinesAction:
         printService = dtlprint.PrintService(settings.quiet, settings.verbose)
         labSvc = dtllabservice.LabService(settings, printService)
 
-        if settings.name is not None:
-            vms = labSvc.getVirtualMachine(settings.subscription, name=settings.name)
-        elif settings.vmid is not None:
-            vms = labSvc.getVirtualMachine(settings.subscription, vmId=settings.vmid)
+        if settings.deletevm and (
+                        settings.name is not None or settings.vmid is not None) and settings.labname is not None:
+            return labSvc.deleteVirtualMachine(settings.subscription, settings.labname, settings.name, settings.vmid)
         else:
-            vms = labSvc.getVirtualMachinesForLab(settings.subscription, settings.labname)
+            if settings.name is not None:
+                vms = labSvc.getVirtualMachine(settings.subscription, name=settings.name)
+            elif settings.vmid is not None:
+                vms = labSvc.getVirtualMachine(settings.subscription, vmId=settings.vmid)
+            else:
+                vms = labSvc.getVirtualMachinesForLab(settings.subscription, settings.labname)
 
-        # Coalesce the two different results into a list of virtual machines.
-        if 'value' in vms:
-            vms = vms['value']
+            # Coalesce the two different results into a list of virtual machines.
+            if 'value' in vms:
+                vms = vms['value']
 
-        if len(vms) > 0:
-            printService.info('Virtual machine(s):')
-            printService.dumps(vms)
-        else:
-            printService.error('No virtual machines found.')
-            return 1
+            if len(vms) > 0:
+                printService.info('Virtual machine(s):')
+                printService.dumps(vms)
+            else:
+                printService.error('No virtual machines found.')
+                return 1
 
-        return 0
+            return 0
 
 
 class VirtualMachineTemplatesAction:

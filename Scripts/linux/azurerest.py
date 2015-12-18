@@ -76,7 +76,26 @@ class AzureRestHelper:
         verb = 'GET'
         headers = self.__getHeaders(apiVersion)
 
-        return self.__webrequest(verb, url, headers, apiVersion)
+        result, response, bodyStr = self.__webrequest(verb, url, headers, apiVersion)
+        return self.__deserializeBody(bodyStr)
+
+    def delete(self, url, apiVersion):
+        """Performs an HTTP DELETE operation
+
+        Args:
+            url (string) - the URL of the resource to delete.
+            apiVersion (string) - the API version of the resource provider used to delete the resource.
+
+        Returns:
+            A boolean value indicating whether the request was successful.
+            A response object containing the response from the DELETE request.
+        """
+        verb = 'DELETE'
+        headers = self.__getHeaders(apiVersion)
+
+        result, response, bodyStr = self.__webrequest(verb, url, headers, apiVersion)
+
+        return result, response, self.__deserializeBody(bodyStr)
 
     def post(self, url, body, apiVersion):
         """Performs an HTTP POST operation
@@ -109,7 +128,23 @@ class AzureRestHelper:
         verb = 'PUT'
         headers = self.__getHeaders(apiVersion)
 
-        return self.__webrequest(verb, url, headers, apiVersion, body)
+        result, response, bodyStr = self.__webrequest(verb, url, headers, apiVersion, body)
+        return self.__deserializeBody(bodyStr)
+
+    def __deserializeBody(self, bodyStr):
+        body = None
+
+        try:
+            if self._settings.verbose:
+                print 'Response Body:'
+                print bodyStr
+
+            if bodyStr is not None:
+                body = json.loads(bodyStr)
+        except:
+            pass
+
+        return body
 
     def __getHeaders(self, apiVersion):
         coreHeaders = {
@@ -146,35 +181,13 @@ class AzureRestHelper:
             conn.request(verb, url, body, headers=headers)
 
             response = conn.getresponse()
+            bodyStr = response.read()
 
             if response.status < 200 or response.status >= 300:
                 print '{0} request failed: {1}'.format(verb, response.status)
+                return False, response, bodyStr
 
-                bodyStr = response.read()
-
-                try:
-                    body = json.loads(bodyStr)
-
-                    if self._settings.verbose:
-                        print 'Response Body:'
-                        print json.dumps(body, indent=4)
-
-                except:
-                    if self._settings.verbose:
-                        print bodyStr
-
-                return None
-
-            responseBody = response.read()
-
-            if self._settings.verbose:
-                print 'Response Body:'
-                print responseBody
-
-            if responseBody is not None:
-                return json.loads(responseBody)
-
-            return None
+            return True, response, bodyStr
 
         except httplib.HTTPException as e:
             print 'Error during {0}:{1}'.format(verb, url)
