@@ -45,7 +45,7 @@
 
 # The Id of the product to be installed from the WebPI catalog.
 # More details: http://www.iis.net/learn/install/web-platform-installer/web-platform-installer-v4-command-line-webpicmdexe-rtw-release
-$ProductId = $args[0],
+$ProductId = $args[0]
 
 # The location where this script resides. 
 # Note: We cannot use $PSScriptRoot or $MyInvocation inside a script block. Hence passing 
