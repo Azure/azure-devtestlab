@@ -257,14 +257,14 @@ function InstallProducts
     $p = Start-Process -FilePath "WebPICmd" -ArgumentList $args -PassThru -Wait
 
     # check the exit code
-    if ($p.ExitCode -ne 0)
+    if (($p.ExitCode -ne 0) -and ($p.ExitCode -ne 3010))
     {
         $errMsg = $("Error! Installation failed with exit code " + $p.ExitCode + ". Please see the WebPI logs in the '%LOCALAPPDATA%\Microsoft\Web Platform Installer\logs' folder for details.")
         WriteLog $errMsg
         Write-Error $errMsg 
     }
     
-    WriteLog "Success. WebPICmd exited with 0."
+    WriteLog $("Success. WebPICmd exited with " + $p.ExitCode + ".")
 }
 
 ##################################################################################################
