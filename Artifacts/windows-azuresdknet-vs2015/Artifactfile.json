@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
   "title": "Azure SDK for .NET (VS 2015)",
-  "description": "Installs the lastest version of Microsoft Azure SDK for .NET (VS 2013)",
+  "description": "Installs the latest version of Microsoft Azure SDK for .NET (VS 2013)",
   "tags": [
     "Windows",
     "AzureSDK"
