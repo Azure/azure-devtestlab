@@ -1,4 +1,3 @@
-
 Function Get-TempPassword() {
     Param(
         [int]$length=10,
@@ -38,14 +37,21 @@ $scriptContent = Get-Content -Path $command -Delimiter ([char]0)
 $scriptBlock = [scriptblock]::Create($scriptContent)
 
 # Run Chocolatey as the artifactInstaller user
-Enable-PSRemoting -force
-$exitCode = Invoke-Command -ScriptBlock $scriptBlock -Credential $credential -ComputerName $env:COMPUTERNAME -ArgumentList @($PSScriptRoot)
-Disable-PSRemoting -Force
+Enable-PSRemoting -SkipNetworkProfileCheck -Force
 
-# Delete the artifactInstaller user
-$cn.Delete("User", $userName)
+try
+{
+    $exitCode = Invoke-Command -ScriptBlock $scriptBlock -Credential $credential -ComputerName $env:COMPUTERNAME -ArgumentList @($PSScriptRoot, "-verbose")
+}
+finally
+{
+    Disable-PSRemoting -Force
 
-# Delete the artifactInstaller user profile
-gwmi win32_userprofile | where { $_.LocalPath -like "*$userName*" } | foreach { $_.Delete() }
+    # Delete the artifactInstaller user
+    $cn.Delete("User", $userName)
+
+    # Delete the artifactInstaller user profile
+    gwmi win32_userprofile | where { $_.LocalPath -like "*$userName*" } | foreach { $_.Delete() }
+}
 
 exit $exitCode
