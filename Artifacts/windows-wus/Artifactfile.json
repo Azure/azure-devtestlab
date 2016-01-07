@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+  "title": "Update Windows",
+  "description": "Update windows by installing all required and recommended Windows Updates.",
+  "tags": [
+    "Windows",
+    "Update",
+    "wu"
+  ],
+  "iconUri": "",
+  "targetOsType": "Windows",
+    "runCommand": {
+    "commandToExecute": "['powershell.exe -File Get-WUInstall.ps1 -UpdateType Software -AcceptAll -IgnoreRebootRequired -IgnoreReboot']"
+  }
+}
