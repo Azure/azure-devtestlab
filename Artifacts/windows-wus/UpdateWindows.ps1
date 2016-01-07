@@ -51,7 +51,7 @@ try
     }
 
     Import-Module PSWindowsUpdate
-    Get-WUInstall -UpdateType Software -AcceptAll -IgnoreRebootRequired -IgnoreReboot
+    Get-WUInstall -NotCategory "Language packs" -AcceptAll
 }
 catch
 {
