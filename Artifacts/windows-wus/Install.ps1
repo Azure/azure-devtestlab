@@ -49,12 +49,12 @@ Write-Host $runProcessFile
 
 # Run script now
 $newProcess = new-object System.Diagnostics.ProcessStartInfo "powershell";
-$newProcess.Arguments = "-ExecutionPolicy Bypass -NoProfile -File " + $runProcessFile + " `"" + $vsInstallScript + "`" `` " + $userName + " " + $password
+$newProcess.Arguments = "-ExecutionPolicy Bypass -NoProfile -File " + $runProcessFile + " `"" + $vsInstallScript + "` " + $userName + " " + $password
 Write-Host $newProcess.Arguments
 $newProcess.Verb = "runas";
 $process = [System.Diagnostics.Process]::Start($newProcess);
 $process.WaitForExit();
-Write-Host ("InstallVS: " + $process.ExitCode)
+Write-Host ("UpdateWindows: " + $process.ExitCode)
 
 
 # Cleanup

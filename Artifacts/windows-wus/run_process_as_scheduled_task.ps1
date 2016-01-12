@@ -1,7 +1,6 @@
 Param
 (
   [ValidateNotNullOrEmpty()][string] $filePath,
-  [ValidateNotNullOrEmpty()][string] $arguments,
   [ValidateNotNullOrEmpty()][string] $username,
   [ValidateNotNullOrEmpty()][string] $password
 )
@@ -9,7 +8,6 @@ Param
 $Logfile = [System.IO.Path]::Combine($PSScriptRoot, "ScheduledTaskLog" + ".txt")
 
 Add-content $Logfile -value "FilePath : $filePath"
-Add-content $Logfile -value "Arguments : $arguments"
 Add-content $Logfile -value "Username : $username"
 Add-content $Logfile -value "Password : $password"
 
@@ -26,7 +24,7 @@ $taskTrigger = New-ScheduledTaskTrigger -AtLogOn
 # Define a task action to run the companion script.
 Add-content $Logfile -value "Creating a new scheduled task action"
 $actionExecutable = "powershell"
-$actionArgs = ("-ExecutionPolicy Bypass -NoProfile -File `"" + $psFilePath + "`" `"" + $filePath + "`" `"" + $arguments + "`" " +$signalFilePath)
+$actionArgs = ("-ExecutionPolicy Bypass -NoProfile -File `"" + $psFilePath + "`" `"" + $filePath + "`" " +$signalFilePath)
 $taskAction = New-ScheduledTaskAction -Execute $actionExecutable -Argument $actionArgs
 
 # Create a new scheduled task
