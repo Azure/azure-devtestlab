@@ -20,6 +20,9 @@ $signalFile
 
 )
 
+Write-Host "filePath = $filePath"
+Write-Host "arguments = $arguments"
+Write-Host "signalFile = $signalFile"
 
 
 if ($filePath.EndsWith(".ps1"))
