@@ -62,9 +62,9 @@ Disable-PSRemoting -Force
 $cn.Delete("User", $userName)
 gwmi win32_userprofile | where { $_.LocalPath -like "*$userName*" } | foreach { $_.Delete() }
 
-if ($process.ExitCode -eq 3010)
+if ($process.ExitCode -gt 0)
 {
-    Write-Host ("Restarting the machine as exit code 3010 was received")
+    Write-Host ("Restarting the machine")
     $newProcess = new-object System.Diagnostics.ProcessStartInfo "shutdown";
     $newProcess.Arguments = "-r -t 0 -f"
     Write-Host $newProcess.Arguments
