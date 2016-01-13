@@ -20,16 +20,19 @@ $taskName = $signalFileNameWithoutExtension
 # Create a task trigger to run at user logon.
 Add-content $Logfile -value "Creating a new scheduled task"
 $taskTrigger = New-ScheduledTaskTrigger -AtLogOn
+#$TaskStartTime = [datetime]::Now.AddMinutes(1) 
+#$taskTrigger = New-ScheduledTaskTrigger -Once -At $TaskStartTime 
 
 # Define a task action to run the companion script.
 Add-content $Logfile -value "Creating a new scheduled task action"
 $actionExecutable = "powershell"
-$actionArgs = ("-ExecutionPolicy Bypass -NoProfile -File `"" + $psFilePath + "`" `"" + $filePath + "`" " +$signalFilePath)
+$actionArgs = "-ExecutionPolicy Bypass -NoProfile -File $psFilePath -filePath $filePath -signalFile $signalFilePath"
 $taskAction = New-ScheduledTaskAction -Execute $actionExecutable -Argument $actionArgs
 
 # Create a new scheduled task
 Add-content $Logfile -value "Registering scheduled task : $taskName"
 $schtask = Register-ScheduledTask -TaskName $taskName -Trigger $taskTrigger -Action $taskAction -User "$env:COMPUTERNAME\$($username)" -Password $password -RunLevel Highest
+#$schtask = Register-ScheduledTask -TaskName $taskName -Trigger $taskTrigger -Action $taskAction -RunLevel Highest
 
 Add-content $Logfile -value "Starting scheduled task"
 Start-ScheduledTask -TaskName $taskName

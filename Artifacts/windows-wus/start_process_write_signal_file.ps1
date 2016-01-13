@@ -1,23 +1,13 @@
-Param (
+Param
+(
+  [ValidateNotNullOrEmpty()]
+  [string] $filePath,
 
-     [ValidateNotNullOrEmpty()]
+  [ValidateNotNullOrEmpty()]
+  [string] $arguments,
 
-     [string] 
-$filePath,
-
-
-
-     [ValidateNotNullOrEmpty()]
- 
-    [string] $arguments,
-
-
-
-     [ValidateNotNullOrEmpty()]
- 
-    [string] 
-$signalFile
-
+  [ValidateNotNullOrEmpty()]
+  [string] $signalFile
 )
 
 Write-Host "filePath = $filePath"
