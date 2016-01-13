@@ -10,6 +10,6 @@
   "iconUri": "",
   "targetOsType": "Windows",
     "runCommand": {
-    "commandToExecute": "['powershell.exe -executionpolicy bypass -File UpdateWindows.ps1']"
+    "commandToExecute": "['powershell.exe -executionpolicy bypass -File Install.ps1']"
   }
 }
