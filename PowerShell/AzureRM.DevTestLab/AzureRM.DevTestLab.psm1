@@ -122,46 +122,6 @@ function GetLabFromVhd_Private
     return $lab
 }
 
-function GetDefaultStorageAccountContextFromLab_Private
-{
-    Param(
-        [ValidateNotNull()]
-        # An existing Lab (please use the Get-AzureRmDtlLab cmdlet to get this lab object).
-        $Lab
-    )
-
-    $lab = GetResourceWithProperties_Private -Resource $Lab
-
-    # Get the default storage account associated with the lab.
-    $labStorageAccount = Get-AzureRmResource | Where-Object {
-        $_.ResourceType -eq $StorageAccountResourceType -and 
-        $_.ResourceId -eq $lab.Properties.DefaultStorageAccount
-    }
-
-    if ($null -eq $labStorageAccount)
-    {
-        throw $("Unable to extract the default storage account for lab '" + $Lab.Name + "'")
-    }
-
-    # Extracting the lab's storage account key
-    $labStorageAccountKey = Get-AzureRmStorageAccountKey -ResourceGroupName $labStorageAccount.ResourceGroupName -Name $labStorageAccount.ResourceName
-
-    if ($null -eq $labStorageAccountKey)
-    {
-        throw $("Unable to extract the storage account key for lab '" + $Lab.Name + "'")
-    }
-
-    # Create a new storage context using the lab's default storage account .
-    $labStorageAccountContext = New-AzureStorageContext -StorageAccountName $labStorageAccount.ResourceName -StorageAccountKey $labStorageAccountKey.Key1
-
-    if ($null -eq $labStorageAccountContext)
-    {
-        throw $("Unable to create a new storage account context for storage account '" + $labStorageAccount.ResourceName + "'")
-    }
-
-    return $labStorageAccountContext
-}
-
 function GetResourceWithProperties_Private
 {
     Param(
@@ -693,10 +653,16 @@ function Get-AzureRmDtlVhd
     {
         Write-Verbose $("Processing cmdlet '" + $PSCmdlet.MyInvocation.InvocationName + "', ParameterSet = '" + $PSCmdlet.ParameterSetName + "'")
 
-        # Get the default storage account associated with the lab.
-        Write-Verbose $("Extracting the context for the default storage account for lab '" + $Lab.Name + "'")
-        $labStorageAccountContext = GetDefaultStorageAccountContextFromLab_Private -Lab $Lab
-        Write-Verbose $("Successfully extracted the context for the default storage account for lab '" + $Lab.Name + "'")
+        # Get a context associated with the lab's default storage account.
+        Write-Verbose $("Extracting a storage acccount context for the lab '" + $Lab.Name + "'")
+
+        $labStorageAccountContext = New-AzureRmDtlLabStorageContext -Lab $Lab
+        if ($null -eq $labStorageAccountContext)
+        {
+            throw $("Unable to extract a storage account context for the lab '" + $Lab.Name + "'")
+        }
+
+        Write-Verbose $("Successfully extracted a storage account context for the lab '" + $Lab.Name + "'")
 
         # Extract the 'uploads' container (which houses the vhds).
         Write-Verbose $("Extracting the 'uploads' container")
@@ -1006,6 +972,77 @@ function New-AzureRmDtlLab
         {
             throw $("One or more labs with name '" + $LabName + "' already exist in the current subscription '" + (Get-AzureRmContext).Subscription.SubscriptionId + "'.")
         }
+    }
+}
+
+##################################################################################################
+
+function New-AzureRmDtlLabStorageContext
+{
+    <#
+        .SYNOPSIS
+        Creates an Azure storage context from the lab's storage account.
+
+        .DESCRIPTION
+        The New-AzureRmDtlLabStorageContext cmdlet creates an Azure storage context from the
+        storage account associated with the specified lab.
+
+        .EXAMPLE
+        $lab = $null
+
+        $lab = Get-AzureRmDtlLab -LabName "MyLab1"
+        New-AzureRmDtlLabStorageContext -Lab $lab
+
+        Creates a new storage context from the storage account of the lab "MyLab1".
+
+        .INPUTS
+        None. Currently you cannot pipe objects to this cmdlet (this will be fixed in a future version).  
+    #>
+
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory=$true)] 
+        [ValidateNotNull()]
+        # An existing Lab (please use the Get-AzureRmDtlLab cmdlet to get this lab object).
+        $Lab
+    )
+
+    PROCESS
+    {
+        Write-Verbose $("Processing cmdlet '" + $PSCmdlet.MyInvocation.InvocationName + "', ParameterSet = '" + $PSCmdlet.ParameterSetName + "'")
+
+        # Get the same lab object, but with properties attached.
+        $lab = GetResourceWithProperties_Private -Resource $Lab
+
+        # Get the default storage account associated with the lab.
+        Write-Verbose $("Extracting the default storage account for lab '" + $Lab.Name +"'")
+
+        $labStorageAccount = Get-AzureRmResource | Where-Object {
+            $_.ResourceType -eq $StorageAccountResourceType -and 
+            $_.ResourceId -eq $lab.Properties.DefaultStorageAccount
+        }
+
+        if ($null -eq $labStorageAccount)
+        {
+            throw $("Unable to extract the default storage account for lab '" + $Lab.Name + "'")
+        }
+
+        Write-Verbose $("Successfully extracted the default storage account for lab '" + $Lab.Name +"'")
+
+        # Extracting the lab's storage account key
+        Write-Verbose $("Extracting the storage account key for lab '" + $Lab.Name +"'")
+
+        $labStorageAccountKey = Get-AzureRmStorageAccountKey -ResourceGroupName $labStorageAccount.ResourceGroupName -Name $labStorageAccount.ResourceName
+
+        if ($null -eq $labStorageAccountKey)
+        {
+            throw $("Unable to extract the storage account key for lab '" + $Lab.Name + "'")
+        }
+
+        Write-Verbose $("Successfully extracted the storage account key for lab '" + $Lab.Name +"'")
+
+        # Create a new storage context using the lab's default storage account .
+        New-AzureStorageContext -StorageAccountName $labStorageAccount.ResourceName -StorageAccountKey $labStorageAccountKey.Key1 | Write-Output
     }
 }
 
@@ -1341,8 +1378,17 @@ function Add-AzureRmDtlVhd
             }
         }
 
-        # Get the context associated with the lab's default storage account.
-        $destStorageAccountContext = GetDefaultStorageAccountContextFromLab_Private -Lab $DestLab
+        # Get a context associated with the lab's default storage account.
+        Write-Verbose $("Extracting a storage acccount context for the lab '" + $DestLab.Name + "'")
+
+        $destStorageAccountContext = New-AzureRmDtlLabStorageContext -Lab $DestLab
+
+        if ($null -eq $destStorageAccountContext)
+        {
+            throw $("Unable to extract the storage account context for lab '" + $DestLab.Name + "'")
+        }
+
+        Write-Verbose $("Successfully extracted a storage account context for the lab '" + $DestLab.Name + "'")
 
         # Extract the 'uploads' container (which houses the vhds).
         $destContainer = Get-AzureStorageContainer -Name "uploads" -Context $destStorageAccountContext
@@ -1411,25 +1457,36 @@ function Start-AzureRmDtlVhdCopy
         - Vhds from Azure storage containers are copied directly into the lab (without being staged and validated locally).  
 
         .EXAMPLE
-        $lab = $null
+        $destLab = $null
 
-        $lab = Get-AzureRmDtlLab -LabName "MyLab"
-        $friendlyName = "AnExampleVHD.vhd"
+        $destLab = Get-AzureRmDtlLab -LabName "MyLab"
 
-        Start-AzureRmDtlVhdCopy -SrcVhdBlobName "MyOriginal.vhd" -SrcVhdContainerName "MyContainer1" -SrcVhdStorageAccountName "MyStorageAccount1" -SrcVhdStorageAccountKey "xxxxxxx" -DestLab $lab -DestVhdName "MyRenamed.vhd"
+        $destVhd = Start-AzureRmDtlVhdCopy -SrcVhdBlobName "MyOriginal.vhd" -SrcVhdContainerName "MyContainer1" -SrcVhdStorageAccountName "MyStorageAccount1" -SrcVhdStorageAccountKey "xxxxxxx" -DestLab $destLab -WaitForCompletion
 
-        Initiates copying of vhd file "MyOriginal.vhd" from the storage account "MyStorageAccount1" into the lab "MyLab" as "MyRenamed.vhd".
+        Initiates copying of vhd file "MyOriginal.vhd" from the storage account "MyStorageAccount1" into the lab "MyLab" and waits
+        for the copy operation to fully complete. 
+        
+        Note: When the '-WaitForCompletion' switch is specified, this cmdlet's output is the vhd object which was successfully 
+        copied into the destination lab.
 
         .EXAMPLE
-        $lab = $null
+        $destLab = $null
 
-        $lab = Get-AzureRmDtlLab -LabName "MyLab"
-        $friendlyName = "AnExampleVHD.vhd"
+        $destLab = Get-AzureRmDtlLab -LabName "MyLab"
+        $destLabStorageContext = New-AzureRmDtlLabStorageContext -Lab $destLab
 
-        Start-AzureRmDtlVhdCopy -SrcVhdBlobName "MyOriginal.vhd" -SrcVhdContainerName "MyContainer1" -SrcVhdStorageAccountName "MyStorageAccount1" -SrcVhdStorageAccountKey "xxxxxxx" -DestLab $lab -WaitForCompletion
+        $destVhdName = "MyRenamed.vhd"
 
-        Initiates copying of vhd file "MyOriginal.vhd" from the storage account "MyStorageAccount1" into the lab "MyLab" and wait
-        for the copy operation to fully complete.
+        $destVhd = Start-AzureRmDtlVhdCopy -SrcVhdBlobName "MyOriginal.vhd" -SrcVhdContainerName "MyContainer1" -SrcVhdStorageAccountName "MyStorageAccount1" -SrcVhdStorageAccountKey "xxxxxxx" -DestLab $destLab -DestVhdName $destVhdName
+
+        Get-AzureStorageBlobCopyState -Blob $destVhdName -Container "uploads" -Context $destLabStorageContext
+
+        Initiates copying of vhd file "MyOriginal.vhd" from the storage account "MyStorageAccount1" into the lab "MyLab" as "MyRenamed.vhd", but does
+        not wait for the copy operation to complete.
+
+        Note: When the '-WaitForCompletion' switch is not specified, this cmdlet's output is the vhd object partially copied into the destination 
+        lab. The status of the copy-operation can be queried by using the 'New-AzureRmDtlLabStorageContext' and 'get-AzureStorageBlobCopyState' cmdlets 
+        as shown above.
 
         .INPUTS
         None. Currently you cannot pipe objects to this cmdlet (this will be fixed in a future version).  
@@ -1488,9 +1545,6 @@ function Start-AzureRmDtlVhdCopy
         [Parameter(Mandatory=$false, ParameterSetName="AddFromStorageContainer")] 
         [switch]
         # [Optional] If specified, will wait for vhd copy operation to complete.
-        # Note: If specified, then this cmdlet's output is the vhd object successfully copied into the lab.
-        # Note: If specified, then this cmdlet's output is the vhd object partially copied into the lab (please
-        # use the 'get-AzureStorageBlobCopyState' cmdlet to get the updated status on the vhd copy.
         $WaitForCompletion
     )
 
@@ -1523,8 +1577,17 @@ function Start-AzureRmDtlVhdCopy
                     throw $("Unable to create a new storage account context for storage account '" + $SrcVhdStorageAccountName + "'")
                 }
 
-                # Get the context associated with the lab's default storage account.
-                $destStorageAccountContext = GetDefaultStorageAccountContextFromLab_Private -Lab $DestLab
+                # Get a context associated with the lab's default storage account.
+                Write-Verbose $("Extracting a storage acccount context for the lab '" + $DestLab.Name + "'")
+
+                $destStorageAccountContext = New-AzureRmDtlLabStorageContext -Lab $DestLab
+
+                if ($null -eq $destStorageAccountContext)
+                {
+                    throw $("Unable to extract the storage account context for lab '" + $DestLab.Name + "'")
+                }
+
+                Write-Verbose $("Successfully extracted a storage account context for the lab '" + $DestLab.Name + "'")
 
                 # Extract the 'uploads' container (which houses the vhds).
                 $destContainer = Get-AzureStorageContainer -Name "uploads" -Context $destStorageAccountContext
