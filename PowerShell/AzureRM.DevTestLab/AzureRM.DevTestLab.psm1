@@ -215,108 +215,6 @@ function CreateNewResourceGroup_Private
     return (New-AzureRmResourceGroup -Name $randomRGName -Location $Location)
 }
 
-function IsFileRemote_Private
-{
-    Param(
-        [ValidateNotNullOrEmpty()] 
-        [string] 
-        #  The full path or Uri of a file.
-        $FilePathOrUri
-    )
-
-    # Poor man's check for UNC paths
-    if ($FilePathOrUri.StartsWith("\\"))
-    {
-        return $true
-    }
-
-    # Poor man's check for Uris.
-    if ($FilePathOrUri.StartsWith("https://"))
-    {
-        return $true
-    }
-
-    # A more formal check for UNC paths
-    $uri = New-Object -TypeName System.Uri -ArgumentList @($FilePathOrUri) 
-    if (($null -ne $uri) -and ($true -eq $uri.IsUnc))
-    {
-        return $true
-    }
-
-    # Check for network-mapped drives
-    $driveInfo = New-Object -TypeName System.IO.DriveInfo -ArgumentList @($FilePathOrUri)
-    if (($null -ne $driveInfo) -and ($driveInfo.DriveType -eq [System.IO.DriveType]::Network))
-    {
-        return $true
-    }
-            
-    # else just assume it is local
-    return $false
-}
-
-function CopyVhdToLocalIfRemote_Private
-{
-    Param(
-        [ValidateNotNullOrEmpty()] 
-        [string] 
-        # The full path a local or remote (available from a UNC share or a network-mapped drive) file.
-        $VhdFilePathOrUri,
-
-        [ValidateNotNullOrEmpty()] 
-        [string] 
-        # A local folder to which the source vhd will be copied. 
-        $LocalStagingFolder
-    )
-
-    # check whether the file resides locally or is remote. 
-    $isRemoteVhd = IsFileRemote_Private -FilePathOrUri $VhdFilePathOrUri
-
-    # if this is a local vhd, then don't copy it to the local staging area
-    if ($false -eq $isRemoteVhd)
-    {
-        Write-Verbose "This is a local vhd, hence won't be copied into the local staging area."
-        return $VhdFilePathOrUri
-    }
-
-    # Pre-condition check
-    if ($false -eq (Test-Path -Path $LocalStagingFolder))
-    {
-        throw $("The specified local staging folder '" + $LocalStagingFolder + "' does not exist.")
-    }
-
-    $vhdSourceFileName = Split-Path -Path $VhdFilePathOrUri -Leaf
-    $vhdStagingPath = Join-Path -Path $LocalStagingFolder -ChildPath $vhdSourceFileName
-
-    # let us copy the vhd to the local staging folder.
-    Write-Warning $("Copying the vhd to local staging area '" + $vhdStagingPath + "' (Note: This can take a while)...")
-    Write-Verbose $("Copying the vhd to local staging area.")
-    Write-Verbose $("Source : " + $VhdFilePathOrUri)
-    Write-Verbose $("Staging Destination : " + $vhdStagingPath)
-
-    # let us measure the file copy time for instrumentation purposes.
-    $stopWatch = [Diagnostics.Stopwatch]::StartNew()
-
-    if ($true -eq $VhdFilePathOrUri.StartsWith("https://"))
-    {
-        # @Todo: Blob Uris are currently not supported. Will be fixed in a future update.
-        throw "Blob Uris are currently not supported by this cmdlet."
-    }
-    else
-    {
-        Copy-Item -Path $VhdFilePathOrUri -Destination $vhdStagingPath -Force | Out-Null
-
-        if ($false -eq $?)
-        {
-            throw "An error occurred while copying the vhd to staging folder."
-        }
-    }
-
-    $stopWatch.Stop()
-    Write-Verbose $("Successfully copied vhd to staging folder in " + $stopWatch.Elapsed.TotalSeconds + " seconds.")
-
-    return $vhdStagingPath
-}
-
 ##################################################################################################
 
 function Get-AzureRmDtlLab
@@ -1206,7 +1104,6 @@ function New-AzureRmDtlVMTemplate
         # Unique name for the deployment
         $deploymentName = [Guid]::NewGuid().ToString()
 
-        # Copy the vhd file into the staging area if needed
         switch($PSCmdlet.ParameterSetName)
         {
             "FromVM"
@@ -1361,13 +1258,10 @@ function Add-AzureRmDtlVhd
         - The vhd must be uploaded as a page blob (and NOT as a block blob).
 
         Other notes:
-        - Vhds from local drives are: 
-            - validated to ensure they meet the Azure requirements. 
-            - If validation is successful, they are uploaded to the destination lab.
-        - Vhds from UNC shares and network mapped drives too are validated. The vhd files are:
-            - copied to a local staging (location is customizable via the -LocalStagingFolder parameter) and 
-            - validated to ensure they meet the Azure requirements. 
-            - If validation is successful, they are uploaded to the destination lab.
+        - Vhds are validated to ensure they meet the Azure requirements. If validation is successful, they 
+          are uploaded to the destination lab.
+        - For perf reasons, if you have a remote vhd (on a UNC share or on a network mapped drive), it is
+          recommended that you copy it a local disk, before calling this cmdlet. 
 
         .EXAMPLE
         $destLab = $null
@@ -1384,15 +1278,6 @@ function Add-AzureRmDtlVhd
         Add-AzureRmDtlVhd -SrcVhdPath "\\MyShare\MyFolder\MyOriginal.vhd" -DestLab $lab 
 
         Uploads a vhd file "MyOriginal.vhd" from specified network share "\\MyShare\MyFolder" into the lab "MyLab". 
-
-        .EXAMPLE
-        $destLab = $null
-
-        $destLab = Get-AzureRmDtlLab -LabName "MyLab"
-        Add-AzureRmDtlVhd -SrcVhdPath "\\MyShare\MyFolder\MyOriginal.vhd" -DestLab $lab -LocalStagingFolder "f:\temp"
-
-        Uploads a vhd file "MyOriginal.vhd" from specified network share "\\MyShare\MyFolder" into the lab "MyLab",
-        using "f:\temp" as an intermediate staging folder.
 
         .INPUTS
         None. Currently you cannot pipe objects to this cmdlet (this will be fixed in a future version).  
@@ -1419,15 +1304,6 @@ function Add-AzureRmDtlVhd
         # [Optional] The name that will be assigned to vhd once uploded to the lab.
         # The name should be in a "<filename>.vhd" format (E.g. "WinServer2012-VS2015.Vhd"). 
         $DestVhdName,
-
-        [Parameter(Mandatory=$false)] 
-        [ValidateNotNullOrEmpty()]
-        [string]
-        # [Optional] An intermediate, local folder to which the source vhd will be copied, prior to upload. 
-        # All validation checks (dictated by Azure) will be run on the vhd here. 
-        # Note: By default, the local staging folder used is '%USERPROFILE%\UploadVhdToDTL\Staging'.
-        # Note: This parameters is ignored in case the source vhd resides on local drives.
-        $LocalStagingFolder = $(Join-Path $env:USERPROFILE -ChildPath "UploadVhdToDTL\Staging"),
 
         [Parameter(Mandatory=$false)] 
         [ValidateScript({$_ -ge 1})]
@@ -1465,15 +1341,6 @@ function Add-AzureRmDtlVhd
             }
         }
 
-        # Create the local staging folder if it doesn't already exist
-        if ($false -eq (Test-Path -Path $LocalStagingFolder))
-        {
-            New-Item -Path $LocalStagingFolder -ItemType directory | Out-Null
-        }
-        
-        # If this is a remote vhd, then copy it to the local staging area 
-        $vhdLocalPath = CopyVhdToLocalIfRemote_Private -VhdFilePathOrUri $SrcVhdPath -LocalStagingFolder $LocalStagingFolder
-
         # Get the context associated with the lab's default storage account.
         $destStorageAccountContext = GetDefaultStorageAccountContextFromLab_Private -Lab $DestLab
 
@@ -1494,14 +1361,14 @@ function Add-AzureRmDtlVhd
             # Now upload the vhd to lab's container
             Write-Warning "Starting upload of vhd to lab (Note: This can take a while)..."
             Write-Verbose "Starting upload of vhd to lab (Note: This can take a while)..."
-            Write-Verbose $("Source: " + $VhdLocalPath)
+            Write-Verbose $("Source: " + $SrcVhdPath)
             Write-Verbose $("Destination: " + $destVhdUri)
         
             # let us measure the file upload time for instrumentation purposes.
             $stopWatch = [Diagnostics.Stopwatch]::StartNew()
 
-            # Now upload the local vhd to the lab.
-            Add-AzureRmVhd -Destination $destVhdUri -LocalFilePath $VhdLocalPath -ResourceGroupName $DestLab.ResourceGroupName -NumberOfUploaderThreads $NumThreads -OverWrite:$PSBoundParameters.ContainsKey("OverWrite") | Out-Null
+            # Now upload the vhd to the lab.
+            Add-AzureRmVhd -Destination $destVhdUri -LocalFilePath $SrcVhdPath -ResourceGroupName $DestLab.ResourceGroupName -NumberOfUploaderThreads $NumThreads -OverWrite:$PSBoundParameters.ContainsKey("OverWrite") | Out-Null
 
             if ($false -eq $?)
             {
@@ -1644,7 +1511,6 @@ function Start-AzureRmDtlVhdCopy
             }
         }
         
-        # Copy the vhd file into the staging area if needed
         switch($PSCmdlet.ParameterSetName)
         {
             "AddFromStorageContainer"
