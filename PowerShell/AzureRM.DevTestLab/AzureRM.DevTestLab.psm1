@@ -1187,6 +1187,14 @@ function New-AzureRmDtlVMTemplate
                 # Get the lab that contains the source VM
                 $lab = GetLabFromVM_Private -VM $SrcDtlVM
 
+                # Pre-condition check to ensure that a VM template with same name doesn't already exist.
+                $destVMTemplateExists = ($null -ne (Get-AzureRmDtlVMTemplate -VMTemplateName $DestVMTemplateName -Lab $lab)) 
+
+                if ($true -eq $destVMTemplateExists)
+                {
+                    throw $("A VM Template with the name '" + $DestVMTemplateName + "' already exists in the lab '" + $lab.Name + "'. Please specify another name for the VM Template to be created.")
+                }
+
                 # Create the VM Template in the lab's resource group by deploying the RM template
                 Write-Verbose $("Creating VM Template '" + $DestVMTemplateName + "' in lab '" + $lab.ResourceName + "'")
                 $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $VMTemplateCreationTemplateFile -existingLabName $lab.ResourceName -existingVMResourceId $SrcDtlVM.Properties.Vms[0].ComputeId -templateName $VMTemplateNameEncoded -templateDescription $DestVMTemplateDescription
@@ -1215,6 +1223,14 @@ function New-AzureRmDtlVMTemplate
 
                 # Get the lab that contains the source vhd
                 $lab = GetLabFromVhd_Private -Vhd $SrcDtlVhd
+
+                # Pre-condition check to ensure that a VM template with same name doesn't already exist.
+                $destVMTemplateExists = ($null -ne (Get-AzureRmDtlVMTemplate -VMTemplateName $DestVMTemplateName -Lab $lab)) 
+
+                if ($true -eq $destVMTemplateExists)
+                {
+                    throw $("A VM Template with the name '" + $DestVMTemplateName + "' already exists in the lab '" + $lab.Name + "'. Please specify another name for the VM Template to be created.")
+                }
 
                 # Create the VM Template in the lab's resource group by deploying the RM template
                 Write-Verbose $("Creating VM Template '" + $DestVMTemplateName + "' in lab '" + $lab.ResourceName + "'")
@@ -1257,6 +1273,14 @@ function New-AzureRmDtlVMTemplate
 
                 write-Verbose $("Found lab : " + $lab.ResourceName) 
                 write-Verbose $("LabId : " + $lab.ResourceId) 
+
+                # Pre-condition check to ensure that a VM template with same name doesn't already exist.
+                $destVMTemplateExists = ($null -ne (Get-AzureRmDtlVMTemplate -VMTemplateName $DestVMTemplateName -Lab $lab)) 
+
+                if ($true -eq $destVMTemplateExists)
+                {
+                    throw $("A VM Template with the name '" + $DestVMTemplateName + "' already exists in the lab '" + $lab.Name + "'. Please specify another name for the VM Template to be created.")
+                }
 
                 # Create the VM Template in the lab's resource group by deploying the RM template
                 Write-Verbose $("Creating VM Template '" + $DestVMTemplateName + "' in lab '" + $lab.ResourceName + "'")
