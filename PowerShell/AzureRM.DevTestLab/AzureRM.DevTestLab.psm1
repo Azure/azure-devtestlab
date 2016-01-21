@@ -1133,8 +1133,12 @@ function New-AzureRmDtlVMTemplate
     {
         Write-Verbose $("Processing cmdlet '" + $PSCmdlet.MyInvocation.InvocationName + "', ParameterSet = '" + $PSCmdlet.ParameterSetName + "'")
 
-        # @Todo: Pre-condition check for the VM template name
-        
+        # Pre-condition check for the VM template name
+        if ($true -eq ($DestVMTemplateName -match "[^0-9a-zA-Z()_-]"))
+        {
+            throw $("Invalid characters detected in the supplied VM template name '" + $DestVMTemplateName + "'. The VM template name can only include alphanumeric characters, underscores, hyphens and parantheses.")
+        }
+
         # Encode the VM template name
         $VMTemplateNameEncoded = $DestVMTemplateName.Replace(" ", "%20")
 
