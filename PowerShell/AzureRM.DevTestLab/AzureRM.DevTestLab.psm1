@@ -1120,9 +1120,9 @@ function New-AzureRmDtlVMTemplate
         # Name of the new lab VM template to be created.
         $DestVMTemplateName,
 
-        [Parameter(Mandatory=$true, ParameterSetName="FromVM")]
-        [Parameter(Mandatory=$true, ParameterSetName="FromVhd")]
-        [Parameter(Mandatory=$true, ParameterSetName="FromAzureRmVMImage")]
+        [Parameter(Mandatory=$false, ParameterSetName="FromVM")]
+        [Parameter(Mandatory=$false, ParameterSetName="FromVhd")]
+        [Parameter(Mandatory=$false, ParameterSetName="FromAzureRmVMImage")]
         [ValidateNotNull()]
         [string]
         # Details about the new lab VM template being created.
