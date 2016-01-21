@@ -1209,7 +1209,7 @@ function New-AzureRmDtlVMTemplate
                     Write-Verbose $("The RM template file was located at : '" + $VMTemplateCreationTemplateFile + "'")
                 }
 
-                # Get the lab that contains the source VM
+                # Get the lab that contains the source vhd
                 $lab = GetLabFromVhd_Private -Vhd $SrcDtlVhd
 
                 # Create the VM Template in the lab's resource group by deploying the RM template
@@ -1459,11 +1459,27 @@ function Start-AzureRmDtlVhdCopy
         .EXAMPLE
         $destLab = $null
 
-        $destLab = Get-AzureRmDtlLab -LabName "MyLab"
+        $destLab = Get-AzureRmDtlLab -LabName "MyLab" 
 
         $destVhd = Start-AzureRmDtlVhdCopy -SrcVhdBlobName "MyOriginal.vhd" -SrcVhdContainerName "MyContainer1" -SrcVhdStorageAccountName "MyStorageAccount1" -SrcVhdStorageAccountKey "xxxxxxx" -DestLab $destLab -WaitForCompletion
 
         Initiates copying of vhd file "MyOriginal.vhd" from the storage account "MyStorageAccount1" into the lab "MyLab" and waits
+        for the copy operation to fully complete. 
+        
+        Note: When the '-WaitForCompletion' switch is specified, this cmdlet's output is the vhd object which was successfully 
+        copied into the destination lab.
+
+        .EXAMPLE
+        $srcLab = $null
+
+        $srcLab = Get-AzureRmDtlLab -LabName "MySrcLab"
+        $srcVhd = Get-AzureRmDtlVhd -Lab $srcLab -VhdName "MyOriginal.vhd"
+
+        $destLab = Get-AzureRmDtlLab -LabName "MyDestLab"
+
+        $destVhd = Start-AzureRmDtlVhdCopy -SrcDtlVhd $SrcVhd -DestLab $destLab -WaitForCompletion
+
+        Initiates copying of vhd file "MyOriginal.vhd" from the lab "MySrcLab" into the lab "MyDestLab" and waits
         for the copy operation to fully complete. 
         
         Note: When the '-WaitForCompletion' switch is specified, this cmdlet's output is the vhd object which was successfully 
@@ -1493,56 +1509,66 @@ function Start-AzureRmDtlVhdCopy
     #>
     [CmdletBinding(
         SupportsShouldProcess=$true,
-        DefaultParameterSetName="AddFromStorageContainer")]
+        DefaultParameterSetName="CopyVhdFromStorageContainer")]
     Param(
-        [Parameter(Mandatory=$true, ParameterSetName="AddFromStorageContainer")] 
+        [Parameter(Mandatory=$true, ParameterSetName="CopyVhdFromStorageContainer")] 
         [ValidateNotNullOrEmpty()]
         [string]
         # The name of the blob representing the vhd file (that'll be uploaded to the lab).
         $SrcVhdBlobName,
 
-        [Parameter(Mandatory=$true, ParameterSetName="AddFromStorageContainer")] 
+        [Parameter(Mandatory=$true, ParameterSetName="CopyVhdFromStorageContainer")] 
         [ValidateNotNullOrEmpty()]
         [string]
         # The name of the container representing the vhd file (that'll be uploaded to the lab).
         $SrcVhdContainerName,
 
-        [Parameter(Mandatory=$true, ParameterSetName="AddFromStorageContainer")] 
+        [Parameter(Mandatory=$true, ParameterSetName="CopyVhdFromStorageContainer")] 
         [ValidateNotNullOrEmpty()]
         [string]
         # The name of the storage account associated with the vhd file (that'll be uploaded to the lab).
         $SrcVhdStorageAccountName,
 
-        [Parameter(Mandatory=$true, ParameterSetName="AddFromStorageContainer")] 
+        [Parameter(Mandatory=$true, ParameterSetName="CopyVhdFromStorageContainer")] 
         [ValidateNotNullOrEmpty()]
         [string]
         # The key of the storage account associated with the vhd file (that'll be uploaded to the lab).
         $SrcVhdStorageAccountKey,
 
-        [Parameter(Mandatory=$true, ParameterSetName="AddFromStorageContainer")] 
+        [Parameter(Mandatory=$true, ParameterSetName="CopyVhdFromLab")] 
+        [ValidateNotNull()]
+        # An existing lab in which the vhd is located (please use the Get-AzureRmDtlLab cmdlet to get this lab object).
+        $SrcDtlVhd,
+
+        [Parameter(Mandatory=$true, ParameterSetName="CopyVhdFromStorageContainer")] 
+        [Parameter(Mandatory=$true, ParameterSetName="CopyVhdFromLab")] 
         [ValidateNotNull()]
         # An existing lab to which the vhd will be uploaded (please use the Get-AzureRmDtlLab cmdlet to get this lab object).
         $DestLab,
 
-        [Parameter(Mandatory=$false, ParameterSetName="AddFromStorageContainer")] 
+        [Parameter(Mandatory=$false, ParameterSetName="CopyVhdFromStorageContainer")] 
+        [Parameter(Mandatory=$false, ParameterSetName="CopyVhdFromLab")] 
         [string]
         # [Optional] The name that will be assigned to vhd once uploded to the lab.
         # The name should be in a "<filename>.vhd" format (E.g. "WinServer2012-VS2015.Vhd"). 
         $DestVhdName,
 
-        [Parameter(Mandatory=$false, ParameterSetName="AddFromStorageContainer")] 
+        [Parameter(Mandatory=$false, ParameterSetName="CopyVhdFromStorageContainer")] 
+        [Parameter(Mandatory=$false, ParameterSetName="CopyVhdFromLab")] 
         [ValidateScript({$_ -ge 1})]
         [int]
         # [Optional] The number of uploader threads to use.
         # Note: By default, the numer of uploader threads used is equal to the number of processors.  
         $NumThreads = $env:NUMBER_OF_PROCESSORS,
 
-        [Parameter(Mandatory=$false, ParameterSetName="AddFromStorageContainer")] 
+        [Parameter(Mandatory=$false, ParameterSetName="CopyVhdFromStorageContainer")] 
+        [Parameter(Mandatory=$false, ParameterSetName="CopyVhdFromLab")] 
         [switch]
         # [Optional] If specified, will overwrite any existing vhd with the same name in the lab.
         $OverWrite,
 
-        [Parameter(Mandatory=$false, ParameterSetName="AddFromStorageContainer")] 
+        [Parameter(Mandatory=$false, ParameterSetName="CopyVhdFromStorageContainer")] 
+        [Parameter(Mandatory=$false, ParameterSetName="CopyVhdFromLab")] 
         [switch]
         # [Optional] If specified, will wait for vhd copy operation to complete.
         $WaitForCompletion
@@ -1552,108 +1578,198 @@ function Start-AzureRmDtlVhdCopy
     {
         Write-Verbose $("Processing cmdlet '" + $PSCmdlet.MyInvocation.InvocationName + "', ParameterSet = '" + $PSCmdlet.ParameterSetName + "'")
 
+        #
+        # Section #1: Figure out that destination storage details
+        # 
+
+        $myDestBlobName = $null
+        $myDestBlobUri = $null
+        $myDestBlobExists = $null
+        $myDestContainer = $null
+        $myDestContainerName = $null
+        $myDestStorageContext = $null
+
         # If the user has specified a name for the destination name, ensure that it is appended with ".vhd" extension. 
-        if ([string]::IsNullOrEmpty($DestVhdName))
-        {
-            $DestVhdName = $SrcVhdBlobName
-        }
-        else
+        if ($false -eq [string]::IsNullOrEmpty($DestVhdName))
         {
             if ($DestVhdName -notlike "*.vhd")
             {
-                $DestVhdName = $($DestVhdName + ".vhd")
+                $myDestBlobName = $($DestVhdName + ".vhd")
+            }
+            else
+            {
+                $myDestBlobName = $DestVhdName
             }
         }
-        
+        else
+        {
+            switch($PSCmdlet.ParameterSetName)
+            {
+                "CopyVhdFromLab"
+                {
+                    $myDestBlobName = $SrcDtlVhd.Name
+                }
+
+                "CopyVhdFromStorageContainer"
+                {
+                    $myDestBlobName = $SrcVhdBlobName
+                }
+            }
+        }
+
+        # Get a storage context associated with the destination lab's default storage account.
+        Write-Verbose $("Extracting a storage acccount context for the lab '" + $DestLab.Name + "'")
+
+        $myDestStorageContext = New-AzureRmDtlLabStorageContext -Lab $DestLab
+
+        if ($null -eq $myDestStorageContext)
+        {
+            throw $("Unable to extract the storage account context for lab '" + $DestLab.Name + "'")
+        }
+
+        Write-Verbose $("Successfully extracted a storage account context for the lab '" + $DestLab.Name + "'")
+
+        # Extract the 'uploads' container (which houses the vhds) from the destination lab.
+        $myDestContainer = Get-AzureStorageContainer -Name "uploads" -Context $myDestStorageContext
+
+        if ($null -eq $myDestContainer)
+        {
+            throw $("Unable to extract the 'uploads' container from the default storage account of lab '" + $DestLab.Name + "'")
+        }
+
+        $myDestContainerName = $myDestContainer.Name
+
+        # Compute the destination vhd uri. 
+        $myDestBlobUri = $($myDestContainer.CloudBlobContainer.Uri.AbsoluteUri + "/" + $myDestBlobName) 
+
+        # check if the vhd with same name already exists in the destination lab.
+        $myDestBlobExists = ($null -ne (Get-AzureStorageBlob -Blob $myDestBlobName -Container $myDestContainerName -Context $myDestStorageContext -ErrorAction Ignore))
+
+
+        #
+        # Section #2: Figure out that source storage details
+        # 
+
+        $mySrcBlobName = $null
+        $mySrcContainer = $null
+        $mySrcContainerName = $null
+        $mySrcStorageContext = $null
+
         switch($PSCmdlet.ParameterSetName)
         {
-            "AddFromStorageContainer"
+            "CopyVhdFromLab"
             {
-                # Create a new storage context using the provided src storage account name and key.
-                $srcStorageAccountContext = New-AzureStorageContext -StorageAccountName $SrcVhdStorageAccountName -StorageAccountKey $SrcVhdStorageAccountKey
+                $mySrcBlobName = $SrcDtlVhd.Name
 
-                if ($null -eq $srcStorageAccountContext)
+                # Get the lab that contains the source vhd
+                $srcLab = GetLabFromVhd_Private -Vhd $SrcDtlVhd
+
+                # Create a new storage context for the src lab.
+                Write-Verbose $("Extracting a storage account context for the lab '" + $srcLab.Name + "'")
+
+                $mySrcStorageContext = New-AzureRmDtlLabStorageContext -Lab $srcLab
+
+                if ($null -eq $mySrcStorageContext)
+                {
+                    throw $("Unable to create a new storage account context for the lab '" + $srcLab.Name + "'")
+                }
+
+                Write-Verbose $("Successfully extracted a storage account context for the lab '" + $srcLab.Name + "'")
+
+                # Extract the 'uploads' container (which houses the vhds) from the src lab.
+                $mySrcContainer = Get-AzureStorageContainer -Name "uploads" -Context $mySrcStorageContext
+
+                if ($null -eq $mySrcContainer)
+                {
+                    throw $("Unable to extract the 'uploads' container from the default storage account of lab '" + $srcLab.Name + "'")
+                }
+
+                $mySrcContainerName = $mySrcContainer.Name
+            }
+
+
+            "CopyVhdFromStorageContainer"
+            {
+                $mySrcBlobName = $SrcVhdBlobName
+
+                # Create a new storage context using the provided src storage account name and key.
+                Write-Verbose $("Extracting a storage account context for the storage account '" + $SrcVhdStorageAccountName + "'")
+
+                $mySrcStorageContext = New-AzureStorageContext -StorageAccountName $SrcVhdStorageAccountName -StorageAccountKey $SrcVhdStorageAccountKey
+
+                if ($null -eq $mySrcStorageContext)
                 {
                     throw $("Unable to create a new storage account context for storage account '" + $SrcVhdStorageAccountName + "'")
                 }
 
-                # Get a context associated with the lab's default storage account.
-                Write-Verbose $("Extracting a storage acccount context for the lab '" + $DestLab.Name + "'")
+                Write-Verbose $("Successfully extracted a storage account context for the storage account '" + $SrcVhdStorageAccountName + "'")
 
-                $destStorageAccountContext = New-AzureRmDtlLabStorageContext -Lab $DestLab
+                # Extract the specified container (which houses the vhds) from the src lab.
+                $mySrcContainer = Get-AzureStorageContainer -Name $SrcVhdContainerName -Context $mySrcStorageContext
 
-                if ($null -eq $destStorageAccountContext)
+                if ($null -eq $mySrcContainer)
                 {
-                    throw $("Unable to extract the storage account context for lab '" + $DestLab.Name + "'")
+                    throw $("Unable to extract the 'uploads' container from the default storage account of lab '" + $srcLab.Name + "'")
                 }
 
-                Write-Verbose $("Successfully extracted a storage account context for the lab '" + $DestLab.Name + "'")
+                $mySrcContainerName = $mySrcContainer.Name
+            }
+        }
 
-                # Extract the 'uploads' container (which houses the vhds).
-                $destContainer = Get-AzureStorageContainer -Name "uploads" -Context $destStorageAccountContext
 
-                if ($null -eq $destContainer)
+        #
+        # Section #3: Copying vhd from source to destination
+        #
+
+        # Processing the -Confirm and -Whatif switches.
+        if ($PSCmdlet.ShouldProcess($myDestBlobName, "Add Vhd"))
+        {
+            if ($myDestBlobExists -and ($false -eq $PSBoundParameters.ContainsKey("OverWrite")))
+            {
+                throw $("A vhd with the name '" + $myDestBlobName + "' already exists in the lab '" + $DestLab.Name + "'. Please use the -OverWrite switch to overwrite it.")
+            }
+
+            # copy the vhd to the lab.
+            Write-Verbose $("Copying the vhd to lab '" + $DestLab.Name + "'")
+            Write-Verbose $("Source blob: " + $mySrcBlobName)
+            Write-Verbose $("Source container: " + $mySrcContainerName)
+            Write-Verbose $("Source storage account: " + $mySrcStorageContext.StorageAccountName)
+            Write-Verbose $("Destination blob: " + $myDestBlobName)
+            Write-Verbose $("Destination container: " + $myDestContainerName)
+            Write-Verbose $("Destination storage account: " + $myDestStorageContext.StorageAccountName)
+
+            $partiallyCopiedVhd = Start-AzureStorageBlobCopy -SrcBlob $mySrcBlobName -SrcContainer $mySrcContainerName -Context $mySrcStorageContext -DestBlob $myDestBlobName -DestContainer $myDestContainerName -DestContext $myDestStorageContext -ConcurrentTaskCount $NumThreads -Force -ErrorAction "Stop"
+
+            if ($false -eq $? -or $null -eq $partiallyCopiedVhd)
+            {
+                throw "An error occurred while copying the vhd to the lab '" + $DestLab.Name + "'."
+            }    
+
+            Write-Verbose $("Successfully initiated the copy of vhd '" + $mySrcBlobName + "' to lab '" + $DestLab.Name + "'.")
+
+            if($PSBoundParameters.ContainsKey("WaitForCompletion"))
+            {
+                Write-Warning $("Waiting for the vhd copy operation to complete (Note: This can take a while)...")
+
+                # let us measure the file copy time for instrumentation purposes.
+                $stopWatch = [Diagnostics.Stopwatch]::StartNew()
+
+                Get-AzureStorageBlobCopyState -Blob $myDestBlobName -Container $myDestContainerName -Context $myDestStorageContext -WaitForComplete | Out-Null
+
+                if ($false -eq $?)
                 {
-                    throw $("Unable to extract the 'uploads' container from the default storage account of lab '" + $DestLab.Name + "'")
-                }
+                    throw "An error occurred while querying the copy-state of the uploaded vhd."
+                }    
 
-                # Processing the -Confirm and -Whatif switches.
-                if ($PSCmdlet.ShouldProcess($DestVhdName, "Add Vhd"))
-                {
-                    # check if the vhd with same name already exists in the lab.
-                    $destVhdExists = ($null -ne (Get-AzureStorageBlob -Blob $DestVhdName -Container $destContainer.Name -Context $destStorageAccountContext -ErrorAction Ignore))
+                $stopWatch.Stop()
+                Write-Verbose $("Successfully copied vhd to lab " + $stopWatch.Elapsed.TotalSeconds + " seconds.")
 
-                    if ($destVhdExists -and ($false -eq $PSBoundParameters.ContainsKey("OverWrite")))
-                    {
-                        throw $("A vhd with the name '" + $DestVhdName + "' already exists in the lab '" + $DestLab.Name + "'. Please use the -OverWrite switch to overwrite it.")
-                    }
-
-                    # Compute the destination vhd uri. 
-                    $destVhdUri = $($destContainer.CloudBlobContainer.Uri.AbsoluteUri + "/" + $DestVhdName) 
-
-                    # copy the vhd to the lab.
-                    Write-Verbose $("Copying the vhd to lab '" + $DestLab.Name + "'")
-                    Write-Verbose $("Source blob: " + $SrcVhdBlobName)
-                    Write-Verbose $("Source container: " + $SrcVhdBlobName)
-                    Write-Verbose $("Source storage account: " + $SrcVhdBlobName)
-                    Write-Verbose $("Destination blob: " + $DestVhdName)
-                    Write-Verbose $("Destination container: " + $destContainer.Name)
-                    Write-Verbose $("Destination storage account: " + $destStorageAccountContext.StorageAccountName)
-
-                    $partiallyCopiedVhd = Start-AzureStorageBlobCopy -SrcBlob $SrcVhdBlobName -SrcContainer $SrcVhdContainerName -Context $srcStorageAccountContext -DestBlob $DestVhdName -DestContainer $destContainer.Name -DestContext $destStorageAccountContext -ConcurrentTaskCount $NumThreads -Force 
-
-                    if ($false -eq $? -or $null -eq $partiallyCopiedVhd)
-                    {
-                        throw "An error occurred while copying the vhd to the lab '" + $DestLab.Name + "'."
-                    }    
-
-                    Write-Verbose $("Successfully initiated the copy of vhd '" + $SrcVhdBlobName + "' to lab '" + $DestLab.Name + "'.")
-
-                    if($PSBoundParameters.ContainsKey("WaitForCompletion"))
-                    {
-                        Write-Warning $("Waiting for the vhd copy operation to complete (Note: This can take a while)...")
-
-                        # let us measure the file copy time for instrumentation purposes.
-                        $stopWatch = [Diagnostics.Stopwatch]::StartNew()
-
-                        Get-AzureStorageBlobCopyState -Blob $DestVhdName -Container $destContainer.Name -Context $destStorageAccountContext -WaitForComplete | Out-Null
-
-                        if ($false -eq $?)
-                        {
-                            throw "An error occurred while querying the copy-state of the uploaded vhd."
-                        }    
-
-                        $stopWatch.Stop()
-                        Write-Verbose $("Successfully copied vhd to lab " + $stopWatch.Elapsed.TotalSeconds + " seconds.")
-
-                        # fetch and return the vhd which was just uploaded
-                        Get-AzureRmDtlVhd -Lab $DestLab -VhdAbsoluteUri $destVhdUri | Write-Output
-                    }
-                    else
-                    {
-                        $partiallyCopiedVhd | Write-Output
-                    }
-                }
+                # fetch and return the vhd which was just uploaded
+                Get-AzureRmDtlVhd -Lab $DestLab -VhdAbsoluteUri $myDestBlobUri | Write-Output
+            }
+            else
+            {
+                $partiallyCopiedVhd | Write-Output
             }
         }
     } 
