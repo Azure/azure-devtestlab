@@ -14,6 +14,13 @@
         "description": "Resource ID of an existing VM from which the VM template will be created or updated."
       }
     },
+    "isVMSysPrepped": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "If the existing VM is a Windows VM, then specifies whether the VM is sysprepped (Note: If the existing VM is NOT a Windows VM, then please specify 'false')."
+      }
+    },
     "templateName": {
       "type": "string",
       "metadata": {
@@ -40,7 +47,7 @@
       "properties": {
         "vm": {
           "sourceVmId": "[parameters('existingVMResourceId')]",
-          "sysPrep": false
+          "sysPrep": "[parameters('isVMSysPrepped')]"
         },
         "description": "[parameters('templateDescription')]"
       }

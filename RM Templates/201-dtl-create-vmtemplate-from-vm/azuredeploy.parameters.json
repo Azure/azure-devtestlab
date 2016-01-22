@@ -8,6 +8,9 @@
     "existingVMResourceId": {
       "value": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/MyLabRG/providers/Microsoft.DevTestLab/environments/MyVM1"
     },
+    "isVMSysPrepped": {
+      "value": true
+    },
     "templateName": {
       "value": "MyVMTemplate1"
     },

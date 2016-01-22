@@ -21,6 +21,13 @@
         "description": "Specifies the OS type of the VHD. Currently 'Windows' and 'Linux' are the only supported values."
       }
     },
+    "isVhdSysPrepped": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "If the existing VHD is a Windows VHD, then specifies whether the VHD is sysprepped (Note: If the existing VHD is NOT a Windows VHD, then please specify 'false')."
+      }
+    },
     "templateName": {
       "type": "string",
       "metadata": {
@@ -47,7 +54,7 @@
       "properties": {
         "vhd": {
           "imageName": "[parameters('existingVhdUri')]",
-          "sysPrep": false
+          "sysPrep": "[parameters('isVhdSysPrepped')]"
         },
         "osType": "[parameters('imageOsType')]",
         "description": "[parameters('templateDescription')]"

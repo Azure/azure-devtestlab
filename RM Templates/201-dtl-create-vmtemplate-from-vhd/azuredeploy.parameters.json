@@ -11,6 +11,9 @@
     "imageOsType": {
       "value": "windows"
     },
+    "isVhdSysPrepped": {
+      "value": true
+    },
     "templateName": {
       "value": "MyVMTemplate1"
     },
