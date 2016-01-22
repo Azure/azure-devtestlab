@@ -1115,6 +1115,14 @@ function New-AzureRmDtlVMTemplate
         # Note: This parameter is ignored when '-SrcDtlVM' is used.
         $SrcImageOSType,
 
+        [Parameter(Mandatory=$false, ParameterSetName="FromVM")]
+        [Parameter(Mandatory=$false, ParameterSetName="FromVhd")]
+        [switch]
+        # Specifies whether the source VM or Vhd is sysprepped. 
+        # Note: This parameter is ignored when a linux VHD or VM is used as the source for the new VM template.
+        # Note: This parameter is ignored when an Azure gallery image is used as the source for the new VM template.
+        $SrcIsSysPrepped,
+
         [Parameter(Mandatory=$true, ParameterSetName="FromAzureRmVMImage")]
         [ValidateNotNullOrEmpty()]
         [string]
@@ -1158,6 +1166,14 @@ function New-AzureRmDtlVMTemplate
         {
             "FromVM"
             {
+                # Ignore 'sysprep' for non-Windows VMs.
+                $isSysPrepped = $PSBoundParameters.ContainsKey("SrcIsSysPrepped")
+
+                if ("linux" -eq $SrcImageOSType)
+                {
+                    $isSysPrepped = $false    
+                }
+
                 # Get the same VM object, but with properties attached.
                 $SrcDtlVM = GetResourceWithProperties_Private -Resource $SrcDtlVM
 
@@ -1206,11 +1222,19 @@ function New-AzureRmDtlVMTemplate
 
                 # Create the VM Template in the lab's resource group by deploying the RM template
                 Write-Verbose $("Creating VM Template '" + $DestVMTemplateName + "' in lab '" + $lab.ResourceName + "'")
-                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $VMTemplateCreationTemplateFile -existingLabName $lab.ResourceName -existingVMResourceId $SrcDtlVM.Properties.Vms[0].ComputeId -templateName $VMTemplateNameEncoded -templateDescription $DestVMTemplateDescription
+                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $VMTemplateCreationTemplateFile -existingLabName $lab.ResourceName -existingVMResourceId $SrcDtlVM.Properties.Vms[0].ComputeId -isVMSysPrepped $isSysPrepped -templateName $VMTemplateNameEncoded -templateDescription $DestVMTemplateDescription
             }
 
             "FromVhd"
             {
+                # Ignore 'sysprep' for non-Windows vhds.
+                $isSysPrepped = $PSBoundParameters.ContainsKey("SrcIsSysPrepped")
+
+                if ("linux" -eq $SrcImageOSType)
+                {
+                    $isSysPrepped = $false    
+                }
+
                 # Pre-condition checks to ensure that we're able to extract the uri of the vhd blob.
                 if (($null -eq $SrcDtlVhd.ICloudBlob) -or ($null -eq $SrcDtlVhd.ICloudBlob.Uri) -or ($null -eq $SrcDtlVhd.ICloudBlob.Uri.AbsoluteUri))
                 {
@@ -1243,7 +1267,7 @@ function New-AzureRmDtlVMTemplate
 
                 # Create the VM Template in the lab's resource group by deploying the RM template
                 Write-Verbose $("Creating VM Template '" + $DestVMTemplateName + "' in lab '" + $lab.ResourceName + "'")
-                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $VMTemplateCreationTemplateFile -existingLabName $lab.ResourceName -existingVhdUri $SrcDtlVhd.ICloudBlob.Uri.AbsoluteUri -imageOsType $SrcImageOSType -templateName $VMTemplateNameEncoded -templateDescription $DestVMTemplateDescription
+                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $VMTemplateCreationTemplateFile -existingLabName $lab.ResourceName -existingVhdUri $SrcDtlVhd.ICloudBlob.Uri.AbsoluteUri -imageOsType $SrcImageOSType -isVhdSysPrepped $isSysPrepped -templateName $VMTemplateNameEncoded -templateDescription $DestVMTemplateDescription
             }
 
             "FromAzureRmVMImage"
