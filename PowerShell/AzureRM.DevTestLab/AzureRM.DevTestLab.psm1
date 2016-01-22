@@ -1222,7 +1222,7 @@ function New-AzureRmDtlVMTemplate
 
                 # Create the VM Template in the lab's resource group by deploying the RM template
                 Write-Verbose $("Creating VM Template '" + $DestVMTemplateName + "' in lab '" + $lab.ResourceName + "'")
-                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $VMTemplateCreationTemplateFile -existingLabName $lab.ResourceName -existingVMResourceId $SrcDtlVM.Properties.Vms[0].ComputeId -isVMSysPrepped $isSysPrepped -templateName $VMTemplateNameEncoded -templateDescription $DestVMTemplateDescription
+                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $VMTemplateCreationTemplateFile -existingLabName $lab.ResourceName -existingVMResourceId $SrcDtlVM.Properties.Vms[0].ComputeId -isVMSysPrepped $isSysPrepped -templateName $VMTemplateNameEncoded -templateDescription $DestVMTemplateDescription -ErrorAction "Stop"
             }
 
             "FromVhd"
@@ -1267,7 +1267,7 @@ function New-AzureRmDtlVMTemplate
 
                 # Create the VM Template in the lab's resource group by deploying the RM template
                 Write-Verbose $("Creating VM Template '" + $DestVMTemplateName + "' in lab '" + $lab.ResourceName + "'")
-                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $VMTemplateCreationTemplateFile -existingLabName $lab.ResourceName -existingVhdUri $SrcDtlVhd.ICloudBlob.Uri.AbsoluteUri -imageOsType $SrcImageOSType -isVhdSysPrepped $isSysPrepped -templateName $VMTemplateNameEncoded -templateDescription $DestVMTemplateDescription
+                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $VMTemplateCreationTemplateFile -existingLabName $lab.ResourceName -existingVhdUri $SrcDtlVhd.ICloudBlob.Uri.AbsoluteUri -imageOsType $SrcImageOSType -isVhdSysPrepped $isSysPrepped -templateName $VMTemplateNameEncoded -templateDescription $DestVMTemplateDescription -ErrorAction "Stop"
             }
 
             "FromAzureRmVMImage"
@@ -1317,7 +1317,7 @@ function New-AzureRmDtlVMTemplate
 
                 # Create the VM Template in the lab's resource group by deploying the RM template
                 Write-Verbose $("Creating VM Template '" + $DestVMTemplateName + "' in lab '" + $lab.ResourceName + "'")
-                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $VMTemplateCreationTemplateFile -existingLabName $lab.ResourceName -imagePublisher $SrcAzureRmVMImage.PublisherName -imageOffer $SrcAzureRmVMImage.Offer -imageSku $SrcAzureRmVMImage.Skus -imageVersion $SrcAzureRmVMImage.Version -imageOsType $SrcImageOSType -templateName $VMTemplateNameEncoded -templateDescription $DestVMTemplateDescription
+                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $VMTemplateCreationTemplateFile -existingLabName $lab.ResourceName -imagePublisher $SrcAzureRmVMImage.PublisherName -imageOffer $SrcAzureRmVMImage.Offer -imageSku $SrcAzureRmVMImage.Skus -imageVersion $SrcAzureRmVMImage.Version -imageOsType $SrcImageOSType -templateName $VMTemplateNameEncoded -templateDescription $DestVMTemplateDescription -ErrorAction "Stop"
             }
         }
 
