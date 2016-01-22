@@ -1106,6 +1106,15 @@ function New-AzureRmDtlVMTemplate
         # An existing azure gallery image from which the new lab VM template will be created (please use the Get-AzureRmVMImage cmdlet to get this image object).
         $SrcAzureRmVMImage,
 
+        [Parameter(Mandatory=$true, ParameterSetName="FromVhd")]
+        [Parameter(Mandatory=$true, ParameterSetName="FromAzureRmVMImage")]
+        [ValidateSet("windows", "linux")]        
+        [string]
+        # The OS type of the source Vhd or Azure gallery image. 
+        # Note: Currently "windows" and "linux" are the only supported values.
+        # Note: This parameter is ignored when '-SrcDtlVM' is used.
+        $SrcImageOSType,
+
         [Parameter(Mandatory=$true, ParameterSetName="FromAzureRmVMImage")]
         [ValidateNotNullOrEmpty()]
         [string]
@@ -1234,7 +1243,7 @@ function New-AzureRmDtlVMTemplate
 
                 # Create the VM Template in the lab's resource group by deploying the RM template
                 Write-Verbose $("Creating VM Template '" + $DestVMTemplateName + "' in lab '" + $lab.ResourceName + "'")
-                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $VMTemplateCreationTemplateFile -existingLabName $lab.ResourceName -existingVhdUri $SrcDtlVhd.ICloudBlob.Uri.AbsoluteUri -templateName $VMTemplateNameEncoded -templateDescription $DestVMTemplateDescription
+                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $VMTemplateCreationTemplateFile -existingLabName $lab.ResourceName -existingVhdUri $SrcDtlVhd.ICloudBlob.Uri.AbsoluteUri -imageOsType $SrcImageOSType -templateName $VMTemplateNameEncoded -templateDescription $DestVMTemplateDescription
             }
 
             "FromAzureRmVMImage"
@@ -1284,7 +1293,7 @@ function New-AzureRmDtlVMTemplate
 
                 # Create the VM Template in the lab's resource group by deploying the RM template
                 Write-Verbose $("Creating VM Template '" + $DestVMTemplateName + "' in lab '" + $lab.ResourceName + "'")
-                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $VMTemplateCreationTemplateFile -existingLabName $lab.ResourceName -imagePublisher $SrcAzureRmVMImage.PublisherName -imageOffer $SrcAzureRmVMImage.Offer -imageSku $SrcAzureRmVMImage.Skus -imageVersion $SrcAzureRmVMImage.Version -templateName $VMTemplateNameEncoded -templateDescription $DestVMTemplateDescription
+                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $VMTemplateCreationTemplateFile -existingLabName $lab.ResourceName -imagePublisher $SrcAzureRmVMImage.PublisherName -imageOffer $SrcAzureRmVMImage.Offer -imageSku $SrcAzureRmVMImage.Skus -imageVersion $SrcAzureRmVMImage.Version -imageOsType $SrcImageOSType -templateName $VMTemplateNameEncoded -templateDescription $DestVMTemplateDescription
             }
         }
 
@@ -1913,7 +1922,7 @@ function New-AzureRmDtlVirtualMachine
         $VMTemplate = GetResourceWithProperties_Private -Resource $VMTemplate
 
         # Pre-condition checks for azure gallery images.
-        if ("Gallery" -eq $VMTemplate.Properties.ImageType)
+        if ($null -ne $VMTemplate.Properties.Gallery)
         {
             if ($false -eq (($PSBoundParameters.ContainsKey("UserName") -and $PSBoundParameters.ContainsKey("Password")) -or ($PSBoundParameters.ContainsKey("UserName") -and $PSBoundParameters.ContainsKey("SSHKey"))))
             {
@@ -1935,7 +1944,7 @@ function New-AzureRmDtlVirtualMachine
             else 
             {
                 # Pre-condition checks for sysprepped Windows vhds.
-                if ($true -eq $VMTemplate.Properties.SysPrep)
+                if ($true -eq $VMTemplate.Properties.Vhd.SysPrep)
                 {
                     if ($false -eq ($PSBoundParameters.ContainsKey("UserName") -and $PSBoundParameters.ContainsKey("Password")))
                     {
