@@ -1830,6 +1830,10 @@ function Start-AzureRmDtlVhdCopy
             }
             else
             {
+                Write-Verbose $("The output is a vhd object which has been partially copied into the destination lab.")
+                Write-Verbose $("To get the status of the vhd copy-operation, please use the 'New-AzureRmDtlLabStorageContext' and 'get-AzureStorageBlobCopyState' cmdlets.")
+                Write-Verbose $("To see an example, please run 'Get-Help Start-AzureRmDtlVhdCopy -Examples'.")
+
                 $partiallyCopiedVhd | Write-Output
             }
         }
