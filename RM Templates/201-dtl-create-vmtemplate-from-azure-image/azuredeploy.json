@@ -32,6 +32,13 @@
         "description": "Specifies the vm image version."
       }
     },
+    "imageOsType": {
+      "type": "string",
+      "defaultValue": "windows",
+      "metadata": {
+        "description": "Specifies the OS type of the vm image. Currently 'Windows' and 'Linux' are the only supported values."
+      }
+    },
     "templateName": {
       "type": "string",
       "metadata": {
@@ -62,6 +69,7 @@
           "imageSku": "[parameters('imageSku')]",
           "imageVersion": "[parameters('imageVersion')]"
         },
+        "osType": "[parameters('imageOsType')]",
         "description": "[parameters('templateDescription')]"
       }
     }

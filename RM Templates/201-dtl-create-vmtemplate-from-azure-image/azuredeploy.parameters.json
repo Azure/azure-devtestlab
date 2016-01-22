@@ -17,6 +17,9 @@
     "imageVersion": {
       "value": "1.0.5"
     },
+    "imageOsType": {
+      "value": "windows"
+    },
     "templateName": {
       "value": "MyVMTemplate1"
     },

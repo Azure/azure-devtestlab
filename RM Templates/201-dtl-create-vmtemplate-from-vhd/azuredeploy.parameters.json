@@ -8,6 +8,9 @@
     "existingVhdUri": {
       "value": "https://MyStorageAccount1.vhd.blob.core.windows.net/uploads/MyImage1.vhd"
     },
+    "imageOsType": {
+      "value": "windows"
+    },
     "templateName": {
       "value": "MyVMTemplate1"
     },

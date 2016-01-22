@@ -14,6 +14,13 @@
         "description": "URI of an existing VHD from which the VM template will be created or updated."
       }
     },
+    "imageOsType": {
+      "type": "string",
+      "defaultValue": "windows",
+      "metadata": {
+        "description": "Specifies the OS type of the VHD. Currently 'Windows' and 'Linux' are the only supported values."
+      }
+    },
     "templateName": {
       "type": "string",
       "metadata": {
@@ -42,6 +49,7 @@
           "imageName": "[parameters('existingVhdUri')]",
           "sysPrep": false
         },
+        "osType": "[parameters('imageOsType')]",
         "description": "[parameters('templateDescription')]"
       }
     }
