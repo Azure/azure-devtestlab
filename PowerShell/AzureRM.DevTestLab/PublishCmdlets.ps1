@@ -1,12 +1,17 @@
 ﻿###################################################################################################
 
-function UpdateRMTemplates
+<#
+    .SYNOPSIS
+    Creates a local copy of the Azure RM Templates for Azure DevTestLabs. If local copies already
+    exist, they are simply updated.
+#>
+
+function UpdateRMTemplate
 {
     # Ensure that the RM templates folder  exists.
     $srcRMTemplatesFolder = Join-Path -Path $PSScriptRoot -ChildPath "..\..\RM Templates" -Resolve -ErrorAction "Stop"
 
-    # Ensure that the powershell cmdlets folder  exists.
-    $destCmdletsFolder = Join-Path -Path $PSScriptRoot -ChildPath "..\..\PowerShell\AzureRM.DevTestLab" -Resolve -ErrorAction "Stop"
+    $destCmdletsFolder = $PSScriptRoot 
 
     # Ensure that the RM template files exists.
     $srcRMTemplateFiles = Get-ChildItem -Path $srcRMTemplatesFolder -Recurse -Filter "azuredeploy.json" 
@@ -42,79 +47,12 @@ function UpdateRMTemplates
 
 ###################################################################################################
 
-function GenerateModuleManifest
-{
-        Param(
-        [ValidateNotNullOrEmpty()]
-        [string]
-        $ModuleVersion
-    )
+<#
+    .SYNOPSIS
+    Publishes the AzureRM.DevTestLab module to the PowerShell gallery.
+#>
 
-    # Ensure that the powershell cmdlets folder  exists.
-    $srcCmdletsFolder = Join-Path -Path $PSScriptRoot -ChildPath "..\..\PowerShell\AzureRM.DevTestLab" -Resolve -ErrorAction "Stop"
-
-    # Ensure that the module script file exists.
-    $srcModuleScriptFile = Join-Path -Path $PSScriptRoot -ChildPath "..\..\PowerShell\AzureRM.DevTestLab\AzureRM.DevTestLab.psm1" -Resolve -ErrorAction "Stop"
-
-    # Ensure that the RM template files exist in the cmdlets folder.
-    $srcRMTemplateFiles = Get-ChildItem -Path $srcCmdletsFolder -Recurse -Filter "*azuredeploy.json" 
-    if ($null -eq $srcRMTemplateFiles -or 0 -eq $srcRMTemplateFiles.Count)
-    {
-        throw $("No RM template files were found in location '" + $srcCmdletsFolder + "'.")
-    }
-
-    # Compute the list of files to package with this module
-    $moduleFileList = @()
-    foreach ($srcFile in $srcRMTemplateFiles)
-    {
-        $moduleFileList += $srcFile.Name
-    }
-
-    # Here's the rest of the module attributes
-    $moduleRoot = "AzureRM.DevTestLab"
-    $moduleGuid = "895e6365-43ef-4ef2-a33c-c3bfdf2d0e3e"
-    $moduleAuthor = "Azure DevTest Lab"
-    $moduleCompanyName = "Azure DevTest Lab"
-    $moduleCopyright = "(c) 2016 Azure DevTest Labs. All rights reserved."
-    $moduleDescription = "PowerShell module for Azure DevTest Labs (Preview)"
-
-    # Compute the destination path of the module manifest file.
-    $destModuleManifestFilepath = $(Join-Path -Path $PSScriptRoot -ChildPath "..\..\PowerShell\AzureRM.DevTestLab\AzureRM.DevTestLab.psd1")
-
-    # Nuke any existing file with same name
-    if ($true -eq (Test-Path -Path $destModuleManifestFilepath))
-    {
-        Remove-Item -Path $destModuleManifestFilepath -Force -ErrorAction "Stop"
-    }
-
-    Write-Host "Generating the module manifest file..."
-
-    # Generate the module manifest file.
-    New-ModuleManifest -Path $destModuleManifestFilepath `
-        -RootModule $moduleRoot `
-        -ModuleVersion $ModuleVersion `
-        -FileList $moduleFileList `
-        -Guid $moduleGuid `
-        -Author $moduleAuthor `
-        -CompanyName $moduleCompanyName `
-        -Copyright $moduleCopyright `
-        -Description $moduleDescription `
-        -ErrorAction "Stop"
-
-    # Check if the file was actually generated
-    if ($false -eq (Test-Path -Path $destModuleManifestFilepath))
-    {
-        throw $("The module manifest file '" + $destModuleManifestFilepath + "' could not be generated.")
-    }
-    else
-    {
-        Write-Host "The module manifest file was successfully generated."
-    }
-}
-
-###################################################################################################
-
-function PublishModule
+function PublishModuleToGallery
 {
     Param(
         [ValidateNotNullOrEmpty()]
