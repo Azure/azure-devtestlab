@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
-  "title": "NotepadPlusPlus",
+  "title": "Notepad++",
   "description": "Installs Notepad++ using the Chocolatey package manager",
   "tags": [
     "Windows",
