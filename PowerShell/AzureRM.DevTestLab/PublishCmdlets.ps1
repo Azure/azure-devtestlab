@@ -6,7 +6,7 @@
     exist, they are simply updated.
 #>
 
-function UpdateRMTemplate
+function Update-RMTemplates
 {
     # Ensure that the RM templates folder  exists.
     $srcRMTemplatesFolder = Join-Path -Path $PSScriptRoot -ChildPath "..\..\RM Templates" -Resolve -ErrorAction "Stop"
@@ -52,7 +52,7 @@ function UpdateRMTemplate
     Publishes the AzureRM.DevTestLab module to the PowerShell gallery.
 #>
 
-function PublishModuleToGallery
+function PublishTo-PowerShellGallery
 {
     Param(
         [ValidateNotNullOrEmpty()]
