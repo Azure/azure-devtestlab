@@ -22,17 +22,17 @@ Function Get-TempPassword() {
         [string[]]$sourcedata
     )
 
-    For ($loop=1; $loop –le $length; $loop++) {
+    For ($loop=1; $loop -le $length; $loop++) {
             $tempPassword+=($sourcedata | GET-RANDOM)
     }
 
     return $tempPassword
 }
 
-$ascii=$NULL;For ($a=33;$a –le 126;$a++) {$ascii+=,[char][byte]$a }
+$ascii=$NULL;For ($a=33;$a -le 126;$a++) {$ascii+=,[char][byte]$a }
 
 $userName = "artifactInstaller"
-$password = Get-TempPassword –length 43 –sourcedata $ascii
+$password = Get-TempPassword -length 43 -sourcedata $ascii
 
 $cn = [ADSI]"WinNT://$env:ComputerName"
 
@@ -55,7 +55,7 @@ $scriptContent = Get-Content -Path $command -Delimiter ([char]0)
 $scriptBlock = [scriptblock]::Create($scriptContent)
 
 # Run Chocolatey as the artifactInstaller user
-Enable-PSRemoting –force
+Enable-PSRemoting -Force
 $exitCode = Invoke-Command -ScriptBlock $scriptBlock -Credential $credential -ComputerName $env:COMPUTERNAME -ArgumentList @($GitRepoLocation, $GitLocalRepoLocation, $GitBranch, $PersonalAccessToken, $PSScriptRoot)
 Disable-PSRemoting -Force
 
