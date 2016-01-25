@@ -7,7 +7,7 @@ This is a public, community-contributed repository that contains:
 - **PowerShell module for Azure DevTest Labs:** Cmdlets for accessing and creating Azure DevTest Lab resources like labs, VMs, VM templates etc ([more details](#powershell-module)).
 
 ---
-### Artifacts [![Build Status](http://dtl-internal-ci.westus.cloudapp.azure.com:8080/job/Artifacts-Acceptance-Test/badge/icon?style=plastic)](http://dtl-internal-ci.westus.cloudapp.azure.com:8080/job/Artifacts-Acceptance-Test/)
+### Artifacts [![Build Status](http://dtl-internal-ci.westus.cloudapp.azure.com:8080/job/Regression-Tests-Artifacts/badge/icon?style=plastic)](http://dtl-internal-ci.westus.cloudapp.azure.com:8080/job/Regression-Tests-Artifacts/)
 Authoring:
 - Please see the document ['AUTHORING'](Documentation/AUTHORING.md) in the Documentation folder for details.
 
@@ -21,14 +21,14 @@ Contributions guidelines:
 - It is highly recommended that a **Readme.md** file be included to explain how the artifact works and how to troubleshoot any failures.
 
 ---
-### Azure RM Templates [![Build Status](http://dtl-internal-ci.westus.cloudapp.azure.com:8080/job/ARMTemplates-Acceptance-Test/badge/icon?style=plastic)](http://dtl-internal-ci.westus.cloudapp.azure.com:8080/job/ARMTemplates-Acceptance-Test/)
+### Azure RM Templates [![Build Status](http://dtl-internal-ci.westus.cloudapp.azure.com:8080/job/Regression-Tests-ARMTemplates/badge/icon?style=plastic)](http://dtl-internal-ci.westus.cloudapp.azure.com:8080/job/Regression-Tests-ARMTemplates/)
 Downloads:
 - The official, stable versions can be found in [Azure quickstart template repository](https://github.com/Azure/azure-quickstart-templates).
 
 - The latest, *developer* versions can be found in the ['RM Templates'](RM Templates) folder of this repo.
 
 ---
-### PowerShell Module [![Build Status](http://dtl-internal-ci.westus.cloudapp.azure.com:8080/job/PowerShell-Acceptance-Test/badge/icon?style=plastic)](http://dtl-internal-ci.westus.cloudapp.azure.com:8080/job/PowerShell-Acceptance-Test/)
+### PowerShell Module [![Build Status](http://dtl-internal-ci.westus.cloudapp.azure.com:8080/job/Regression-Tests-PowerShell/badge/icon?style=plastic)](http://dtl-internal-ci.westus.cloudapp.azure.com:8080/job/Regression-Tests-PowerShell/)
 Source:
 - The source code for AzureRM.DevTestLab can be found in the ['PowerShell'](powershell) folder.
 
