@@ -10,17 +10,17 @@ Function Get-TempPassword() {
         [string[]]$sourcedata
     )
 
-    For ($loop=1; $loop �le $length; $loop++) {
+    For ($loop=1; $loop -le $length; $loop++) {
             $tempPassword+=($sourcedata | GET-RANDOM)
     }
 
     return $tempPassword
 }
 
-$ascii=$NULL;For ($a=33;$a �le 126;$a++) {$ascii+=,[char][byte]$a }
+$ascii=$NULL;For ($a=33;$a -le 126;$a++) {$ascii+=,[char][byte]$a }
 
 $userName = "artifactInstaller"
-$password = Get-TempPassword �length 43 �sourcedata $ascii
+$password = Get-TempPassword -length 43 -sourcedata $ascii
 
 $cn = [ADSI]"WinNT://$env:ComputerName"
 
