@@ -42,7 +42,7 @@
 # Note: Because the $ErrorActionPreference is "Stop", this script will stop on first failure.  
 $ErrorActionPreference = "stop"
 
-Enable-PSRemoting –force -SkipNetworkProfileCheck
+Enable-PSRemoting -Force -SkipNetworkProfileCheck
 
 # Ensure that current process can run scripts. 
 Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force 
