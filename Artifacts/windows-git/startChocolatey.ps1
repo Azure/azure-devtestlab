@@ -42,7 +42,7 @@ $credential = New-Object System.Management.Automation.PSCredential("$env:COMPUTE
 $command = $PSScriptRoot + "\ChocolateyPackageInstaller.ps1"
 
 # Run Chocolatey as the artifactInstaller user
-Enable-PSRemoting –force -SkipNetworkProfileCheck
+Enable-PSRemoting –Force -SkipNetworkProfileCheck
 
 # Ensure that current process can run scripts. 
 Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force 
