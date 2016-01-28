@@ -9,7 +9,7 @@
   "iconUri": "",
   "targetOsType": "Windows",
   "runCommand": {
-    "commandToExecute": "powershell.exe -executionpolicy bypass -File startChocolatey.ps1 -PackageList putty"
+    "commandToExecute": "powershell.exe -ExecutionPolicy bypass -File startChocolatey.ps1 -PackageList putty"
 
   }
 }
