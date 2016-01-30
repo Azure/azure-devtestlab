@@ -6,12 +6,13 @@
     exist, they are simply updated.
 #>
 
-function Update-RMTemplates
+function Update-RMTemplates-ForPS
 {
-    # Ensure that the RM templates folder  exists.
-    $srcRMTemplatesFolder = Join-Path -Path $PSScriptRoot -ChildPath "..\..\RM Templates" -Resolve -ErrorAction "Stop"
+    # Ensure that the src RM templates folder  exists.
+    $srcRMTemplatesFolder = Join-Path -Path $PSScriptRoot -ChildPath "..\..\RMTemplates" -Resolve -ErrorAction "Stop"
 
-    $destCmdletsFolder = $PSScriptRoot 
+    # Ensure that the dest cmdlets folder exists.
+    $destCmdletsFolder = Join-Path -Path $PSScriptRoot -ChildPath "..\..\PowerShell\AzureRM.DevTestLab" -Resolve -ErrorAction "Stop"
 
     # Ensure that the RM template files exists.
     $srcRMTemplateFiles = Get-ChildItem -Path $srcRMTemplatesFolder -Recurse -Filter "azuredeploy.json" 

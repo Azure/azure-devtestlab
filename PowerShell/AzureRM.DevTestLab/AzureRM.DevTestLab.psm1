@@ -44,15 +44,15 @@ $StorageAccountResourceType = "microsoft.storage/storageAccounts"
 # The API version required to query DTL resources
 $RequiredApiVersion = "2015-05-21-preview"
 
-# Paths to Azure RM templates for the DevTest Lab provider.
-$ARMTemplate_CreateLab = ".\101-dtl-create-lab-azuredeploy.json"
-$ARMTemplate_CreateVM_BuiltinUsr = ".\101-dtl-create-vm-builtin-user-azuredeploy.json"
-$ARMTemplate_CreateVM_UsrPwd = ".\101-dtl-create-vm-username-pwd-azuredeploy.json"
-$ARMTemplate_CreateVM_UsrSSH = ".\101-dtl-create-vm-username-ssh-azuredeploy.json"
-$ARMTemplate_CreateLab_WithPolicies = ".\201-dtl-create-lab-with-policies-azuredeploy.json"
-$ARMTemplate_CreateVMTemplate_FromImage = ".\201-dtl-create-vmtemplate-from-azure-image-azuredeploy.json"
-$ARMTemplate_CreateVMTemplate_FromVhd = ".\201-dtl-create-vmtemplate-from-vhd-azuredeploy.json"
-$ARMTemplate_CreateVMTemplate_FromVM = ".\201-dtl-create-vmtemplate-from-vm-azuredeploy.json"
+# Paths to Azure RM templates for the DevTest Lab provider. 
+$ARMTemplate_CreateLab = Join-Path -Path $PSScriptRoot -ChildPath "101-dtl-create-lab-azuredeploy.json" -Resolve
+$ARMTemplate_CreateVM_BuiltinUsr = Join-Path -Path $PSScriptRoot -ChildPath "101-dtl-create-vm-builtin-user-azuredeploy.json" -Resolve
+$ARMTemplate_CreateVM_UsrPwd = Join-Path -Path $PSScriptRoot -ChildPath "101-dtl-create-vm-username-pwd-azuredeploy.json" -Resolve
+$ARMTemplate_CreateVM_UsrSSH = Join-Path -Path $PSScriptRoot -ChildPath "101-dtl-create-vm-username-ssh-azuredeploy.json" -Resolve
+$ARMTemplate_CreateLab_WithPolicies = Join-Path -Path $PSScriptRoot -ChildPath "201-dtl-create-lab-with-policies-azuredeploy.json" -Resolve
+$ARMTemplate_CreateVMTemplate_FromImage = Join-Path -Path $PSScriptRoot -ChildPath "201-dtl-create-vmtemplate-from-azure-image-azuredeploy.json" -Resolve
+$ARMTemplate_CreateVMTemplate_FromVhd = Join-Path -Path $PSScriptRoot -ChildPath "201-dtl-create-vmtemplate-from-vhd-azuredeploy.json" -Resolve
+$ARMTemplate_CreateVMTemplate_FromVM = Join-Path -Path $PSScriptRoot -ChildPath "201-dtl-create-vmtemplate-from-vm-azuredeploy.json" -Resolve
 
 ##################################################################################################
 
