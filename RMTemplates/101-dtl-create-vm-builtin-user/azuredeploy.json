@@ -14,12 +14,6 @@
         "description": "The name of an existing lab where the new vm will be created."
       }
     },
-    "existingLabResourceGroupName": {
-      "type": "string",
-      "metadata": {
-        "description": "The resource group name of an existing lab (identified via the 'existingLabName' parameter) in which the new vm will be created."
-      }
-    },
     "existingVMTemplateName": {
       "type": "string",
       "metadata": {
@@ -33,14 +27,17 @@
       }
     }
   },
+  "variables": {
+    "resourceName": "[concat(parameters('existingLabName'), '/', parameters('newVMName'))]",
+    "resourceType": "Microsoft.DevTestLab/labs/environments"
+  },
   "resources": [
     {
       "apiVersion": "2015-05-21-preview",
-      "type": "Microsoft.DevTestLab/environments",
-      "name": "[parameters('newVMName')]",
+      "type": "Microsoft.DevTestLab/labs/environments",
+      "name": "[variables('resourceName')]",
       "location": "[resourceGroup().location]",
       "properties": {
-        "labId": "[resourceId(parameters('existingLabResourceGroupName'), 'Microsoft.DevTestLab/labs', parameters('existingLabName'))]",
         "vms": [
           {
             "name": "[parameters('newVMName')]",
@@ -58,7 +55,7 @@
   "outputs": {
     "vmId": {
       "type": "string",
-      "value": "[resourceId('Microsoft.DevTestLab/environments', parameters('newVMName'))]"
+      "value": "[resourceId(variables('resourceType'), parameters('existingLabName'), parameters('newVMName'))]"
     }
   }
 }
