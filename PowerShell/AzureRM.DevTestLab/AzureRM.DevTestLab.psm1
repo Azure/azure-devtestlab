@@ -63,21 +63,18 @@ function GetLabFromNestedResource_Private
 {
     Param(
         [ValidateNotNull()]
-        # An existing Lab nested resource
-        $NestedResource
+        # An existing Lab nested resource Id
+        $NestedResourceId
     )
-    $array = $NestedResource.ResourceId.split("/")
-    $parts = $array[0..($array.Count -3)]
+    $array = $NestedResourceId.split("/")
+    $parts = $array[0..($array.Count - 3)]
     $labId = [string]::Join("/",$parts)
 
-    $lab = Get-AzureRmResource | Where-Object {
-        $_.ResourceType -eq $LabResourceType -and 
-        $_.ResourceId -eq $labId
-    }
+    $lab = Get-AzureRmResource -ResourceId $labId
 
     if ($null -eq $lab)
     {
-        throw $("Unable to detect lab for VM '" + $VM.ResourceName + "'")
+        throw $("Unable to detect lab for resource '" + $NestedResourceId + "'")
     }
 
     return $lab
@@ -91,12 +88,7 @@ function GetLabFromVM_Private
         $VM
     )
 
-    $vm = GetResourceWithProperties_Private -Resource $VM.ResourceId
-
-    $lab = Get-AzureRmResource | Where-Object {
-        $_.ResourceType -eq $LabResourceType -and 
-        $_.ResourceId -eq $vm.Properties.LabId
-    }
+    $lab = GetLabFromNestedResource_Private -NestedResource $VM.ResourceId
 
     if ($null -eq $lab)
     {
