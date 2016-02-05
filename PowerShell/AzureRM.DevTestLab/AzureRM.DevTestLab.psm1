@@ -45,14 +45,14 @@ $StorageAccountResourceType = "microsoft.storage/storageAccounts"
 $RequiredApiVersion = "2015-05-21-preview"
 
 # Paths to Azure RM templates for the DevTest Lab provider. 
-$ARMTemplate_CreateLab = Join-Path -Path $PSScriptRoot -ChildPath "101-dtl-create-lab-azuredeploy.json" -Resolve
-$ARMTemplate_CreateVM_BuiltinUsr = Join-Path -Path $PSScriptRoot -ChildPath "101-dtl-create-vm-builtin-user-azuredeploy.json" -Resolve
-$ARMTemplate_CreateVM_UsrPwd = Join-Path -Path $PSScriptRoot -ChildPath "101-dtl-create-vm-username-pwd-azuredeploy.json" -Resolve
-$ARMTemplate_CreateVM_UsrSSH = Join-Path -Path $PSScriptRoot -ChildPath "101-dtl-create-vm-username-ssh-azuredeploy.json" -Resolve
-$ARMTemplate_CreateLab_WithPolicies = Join-Path -Path $PSScriptRoot -ChildPath "201-dtl-create-lab-with-policies-azuredeploy.json" -Resolve
-$ARMTemplate_CreateVMTemplate_FromImage = Join-Path -Path $PSScriptRoot -ChildPath "201-dtl-create-vmtemplate-from-azure-image-azuredeploy.json" -Resolve
-$ARMTemplate_CreateVMTemplate_FromVhd = Join-Path -Path $PSScriptRoot -ChildPath "201-dtl-create-vmtemplate-from-vhd-azuredeploy.json" -Resolve
-$ARMTemplate_CreateVMTemplate_FromVM = Join-Path -Path $PSScriptRoot -ChildPath "201-dtl-create-vmtemplate-from-vm-azuredeploy.json" -Resolve
+$ARMTemplate_CreateLab = ".\101-dtl-create-lab-azuredeploy.json"
+$ARMTemplate_CreateVM_BuiltinUsr = ".\101-dtl-create-vm-builtin-user-azuredeploy.json"
+$ARMTemplate_CreateVM_UsrPwd = ".\101-dtl-create-vm-username-pwd-azuredeploy.json"
+$ARMTemplate_CreateVM_UsrSSH = ".\101-dtl-create-vm-username-ssh-azuredeploy.json"
+$ARMTemplate_CreateLab_WithPolicies = ".\201-dtl-create-lab-with-policies-azuredeploy.json"
+$ARMTemplate_CreateVMTemplate_FromImage = ".\201-dtl-create-vmtemplate-from-azure-image-azuredeploy.json"
+$ARMTemplate_CreateVMTemplate_FromVhd = ".\201-dtl-create-vmtemplate-from-vhd-azuredeploy.json"
+$ARMTemplate_CreateVMTemplate_FromVM = ".\201-dtl-create-vmtemplate-from-vm-azuredeploy.json"
 
 ##################################################################################################
 
@@ -1052,13 +1052,12 @@ function New-AzureRmDtlVMTemplate
 {
     <#
         .SYNOPSIS
-        Creates a new (or updates an existing) virtual machine template.
+        Creates a new virtual machine template.
 
         .DESCRIPTION
         The New-AzureRmDtlVMTemplate cmdlet creates a new VM template from an existing VM or Vhd.
         - The VM template name can only include alphanumeric characters, underscores, hyphens and parantheses.
         - The new VM template is created in the same lab as the VM (or Vhd).
-        - If a VM template with the same name already exists in the lab, then it is simply updated.
 
         .EXAMPLE
         $vm = $null
@@ -1073,9 +1072,9 @@ function New-AzureRmDtlVMTemplate
 
         $lab = Get-AzureRmDtlLab -LabName "MyLab1"
         $vhd = Get-AzureRmDtlVhd -Lab $lab -VMName "MyVhd1.vhd"
-        New-AzureRmDtlVMTemplate -SrcDtlVhd $vhd -DestVMTemplateName "MyVMTemplate1" -DestVMTemplateDescription "MyDescription"
+        New-AzureRmDtlVMTemplate -SrcDtlVhd $vhd -SrcDtlLab $lab -DestVMTemplateName "MyVMTemplate1" -DestVMTemplateDescription "MyDescription"
 
-        Creates a new VM Template "MyVMTemplate1" in the lab "MyLab1" using the vhd "MyVhd1.vhd" as the source.
+        Creates a new VM Template "MyVMTemplate1" in the lab "MyLab1" using the vhd "MyVhd1.vhd" from the same lab.
 
         .EXAMPLE
         $lab = $null
@@ -1100,6 +1099,11 @@ function New-AzureRmDtlVMTemplate
         [ValidateNotNull()]
         # An existing lab vhd from which the new lab VM template will be created (please use the Get-AzureRmDtlVhd cmdlet to get this lab vhd object).
         $SrcDtlVhd,
+
+        [Parameter(Mandatory=$true, ParameterSetName="FromVhd")]
+        [ValidateNotNull()]
+        # An existing lab where the source vhd resides (please use the Get-AzureRmDtlLab cmdlet to get this lab object).
+        $SrcDtlLab,
 
         [Parameter(Mandatory=$true, ParameterSetName="FromAzureRmVMImage")]
         [ValidateNotNull()]
@@ -1126,7 +1130,7 @@ function New-AzureRmDtlVMTemplate
         [Parameter(Mandatory=$true, ParameterSetName="FromAzureRmVMImage")]
         [ValidateNotNullOrEmpty()]
         [string]
-        # The name of the lab.
+        # The name of the lab where the new VM template will be created.
         $DestLabName,
 
         [Parameter(Mandatory=$true, ParameterSetName="FromVM")]
@@ -1254,20 +1258,25 @@ function New-AzureRmDtlVMTemplate
                     Write-Verbose $("The RM template file was located at : '" + $VMTemplateCreationTemplateFile + "'")
                 }
 
-                # Get the lab that contains the source vhd
-                $lab = GetLabFromVhd_Private -Vhd $SrcDtlVhd
+                # Pre-condition check to ensure that src vhd indeed belongs to the src lab.
+                $vhd = Get-AzureRmDtlVhd -VhdAbsoluteUri $SrcDtlVhd.ICloudBlob.Uri.AbsoluteUri -Lab $SrcDtlLab
+
+                if (($null -eq $vhd) -or ($vhd.ICloudBlob.Uri.AbsoluteUri -ne $SrcDtlVhd.ICloudBlob.Uri.AbsoluteUri))
+                {
+                    throw $("The specified vhd '" + $SrcDtlVhd.Name + "' could not be located in the lab '" + $SrcDtlLab.Name + "'.")
+                }
 
                 # Pre-condition check to ensure that a VM template with same name doesn't already exist.
-                $destVMTemplateExists = ($null -ne (Get-AzureRmDtlVMTemplate -VMTemplateName $DestVMTemplateName -Lab $lab)) 
+                $destVMTemplateExists = ($null -ne (Get-AzureRmDtlVMTemplate -VMTemplateName $DestVMTemplateName -Lab $SrcDtlLab)) 
 
                 if ($true -eq $destVMTemplateExists)
                 {
-                    throw $("A VM Template with the name '" + $DestVMTemplateName + "' already exists in the lab '" + $lab.Name + "'. Please specify another name for the VM Template to be created.")
+                    throw $("A VM Template with the name '" + $DestVMTemplateName + "' already exists in the lab '" + $SrcDtlLab.Name + "'. Please specify another name for the VM Template to be created.")
                 }
 
                 # Create the VM Template in the lab's resource group by deploying the RM template
-                Write-Verbose $("Creating VM Template '" + $DestVMTemplateName + "' in lab '" + $lab.ResourceName + "'")
-                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $VMTemplateCreationTemplateFile -existingLabName $lab.ResourceName -existingVhdUri $SrcDtlVhd.ICloudBlob.Uri.AbsoluteUri -imageOsType $SrcImageOSType -isVhdSysPrepped $isSysPrepped -templateName $VMTemplateNameEncoded -templateDescription $DestVMTemplateDescription -ErrorAction "Stop"
+                Write-Verbose $("Creating VM Template '" + $DestVMTemplateName + "' in lab '" + $SrcDtlLab.ResourceName + "'")
+                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $SrcDtlLab.ResourceGroupName -TemplateFile $VMTemplateCreationTemplateFile -existingLabName $SrcDtlLab.ResourceName -existingVhdUri $SrcDtlVhd.ICloudBlob.Uri.AbsoluteUri -imageOsType $SrcImageOSType -isVhdSysPrepped $isSysPrepped -templateName $VMTemplateNameEncoded -templateDescription $DestVMTemplateDescription -ErrorAction "Stop"
             }
 
             "FromAzureRmVMImage"
@@ -1538,7 +1547,7 @@ function Start-AzureRmDtlVhdCopy
 
         $destLab = Get-AzureRmDtlLab -LabName "MyDestLab"
 
-        $destVhd = Start-AzureRmDtlVhdCopy -SrcDtlVhd $SrcVhd -DestLab $destLab -WaitForCompletion
+        $destVhd = Start-AzureRmDtlVhdCopy -SrcDtlVhd $srcVhd -SrcDtlLab $srcLab -DestLab $destLab -WaitForCompletion
 
         Initiates copying of vhd file "MyOriginal.vhd" from the lab "MySrcLab" into the lab "MyDestLab" and waits
         for the copy operation to fully complete. 
@@ -1598,8 +1607,13 @@ function Start-AzureRmDtlVhdCopy
 
         [Parameter(Mandatory=$true, ParameterSetName="CopyVhdFromLab")] 
         [ValidateNotNull()]
-        # An existing lab in which the vhd is located (please use the Get-AzureRmDtlLab cmdlet to get this lab object).
+        # An existing lab vhd that'll be copied from its source lab to the destination lab (please use the Get-AzureRmDtlVhd cmdlet to get this vhd object).
         $SrcDtlVhd,
+
+        [Parameter(Mandatory=$true, ParameterSetName="CopyVhdFromLab")]
+        [ValidateNotNull()]
+        # An existing lab where the source vhd resides (please use the Get-AzureRmDtlLab cmdlet to get this lab object).
+        $SrcDtlLab,
 
         [Parameter(Mandatory=$true, ParameterSetName="CopyVhdFromStorageContainer")] 
         [Parameter(Mandatory=$true, ParameterSetName="CopyVhdFromLab")] 
@@ -1720,29 +1734,34 @@ function Start-AzureRmDtlVhdCopy
         {
             "CopyVhdFromLab"
             {
+                # Pre-condition check to ensure that src vhd indeed belongs to the src lab.
+                $srcVhd = Get-AzureRmDtlVhd -VhdAbsoluteUri $SrcDtlVhd.ICloudBlob.Uri.AbsoluteUri -Lab $SrcDtlLab
+
+                if (($null -eq $srcVhd) -or ($srcVhd.ICloudBlob.Uri.AbsoluteUri -ne $SrcDtlVhd.ICloudBlob.Uri.AbsoluteUri))
+                {
+                    throw $("The specified vhd '" + $SrcDtlVhd.Name + "' could not be located in the lab '" + $SrcDtlLab.Name + "'.")
+                }
+
                 $mySrcBlobName = $SrcDtlVhd.Name
 
-                # Get the lab that contains the source vhd
-                $srcLab = GetLabFromVhd_Private -Vhd $SrcDtlVhd
-
                 # Create a new storage context for the src lab.
-                Write-Verbose $("Extracting a storage account context for the lab '" + $srcLab.Name + "'")
+                Write-Verbose $("Extracting a storage account context for the lab '" + $SrcDtlLab.Name + "'")
 
-                $mySrcStorageContext = New-AzureRmDtlLabStorageContext -Lab $srcLab
+                $mySrcStorageContext = New-AzureRmDtlLabStorageContext -Lab $SrcDtlLab
 
                 if ($null -eq $mySrcStorageContext)
                 {
-                    throw $("Unable to create a new storage account context for the lab '" + $srcLab.Name + "'")
+                    throw $("Unable to create a new storage account context for the lab '" + $SrcDtlLab.Name + "'")
                 }
 
-                Write-Verbose $("Successfully extracted a storage account context for the lab '" + $srcLab.Name + "'")
+                Write-Verbose $("Successfully extracted a storage account context for the lab '" + $SrcDtlLab.Name + "'")
 
                 # Extract the 'uploads' container (which houses the vhds) from the src lab.
                 $mySrcContainer = Get-AzureStorageContainer -Name "uploads" -Context $mySrcStorageContext
 
                 if ($null -eq $mySrcContainer)
                 {
-                    throw $("Unable to extract the 'uploads' container from the default storage account of lab '" + $srcLab.Name + "'")
+                    throw $("Unable to extract the 'uploads' container from the default storage account of lab '" + $SrcDtlLab.Name + "'")
                 }
 
                 $mySrcContainerName = $mySrcContainer.Name
@@ -1770,7 +1789,7 @@ function Start-AzureRmDtlVhdCopy
 
                 if ($null -eq $mySrcContainer)
                 {
-                    throw $("Unable to extract the 'uploads' container from the default storage account of lab '" + $srcLab.Name + "'")
+                    throw $("Unable to extract the container '" + $SrcVhdContainerName +"' from the storage account '" + $SrcVhdStorageAccountName + "'")
                 }
 
                 $mySrcContainerName = $mySrcContainer.Name
