@@ -33,7 +33,7 @@
 
 # Resource types exposed by the DevTestLab provider.
 $LabResourceType = "microsoft.devtestlab/labs"
-$EnvironmentResourceType = "microsoft.devtestlab/environments"
+$EnvironmentResourceType = "microsoft.devtestlab/labs/environments"
 $VMTemplateResourceType = "microsoft.devtestlab/labs/vmtemplates"
 $ArtifactSourceResourceType = "microsoft.devtestlab/labs/artifactsources"
 $ArtifactResourceType = "microsoft.devtestlab/labs/artifactsources/artifacts"
@@ -59,6 +59,29 @@ $ARMTemplate_CreateVMTemplate_FromVM = ".\201-dtl-create-vmtemplate-from-vm-azur
 #
 # Private helper methods
 #
+function GetLabFromNestedResource_Private
+{
+    Param(
+        [ValidateNotNull()]
+        # An existing Lab nested resource
+        $NestedResource
+    )
+    $array = $NestedResource.ResourceId.split("/")
+    $parts = $array[0..($array.Count -3)]
+    $labId = [string]::Join("/",$parts)
+
+    $lab = Get-AzureRmResource | Where-Object {
+        $_.ResourceType -eq $LabResourceType -and 
+        $_.ResourceId -eq $labId
+    }
+
+    if ($null -eq $lab)
+    {
+        throw $("Unable to detect lab for VM '" + $VM.ResourceName + "'")
+    }
+
+    return $lab
+}
 
 function GetLabFromVM_Private
 {
@@ -68,7 +91,7 @@ function GetLabFromVM_Private
         $VM
     )
 
-    $vm = GetResourceWithProperties_Private -Resource $VM
+    $vm = GetResourceWithProperties_Private -Resource $VM.ResourceId
 
     $lab = Get-AzureRmResource | Where-Object {
         $_.ResourceType -eq $LabResourceType -and 
@@ -82,6 +105,8 @@ function GetLabFromVM_Private
 
     return $lab
 }
+
+
 
 function GetLabFromVhd_Private
 {
@@ -720,40 +745,25 @@ function Get-AzureRmDtlVirtualMachine
         .DESCRIPTION
         The Get-AzureRmDtlVirtualMachine cmdlet does the following: 
         - Gets a specific VM, if the -VMId parameter is specified.
-        - Gets all VMs with matching name, if the -VMName parameter is specified.
         - Gets all VMs in a lab, if the -LabName parameter is specified.
-        - Gets all VMs in a resource group, if the -VMResourceGroup parameter is specified.
-        - Gets all VMs in a location, if the -VMLocation parameter is specified.
-        - Gets all VMs within current subscription, if no parameters are specified. 
 
         .EXAMPLE
-        Get-AzureRmDtlVirtualMachine -VMId "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/MyLabRG/providers/Microsoft.DevTestLab/environments/MyVM"
+        Get-AzureRmDtlVirtualMachine -VMId "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/MyLabRG/providers/Microsoft.DevTestLab/labs/MyLab/environments/MyVM"
         Gets a specific VM, identified by the specified resource-id.
-
-        .EXAMPLE
-        Get-AzureRmDtlVirtualMachine -VMName "MyVM1"
-        Gets all VMs with the name "MyVM1".
 
         .EXAMPLE
         Get-AzureRmDtlVirtualMachine -LabName "MyLab"
         Gets all VMs within the lab "MyLab".
 
         .EXAMPLE
-        Get-AzureRmDtlVirtualMachine -VMResourceGroupName "MyLabRG"
-        Gets all VMs in the "MyLabRG" resource group.
+        Get-AzureRmDtlVirtualMachine -LabName "MyLab" -VmName "MyVm"
+        Gets Vm "MyVm" within the lab "MyLab".
 
-        .EXAMPLE
-        Get-AzureRmDtlVirtualMachine -VMLocation "westus"
-        Gets all VMs in the "westus" location.
-
-        .EXAMPLE
-        Get-AzureRmDtlVirtualMachine
-        Gets all VMs within current subscription (use the Select-AzureRmSubscription cmdlet to change the current subscription).
 
         .INPUTS
         None. Currently you cannot pipe objects to this cmdlet (this will be fixed in a future version).  
     #>
-    [CmdletBinding(DefaultParameterSetName="ListAll")]
+    [CmdletBinding()]
     Param(
         [Parameter(Mandatory=$true, ParameterSetName="ListByVMId")] 
         [ValidateNotNullOrEmpty()]
@@ -761,36 +771,20 @@ function Get-AzureRmDtlVirtualMachine
         # The ResourceId of the VM (e.g. "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/MyLabRG/providers/Microsoft.DevTestLab/environments/MyVM").
         $VMId,
 
-        [Parameter(Mandatory=$true, ParameterSetName="ListByVMName")] 
-        [ValidateNotNullOrEmpty()]
-        [string]
-        # The name of the VM.
-        $VMName,
-
-        [Parameter(Mandatory=$true, ParameterSetName="ListAllInLab")] 
+        [Parameter(Mandatory=$true, ParameterSetName="ListInLab")] 
         [ValidateNotNullOrEmpty()]
         [string]
         # Name of the lab.
         $LabName,
 
-        [Parameter(Mandatory=$true, ParameterSetName="ListAllInResourceGroup")] 
+        [Parameter(Mandatory=$false, ParameterSetName="ListInLab")] 
         [ValidateNotNullOrEmpty()]
         [string]
-        # The name of the VM's resource group.
-        $VMResourceGroupName,
-
-        [Parameter(Mandatory=$true, ParameterSetName="ListAllInLocation")] 
-        [ValidateNotNullOrEmpty()]
-        [string]
-        # The location of the VM.
-        $VMLocation,
+        # Name of the lab.
+        $VmName,
 
         [Parameter(Mandatory=$false, ParameterSetName="ListByVMId")] 
-        [Parameter(Mandatory=$false, ParameterSetName="ListByVMName")] 
-        [Parameter(Mandatory=$false, ParameterSetName="ListAllInLab")] 
-        [Parameter(Mandatory=$false, ParameterSetName="ListAllInResourceGroup")] 
-        [Parameter(Mandatory=$false, ParameterSetName="ListAllInLocation")] 
-        [Parameter(Mandatory=$false, ParameterSetName="ListAll")] 
+        [Parameter(Mandatory=$false, ParameterSetName="ListInLab")]
         [switch]
         # Optional. If specified, fetches the properties of the virtual machine(s).
         $ShowProperties
@@ -806,21 +800,10 @@ function Get-AzureRmDtlVirtualMachine
         {
             "ListByVMId"
             {
-                $output = Get-AzureRmResource | Where-Object { 
-                    $_.ResourceType -eq $EnvironmentResourceType -and 
-                    $_.ResourceId -eq $VMId 
-                }
-            }
-                    
-            "ListByVMName"
-            {
-                $output = Get-AzureRmResource | Where-Object { 
-                    $_.ResourceType -eq $EnvironmentResourceType -and 
-                    $_.ResourceName -eq $VMName 
-                }                
+                $output = Get-AzureRmResource -ResourceId $VMId
             }
 
-            "ListAllInLab"
+            "ListInLab"
             {
                 $fetchedLabObj = Get-AzureRmDtlLab -LabName $LabName 
 
@@ -834,40 +817,20 @@ function Get-AzureRmDtlVirtualMachine
                     {
                         write-Verbose $("Found lab : " + $fetchedLabObj.ResourceName) 
                         write-Verbose $("LabId : " + $fetchedLabObj.ResourceId) 
+                        $resourceName = $LabName
+                        if($VmName -ne $null -and $VmName -ne '') 
+                        {
+                            $resourceName = $resourceName + "/" + $VmName
+                        }
 
                         # Note: The -ErrorAction 'SilentlyContinue' ensures that we suppress irrelevant
                         # errors originating while expanding properties (especially in internal test and
                         # pre-production subscriptions).
-                        $output = Get-AzureRmResource -ExpandProperties -ErrorAction "SilentlyContinue" | Where-Object { 
-                            $_.ResourceType -eq $EnvironmentResourceType -and
-                            $_.Properties.LabId -eq $fetchedLabObj.ResourceId
-                        }
+                        $output = Get-AzureRmResource -ResourceName $resourceName -ResourceType $EnvironmentResourceType -ResourceGroupName $fetchedLabObj.ResourceGroupName -ExpandProperties -ErrorAction "SilentlyContinue"
                     }
                 }
             }
 
-            "ListAllInResourceGroup"
-            {
-                $output = Get-AzureRmResource | Where-Object { 
-                    $_.ResourceType -eq $EnvironmentResourceType -and 
-                    $_.ResourceGroupName -eq $VMResourceGroupName 
-                }             
-            }
-
-            "ListAllInLocation"
-            {
-                $output = Get-AzureRmResource | Where-Object { 
-                    $_.ResourceType -eq $EnvironmentResourceType -and 
-                    $_.Location -eq $VMLocation 
-                }
-            }
-
-            "ListAll" 
-            {
-                $output = Get-AzureRmResource | Where-Object { 
-                    $_.ResourceType -eq $EnvironmentResourceType 
-                }
-            }
         }
 
         # now let us display the output
