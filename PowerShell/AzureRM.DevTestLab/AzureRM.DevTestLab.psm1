@@ -2045,11 +2045,7 @@ function Remove-AzureRmDtlVirtualMachine
         .DESCRIPTION
         The Remove-AzureRmDtlVirtualMachine cmdlet does the following: 
         - Deletes a specific VM, if the -VMId parameter is specified.
-        - Deletes all VMs with matching name, if the -VMName parameter is specified.
         - Deletes all VMs in a lab, if the -LabName parameter is specified.
-        - Deletes all VMs in a resource group, if the -VMResourceGroup parameter is specified.
-        - Deletes all VMs in a location, if the -VMLocation parameter is specified.
-        - Deletes all VMs within current subscription, if no parameters are specified. 
 
         Warning: 
         - If multiple VMs match the specified conditions, all of them will be deleted. 
@@ -2065,57 +2061,32 @@ function Remove-AzureRmDtlVirtualMachine
         Deletes all VMs with the name "MyVM1".
 
         .EXAMPLE
-        Remove-AzureRmDtlVirtualMachine -LabName "MyLab"
-        Deletes all VMs within the lab "MyLab".
-
-        .EXAMPLE
-        Remove-AzureRmDtlVirtualMachine -VMResourceGroupName "MyLabRG"
-        Deletes all VMs in the "MyLabRG" resource group.
-
-        .EXAMPLE
-        Remove-AzureRmDtlVirtualMachine -VMLocation "westus"
-        Deletes all VMs in the "westus" location.
-
-        .EXAMPLE
-        Remove-AzureRmDtlVirtualMachine
-        Deletes all VMs within current subscription (use the Select-AzureRmSubscription cmdlet to change the current subscription).
+        Remove-AzureRmDtlVirtualMachine -LabName "MyLab" -VMName "MyVM1"
+        Deletes Vm "MyVM1" within the lab "MyLab".
 
         .INPUTS
         None. Currently you cannot pipe objects to this cmdlet (this will be fixed in a future version).  
     #>
     [CmdletBinding(
-        SupportsShouldProcess=$true,
-        DefaultParameterSetName="DeleteAll")]
+        SupportsShouldProcess=$true)]
     Param(
         [Parameter(Mandatory=$true, ParameterSetName="DeleteByVMId")] 
         [ValidateNotNullOrEmpty()]
         [string]
-        # The ResourceId of the VM (e.g. "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/MyLabRG/providers/Microsoft.DevTestLab/environments/MyVM").
+        # The ResourceId of the VM (e.g. "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/MyLabRG/providers/Microsoft.DevTestLab/labs/MyLab/environments/MyVM").
         $VMId,
 
-        [Parameter(Mandatory=$true, ParameterSetName="DeleteByVMName")] 
-        [ValidateNotNullOrEmpty()]
-        [string]
-        # The name of the VM.
-        $VMName,
-
-        [Parameter(Mandatory=$true, ParameterSetName="DeleteAllInLab")] 
+        [Parameter(Mandatory=$true, ParameterSetName="DeleteInLab")] 
         [ValidateNotNullOrEmpty()]
         [string]
         # Name of the lab.
         $LabName,
 
-        [Parameter(Mandatory=$true, ParameterSetName="DeleteAllInResourceGroup")] 
+        [Parameter(Mandatory=$false, ParameterSetName="DeleteInLab")] 
         [ValidateNotNullOrEmpty()]
         [string]
-        # The name of the VM's resource group.
-        $VMResourceGroupName,
-
-        [Parameter(Mandatory=$true, ParameterSetName="DeleteAllInLocation")] 
-        [ValidateNotNullOrEmpty()]
-        [string]
-        # The location of the VM.
-        $VMLocation
+        # The name of the VM.
+        $VMName
     )
 
     PROCESS
@@ -2130,40 +2101,24 @@ function Remove-AzureRmDtlVirtualMachine
             "DeleteByVMId"
             {
                 $vms = Get-AzureRmDtlVirtualMachine -VMId $VMId
-            }
-                    
-            "DeleteByVMName"
-            {
-                $vms = Get-AzureRmDtlVirtualMachine -VMName $VMName 
-            }
+            } 
 
-            "DeleteAllInLab"
+            "DeleteInLab"
             {
-                $vms = Get-AzureRmDtlVirtualMachine -LabName $LabName
+                if($VMName -ne $null -and $VMName -ne '') 
+                {
+                    $vms = Get-AzureRmDtlVirtualMachine -LabName $LabName -VmName $VMName 
+                } else 
+                {
+                    $vms = Get-AzureRmDtlVirtualMachine -LabName $LabName
+                }
             }
-
-            "DeleteAllInResourceGroup"
-            {
-                $vms = Get-AzureRmDtlVirtualMachine -VMResourceGroupName $VMResourceGroupName 
-            }
-
-            "DeleteAllInLocation"
-            {
-                $vms = Get-AzureRmDtlVirtualMachine -VMLocation $VMLocation
-            }
-
-            "DeleteAll" 
-            {
-                $vms = Get-AzureRmDtlVirtualMachine
-            }
+            
         }
 
         # Next, for each VM... 
         foreach ($vm in $vms)
         {
-            # Get the same VM object, but with properties attached.
-            $vm = GetResourceWithProperties_Private -Resource $vm
-
             # Pop the confirmation dialog.
             if ($PSCmdlet.ShouldProcess($vm.ResourceName, "delete VM"))
             {
