@@ -16,10 +16,17 @@ $credential = New-Object System.Management.Automation.PSCredential("$env:COMPUTE
 
 $command = $file = $PSScriptRoot + "\ChocolateyPackageInstaller.ps1"
 
-Enable-PSRemoting –force
+Enable-PSRemoting -Force -SkipNetworkProfileCheck
+
+# Ensure that current process can run scripts. 
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force 
 
 # Work around a bug in the Squirrel installer
-Invoke-Command -Credential $credential -ComputerName $env:COMPUTERNAME -ScriptBlock {New-Item -Path "HKCU:\Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\TrayNotify"  -type directory -force -ErrorAction Continue}
+Invoke-Command -Credential $credential -ComputerName $env:COMPUTERNAME -ScriptBlock 
+{
+    Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
+    New-Item -Path "HKCU:\Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\TrayNotify"  -Type directory -Force -ErrorAction Continue
+}
 
 Invoke-Command -FilePath $command -Credential $credential -ComputerName $env:COMPUTERNAME -ArgumentList $packageList
 Disable-PSRemoting -Force
