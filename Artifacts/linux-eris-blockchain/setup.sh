@@ -163,7 +163,5 @@ echo "Finished starting services and chains."
 # Cleanup
 
 rm /home/$erisUser/*.sh
-echo
-echo
-echo "Eris Installed!"
+
 
