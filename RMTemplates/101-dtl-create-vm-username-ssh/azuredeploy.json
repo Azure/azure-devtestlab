@@ -60,7 +60,7 @@
             "size": "[parameters('newVMSize')]",
             "isAuthenticationWithSshKey": true,
             "userName": "[parameters('userName')]",
-            "sshKey": "[parameters('useSshKey')]",
+            "sshKey": "[parameters('sshKey')]",
             "password": ""
           }
         ]
