@@ -33,7 +33,7 @@
 
 # Resource types exposed by the DevTestLab provider.
 $LabResourceType = "microsoft.devtestlab/labs"
-$EnvironmentResourceType = "microsoft.devtestlab/environments"
+$EnvironmentResourceType = "microsoft.devtestlab/labs/environments"
 $VMTemplateResourceType = "microsoft.devtestlab/labs/vmtemplates"
 $ArtifactSourceResourceType = "microsoft.devtestlab/labs/artifactsources"
 $ArtifactResourceType = "microsoft.devtestlab/labs/artifactsources/artifacts"
@@ -59,6 +59,26 @@ $ARMTemplate_CreateVMTemplate_FromVM = ".\201-dtl-create-vmtemplate-from-vm-azur
 #
 # Private helper methods
 #
+function GetLabFromNestedResource_Private
+{
+    Param(
+        [ValidateNotNull()]
+        # An existing Lab nested resource Id
+        $NestedResourceId
+    )
+    $array = $NestedResourceId.split("/")
+    $parts = $array[0..($array.Count - 3)]
+    $labId = [string]::Join("/",$parts)
+
+    $lab = Get-AzureRmResource -ResourceId $labId
+
+    if ($null -eq $lab)
+    {
+        throw $("Unable to detect lab for resource '" + $NestedResourceId + "'")
+    }
+
+    return $lab
+}
 
 function GetLabFromVM_Private
 {
@@ -68,12 +88,7 @@ function GetLabFromVM_Private
         $VM
     )
 
-    $vm = GetResourceWithProperties_Private -Resource $VM
-
-    $lab = Get-AzureRmResource | Where-Object {
-        $_.ResourceType -eq $LabResourceType -and 
-        $_.ResourceId -eq $vm.Properties.LabId
-    }
+    $lab = GetLabFromNestedResource_Private -NestedResource $VM.ResourceId
 
     if ($null -eq $lab)
     {
@@ -82,6 +97,8 @@ function GetLabFromVM_Private
 
     return $lab
 }
+
+
 
 function GetLabFromVhd_Private
 {
@@ -720,40 +737,25 @@ function Get-AzureRmDtlVirtualMachine
         .DESCRIPTION
         The Get-AzureRmDtlVirtualMachine cmdlet does the following: 
         - Gets a specific VM, if the -VMId parameter is specified.
-        - Gets all VMs with matching name, if the -VMName parameter is specified.
         - Gets all VMs in a lab, if the -LabName parameter is specified.
-        - Gets all VMs in a resource group, if the -VMResourceGroup parameter is specified.
-        - Gets all VMs in a location, if the -VMLocation parameter is specified.
-        - Gets all VMs within current subscription, if no parameters are specified. 
 
         .EXAMPLE
-        Get-AzureRmDtlVirtualMachine -VMId "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/MyLabRG/providers/Microsoft.DevTestLab/environments/MyVM"
+        Get-AzureRmDtlVirtualMachine -VMId "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/MyLabRG/providers/Microsoft.DevTestLab/labs/MyLab/environments/MyVM"
         Gets a specific VM, identified by the specified resource-id.
-
-        .EXAMPLE
-        Get-AzureRmDtlVirtualMachine -VMName "MyVM1"
-        Gets all VMs with the name "MyVM1".
 
         .EXAMPLE
         Get-AzureRmDtlVirtualMachine -LabName "MyLab"
         Gets all VMs within the lab "MyLab".
 
         .EXAMPLE
-        Get-AzureRmDtlVirtualMachine -VMResourceGroupName "MyLabRG"
-        Gets all VMs in the "MyLabRG" resource group.
+        Get-AzureRmDtlVirtualMachine -LabName "MyLab" -VmName "MyVm"
+        Gets Vm "MyVm" within the lab "MyLab".
 
-        .EXAMPLE
-        Get-AzureRmDtlVirtualMachine -VMLocation "westus"
-        Gets all VMs in the "westus" location.
-
-        .EXAMPLE
-        Get-AzureRmDtlVirtualMachine
-        Gets all VMs within current subscription (use the Select-AzureRmSubscription cmdlet to change the current subscription).
 
         .INPUTS
         None. Currently you cannot pipe objects to this cmdlet (this will be fixed in a future version).  
     #>
-    [CmdletBinding(DefaultParameterSetName="ListAll")]
+    [CmdletBinding()]
     Param(
         [Parameter(Mandatory=$true, ParameterSetName="ListByVMId")] 
         [ValidateNotNullOrEmpty()]
@@ -761,36 +763,20 @@ function Get-AzureRmDtlVirtualMachine
         # The ResourceId of the VM (e.g. "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/MyLabRG/providers/Microsoft.DevTestLab/environments/MyVM").
         $VMId,
 
-        [Parameter(Mandatory=$true, ParameterSetName="ListByVMName")] 
-        [ValidateNotNullOrEmpty()]
-        [string]
-        # The name of the VM.
-        $VMName,
-
-        [Parameter(Mandatory=$true, ParameterSetName="ListAllInLab")] 
+        [Parameter(Mandatory=$true, ParameterSetName="ListInLab")] 
         [ValidateNotNullOrEmpty()]
         [string]
         # Name of the lab.
         $LabName,
 
-        [Parameter(Mandatory=$true, ParameterSetName="ListAllInResourceGroup")] 
+        [Parameter(Mandatory=$false, ParameterSetName="ListInLab")] 
         [ValidateNotNullOrEmpty()]
         [string]
-        # The name of the VM's resource group.
-        $VMResourceGroupName,
-
-        [Parameter(Mandatory=$true, ParameterSetName="ListAllInLocation")] 
-        [ValidateNotNullOrEmpty()]
-        [string]
-        # The location of the VM.
-        $VMLocation,
+        # Name of the lab.
+        $VmName,
 
         [Parameter(Mandatory=$false, ParameterSetName="ListByVMId")] 
-        [Parameter(Mandatory=$false, ParameterSetName="ListByVMName")] 
-        [Parameter(Mandatory=$false, ParameterSetName="ListAllInLab")] 
-        [Parameter(Mandatory=$false, ParameterSetName="ListAllInResourceGroup")] 
-        [Parameter(Mandatory=$false, ParameterSetName="ListAllInLocation")] 
-        [Parameter(Mandatory=$false, ParameterSetName="ListAll")] 
+        [Parameter(Mandatory=$false, ParameterSetName="ListInLab")]
         [switch]
         # Optional. If specified, fetches the properties of the virtual machine(s).
         $ShowProperties
@@ -806,21 +792,10 @@ function Get-AzureRmDtlVirtualMachine
         {
             "ListByVMId"
             {
-                $output = Get-AzureRmResource | Where-Object { 
-                    $_.ResourceType -eq $EnvironmentResourceType -and 
-                    $_.ResourceId -eq $VMId 
-                }
-            }
-                    
-            "ListByVMName"
-            {
-                $output = Get-AzureRmResource | Where-Object { 
-                    $_.ResourceType -eq $EnvironmentResourceType -and 
-                    $_.ResourceName -eq $VMName 
-                }                
+                $output = Get-AzureRmResource -ResourceId $VMId
             }
 
-            "ListAllInLab"
+            "ListInLab"
             {
                 $fetchedLabObj = Get-AzureRmDtlLab -LabName $LabName 
 
@@ -834,40 +809,20 @@ function Get-AzureRmDtlVirtualMachine
                     {
                         write-Verbose $("Found lab : " + $fetchedLabObj.ResourceName) 
                         write-Verbose $("LabId : " + $fetchedLabObj.ResourceId) 
+                        $resourceName = $LabName
+                        if($VmName -ne $null -and $VmName -ne '') 
+                        {
+                            $resourceName = $resourceName + "/" + $VmName
+                        }
 
                         # Note: The -ErrorAction 'SilentlyContinue' ensures that we suppress irrelevant
                         # errors originating while expanding properties (especially in internal test and
                         # pre-production subscriptions).
-                        $output = Get-AzureRmResource -ExpandProperties -ErrorAction "SilentlyContinue" | Where-Object { 
-                            $_.ResourceType -eq $EnvironmentResourceType -and
-                            $_.Properties.LabId -eq $fetchedLabObj.ResourceId
-                        }
+                        $output = Get-AzureRmResource -ResourceName $resourceName -ResourceType $EnvironmentResourceType -ResourceGroupName $fetchedLabObj.ResourceGroupName -ExpandProperties -ErrorAction "SilentlyContinue"
                     }
                 }
             }
 
-            "ListAllInResourceGroup"
-            {
-                $output = Get-AzureRmResource | Where-Object { 
-                    $_.ResourceType -eq $EnvironmentResourceType -and 
-                    $_.ResourceGroupName -eq $VMResourceGroupName 
-                }             
-            }
-
-            "ListAllInLocation"
-            {
-                $output = Get-AzureRmResource | Where-Object { 
-                    $_.ResourceType -eq $EnvironmentResourceType -and 
-                    $_.Location -eq $VMLocation 
-                }
-            }
-
-            "ListAll" 
-            {
-                $output = Get-AzureRmResource | Where-Object { 
-                    $_.ResourceType -eq $EnvironmentResourceType 
-                }
-            }
         }
 
         # now let us display the output
@@ -2044,13 +1999,7 @@ function New-AzureRmDtlVirtualMachine
         }
 
 
-        # Create a new resource group with a unique name (using the VM name as a seed/prefix).
-        Write-Verbose $("Creating new resoure group with seed/prefix '" + $VMName + "' at location '" + $Lab.Location + "'")
-        $newResourceGroup = CreateNewResourceGroup_Private -ResourceGroupSeedPrefixName $VMName -Location $Lab.Location
-        Write-Verbose $("Created new resource group '" + $newResourceGroup.ResourceGroupName + "' at location '" + $newResourceGroup.Location + "'")
-
         # Create the virtual machine in this lab by deploying the RM template
-        Write-Verbose $("Creating new virtual machine '" + $VMName + "'")
         Write-Warning $("Creating new virtual machine '" + $VMName + "'. This may take a couple of minutes.")
 
         $rgDeployment = $null
@@ -2062,17 +2011,17 @@ function New-AzureRmDtlVirtualMachine
         {
             "BuiltInUser"
             {
-                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $newResourceGroup.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -existingLabResourceGroupName $Lab.ResourceGroupName -newVMSize $VMSize -existingVMTemplateName $VMTemplate.Name
+                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $Lab.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -newVMSize $VMSize -existingVMTemplateName $VMTemplate.Name
             }
 
             "UsernamePwd"
             {
-                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $newResourceGroup.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -existingLabResourceGroupName $Lab.ResourceGroupName -newVMSize $VMSize -existingVMTemplateName $VMTemplate.Name -userName $UserName -password $Password
+                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $Lab.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -newVMSize $VMSize -existingVMTemplateName $VMTemplate.Name -userName $UserName -password $Password
             }
 
             "UsernameSSHKey"
             {
-                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $newResourceGroup.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -existingLabResourceGroupName $Lab.ResourceGroupName -newVMSize $VMSize -existingVMTemplateName $VMTemplate.Name -userName $UserName -sshKey $SSHKey  
+                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $Lab.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -newVMSize $VMSize -existingVMTemplateName $VMTemplate.Name -userName $UserName -sshKey $SSHKey  
             }
         }
 
@@ -2096,11 +2045,7 @@ function Remove-AzureRmDtlVirtualMachine
         .DESCRIPTION
         The Remove-AzureRmDtlVirtualMachine cmdlet does the following: 
         - Deletes a specific VM, if the -VMId parameter is specified.
-        - Deletes all VMs with matching name, if the -VMName parameter is specified.
         - Deletes all VMs in a lab, if the -LabName parameter is specified.
-        - Deletes all VMs in a resource group, if the -VMResourceGroup parameter is specified.
-        - Deletes all VMs in a location, if the -VMLocation parameter is specified.
-        - Deletes all VMs within current subscription, if no parameters are specified. 
 
         Warning: 
         - If multiple VMs match the specified conditions, all of them will be deleted. 
@@ -2116,57 +2061,32 @@ function Remove-AzureRmDtlVirtualMachine
         Deletes all VMs with the name "MyVM1".
 
         .EXAMPLE
-        Remove-AzureRmDtlVirtualMachine -LabName "MyLab"
-        Deletes all VMs within the lab "MyLab".
-
-        .EXAMPLE
-        Remove-AzureRmDtlVirtualMachine -VMResourceGroupName "MyLabRG"
-        Deletes all VMs in the "MyLabRG" resource group.
-
-        .EXAMPLE
-        Remove-AzureRmDtlVirtualMachine -VMLocation "westus"
-        Deletes all VMs in the "westus" location.
-
-        .EXAMPLE
-        Remove-AzureRmDtlVirtualMachine
-        Deletes all VMs within current subscription (use the Select-AzureRmSubscription cmdlet to change the current subscription).
+        Remove-AzureRmDtlVirtualMachine -LabName "MyLab" -VMName "MyVM1"
+        Deletes Vm "MyVM1" within the lab "MyLab".
 
         .INPUTS
         None. Currently you cannot pipe objects to this cmdlet (this will be fixed in a future version).  
     #>
     [CmdletBinding(
-        SupportsShouldProcess=$true,
-        DefaultParameterSetName="DeleteAll")]
+        SupportsShouldProcess=$true)]
     Param(
         [Parameter(Mandatory=$true, ParameterSetName="DeleteByVMId")] 
         [ValidateNotNullOrEmpty()]
         [string]
-        # The ResourceId of the VM (e.g. "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/MyLabRG/providers/Microsoft.DevTestLab/environments/MyVM").
+        # The ResourceId of the VM (e.g. "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/MyLabRG/providers/Microsoft.DevTestLab/labs/MyLab/environments/MyVM").
         $VMId,
 
-        [Parameter(Mandatory=$true, ParameterSetName="DeleteByVMName")] 
-        [ValidateNotNullOrEmpty()]
-        [string]
-        # The name of the VM.
-        $VMName,
-
-        [Parameter(Mandatory=$true, ParameterSetName="DeleteAllInLab")] 
+        [Parameter(Mandatory=$true, ParameterSetName="DeleteInLab")] 
         [ValidateNotNullOrEmpty()]
         [string]
         # Name of the lab.
         $LabName,
 
-        [Parameter(Mandatory=$true, ParameterSetName="DeleteAllInResourceGroup")] 
+        [Parameter(Mandatory=$false, ParameterSetName="DeleteInLab")] 
         [ValidateNotNullOrEmpty()]
         [string]
-        # The name of the VM's resource group.
-        $VMResourceGroupName,
-
-        [Parameter(Mandatory=$true, ParameterSetName="DeleteAllInLocation")] 
-        [ValidateNotNullOrEmpty()]
-        [string]
-        # The location of the VM.
-        $VMLocation
+        # The name of the VM.
+        $VMName
     )
 
     PROCESS
@@ -2181,40 +2101,24 @@ function Remove-AzureRmDtlVirtualMachine
             "DeleteByVMId"
             {
                 $vms = Get-AzureRmDtlVirtualMachine -VMId $VMId
-            }
-                    
-            "DeleteByVMName"
-            {
-                $vms = Get-AzureRmDtlVirtualMachine -VMName $VMName 
-            }
+            } 
 
-            "DeleteAllInLab"
+            "DeleteInLab"
             {
-                $vms = Get-AzureRmDtlVirtualMachine -LabName $LabName
+                if($VMName -ne $null -and $VMName -ne '') 
+                {
+                    $vms = Get-AzureRmDtlVirtualMachine -LabName $LabName -VmName $VMName 
+                } else 
+                {
+                    $vms = Get-AzureRmDtlVirtualMachine -LabName $LabName
+                }
             }
-
-            "DeleteAllInResourceGroup"
-            {
-                $vms = Get-AzureRmDtlVirtualMachine -VMResourceGroupName $VMResourceGroupName 
-            }
-
-            "DeleteAllInLocation"
-            {
-                $vms = Get-AzureRmDtlVirtualMachine -VMLocation $VMLocation
-            }
-
-            "DeleteAll" 
-            {
-                $vms = Get-AzureRmDtlVirtualMachine
-            }
+            
         }
 
         # Next, for each VM... 
         foreach ($vm in $vms)
         {
-            # Get the same VM object, but with properties attached.
-            $vm = GetResourceWithProperties_Private -Resource $vm
-
             # Pop the confirmation dialog.
             if ($PSCmdlet.ShouldProcess($vm.ResourceName, "delete VM"))
             {
