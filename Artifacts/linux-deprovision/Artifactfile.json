@@ -8,6 +8,6 @@
   "iconUri": "",
   "targetOsType": "Linux",
   "runCommand": {
-    "commandToExecute": "['sh deprovision_vm.sh']"
+    "commandToExecute": "['sudo waagent -force -deprovision+user']"
   }
 }
