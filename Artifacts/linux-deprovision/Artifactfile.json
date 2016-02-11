@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
   "title": "Deprovision",
-  "description": "Deprovision Ubuntu Linux Vm to capture as Image.",
+  "description": "Deprovision Linux Vm to capture as Image. This process is destructive",
   "tags": [
     "Linux"
   ],
