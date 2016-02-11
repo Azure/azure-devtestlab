@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+  "title": "BitPay Bitcore",
+  "description": "Add an Linux Bitcore node to the Lab",
+  "iconUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/Artifacts/linux-bitcore/labArtifact.png",
+  "linux-bootstrap-chef/chefArtifact.png": null,
+  "targetOsType": "Linux",
+  "parameters": {
+    "adminUserName": {
+      "type": "string",
+      "displayName": "Admin User Account",
+      "description": "Needs to be the same account name for the host",
+      "allowEmpty": false
+    }
+  },
+  "runCommand": {
+    "commandToExecute": "[concat('sh', ' ', 'install_bitcore.sh', ' ', parameters('adminUserName'))]"
+  }
+}
+

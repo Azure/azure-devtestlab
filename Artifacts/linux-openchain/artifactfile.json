@@ -1,0 +1,39 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+  "title": "Multichain on Linux",
+  "description": "Deploys MultiChain a new lab private blockchain.",
+  "iconUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/Artifacts/linux-openchain/labArtifact.png",
+  "linux-bootstrap-chef/chefArtifact.png": null,
+  "targetOsType": "Linux",
+  "parameters": {
+    "adminUserName": {
+      "type": "string",
+      "displayName": "Admin User Account",
+      "description": "Needs to be the same account name for the host",
+      "allowEmpty": false
+    },
+    "openchainVersion": {
+      "type": "string",
+      "displayName": "Openchain Version",
+      "description": "",
+      "value": "0.5.0",
+      "allowEmpty": false
+    },
+    "openchainAdminKey": {
+      "type": "string",
+      "displayName": "Admin Key",
+      "description": "New wallet address from https://wallet.openchain.org",
+      "allowEmpty": false
+    },
+    "openPermissions": {
+      "type": "bool",
+      "displayName": "Admin Key",
+      "description": "If true anyone can join your blockchain",
+      "defaultValue": false
+    }
+  },
+  "runCommand": {
+    "commandToExecute": "[concat('bash install_openchain.sh ', 'http://', reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIpAddressName'))).dnsSettings.fqdn, '/ ', parameters('openchainVersion'), ' ', parameters('openchainAdminKey'), ' ', parameters('openPermissions'))]"
+  }
+}
+

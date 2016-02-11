@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+  "title": "Multichain on Linux",
+  "description": "Deploys MultiChain a new lab private blockchain.",
+  "iconUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/Artifacts/linux-multichain/labArtifact.png",
+  "linux-bootstrap-chef/chefArtifact.png": null,
+  "targetOsType": "Linux",
+  "parameters": {
+    "adminUserName": {
+      "type": "string",
+      "displayName": "Admin User Account",
+      "description": "Needs to be the same account name for the host",
+      "allowEmpty": false
+    },
+    "chainName": {
+      "type": "string",
+      "displayName": "Private Blockchain Name",
+      "description": "Unique name for your blockchain",
+      "allowEmpty": false
+    }
+  },
+  "runCommand": {
+    "commandToExecute": "[concat('sh', ' ', 'install_multichain.sh', ' ', parameters('adminUserName'), parameters('chainName'))]"
+  }
+}
+
