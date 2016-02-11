@@ -14,10 +14,10 @@
         "description": "The name of an existing lab where the new vm will be created."
       }
     },
-    "existingVMTemplateName": {
+    "imageName": {
       "type": "string",
       "metadata": {
-        "description": "The name of an existing vm template which will be used to create the new vm. The specified vm template must exist in the lab (identified via the 'existingLabName' parameter)."
+        "description": "The name of an existing image which will be used to create the new vm. The specified image must exist in the lab (identified via the 'existingLabName' parameter)."
       }
     },
     "newVMSize": {
@@ -41,7 +41,7 @@
         "vms": [
           {
             "name": "[parameters('newVMName')]",
-            "vmTemplateName": "[parameters('existingVMTemplateName')]",
+            "vmTemplateName": "[parameters('imageName')]",
             "size": "[parameters('newVMSize')]",
             "isAuthenticationWithSshKey": false,
             "sshKey": "",
