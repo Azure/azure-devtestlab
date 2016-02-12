@@ -1,4 +1,4 @@
 #!/bin/bash
 
 set -e
-waagent -force -deprovision+user
+sudo waagent -force -deprovision+user
