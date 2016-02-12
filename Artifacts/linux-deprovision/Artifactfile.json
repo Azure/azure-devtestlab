@@ -8,6 +8,6 @@
     "iconUri": "",
     "targetOsType": "Linux",
     "runCommand": {
-            "commandToExecute": "['su -c /bin/sh/depro.sh']"
+            "commandToExecute": "['sh depro.sh']"
     }
 }
