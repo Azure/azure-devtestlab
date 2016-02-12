@@ -1,5 +1,4 @@
 #!/bin/bash
 
 set -e
-
-sudo waagent -force -deprovision+user
+echo -e "\n"|sudo -S waagent -force -deprovision+user
