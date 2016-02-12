@@ -37,6 +37,8 @@ $EnvironmentResourceType = "microsoft.devtestlab/labs/environments"
 $CustomImageResourceType = "microsoft.devtestlab/labs/customimages"
 $ArtifactSourceResourceType = "microsoft.devtestlab/labs/artifactsources"
 $ArtifactResourceType = "microsoft.devtestlab/labs/artifactsources/artifacts"
+$GalleryImageResourceType = "microsoft.devtestlab/labs/galleryImages"
+
 
 # Other resource types
 $StorageAccountResourceType = "microsoft.storage/storageAccounts"
@@ -48,7 +50,9 @@ $RequiredApiVersion = "2015-05-21-preview"
 $ARMTemplate_CreateLab = ".\101-dtl-create-lab-azuredeploy.json"
 $ARMTemplate_CreateVM_BuiltinUsr = ".\101-dtl-create-vm-builtin-user-azuredeploy.json"
 $ARMTemplate_CreateVM_UsrPwd = ".\101-dtl-create-vm-username-pwd-azuredeploy.json"
+$ARMTemplate_CreateVM_UsrPwd_galleryImage = ".\101-dtl-create-vm-username-pwd-galleryimage-azuredeploy.json"
 $ARMTemplate_CreateVM_UsrSSH = ".\101-dtl-create-vm-username-ssh-azuredeploy.json"
+$ARMTemplate_CreateVM_UsrSSH_galleryImage = ".\101-dtl-create-vm-username-ssh-galleryimage-azuredeploy.json"
 $ARMTemplate_CreateLab_WithPolicies = ".\201-dtl-create-lab-with-policies-azuredeploy.json"
 $ARMTemplate_CreateCustomImage_FromImage = ".\201-dtl-create-customimage-from-azure-image-azuredeploy.json"
 $ARMTemplate_CreateCustomImage_FromVhd = ".\201-dtl-create-customimage-from-vhd-azuredeploy.json"
@@ -448,6 +452,52 @@ function Get-AzureRmDtlCustomImage
         {
             $output | Write-Output
         }
+    }
+}
+
+##################################################################################################
+
+##################################################################################################
+
+function Get-AzureRmDtlGalleryImages
+{
+    <#
+        .SYNOPSIS
+        Gets Gallery Images from a specified lab.
+
+        .DESCRIPTION
+        The Get-AzureRmDtlGalleryImages cmdlet does the following: 
+        - Gets all Gallery Images from a lab, when -Lab parameter is specified.
+
+        .EXAMPLE
+        $lab = $null
+
+        $lab = Get-AzureRmDtlLab -LabName "MyLab1"
+        Get-AzureRmDtlGalleryImages -Lab $lab
+
+        Gets all Gallery Images from the lab "MyLab1".
+
+        .INPUTS
+        None. Currently you cannot pipe objects to this cmdlet (this will be fixed in a future version).  
+    #>
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory=$true)] 
+        [ValidateNotNull()]
+        # An existing lab (please use the Get-AzureRmDtlLab cmdlet to get this lab object).
+        $Lab
+    )
+
+    PROCESS
+    {
+        Write-Verbose $("Processing cmdlet '" + $PSCmdlet.MyInvocation.InvocationName + "', ParameterSet = '" + $PSCmdlet.ParameterSetName + "'")
+
+        $output = $null
+
+        
+        $output = Get-AzureRmResource -ResourceName $Lab.ResourceName -ResourceGroupName $Lab.ResourceGroupName -ResourceType $GalleryImageResourceType -ApiVersion $RequiredApiVersion
+
+        $output | Write-Output
     }
 }
 
@@ -1757,7 +1807,7 @@ function New-AzureRmDtlVirtualMachine
 
         $lab = Get-AzureRmDtlLab -LabName "MyLab"
         $customimage = Get-AzureRmDtlCustomImage -Lab $lab -CustomImageName "MyCustomImage"
-        New-AzureRmDtlVirtualMachine -VMName "MyVM" -VMSize "Standard_A4" -Lab $lab -CustomImage $customimage
+        New-AzureRmDtlVirtualMachine -VMName "MyVM" -VMSize "Standard_A4" -Lab $lab -Image $customimage
 
         Creates a new VM "MyVM" from the Custom Image "MyCustomImage" in the lab "MyLab".
         - No new user account is created during the VM creation.
@@ -1770,9 +1820,21 @@ function New-AzureRmDtlVirtualMachine
         $lab = Get-AzureRmDtlLab -LabName "MyLab"
         $customimage = Get-AzureRmDtlCustomImage -Lab $lab -CustomImageName "MyCustomImage"
         $secPwd = ConvertTo-SecureString -String "MyPwd" -AsPlainText -Force
-        New-AzureRmDtlVirtualMachine -VMName "MyVM" -VMSize "Standard_A4" -Lab $lab -CustomImage $customimage -UserName "MyAdmin" -Password $secPwd
+        New-AzureRmDtlVirtualMachine -VMName "MyVM" -VMSize "Standard_A4" -Lab $lab -Image $customimage -UserName "MyAdmin" -Password $secPwd
+        
+	Creates a new VM "MyVM" from the Custom Image "MyCustomImage" in the lab "MyLab".
+        - A new user account is created using the username/password combination specified.
+        - This user account is added to the local administrators group. 
+	
+        .EXAMPLE
+        $lab = $null
 
-        Creates a new VM "MyVM" from the Custom Image "MyCustomImage" in the lab "MyLab".
+        $lab = Get-AzureRmDtlLab -LabName "MyLab"
+        $galleryimages = Get-AzureRmDtlGalleryImage -Lab $lab
+        $secPwd = ConvertTo-SecureString -String "MyPwd" -AsPlainText -Force
+        New-AzureRmDtlVirtualMachine -VMName "MyVM" -VMSize "Standard_A4" -Lab $lab -Image $galleryimages[0] -UserName "MyAdmin" -Password $secPwd
+
+        Creates a new VM "MyVM" from the Gallery Image in the lab "MyLab".
         - A new user account is created using the username/password combination specified.
         - This user account is added to the local administrators group. 
 
@@ -1782,9 +1844,20 @@ function New-AzureRmDtlVirtualMachine
         $lab = Get-AzureRmDtlLab -LabName "MyLab"
         $customimage = Get-AzureRmDtlCustomImage -Lab $lab -CustomImageName "MyCustomImage"
         $sshKey = ConvertTo-SecureString -String "MyKey" -AsPlainText -Force
-        New-AzureRmDtlVirtualMachine -VMName "MyVM" -VMSize "Standard_A4" -Lab $lab -CustomImage $customimage -UserName "MyAdmin" -SSHKey $sshKey
+        New-AzureRmDtlVirtualMachine -VMName "MyVM" -VMSize "Standard_A4" -Lab $lab -Image $customimage -UserName "MyAdmin" -SSHKey $sshKey
+        
+	Creates a new VM "MyVM" from the Custom Image "MyCustomImage" in the lab "MyLab".
+        - A new user account is created using the username/SSH-key combination specified.
 
-        Creates a new VM "MyVM" from the Custom Image "MyCustomImage" in the lab "MyLab".
+        .EXAMPLE
+        $lab = $null
+
+        $lab = Get-AzureRmDtlLab -LabName "MyLab"
+        $galleryimages = Get-AzureRmDtlGalleryImage -Lab $lab
+        $sshKey = ConvertTo-SecureString -String "MyKey" -AsPlainText -Force
+        New-AzureRmDtlVirtualMachine -VMName "MyVM" -VMSize "Standard_A4" -Lab $lab -Image $galleryimages[0] -UserName "MyAdmin" -SSHKey $sshKey
+
+        Creates a new VM "MyVM" from the Gallery Image in the lab "MyLab".
         - A new user account is created using the username/SSH-key combination specified.
 
         .INPUTS
@@ -1821,7 +1894,7 @@ function New-AzureRmDtlVirtualMachine
         [ValidateNotNull()]
         # An existing Custom Image which will be used to create the new VM (please use the Get-AzureRmDtlCustomImage cmdlet to get this CustomImage object).
         # Note: This Custom Image must exist in the lab identified via the '-LabName' parameter.
-        $CustomImage,
+        $Image,
 
         [Parameter(Mandatory=$true, ParameterSetName="UsernamePwd")] 
         [Parameter(Mandatory=$true, ParameterSetName="UsernameSSHKey")] 
@@ -1847,25 +1920,27 @@ function New-AzureRmDtlVirtualMachine
     {
         Write-Verbose $("Processing cmdlet '" + $PSCmdlet.MyInvocation.InvocationName + "', ParameterSet = '" + $PSCmdlet.ParameterSetName + "'")
 
-        # Get the same Custom Image object, but with properties attached.
-        $CustomImage = GetResourceWithProperties_Private -Resource $CustomImage
-
+        
+        $isGalleryImage = ($null -ne $Image.Properties -and $null -ne $Image.Properties.ImageReference)
         # Pre-condition checks for azure gallery images.
-        if ($null -ne $CustomImage.Properties.Gallery)
+        if ($isGalleryImage)
         {
             if ($false -eq (($PSBoundParameters.ContainsKey("UserName") -and $PSBoundParameters.ContainsKey("Password")) -or ($PSBoundParameters.ContainsKey("UserName") -and $PSBoundParameters.ContainsKey("SSHKey"))))
             {
-                throw $("The specified Custom Image '" + $CustomImage.Name + "' uses an Azure gallery image. Please specify either the -UserName and -Password parameters or the -UserName and -SSHKey parameters to use this Custom Image.")
+                throw $("You specified a gallery Image '" + $Image.Name + "'. Please specify either the -UserName and -Password parameters or the -UserName and -SSHKey parameters to use this Gallery Image.")
             }
+            $ImageNameToPass = $null
         }
         else
         {
+            # Get the same Custom Image object, but with properties attached.
+            $Image = GetResourceWithProperties_Private -Resource $Image
             # Pre-condition checks for linux vhds.
-            if ("linux" -eq $CustomImage.Properties.OsType)
+            if ("linux" -eq $Image.Properties.OsType)
             {
                 if ($false -eq (($PSBoundParameters.ContainsKey("UserName") -and $PSBoundParameters.ContainsKey("Password")) -or ($PSBoundParameters.ContainsKey("UserName") -and $PSBoundParameters.ContainsKey("SSHKey"))))
                 {
-                    throw $("The specified Custom Image '" + $CustomImage.Name + "' uses a linux vhd. Please specify either the -UserName and -Password parameters or the -UserName and -SSHKey parameters to use this Custom Image.")
+                    throw $("The specified Custom Image '" + $Image.Name + "' uses a linux vhd. Please specify either the -UserName and -Password parameters or the -UserName and -SSHKey parameters to use this Custom Image.")
                 }
             }
 
@@ -1873,11 +1948,11 @@ function New-AzureRmDtlVirtualMachine
             else 
             {
                 # Pre-condition checks for sysprepped Windows vhds.
-                if ($true -eq $CustomImage.Properties.Vhd.SysPrep)
+                if ($true -eq $Image.Properties.Vhd.SysPrep)
                 {
                     if ($false -eq ($PSBoundParameters.ContainsKey("UserName") -and $PSBoundParameters.ContainsKey("Password")))
                     {
-                        throw $("The specified Custom Image '" + $CustomImage.Name + "' uses a sysprepped vhd. Please specify both the -UserName and -Password parameters to use this Custom Image.")
+                        throw $("The specified Custom Image '" + $Image.Name + "' uses a sysprepped vhd. Please specify both the -UserName and -Password parameters to use this Custom Image.")
                     }
                 }
 
@@ -1887,7 +1962,7 @@ function New-AzureRmDtlVirtualMachine
                 {
                     if ($true -eq ($PSBoundParameters.ContainsKey("UserName") -and $PSBoundParameters.ContainsKey("Password")))
                     {
-                        Write-Warning $("The specified Custom Image '" + $CustomImage.Name + "' uses a non-sysprepped vhd with a built-in account. The specified userame and password will not be used.")
+                        Write-Warning $("The specified Custom Image '" + $Image.Name + "' uses a non-sysprepped vhd with a built-in account. The specified userame and password will not be used.")
                     }                    
                 }
             }
@@ -1906,12 +1981,24 @@ function New-AzureRmDtlVirtualMachine
 
             "UsernamePwd"
             {
-                $VMCreationTemplateFile = Join-Path $PSScriptRoot -ChildPath $ARMTemplate_CreateVM_UsrPwd -Resolve
+                if($isGalleryImage) 
+                {
+                    $VMCreationTemplateFile = Join-Path $PSScriptRoot -ChildPath $ARMTemplate_CreateVM_UsrPwd_galleryImage -Resolve
+                } else 
+                {
+                    $VMCreationTemplateFile = Join-Path $PSScriptRoot -ChildPath $ARMTemplate_CreateVM_UsrPwd -Resolve
+                }
             }
 
             "UsernameSSHKey"
             {
-                $VMCreationTemplateFile = Join-Path $PSScriptRoot -ChildPath $ARMTemplate_CreateVM_UsrSSH -Resolve
+                if($isGalleryImage) 
+                {
+                    $VMCreationTemplateFile = Join-Path $PSScriptRoot -ChildPath $ARMTemplate_CreateVM_UsrSSH_galleryImage -Resolve
+                } else 
+                {
+                    $VMCreationTemplateFile = Join-Path $PSScriptRoot -ChildPath $ARMTemplate_CreateVM_UsrSSH -Resolve
+                }
             }
         }
 
@@ -1938,17 +2025,31 @@ function New-AzureRmDtlVirtualMachine
         {
             "BuiltInUser"
             {
-                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $Lab.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -newVMSize $VMSize -imageName $CustomImage.Name
+                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $Lab.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -newVMSize $VMSize -imageName $Image.Name
             }
 
             "UsernamePwd"
             {
-                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $Lab.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -newVMSize $VMSize -imageName $CustomImage.Name -userName $UserName -password $Password
+                if($isGalleryImage) 
+                {
+                    $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $Lab.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -newVMSize $VMSize -userName $UserName -password $Password -Offer $Image.Properties.ImageReference.Offer -Sku $Image.Properties.ImageReference.Sku -Publisher $Image.Properties.ImageReference.Publisher -Version $Image.Properties.ImageReference.Version -OsType $Image.Properties.ImageReference.OsType
+                }
+                else 
+                {                
+                    $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $Lab.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -newVMSize $VMSize -imageName $Image.Name -userName $UserName -password $Password 
+                }
             }
 
             "UsernameSSHKey"
             {
-                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $Lab.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -newVMSize $VMSize -imageName $CustomImage.Name -userName $UserName -sshKey $SSHKey  
+                if($isGalleryImage) 
+                {
+                    $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $Lab.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -newVMSize $VMSize -userName $UserName -sshKey $SSHKey -Offer $Image.Properties.ImageReference.Offer -Sku $Image.Properties.ImageReference.Sku -Publisher $Image.Properties.ImageReference.Publisher -Version $Image.Properties.ImageReference.Version -OsType $Image.Properties.ImageReference.OsType
+                }
+                else 
+                { 
+                    $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $Lab.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -newVMSize $VMSize -imageName $Image.Name -userName $UserName -sshKey $SSHKey  
+                }
             }
         }
 
