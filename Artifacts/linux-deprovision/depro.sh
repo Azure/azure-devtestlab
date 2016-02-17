@@ -3,4 +3,4 @@
 set -e
 sudo waagent -force -deprovision+user
 
-sudo shutdown -h +5
+sudo shutdown -h 
