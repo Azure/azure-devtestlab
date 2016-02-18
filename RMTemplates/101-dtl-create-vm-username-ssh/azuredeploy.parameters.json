@@ -8,7 +8,7 @@
     "existingLabName": {
       "value": "MyLab1"
     },
-    "existingVMTemplateName": {
+    "imageName": {
       "value": "MyVMTemplate1"
     },
     "newVMSize": {

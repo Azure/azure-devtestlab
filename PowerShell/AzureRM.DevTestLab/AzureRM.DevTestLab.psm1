@@ -34,9 +34,11 @@
 # Resource types exposed by the DevTestLab provider.
 $LabResourceType = "microsoft.devtestlab/labs"
 $EnvironmentResourceType = "microsoft.devtestlab/labs/environments"
-$VMTemplateResourceType = "microsoft.devtestlab/labs/vmtemplates"
+$CustomImageResourceType = "microsoft.devtestlab/labs/customimages"
 $ArtifactSourceResourceType = "microsoft.devtestlab/labs/artifactsources"
 $ArtifactResourceType = "microsoft.devtestlab/labs/artifactsources/artifacts"
+$GalleryImageResourceType = "microsoft.devtestlab/labs/galleryImages"
+
 
 # Other resource types
 $StorageAccountResourceType = "microsoft.storage/storageAccounts"
@@ -48,11 +50,13 @@ $RequiredApiVersion = "2015-05-21-preview"
 $ARMTemplate_CreateLab = ".\101-dtl-create-lab-azuredeploy.json"
 $ARMTemplate_CreateVM_BuiltinUsr = ".\101-dtl-create-vm-builtin-user-azuredeploy.json"
 $ARMTemplate_CreateVM_UsrPwd = ".\101-dtl-create-vm-username-pwd-azuredeploy.json"
+$ARMTemplate_CreateVM_UsrPwd_galleryImage = ".\101-dtl-create-vm-username-pwd-galleryimage-azuredeploy.json"
 $ARMTemplate_CreateVM_UsrSSH = ".\101-dtl-create-vm-username-ssh-azuredeploy.json"
+$ARMTemplate_CreateVM_UsrSSH_galleryImage = ".\101-dtl-create-vm-username-ssh-galleryimage-azuredeploy.json"
 $ARMTemplate_CreateLab_WithPolicies = ".\201-dtl-create-lab-with-policies-azuredeploy.json"
-$ARMTemplate_CreateVMTemplate_FromImage = ".\201-dtl-create-vmtemplate-from-azure-image-azuredeploy.json"
-$ARMTemplate_CreateVMTemplate_FromVhd = ".\201-dtl-create-vmtemplate-from-vhd-azuredeploy.json"
-$ARMTemplate_CreateVMTemplate_FromVM = ".\201-dtl-create-vmtemplate-from-vm-azuredeploy.json"
+$ARMTemplate_CreateCustomImage_FromImage = ".\201-dtl-create-customimage-from-azure-image-azuredeploy.json"
+$ARMTemplate_CreateCustomImage_FromVhd = ".\201-dtl-create-customimage-from-vhd-azuredeploy.json"
+$ARMTemplate_CreateCustomImage_FromVM = ".\201-dtl-create-customimage-from-vm-azuredeploy.json"
 
 ##################################################################################################
 
@@ -349,64 +353,64 @@ function Get-AzureRmDtlLab
 
 ##################################################################################################
 
-function Get-AzureRmDtlVMTemplate
+function Get-AzureRmDtlCustomImage
 {
     <#
         .SYNOPSIS
-        Gets VM templates from a specified lab.
+        Gets Custom Images from a specified lab.
 
         .DESCRIPTION
-        The Get-AzureRmDtlVMTemplate cmdlet does the following: 
-        - Gets all VM templates from a lab, if the -Lab parameter is specified.
-        - Gets all VM templates with matching name from a lab, if the -VMTemplateName and -Lab parameters are specified.
-        - Gets a specific VM template, if the -VMTemplateId parameter is specified.
+        The Get-AzureRmDtlCustomImage cmdlet does the following: 
+        - Gets all Custom Images from a lab, if the -Lab parameter is specified.
+        - Gets all Custom Images with matching name from a lab, if the -CustomImageName and -Lab parameters are specified.
+        - Gets a specific Custom Image, if the -CustomImageId parameter is specified.
 
         .EXAMPLE
         $lab = $null
 
         $lab = Get-AzureRmDtlLab -LabName "MyLab1"
-        Get-AzureRmDtlVMTemplate -Lab $lab
+        Get-AzureRmDtlCustomImage -Lab $lab
 
-        Gets all VM templates from the lab "MyLab1".
+        Gets all Custom Images from the lab "MyLab1".
 
         .EXAMPLE
         $lab = $null
 
         $lab = Get-AzureRmDtlLab -LabName "MyLab1"
-        Get-AzureRmDtlVMTemplate -VMTemplateName "MyVMTemplate1" -Lab $lab
+        Get-AzureRmDtlCustomImage -CustomImageName "MyCustomImage1" -Lab $lab
 
-        Gets all VM templates with the name "MyVMTemplate1" from the lab "MyLab1".
+        Gets all Custom Images with the name "MyCustomImage1" from the lab "MyLab1".
 
         .EXAMPLE
-        Get-AzureRmDtlVMTemplate -VMTemplateId "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/MyLabRG/providers/Microsoft.DevTestLab/labs/MyLab1/vmtemplates/MyVMTemplate1"
-        Gets a specific VM template, identified by the specified resource-id.
+        Get-AzureRmDtlCustomImage -CustomImageId "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/MyLabRG/providers/Microsoft.DevTestLab/labs/MyLab1/customimages/MyCustomImage1"
+        Gets a specific Custom Image, identified by the specified resource-id.
 
         .INPUTS
         None. Currently you cannot pipe objects to this cmdlet (this will be fixed in a future version).  
     #>
-    [CmdletBinding(DefaultParameterSetName="ListByVMTemplateName")]
+    [CmdletBinding(DefaultParameterSetName="ListByCustomImageName")]
     Param(
-        [Parameter(Mandatory=$true, ParameterSetName="ListByVMTemplateId")] 
+        [Parameter(Mandatory=$true, ParameterSetName="ListByCustomImageId")] 
         [ValidateNotNullOrEmpty()]
         [string]
-        # The ResourceId of the VM template (e.g. "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/MyLabRG/providers/Microsoft.DevTestLab/labs/MyLab1/vmtemplates/MyVMTemplate1").
-        $VMTemplateId,
+        # The ResourceId of the Custom Image (e.g. "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/MyLabRG/providers/Microsoft.DevTestLab/labs/MyLab1/customimages/MyCustomImage1").
+        $CustomImageId,
 
-        [Parameter(Mandatory=$false, ParameterSetName="ListByVMTemplateName")] 
+        [Parameter(Mandatory=$false, ParameterSetName="ListByCustomImageName")] 
         [ValidateNotNullOrEmpty()]
         [string]
-        # The name of the VM template 
-        $VMTemplateName,
+        # The name of the Custom Image 
+        $CustomImageName,
 
-        [Parameter(Mandatory=$true, ParameterSetName="ListByVMTemplateName")] 
+        [Parameter(Mandatory=$true, ParameterSetName="ListByCustomImageName")] 
         [ValidateNotNull()]
         # An existing lab (please use the Get-AzureRmDtlLab cmdlet to get this lab object).
         $Lab,
 
-        [Parameter(Mandatory=$false, ParameterSetName="ListByVMTemplateId")] 
-        [Parameter(Mandatory=$false, ParameterSetName="ListByVMTemplateName")] 
+        [Parameter(Mandatory=$false, ParameterSetName="ListByCustomImageId")] 
+        [Parameter(Mandatory=$false, ParameterSetName="ListByCustomImageName")] 
         [switch]
-        # Optional. If specified, fetches the properties of the VM template(s).
+        # Optional. If specified, fetches the properties of the Custom Image(s).
         $ShowProperties
     )
 
@@ -418,19 +422,19 @@ function Get-AzureRmDtlVMTemplate
 
         switch ($PSCmdlet.ParameterSetName)
         {
-            "ListByVMTemplateId"
+            "ListByCustomImageId"
             {
-                $output = Get-AzureRmResource -ResourceId $VMTemplateId -ApiVersion $RequiredApiVersion
+                $output = Get-AzureRmResource -ResourceId $CustomImageId -ApiVersion $RequiredApiVersion
             }
 
-            "ListByVMTemplateName"
+            "ListByCustomImageName"
             {
-                $output = Get-AzureRmResource -ResourceName $Lab.ResourceName -ResourceGroupName $Lab.ResourceGroupName -ResourceType $VMTemplateResourceType -ApiVersion $RequiredApiVersion
+                $output = Get-AzureRmResource -ResourceName $Lab.ResourceName -ResourceGroupName $Lab.ResourceGroupName -ResourceType $CustomImageResourceType -ApiVersion $RequiredApiVersion
 
-                if ($PSBoundParameters.ContainsKey("VMTemplateName"))
+                if ($PSBoundParameters.ContainsKey("CustomImageName"))
                 {
                     $output = $output | Where-Object {
-                        $_.Name -eq $VMTemplateName                        
+                        $_.Name -eq $CustomImageName                        
                     }
                 }
             }
@@ -448,6 +452,52 @@ function Get-AzureRmDtlVMTemplate
         {
             $output | Write-Output
         }
+    }
+}
+
+##################################################################################################
+
+##################################################################################################
+
+function Get-AzureRmDtlGalleryImages
+{
+    <#
+        .SYNOPSIS
+        Gets Gallery Images from a specified lab.
+
+        .DESCRIPTION
+        The Get-AzureRmDtlGalleryImages cmdlet does the following: 
+        - Gets all Gallery Images from a lab, when -Lab parameter is specified.
+
+        .EXAMPLE
+        $lab = $null
+
+        $lab = Get-AzureRmDtlLab -LabName "MyLab1"
+        Get-AzureRmDtlGalleryImages -Lab $lab
+
+        Gets all Gallery Images from the lab "MyLab1".
+
+        .INPUTS
+        None. Currently you cannot pipe objects to this cmdlet (this will be fixed in a future version).  
+    #>
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory=$true)] 
+        [ValidateNotNull()]
+        # An existing lab (please use the Get-AzureRmDtlLab cmdlet to get this lab object).
+        $Lab
+    )
+
+    PROCESS
+    {
+        Write-Verbose $("Processing cmdlet '" + $PSCmdlet.MyInvocation.InvocationName + "', ParameterSet = '" + $PSCmdlet.ParameterSetName + "'")
+
+        $output = $null
+
+        
+        $output = Get-AzureRmResource -ResourceName $Lab.ResourceName -ResourceGroupName $Lab.ResourceGroupName -ResourceType $GalleryImageResourceType -ApiVersion $RequiredApiVersion
+
+        $output | Write-Output
     }
 }
 
@@ -1003,42 +1053,33 @@ function New-AzureRmDtlLabStorageContext
 
 ##################################################################################################
 
-function New-AzureRmDtlVMTemplate
+function New-AzureRmDtlCustomImage
 {
     <#
         .SYNOPSIS
-        Creates a new virtual machine template.
+        Creates a new virtual machine custom image.
 
         .DESCRIPTION
-        The New-AzureRmDtlVMTemplate cmdlet creates a new VM template from an existing VM or Vhd.
-        - The VM template name can only include alphanumeric characters, underscores, hyphens and parantheses.
-        - The new VM template is created in the same lab as the VM (or Vhd).
+        The New-AzureRmDtlCustomImage cmdlet creates a new Custom Image from an existing VM or Vhd.
+        - The Custom Image name can only include alphanumeric characters, underscores, hyphens and parantheses.
+        - The new Custom Image is created in the same lab as the VM (or Vhd).
 
         .EXAMPLE
         $vm = $null
 
-        $vm = Get-AzureRmDtlVirtualMachine -VMName "MyVM1"
-        New-AzureRmDtlVMTemplate -SrcDtlVM $vm -DestVMTemplateName "MyVMTemplate1" -DestVMTemplateDescription "MyDescription"
+        $vm = Get-AzureRmDtlVirtualMachine -VMName "MyVM1" -LabName "MyLab"
+        New-AzureRmDtlCustomImage -SrcDtlVM $vm -DestCustomImageName "MyCustomImage1" -DestCustomImageDescription "MyDescription"
 
-        Creates a new VM Template "MyVMTemplate1" from the VM "MyVM1" (in the same lab as the VM).
-
-        .EXAMPLE
-        $lab = $null
-
-        $lab = Get-AzureRmDtlLab -LabName "MyLab1"
-        $vhd = Get-AzureRmDtlVhd -Lab $lab -VMName "MyVhd1.vhd"
-        New-AzureRmDtlVMTemplate -SrcDtlVhd $vhd -SrcDtlLab $lab -DestVMTemplateName "MyVMTemplate1" -DestVMTemplateDescription "MyDescription"
-
-        Creates a new VM Template "MyVMTemplate1" in the lab "MyLab1" using the vhd "MyVhd1.vhd" from the same lab.
+        Creates a new Custom Image "MyCustomImage1" from the VM "MyVM1" (in the same lab as the VM).
 
         .EXAMPLE
         $lab = $null
 
         $lab = Get-AzureRmDtlLab -LabName "MyLab1"
-        $image = Get-AzureRmVMImage -Location "west us" -PublisherName "microsoftwindowsserver" -Offer "windowsserver" -Skus "2016-Nano-Server" -Version "2016.0.15"
-        New-AzureRmDtlVMTemplate -SrcAzureRmVMImage $image -DestLabName "MyLab1" -DestVMTemplateName "MyVMTemplate1" -DestVMTemplateDescription "MyDescription"
+        $vhd = Get-AzureRmDtlVhd -Lab $lab -VhdName "MyVhd1.vhd"
+        New-AzureRmDtlCustomImage -SrcDtlVhd $vhd -SrcDtlLab $lab -DestCustomImageName "MyCustomImage1" -DestCustomImageDescription "MyDescription" -SrcImageOSType windows
 
-        Creates a new VM Template "MyVMTemplate1" in the lab "MyLab1" from the azure marketplace image "windowsserver" (sku = "2016-Nano-Server", version "2016.0.15").
+        Creates a new Custom Image "MyCustomImage1" in the lab "MyLab1" using the vhd "MyVhd1.vhd" from the same lab.
 
         .INPUTS
         None.
@@ -1047,12 +1088,12 @@ function New-AzureRmDtlVMTemplate
     Param(
         [Parameter(Mandatory=$true, ParameterSetName="FromVM")]
         [ValidateNotNull()]
-        # An existing lab VM from which the new lab VM template will be created (please use the Get-AzureRmDtlVirtualMachine cmdlet to get this lab VM object).
+        # An existing lab VM from which the new lab Custom Image will be created (please use the Get-AzureRmDtlVirtualMachine cmdlet to get this lab VM object).
         $SrcDtlVM,
 
         [Parameter(Mandatory=$true, ParameterSetName="FromVhd")]
         [ValidateNotNull()]
-        # An existing lab vhd from which the new lab VM template will be created (please use the Get-AzureRmDtlVhd cmdlet to get this lab vhd object).
+        # An existing lab vhd from which the new lab Custom Image will be created (please use the Get-AzureRmDtlVhd cmdlet to get this lab vhd object).
         $SrcDtlVhd,
 
         [Parameter(Mandatory=$true, ParameterSetName="FromVhd")]
@@ -1060,13 +1101,7 @@ function New-AzureRmDtlVMTemplate
         # An existing lab where the source vhd resides (please use the Get-AzureRmDtlLab cmdlet to get this lab object).
         $SrcDtlLab,
 
-        [Parameter(Mandatory=$true, ParameterSetName="FromAzureRmVMImage")]
-        [ValidateNotNull()]
-        # An existing azure gallery image from which the new lab VM template will be created (please use the Get-AzureRmVMImage cmdlet to get this image object).
-        $SrcAzureRmVMImage,
-
         [Parameter(Mandatory=$true, ParameterSetName="FromVhd")]
-        [Parameter(Mandatory=$true, ParameterSetName="FromAzureRmVMImage")]
         [ValidateSet("windows", "linux")]        
         [string]
         # The OS type of the source Vhd or Azure gallery image. 
@@ -1078,45 +1113,37 @@ function New-AzureRmDtlVMTemplate
         [Parameter(Mandatory=$false, ParameterSetName="FromVhd")]
         [switch]
         # Specifies whether the source VM or Vhd is sysprepped. 
-        # Note: This parameter is ignored when a linux VHD or VM is used as the source for the new VM template.
-        # Note: This parameter is ignored when an Azure gallery image is used as the source for the new VM template.
+        # Note: This parameter is ignored when a linux VHD or VM is used as the source for the new Custom Image.
+        # Note: This parameter is ignored when an Azure gallery image is used as the source for the new Custom Image.
         $SrcIsSysPrepped,
-
-        [Parameter(Mandatory=$true, ParameterSetName="FromAzureRmVMImage")]
-        [ValidateNotNullOrEmpty()]
-        [string]
-        # The name of the lab where the new VM template will be created.
-        $DestLabName,
 
         [Parameter(Mandatory=$true, ParameterSetName="FromVM")]
         [Parameter(Mandatory=$true, ParameterSetName="FromVhd")]
-        [Parameter(Mandatory=$true, ParameterSetName="FromAzureRmVMImage")]
         [ValidateNotNullOrEmpty()]
         [string]
-        # Name of the new lab VM template to be created.
-        $DestVMTemplateName,
+        # Name of the new lab Custom Image to be created.
+        $DestCustomImageName,
 
         [Parameter(Mandatory=$false, ParameterSetName="FromVM")]
         [Parameter(Mandatory=$false, ParameterSetName="FromVhd")]
-        [Parameter(Mandatory=$false, ParameterSetName="FromAzureRmVMImage")]
         [ValidateNotNull()]
         [string]
-        # Details about the new lab VM template being created.
-        $DestVMTemplateDescription = ""
+        # Details about the new lab Custom Image being created.
+        $DestCustomImageDescription = ""
     )
 
     PROCESS
     {
         Write-Verbose $("Processing cmdlet '" + $PSCmdlet.MyInvocation.InvocationName + "', ParameterSet = '" + $PSCmdlet.ParameterSetName + "'")
 
-        # Pre-condition check for the VM template name
-        if ($true -eq ($DestVMTemplateName -match "[^0-9a-zA-Z()_-]"))
+        # Pre-condition check for the Custom Image name
+        if ($true -eq ($DestCustomImageName -match "[^0-9a-zA-Z()_-]"))
         {
-            throw $("Invalid characters detected in the supplied VM template name '" + $DestVMTemplateName + "'. The VM template name can only include alphanumeric characters, underscores, hyphens and parantheses.")
+            throw $("Invalid characters detected in the supplied Custom Image name '" + $DestCustomImageName + "'. The Custom Image name can only include alphanumeric characters, underscores, hyphens and parantheses.")
         }
 
-        # Encode the VM template name
-        $VMTemplateNameEncoded = $DestVMTemplateName.Replace(" ", "%20")
+        # Encode the Custom Image name
+        $CustomImageNameEncoded = $DestCustomImageName.Replace(" ", "%20")
 
         # Unique name for the deployment
         $deploymentName = [Guid]::NewGuid().ToString()
@@ -1156,32 +1183,32 @@ function New-AzureRmDtlVMTemplate
                 }
 
                 # Folder location of VM creation script, the template file and template parameters file.
-                $VMTemplateCreationTemplateFile = Join-Path $PSScriptRoot -ChildPath $ARMTemplate_CreateVMTemplate_FromVM -Resolve
+                $CustomImageCreationTemplateFile = Join-Path $PSScriptRoot -ChildPath $ARMTemplate_CreateCustomImage_FromVM -Resolve
 
                 # Pre-condition check to ensure the RM template file exists.
-                if ($false -eq (Test-Path -Path $VMTemplateCreationTemplateFile))
+                if ($false -eq (Test-Path -Path $CustomImageCreationTemplateFile))
                 {
-                    throw $("The RM template file could not be located at : '" + $VMTemplateCreationTemplateFile + "'")
+                    throw $("The RM template file could not be located at : '" + $CustomImageCreationTemplateFile + "'")
                 }
                 else
                 {
-                    Write-Verbose $("The RM template file was located at : '" + $VMTemplateCreationTemplateFile + "'")
+                    Write-Verbose $("The RM template file was located at : '" + $CustomImageCreationTemplateFile + "'")
                 }
 
                 # Get the lab that contains the source VM
                 $lab = GetLabFromVM_Private -VM $SrcDtlVM
 
-                # Pre-condition check to ensure that a VM template with same name doesn't already exist.
-                $destVMTemplateExists = ($null -ne (Get-AzureRmDtlVMTemplate -VMTemplateName $DestVMTemplateName -Lab $lab)) 
+                # Pre-condition check to ensure that a Custom Image with same name doesn't already exist.
+                $destCustomImageExists = ($null -ne (Get-AzureRmDtlCustomImage -CustomImageName $DestCustomImageName -Lab $lab)) 
 
-                if ($true -eq $destVMTemplateExists)
+                if ($true -eq $destCustomImageExists)
                 {
-                    throw $("A VM Template with the name '" + $DestVMTemplateName + "' already exists in the lab '" + $lab.Name + "'. Please specify another name for the VM Template to be created.")
+                    throw $("A Custom Image with the name '" + $DestCustomImageName + "' already exists in the lab '" + $lab.Name + "'. Please specify another name for the Custom Image to be created.")
                 }
 
-                # Create the VM Template in the lab's resource group by deploying the RM template
-                Write-Verbose $("Creating VM Template '" + $DestVMTemplateName + "' in lab '" + $lab.ResourceName + "'")
-                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $VMTemplateCreationTemplateFile -existingLabName $lab.ResourceName -existingVMResourceId $SrcDtlVM.Properties.Vms[0].ComputeId -isVMSysPrepped $isSysPrepped -templateName $VMTemplateNameEncoded -templateDescription $DestVMTemplateDescription -ErrorAction "Stop"
+                # Create the Custom Image in the lab's resource group by deploying the RM template
+                Write-Verbose $("Creating Custom Image '" + $DestCustomImageName + "' in lab '" + $lab.ResourceName + "'")
+                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $CustomImageCreationTemplateFile -existingLabName $lab.ResourceName -existingVMResourceId $SrcDtlVM.Properties.Vms[0].ComputeId -isVMSysPrepped $isSysPrepped -imageName $CustomImageNameEncoded -imageDescription $DestCustomImageDescription -ErrorAction "Stop"
             }
 
             "FromVhd"
@@ -1201,16 +1228,16 @@ function New-AzureRmDtlVMTemplate
                 }
 
                 # Folder location of VM creation script, the template file and template parameters file.
-                $VMTemplateCreationTemplateFile = Join-Path $PSScriptRoot -ChildPath $ARMTemplate_CreateVMTemplate_FromVhd -Resolve
+                $CustomImageCreationTemplateFile = Join-Path $PSScriptRoot -ChildPath $ARMTemplate_CreateCustomImage_FromVhd -Resolve
 
                 # Pre-condition check to ensure the RM template file exists.
-                if ($false -eq (Test-Path -Path $VMTemplateCreationTemplateFile))
+                if ($false -eq (Test-Path -Path $CustomImageCreationTemplateFile))
                 {
-                    throw $("The RM template file could not be located at : '" + $VMTemplateCreationTemplateFile + "'")
+                    throw $("The RM template file could not be located at : '" + $CustomImageCreationTemplateFile + "'")
                 }
                 else
                 {
-                    Write-Verbose $("The RM template file was located at : '" + $VMTemplateCreationTemplateFile + "'")
+                    Write-Verbose $("The RM template file was located at : '" + $CustomImageCreationTemplateFile + "'")
                 }
 
                 # Pre-condition check to ensure that src vhd indeed belongs to the src lab.
@@ -1221,77 +1248,27 @@ function New-AzureRmDtlVMTemplate
                     throw $("The specified vhd '" + $SrcDtlVhd.Name + "' could not be located in the lab '" + $SrcDtlLab.Name + "'.")
                 }
 
-                # Pre-condition check to ensure that a VM template with same name doesn't already exist.
-                $destVMTemplateExists = ($null -ne (Get-AzureRmDtlVMTemplate -VMTemplateName $DestVMTemplateName -Lab $SrcDtlLab)) 
+                # Pre-condition check to ensure that a Custom Image with same name doesn't already exist.
+                $destCustomImageExists = ($null -ne (Get-AzureRmDtlCustomImage -CustomImageName $DestCustomImageName -Lab $SrcDtlLab)) 
 
-                if ($true -eq $destVMTemplateExists)
+                if ($true -eq $destCustomImageExists)
                 {
-                    throw $("A VM Template with the name '" + $DestVMTemplateName + "' already exists in the lab '" + $SrcDtlLab.Name + "'. Please specify another name for the VM Template to be created.")
+                    throw $("A Custom Image with the name '" + $DestCustomImageName + "' already exists in the lab '" + $SrcDtlLab.Name + "'. Please specify another name for the Custom Image to be created.")
                 }
 
-                # Create the VM Template in the lab's resource group by deploying the RM template
-                Write-Verbose $("Creating VM Template '" + $DestVMTemplateName + "' in lab '" + $SrcDtlLab.ResourceName + "'")
-                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $SrcDtlLab.ResourceGroupName -TemplateFile $VMTemplateCreationTemplateFile -existingLabName $SrcDtlLab.ResourceName -existingVhdUri $SrcDtlVhd.ICloudBlob.Uri.AbsoluteUri -imageOsType $SrcImageOSType -isVhdSysPrepped $isSysPrepped -templateName $VMTemplateNameEncoded -templateDescription $DestVMTemplateDescription -ErrorAction "Stop"
-            }
-
-            "FromAzureRmVMImage"
-            {
-                # Pre-condition checks to ensure that we're able to extract the properties of the azure gallery image.
-                if (($null -eq $SrcAzureRmVMImage.PublisherName) -or ($null -eq $SrcAzureRmVMImage.Offer) -or ($null -eq $SrcAzureRmVMImage.Skus) -or ($null -eq $SrcAzureRmVMImage.Version))
-                {
-                    throw $("Unable to determine the properties of the specified azure gallery image '" + $SrcAzureRmVMImage.Name + "'.")
-                }
-
-                # Folder location of VM creation script, the template file and template parameters file.
-                $VMTemplateCreationTemplateFile = Join-Path $PSScriptRoot -ChildPath $ARMTemplate_CreateVMTemplate_FromImage -Resolve
-
-                # Pre-condition check to ensure the RM template file exists.
-                if ($false -eq (Test-Path -Path $VMTemplateCreationTemplateFile))
-                {
-                    throw $("The RM template file could not be located at : '" + $VMTemplateCreationTemplateFile + "'")
-                }
-                else
-                {
-                    Write-Verbose $("The RM template file was located at : '" + $VMTemplateCreationTemplateFile + "'")
-                }
-
-                # fetch the lab where the VM template should be created
-                $lab = Get-AzureRmDtlLab -LabName $DestLabName 
-
-                if ($null -eq $lab -or $lab.Count -eq 0)
-                {
-                    throw $("Unable to detect lab with name '" + $DestLabName + "'")
-                }
-
-                if ($lab.Count > 1)
-                {
-                    throw $("Multiple labs found with name '" + $DestLabName + "'")
-                }
-
-                write-Verbose $("Found lab : " + $lab.ResourceName) 
-                write-Verbose $("LabId : " + $lab.ResourceId) 
-
-                # Pre-condition check to ensure that a VM template with same name doesn't already exist.
-                $destVMTemplateExists = ($null -ne (Get-AzureRmDtlVMTemplate -VMTemplateName $DestVMTemplateName -Lab $lab)) 
-
-                if ($true -eq $destVMTemplateExists)
-                {
-                    throw $("A VM Template with the name '" + $DestVMTemplateName + "' already exists in the lab '" + $lab.Name + "'. Please specify another name for the VM Template to be created.")
-                }
-
-                # Create the VM Template in the lab's resource group by deploying the RM template
-                Write-Verbose $("Creating VM Template '" + $DestVMTemplateName + "' in lab '" + $lab.ResourceName + "'")
-                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $VMTemplateCreationTemplateFile -existingLabName $lab.ResourceName -imagePublisher $SrcAzureRmVMImage.PublisherName -imageOffer $SrcAzureRmVMImage.Offer -imageSku $SrcAzureRmVMImage.Skus -imageVersion $SrcAzureRmVMImage.Version -imageOsType $SrcImageOSType -templateName $VMTemplateNameEncoded -templateDescription $DestVMTemplateDescription -ErrorAction "Stop"
+                # Create the Custom Image in the lab's resource group by deploying the RM template
+                Write-Verbose $("Creating Custom Image '" + $DestCustomImageName + "' in lab '" + $SrcDtlLab.ResourceName + "'")
+                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $SrcDtlLab.ResourceGroupName -TemplateFile $CustomImageCreationTemplateFile -existingLabName $SrcDtlLab.ResourceName -existingVhdUri $SrcDtlVhd.ICloudBlob.Uri.AbsoluteUri -imageOsType $SrcImageOSType -isVhdSysPrepped $isSysPrepped -imageName $CustomImageNameEncoded -imageDescription $DestCustomImageDescription -ErrorAction "Stop"
             }
         }
 
-        # fetch and output the newly created VM template. 
-        if (($null -ne $rgDeployment) -and ($null -ne $rgDeployment.Outputs['vmTemplateId']) -and ($null -ne $rgDeployment.Outputs['vmTemplateId'].Value))
+        # fetch and output the newly created Custom Image. 
+        if (($null -ne $rgDeployment) -and ($null -ne $rgDeployment.Outputs['customImageId']) -and ($null -ne $rgDeployment.Outputs['customImageId'].Value))
         {
-            $vmTemplateId = $rgDeployment.Outputs['vmTemplateId'].Value
-            Write-Verbose $("VMTemplateId : '" + $vmTemplateId + "'")
+            $customImageId = $rgDeployment.Outputs['customImageId'].Value
+            Write-Verbose $("CustomImageId : '" + $customImageId + "'")
 
-            Get-AzureRmResource -ResourceId $vmTemplateId -ApiVersion $RequiredApiVersion | Write-Output
+            Get-AzureRmResource -ResourceId $customImageId -ApiVersion $RequiredApiVersion | Write-Output
         }
     }
 }
@@ -1829,23 +1806,35 @@ function New-AzureRmDtlVirtualMachine
         $lab = $null
 
         $lab = Get-AzureRmDtlLab -LabName "MyLab"
-        $vmtemplate = Get-AzureRmDtlVMTemplate -Lab $lab -VMTemplateName "MyVMTemplate"
-        New-AzureRmDtlVirtualMachine -VMName "MyVM" -VMSize "Standard_A4" -Lab $lab -VMTemplate $vmtemplate
+        $customimage = Get-AzureRmDtlCustomImage -Lab $lab -CustomImageName "MyCustomImage"
+        New-AzureRmDtlVirtualMachine -VMName "MyVM" -VMSize "Standard_A4" -Lab $lab -Image $customimage
 
-        Creates a new VM "MyVM" from the VM template "MyVMTemplate" in the lab "MyLab".
+        Creates a new VM "MyVM" from the Custom Image "MyCustomImage" in the lab "MyLab".
         - No new user account is created during the VM creation.
-        - We assume that the original VM template already contains a built-in user account.
+        - We assume that the original Custom Image already contains a built-in user account.
         - We assume that this built-in account can be used to log into the VM after creation.
 
         .EXAMPLE
         $lab = $null
 
         $lab = Get-AzureRmDtlLab -LabName "MyLab"
-        $vmtemplate = Get-AzureRmDtlVMTemplate -Lab $lab -VMTemplateName "MyVMTemplate"
+        $customimage = Get-AzureRmDtlCustomImage -Lab $lab -CustomImageName "MyCustomImage"
         $secPwd = ConvertTo-SecureString -String "MyPwd" -AsPlainText -Force
-        New-AzureRmDtlVirtualMachine -VMName "MyVM" -VMSize "Standard_A4" -Lab $lab -VMTemplate $vmtemplate -UserName "MyAdmin" -Password $secPwd
+        New-AzureRmDtlVirtualMachine -VMName "MyVM" -VMSize "Standard_A4" -Lab $lab -Image $customimage -UserName "MyAdmin" -Password $secPwd
+        
+	Creates a new VM "MyVM" from the Custom Image "MyCustomImage" in the lab "MyLab".
+        - A new user account is created using the username/password combination specified.
+        - This user account is added to the local administrators group. 
+	
+        .EXAMPLE
+        $lab = $null
 
-        Creates a new VM "MyVM" from the VM template "MyVMTemplate" in the lab "MyLab".
+        $lab = Get-AzureRmDtlLab -LabName "MyLab"
+        $galleryimages = Get-AzureRmDtlGalleryImage -Lab $lab
+        $secPwd = ConvertTo-SecureString -String "MyPwd" -AsPlainText -Force
+        New-AzureRmDtlVirtualMachine -VMName "MyVM" -VMSize "Standard_A4" -Lab $lab -Image $galleryimages[0] -UserName "MyAdmin" -Password $secPwd
+
+        Creates a new VM "MyVM" from the Gallery Image in the lab "MyLab".
         - A new user account is created using the username/password combination specified.
         - This user account is added to the local administrators group. 
 
@@ -1853,11 +1842,22 @@ function New-AzureRmDtlVirtualMachine
         $lab = $null
 
         $lab = Get-AzureRmDtlLab -LabName "MyLab"
-        $vmtemplate = Get-AzureRmDtlVMTemplate -Lab $lab -VMTemplateName "MyVMTemplate"
+        $customimage = Get-AzureRmDtlCustomImage -Lab $lab -CustomImageName "MyCustomImage"
         $sshKey = ConvertTo-SecureString -String "MyKey" -AsPlainText -Force
-        New-AzureRmDtlVirtualMachine -VMName "MyVM" -VMSize "Standard_A4" -Lab $lab -VMTemplate $vmtemplate -UserName "MyAdmin" -SSHKey $sshKey
+        New-AzureRmDtlVirtualMachine -VMName "MyVM" -VMSize "Standard_A4" -Lab $lab -Image $customimage -UserName "MyAdmin" -SSHKey $sshKey
+        
+	Creates a new VM "MyVM" from the Custom Image "MyCustomImage" in the lab "MyLab".
+        - A new user account is created using the username/SSH-key combination specified.
 
-        Creates a new VM "MyVM" from the VM template "MyVMTemplate" in the lab "MyLab".
+        .EXAMPLE
+        $lab = $null
+
+        $lab = Get-AzureRmDtlLab -LabName "MyLab"
+        $galleryimages = Get-AzureRmDtlGalleryImage -Lab $lab
+        $sshKey = ConvertTo-SecureString -String "MyKey" -AsPlainText -Force
+        New-AzureRmDtlVirtualMachine -VMName "MyVM" -VMSize "Standard_A4" -Lab $lab -Image $galleryimages[0] -UserName "MyAdmin" -SSHKey $sshKey
+
+        Creates a new VM "MyVM" from the Gallery Image in the lab "MyLab".
         - A new user account is created using the username/SSH-key combination specified.
 
         .INPUTS
@@ -1892,9 +1892,9 @@ function New-AzureRmDtlVirtualMachine
         [Parameter(Mandatory=$true, ParameterSetName="UsernamePwd")] 
         [Parameter(Mandatory=$true, ParameterSetName="UsernameSSHKey")] 
         [ValidateNotNull()]
-        # An existing VM template which will be used to create the new VM (please use the Get-AzureRmDtlVMTemplate cmdlet to get this VMTemplate object).
-        # Note: This VM template must exist in the lab identified via the '-LabName' parameter.
-        $VMTemplate,
+        # An existing Custom Image which will be used to create the new VM (please use the Get-AzureRmDtlCustomImage cmdlet to get this CustomImage object).
+        # Note: This Custom Image must exist in the lab identified via the '-LabName' parameter.
+        $Image,
 
         [Parameter(Mandatory=$true, ParameterSetName="UsernamePwd")] 
         [Parameter(Mandatory=$true, ParameterSetName="UsernameSSHKey")] 
@@ -1920,25 +1920,27 @@ function New-AzureRmDtlVirtualMachine
     {
         Write-Verbose $("Processing cmdlet '" + $PSCmdlet.MyInvocation.InvocationName + "', ParameterSet = '" + $PSCmdlet.ParameterSetName + "'")
 
-        # Get the same VM template object, but with properties attached.
-        $VMTemplate = GetResourceWithProperties_Private -Resource $VMTemplate
-
+        
+        $isGalleryImage = ($null -ne $Image.Properties -and $null -ne $Image.Properties.ImageReference)
         # Pre-condition checks for azure gallery images.
-        if ($null -ne $VMTemplate.Properties.Gallery)
+        if ($isGalleryImage)
         {
             if ($false -eq (($PSBoundParameters.ContainsKey("UserName") -and $PSBoundParameters.ContainsKey("Password")) -or ($PSBoundParameters.ContainsKey("UserName") -and $PSBoundParameters.ContainsKey("SSHKey"))))
             {
-                throw $("The specified VM template '" + $VMTemplate.Name + "' uses an Azure gallery image. Please specify either the -UserName and -Password parameters or the -UserName and -SSHKey parameters to use this VM template.")
+                throw $("You specified a gallery Image '" + $Image.Name + "'. Please specify either the -UserName and -Password parameters or the -UserName and -SSHKey parameters to use this Gallery Image.")
             }
+            $ImageNameToPass = $null
         }
         else
         {
+            # Get the same Custom Image object, but with properties attached.
+            $Image = GetResourceWithProperties_Private -Resource $Image
             # Pre-condition checks for linux vhds.
-            if ("linux" -eq $VMTemplate.Properties.OsType)
+            if ("linux" -eq $Image.Properties.OsType)
             {
                 if ($false -eq (($PSBoundParameters.ContainsKey("UserName") -and $PSBoundParameters.ContainsKey("Password")) -or ($PSBoundParameters.ContainsKey("UserName") -and $PSBoundParameters.ContainsKey("SSHKey"))))
                 {
-                    throw $("The specified VM template '" + $VMTemplate.Name + "' uses a linux vhd. Please specify either the -UserName and -Password parameters or the -UserName and -SSHKey parameters to use this VM template.")
+                    throw $("The specified Custom Image '" + $Image.Name + "' uses a linux vhd. Please specify either the -UserName and -Password parameters or the -UserName and -SSHKey parameters to use this Custom Image.")
                 }
             }
 
@@ -1946,11 +1948,11 @@ function New-AzureRmDtlVirtualMachine
             else 
             {
                 # Pre-condition checks for sysprepped Windows vhds.
-                if ($true -eq $VMTemplate.Properties.Vhd.SysPrep)
+                if ($true -eq $Image.Properties.Vhd.SysPrep)
                 {
                     if ($false -eq ($PSBoundParameters.ContainsKey("UserName") -and $PSBoundParameters.ContainsKey("Password")))
                     {
-                        throw $("The specified VM template '" + $VMTemplate.Name + "' uses a sysprepped vhd. Please specify both the -UserName and -Password parameters to use this VM template.")
+                        throw $("The specified Custom Image '" + $Image.Name + "' uses a sysprepped vhd. Please specify both the -UserName and -Password parameters to use this Custom Image.")
                     }
                 }
 
@@ -1960,7 +1962,7 @@ function New-AzureRmDtlVirtualMachine
                 {
                     if ($true -eq ($PSBoundParameters.ContainsKey("UserName") -and $PSBoundParameters.ContainsKey("Password")))
                     {
-                        Write-Warning $("The specified VM template '" + $VMTemplate.Name + "' uses a non-sysprepped vhd with a built-in account. The specified userame and password will not be used.")
+                        Write-Warning $("The specified Custom Image '" + $Image.Name + "' uses a non-sysprepped vhd with a built-in account. The specified userame and password will not be used.")
                     }                    
                 }
             }
@@ -1979,12 +1981,24 @@ function New-AzureRmDtlVirtualMachine
 
             "UsernamePwd"
             {
-                $VMCreationTemplateFile = Join-Path $PSScriptRoot -ChildPath $ARMTemplate_CreateVM_UsrPwd -Resolve
+                if($isGalleryImage) 
+                {
+                    $VMCreationTemplateFile = Join-Path $PSScriptRoot -ChildPath $ARMTemplate_CreateVM_UsrPwd_galleryImage -Resolve
+                } else 
+                {
+                    $VMCreationTemplateFile = Join-Path $PSScriptRoot -ChildPath $ARMTemplate_CreateVM_UsrPwd -Resolve
+                }
             }
 
             "UsernameSSHKey"
             {
-                $VMCreationTemplateFile = Join-Path $PSScriptRoot -ChildPath $ARMTemplate_CreateVM_UsrSSH -Resolve
+                if($isGalleryImage) 
+                {
+                    $VMCreationTemplateFile = Join-Path $PSScriptRoot -ChildPath $ARMTemplate_CreateVM_UsrSSH_galleryImage -Resolve
+                } else 
+                {
+                    $VMCreationTemplateFile = Join-Path $PSScriptRoot -ChildPath $ARMTemplate_CreateVM_UsrSSH -Resolve
+                }
             }
         }
 
@@ -2011,17 +2025,31 @@ function New-AzureRmDtlVirtualMachine
         {
             "BuiltInUser"
             {
-                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $Lab.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -newVMSize $VMSize -existingVMTemplateName $VMTemplate.Name
+                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $Lab.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -newVMSize $VMSize -imageName $Image.Name
             }
 
             "UsernamePwd"
             {
-                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $Lab.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -newVMSize $VMSize -existingVMTemplateName $VMTemplate.Name -userName $UserName -password $Password
+                if($isGalleryImage) 
+                {
+                    $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $Lab.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -newVMSize $VMSize -userName $UserName -password $Password -Offer $Image.Properties.ImageReference.Offer -Sku $Image.Properties.ImageReference.Sku -Publisher $Image.Properties.ImageReference.Publisher -Version $Image.Properties.ImageReference.Version -OsType $Image.Properties.ImageReference.OsType
+                }
+                else 
+                {                
+                    $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $Lab.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -newVMSize $VMSize -imageName $Image.Name -userName $UserName -password $Password 
+                }
             }
 
             "UsernameSSHKey"
             {
-                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $Lab.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -newVMSize $VMSize -existingVMTemplateName $VMTemplate.Name -userName $UserName -sshKey $SSHKey  
+                if($isGalleryImage) 
+                {
+                    $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $Lab.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -newVMSize $VMSize -userName $UserName -sshKey $SSHKey -Offer $Image.Properties.ImageReference.Offer -Sku $Image.Properties.ImageReference.Sku -Publisher $Image.Properties.ImageReference.Publisher -Version $Image.Properties.ImageReference.Version -OsType $Image.Properties.ImageReference.OsType
+                }
+                else 
+                { 
+                    $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $Lab.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -newVMSize $VMSize -imageName $Image.Name -userName $UserName -sshKey $SSHKey  
+                }
             }
         }
 
