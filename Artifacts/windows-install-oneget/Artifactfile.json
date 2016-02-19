@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+  "title": "PowerShell Package Manager",
+  "description": "Installs the PowerShell Package Manager for pre-Windows 10 environments",
+  "tags": [
+    "Windows",
+    "PowerShell"
+  ],
+  "targetOsType": "Windows",
+  "runCommand": {
+    "commandToExecute": "powershell.exe -executionpolicy bypass -File installPackageManager.ps1"
+  }
+}
