@@ -1848,11 +1848,11 @@ function New-AzureRmDtlVirtualMachine
         $lab = $null
 
         $lab = Get-AzureRmDtlLab -LabName "MyLab"
-        $galleryimages = Get-AzureRmDtlGalleryImage -Lab $lab
+        $galleryimage = Get-AzureRmDtlGalleryImage -Lab $lab -GalleryImageName "MyGalleryImage"
         $secPwd = ConvertTo-SecureString -String "MyPwd" -AsPlainText -Force
-        New-AzureRmDtlVirtualMachine -VMName "MyVM" -VMSize "Standard_A4" -Lab $lab -Image $galleryimages[0] -UserName "MyAdmin" -Password $secPwd
+        New-AzureRmDtlVirtualMachine -VMName "MyVM" -VMSize "Standard_A4" -Lab $lab -Image $galleryimage -UserName "MyAdmin" -Password $secPwd
 
-        Creates a new VM "MyVM" from the gallery image in the lab "MyLab".
+        Creates a new VM "MyVM" from the gallery image "MyGalleryImage" in the lab "MyLab".
         - A new user account is created using the username/password combination specified.
         - This user account is added to the local administrators group. 
 
@@ -1871,11 +1871,11 @@ function New-AzureRmDtlVirtualMachine
         $lab = $null
 
         $lab = Get-AzureRmDtlLab -LabName "MyLab"
-        $galleryimages = Get-AzureRmDtlGalleryImage -Lab $lab
+        $galleryimage = Get-AzureRmDtlGalleryImage -Lab $lab -GalleryImageName "MyGalleryImage"
         $sshKey = ConvertTo-SecureString -String "MyKey" -AsPlainText -Force
-        New-AzureRmDtlVirtualMachine -VMName "MyVM" -VMSize "Standard_A4" -Lab $lab -Image $galleryimages[0] -UserName "MyAdmin" -SSHKey $sshKey
+        New-AzureRmDtlVirtualMachine -VMName "MyVM" -VMSize "Standard_A4" -Lab $lab -Image $galleryimage -UserName "MyAdmin" -SSHKey $sshKey
 
-        Creates a new VM "MyVM" from the gallery image in the lab "MyLab".
+        Creates a new VM "MyVM" from the gallery image "MyGalleryImage" in the lab "MyLab".
         - A new user account is created using the username/SSH-key combination specified.
 
         .INPUTS
@@ -1910,7 +1910,7 @@ function New-AzureRmDtlVirtualMachine
         [Parameter(Mandatory=$true, ParameterSetName="UsernamePwd")] 
         [Parameter(Mandatory=$true, ParameterSetName="UsernameSSHKey")] 
         [ValidateNotNull()]
-        # An existing custom image which will be used to create the new VM (please use the Get-AzureRmDtlCustomImage cmdlet to get this CustomImage object).
+        # An existing custom or gallery image which will be used to create the new VM (please use the Get-AzureRmDtlCustomImage or Get-AzureRmDtlGalleryImage cmdlets to get this image object).
         # Note: This custom image must exist in the lab identified via the '-LabName' parameter.
         $Image,
 
@@ -1948,7 +1948,6 @@ function New-AzureRmDtlVirtualMachine
             {
                 throw $("You specified a gallery Image '" + $Image.Name + "'. Please specify either the -UserName and -Password parameters or the -UserName and -SSHKey parameters to use this gallery image.")
             }
-            $ImageNameToPass = $null
         }
         else
         {
