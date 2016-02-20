@@ -35,10 +35,9 @@
 $LabResourceType = "microsoft.devtestlab/labs"
 $EnvironmentResourceType = "microsoft.devtestlab/labs/environments"
 $CustomImageResourceType = "microsoft.devtestlab/labs/customimages"
+$GalleryImageResourceType = "microsoft.devtestlab/labs/galleryimages"
 $ArtifactSourceResourceType = "microsoft.devtestlab/labs/artifactsources"
 $ArtifactResourceType = "microsoft.devtestlab/labs/artifactsources/artifacts"
-$GalleryImageResourceType = "microsoft.devtestlab/labs/galleryImages"
-
 
 # Other resource types
 $StorageAccountResourceType = "microsoft.storage/storageAccounts"
@@ -63,6 +62,7 @@ $ARMTemplate_CreateCustomImage_FromVM = ".\201-dtl-create-customimage-from-vm-az
 #
 # Private helper methods
 #
+
 function GetLabFromNestedResource_Private
 {
     Param(
@@ -101,8 +101,6 @@ function GetLabFromVM_Private
 
     return $lab
 }
-
-
 
 function GetLabFromVhd_Private
 {
@@ -254,23 +252,8 @@ function Get-AzureRmDtlLab
         # The name of the lab.
         $LabName,
 
-        [Parameter(Mandatory=$false, ParameterSetName="ListByLabName")] 
-        [Parameter(Mandatory=$true, ParameterSetName="ListAllInResourceGroup")] 
-        [ValidateNotNullOrEmpty()]
-        [string]
-        # The name of the lab's resource group.
-        $LabResourceGroupName,
-
-        [Parameter(Mandatory=$true, ParameterSetName="ListAllInLocation")] 
-        [ValidateNotNullOrEmpty()]
-        [string]
-        # The location of the lab ("westus", "eastasia" etc).
-        $LabLocation,
-
         [Parameter(Mandatory=$false, ParameterSetName="ListByLabId")] 
         [Parameter(Mandatory=$false, ParameterSetName="ListByLabName")] 
-        [Parameter(Mandatory=$false, ParameterSetName="ListAllInResourceGroup")] 
-        [Parameter(Mandatory=$false, ParameterSetName="ListAllInLocation")] 
         [Parameter(Mandatory=$false, ParameterSetName="ListAll")] 
         [switch]
         # Optional. If specified, fetches the properties of the lab(s).
@@ -295,37 +278,10 @@ function Get-AzureRmDtlLab
                     
             "ListByLabName"
             {
-                if ($PSBoundParameters.ContainsKey("LabResourceGroupName"))
-                {
-                    $output = Get-AzureRmResource | Where-Object { 
-                        $_.ResourceType -eq $LabResourceType -and 
-                        $_.ResourceName -eq $LabName -and 
-                        $_.ResourceGroupName -eq $LabResourceGroupName 
-                    }
-                }
-                else
-                {
-                    $output = Get-AzureRmResource | Where-Object { 
-                        $_.ResourceType -eq $LabResourceType -and 
-                        $_.ResourceName -eq $LabName 
-                    }     
-                }
-            }
-
-            "ListAllInResourceGroup"
-            {
                 $output = Get-AzureRmResource | Where-Object { 
                     $_.ResourceType -eq $LabResourceType -and 
-                    $_.ResourceGroupName -eq $LabResourceGroupName 
-                }
-            }
-
-            "ListAllInLocation"
-            {
-                $output = Get-AzureRmResource | Where-Object { 
-                    $_.ResourceType -eq $LabResourceType -and 
-                    $_.Location -eq $LabLocation 
-                }
+                    $_.ResourceName -eq $LabName 
+                }     
             }
 
             "ListAll" 
@@ -357,13 +313,13 @@ function Get-AzureRmDtlCustomImage
 {
     <#
         .SYNOPSIS
-        Gets Custom Images from a specified lab.
+        Gets custom images from a specified lab.
 
         .DESCRIPTION
         The Get-AzureRmDtlCustomImage cmdlet does the following: 
-        - Gets all Custom Images from a lab, if the -Lab parameter is specified.
-        - Gets all Custom Images with matching name from a lab, if the -CustomImageName and -Lab parameters are specified.
-        - Gets a specific Custom Image, if the -CustomImageId parameter is specified.
+        - Gets all custom images from a lab, if the -Lab parameter is specified.
+        - Gets all custom images with matching name from a lab, if the -CustomImageName and -Lab parameters are specified.
+        - Gets a specific custom image, if the -CustomImageId parameter is specified.
 
         .EXAMPLE
         $lab = $null
@@ -371,7 +327,7 @@ function Get-AzureRmDtlCustomImage
         $lab = Get-AzureRmDtlLab -LabName "MyLab1"
         Get-AzureRmDtlCustomImage -Lab $lab
 
-        Gets all Custom Images from the lab "MyLab1".
+        Gets all custom images from the lab "MyLab1".
 
         .EXAMPLE
         $lab = $null
@@ -379,11 +335,11 @@ function Get-AzureRmDtlCustomImage
         $lab = Get-AzureRmDtlLab -LabName "MyLab1"
         Get-AzureRmDtlCustomImage -CustomImageName "MyCustomImage1" -Lab $lab
 
-        Gets all Custom Images with the name "MyCustomImage1" from the lab "MyLab1".
+        Gets all custom images with the name "MyCustomImage1" from the lab "MyLab1".
 
         .EXAMPLE
         Get-AzureRmDtlCustomImage -CustomImageId "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/MyLabRG/providers/Microsoft.DevTestLab/labs/MyLab1/customimages/MyCustomImage1"
-        Gets a specific Custom Image, identified by the specified resource-id.
+        Gets a specific custom image, identified by the specified resource-id.
 
         .INPUTS
         None. Currently you cannot pipe objects to this cmdlet (this will be fixed in a future version).  
@@ -393,13 +349,13 @@ function Get-AzureRmDtlCustomImage
         [Parameter(Mandatory=$true, ParameterSetName="ListByCustomImageId")] 
         [ValidateNotNullOrEmpty()]
         [string]
-        # The ResourceId of the Custom Image (e.g. "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/MyLabRG/providers/Microsoft.DevTestLab/labs/MyLab1/customimages/MyCustomImage1").
+        # The ResourceId of the custom image (e.g. "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/MyLabRG/providers/Microsoft.DevTestLab/labs/MyLab1/customimages/MyCustomImage1").
         $CustomImageId,
 
         [Parameter(Mandatory=$false, ParameterSetName="ListByCustomImageName")] 
         [ValidateNotNullOrEmpty()]
         [string]
-        # The name of the Custom Image 
+        # The name of the custom image 
         $CustomImageName,
 
         [Parameter(Mandatory=$true, ParameterSetName="ListByCustomImageName")] 
@@ -410,7 +366,7 @@ function Get-AzureRmDtlCustomImage
         [Parameter(Mandatory=$false, ParameterSetName="ListByCustomImageId")] 
         [Parameter(Mandatory=$false, ParameterSetName="ListByCustomImageName")] 
         [switch]
-        # Optional. If specified, fetches the properties of the Custom Image(s).
+        # Optional. If specified, fetches the properties of the custom image(s).
         $ShowProperties
     )
 
@@ -434,7 +390,7 @@ function Get-AzureRmDtlCustomImage
                 if ($PSBoundParameters.ContainsKey("CustomImageName"))
                 {
                     $output = $output | Where-Object {
-                        $_.Name -eq $CustomImageName                        
+                        $_.Name -eq $CustomImageName 
                     }
                 }
             }
@@ -457,35 +413,65 @@ function Get-AzureRmDtlCustomImage
 
 ##################################################################################################
 
-##################################################################################################
-
-function Get-AzureRmDtlGalleryImages
+function Get-AzureRmDtlGalleryImage
 {
     <#
         .SYNOPSIS
-        Gets Gallery Images from a specified lab.
+        Gets gallery images from a specified lab.
 
         .DESCRIPTION
-        The Get-AzureRmDtlGalleryImages cmdlet does the following: 
-        - Gets all Gallery Images from a lab, when -Lab parameter is specified.
+        The Get-AzureRmDtlGalleryImage cmdlet does the following: 
+        - Gets all gallery images from a lab, if the -Lab parameter is specified.
+        - Gets all gallery images with matching name from a lab, if the -GalleryImageName and -Lab parameters are specified.
+        - Gets a specific gallery image, if the -GalleryImageId parameter is specified.
 
         .EXAMPLE
         $lab = $null
 
         $lab = Get-AzureRmDtlLab -LabName "MyLab1"
-        Get-AzureRmDtlGalleryImages -Lab $lab
+        Get-AzureRmDtlGalleryImage -Lab $lab
 
-        Gets all Gallery Images from the lab "MyLab1".
+        Gets all gallery images from the lab "MyLab1".
+
+        .EXAMPLE
+        $lab = $null
+
+        $lab = Get-AzureRmDtlLab -LabName "MyLab1"
+        Get-AzureRmDtlGalleryImage -GalleryImageName "MyGalleryImage1" -Lab $lab
+
+        Gets all gallery images with the name "MyGalleryImage1" from the lab "MyLab1".
+
+        .EXAMPLE
+        Get-AzureRmDtlGalleryImage -GalleryImageId "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/MyLabRG/providers/Microsoft.DevTestLab/labs/MyLab1/galleryimages/MyGalleryImage1"
+        Gets a specific gallery image, identified by the specified resource-id.
 
         .INPUTS
         None. Currently you cannot pipe objects to this cmdlet (this will be fixed in a future version).  
     #>
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName="ListByGalleryImageName")]
     Param(
-        [Parameter(Mandatory=$true)] 
+        [Parameter(Mandatory=$true, ParameterSetName="ListByGalleryImageId")] 
+        [ValidateNotNullOrEmpty()]
+        [string]
+        # The ResourceId of the gallery image (e.g. "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/MyLabRG/providers/Microsoft.DevTestLab/labs/MyLab1/galleryimages/MyGalleryImage1").
+        $GalleryImageId,
+
+        [Parameter(Mandatory=$false, ParameterSetName="ListByGalleryImageName")] 
+        [ValidateNotNullOrEmpty()]
+        [string]
+        # The name of the gallery image 
+        $GalleryImageName,
+
+        [Parameter(Mandatory=$true, ParameterSetName="ListByGalleryImageName")] 
         [ValidateNotNull()]
         # An existing lab (please use the Get-AzureRmDtlLab cmdlet to get this lab object).
-        $Lab
+        $Lab,
+
+        [Parameter(Mandatory=$false, ParameterSetName="ListByGalleryImageId")] 
+        [Parameter(Mandatory=$false, ParameterSetName="ListByGalleryImageName")] 
+        [switch]
+        # Optional. If specified, fetches the properties of the gallery image(s).
+        $ShowProperties
     )
 
     PROCESS
@@ -494,10 +480,38 @@ function Get-AzureRmDtlGalleryImages
 
         $output = $null
 
-        
-        $output = Get-AzureRmResource -ResourceName $Lab.ResourceName -ResourceGroupName $Lab.ResourceGroupName -ResourceType $GalleryImageResourceType -ApiVersion $RequiredApiVersion
+        switch ($PSCmdlet.ParameterSetName)
+        {
+            "ListByGalleryImageId"
+            {
+                $output = Get-AzureRmResource -ResourceId $GalleryImageId -ApiVersion $RequiredApiVersion
+            }
 
-        $output | Write-Output
+            "ListByGalleryImageName"
+            {
+                $output = Get-AzureRmResource -ResourceName $Lab.ResourceName -ResourceGroupName $Lab.ResourceGroupName -ResourceType $GalleryImageResourceType -ApiVersion $RequiredApiVersion
+
+                if ($PSBoundParameters.ContainsKey("GalleryImageName"))
+                {
+                    $output = $output | Where-Object {
+                        $_.Name -eq $GalleryImageName 
+                    }
+                }
+            }
+        }
+
+        # now let us display the output
+        if ($PSBoundParameters.ContainsKey("ShowProperties"))
+        {
+            foreach ($item in $output)
+            {
+                GetResourceWithProperties_Private -Resource $item | Write-Output
+            }
+        }
+        else
+        {
+            $output | Write-Output
+        }
     }
 }
 
@@ -794,13 +808,18 @@ function Get-AzureRmDtlVirtualMachine
         Gets a specific VM, identified by the specified resource-id.
 
         .EXAMPLE
-        Get-AzureRmDtlVirtualMachine -LabName "MyLab"
-        Gets all VMs within the lab "MyLab".
+        $lab = $null
+
+        $lab = Get-AzureRmDtlLab -LabName "MyLab1"
+        Get-AzureRmDtlVirtualMachine -Lab $lab
+        Gets all VMs within the lab "MyLab1".
 
         .EXAMPLE
-        Get-AzureRmDtlVirtualMachine -LabName "MyLab" -VmName "MyVm"
-        Gets Vm "MyVm" within the lab "MyLab".
+        $lab = $null
 
+        $lab = Get-AzureRmDtlLab -LabName "MyLab1"
+        Get-AzureRmDtlVirtualMachine -Lab $lab -VmName "MyVm"
+        Gets VM "MyVm" within the lab "MyLab1".
 
         .INPUTS
         None. Currently you cannot pipe objects to this cmdlet (this will be fixed in a future version).  
@@ -813,20 +832,19 @@ function Get-AzureRmDtlVirtualMachine
         # The ResourceId of the VM (e.g. "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/MyLabRG/providers/Microsoft.DevTestLab/environments/MyVM").
         $VMId,
 
-        [Parameter(Mandatory=$true, ParameterSetName="ListInLab")] 
-        [ValidateNotNullOrEmpty()]
-        [string]
-        # Name of the lab.
-        $LabName,
+        [Parameter(Mandatory=$true, ParameterSetName="ListByVMName")] 
+        [ValidateNotNull()]
+        # An existing lab (please use the Get-AzureRmDtlLab cmdlet to get this lab object).
+        $Lab,
 
-        [Parameter(Mandatory=$false, ParameterSetName="ListInLab")] 
+        [Parameter(Mandatory=$false, ParameterSetName="ListByVMName")] 
         [ValidateNotNullOrEmpty()]
         [string]
-        # Name of the lab.
-        $VmName,
+        # Name of the VM to fetch from the lab.
+        $VMName,
 
         [Parameter(Mandatory=$false, ParameterSetName="ListByVMId")] 
-        [Parameter(Mandatory=$false, ParameterSetName="ListInLab")]
+        [Parameter(Mandatory=$false, ParameterSetName="ListByVMName")]
         [switch]
         # Optional. If specified, fetches the properties of the virtual machine(s).
         $ShowProperties
@@ -842,37 +860,36 @@ function Get-AzureRmDtlVirtualMachine
         {
             "ListByVMId"
             {
-                $output = Get-AzureRmResource -ResourceId $VMId
-            }
-
-            "ListInLab"
-            {
-                $fetchedLabObj = Get-AzureRmDtlLab -LabName $LabName 
-
-                if ($null -ne $fetchedLabObj -and $fetchedLabObj.Count -ne 0)
-                {
-                    if ($fetchedLabObj.Count > 1)
-                    {
-                        throw $("Multiple labs found with name '" + $LabName + "'")
-                    }
-                    else
-                    {
-                        write-Verbose $("Found lab : " + $fetchedLabObj.ResourceName) 
-                        write-Verbose $("LabId : " + $fetchedLabObj.ResourceId) 
-                        $resourceName = $LabName
-                        if($VmName -ne $null -and $VmName -ne '') 
-                        {
-                            $resourceName = $resourceName + "/" + $VmName
-                        }
-
-                        # Note: The -ErrorAction 'SilentlyContinue' ensures that we suppress irrelevant
-                        # errors originating while expanding properties (especially in internal test and
-                        # pre-production subscriptions).
-                        $output = Get-AzureRmResource -ResourceName $resourceName -ResourceType $EnvironmentResourceType -ResourceGroupName $fetchedLabObj.ResourceGroupName -ExpandProperties -ErrorAction "SilentlyContinue"
-                    }
+                $output = Get-AzureRmResource | Where-Object { 
+                    $_.ResourceType -eq $EnvironmentResourceType -and 
+                    $_.ResourceId -eq $VMId 
                 }
             }
 
+            "ListByVMName"
+            {
+                $resourceName = $Lab.Name
+                if ($false -eq [string]::IsNullOrEmpty($VMName))
+                {
+                    $resourceName = $resourceName + "/" + $VMName
+                }
+
+                # Note: The -ErrorAction 'SilentlyContinue' ensures that we suppress irrelevant
+                # errors originating while expanding properties (especially in internal test and
+                # pre-production subscriptions).                
+                $output = Get-AzureRmResource -ExpandProperties -ErrorAction "SilentlyContinue" | Where-Object { 
+                    $_.ResourceType -eq $EnvironmentResourceType -and
+                    $_.ResourceGroupName -eq $Lab.ResourceGroupName
+                }
+                
+                if ($PSBoundParameters.ContainsKey("VMName"))
+                {
+                    $output = $output | Where-Object {
+                        $_.Name -eq $VMName -and
+                        $_.ResourceName -eq $($Lab.Name + "/" + $VMName)
+                    }
+                }
+            }
         }
 
         # now let us display the output
@@ -1060,17 +1077,18 @@ function New-AzureRmDtlCustomImage
         Creates a new virtual machine custom image.
 
         .DESCRIPTION
-        The New-AzureRmDtlCustomImage cmdlet creates a new Custom Image from an existing VM or Vhd.
-        - The Custom Image name can only include alphanumeric characters, underscores, hyphens and parantheses.
-        - The new Custom Image is created in the same lab as the VM (or Vhd).
+        The New-AzureRmDtlCustomImage cmdlet creates a new custom image from an existing VM or Vhd.
+        - The custom image name can only include alphanumeric characters, underscores, hyphens and parantheses.
+        - The new custom image is created in the same lab as the VM (or vhd).
 
         .EXAMPLE
-        $vm = $null
+        $lab = $null
 
-        $vm = Get-AzureRmDtlVirtualMachine -VMName "MyVM1" -LabName "MyLab"
+        $lab = Get-AzureRmDtlLab -LabName "MyLab"
+        $vm = Get-AzureRmDtlVirtualMachine -VMName "MyVM1" -Lab $lab
         New-AzureRmDtlCustomImage -SrcDtlVM $vm -DestCustomImageName "MyCustomImage1" -DestCustomImageDescription "MyDescription"
 
-        Creates a new Custom Image "MyCustomImage1" from the VM "MyVM1" (in the same lab as the VM).
+        Creates a new custom image "MyCustomImage1" from the VM "MyVM1" (in the same lab as the VM).
 
         .EXAMPLE
         $lab = $null
@@ -1079,7 +1097,7 @@ function New-AzureRmDtlCustomImage
         $vhd = Get-AzureRmDtlVhd -Lab $lab -VhdName "MyVhd1.vhd"
         New-AzureRmDtlCustomImage -SrcDtlVhd $vhd -SrcDtlLab $lab -DestCustomImageName "MyCustomImage1" -DestCustomImageDescription "MyDescription" -SrcImageOSType windows
 
-        Creates a new Custom Image "MyCustomImage1" in the lab "MyLab1" using the vhd "MyVhd1.vhd" from the same lab.
+        Creates a new custom image "MyCustomImage1" in the lab "MyLab1" using the vhd "MyVhd1.vhd" from the same lab.
 
         .INPUTS
         None.
@@ -1088,12 +1106,12 @@ function New-AzureRmDtlCustomImage
     Param(
         [Parameter(Mandatory=$true, ParameterSetName="FromVM")]
         [ValidateNotNull()]
-        # An existing lab VM from which the new lab Custom Image will be created (please use the Get-AzureRmDtlVirtualMachine cmdlet to get this lab VM object).
+        # An existing lab VM from which the new lab custom image will be created (please use the Get-AzureRmDtlVirtualMachine cmdlet to get this lab VM object).
         $SrcDtlVM,
 
         [Parameter(Mandatory=$true, ParameterSetName="FromVhd")]
         [ValidateNotNull()]
-        # An existing lab vhd from which the new lab Custom Image will be created (please use the Get-AzureRmDtlVhd cmdlet to get this lab vhd object).
+        # An existing lab vhd from which the new lab custom image will be created (please use the Get-AzureRmDtlVhd cmdlet to get this lab vhd object).
         $SrcDtlVhd,
 
         [Parameter(Mandatory=$true, ParameterSetName="FromVhd")]
@@ -1113,22 +1131,22 @@ function New-AzureRmDtlCustomImage
         [Parameter(Mandatory=$false, ParameterSetName="FromVhd")]
         [switch]
         # Specifies whether the source VM or Vhd is sysprepped. 
-        # Note: This parameter is ignored when a linux VHD or VM is used as the source for the new Custom Image.
-        # Note: This parameter is ignored when an Azure gallery image is used as the source for the new Custom Image.
+        # Note: This parameter is ignored when a linux VHD or VM is used as the source for the new custom image.
+        # Note: This parameter is ignored when an Azure gallery image is used as the source for the new custom image.
         $SrcIsSysPrepped,
 
         [Parameter(Mandatory=$true, ParameterSetName="FromVM")]
         [Parameter(Mandatory=$true, ParameterSetName="FromVhd")]
         [ValidateNotNullOrEmpty()]
         [string]
-        # Name of the new lab Custom Image to be created.
+        # Name of the new lab custom image to be created.
         $DestCustomImageName,
 
         [Parameter(Mandatory=$false, ParameterSetName="FromVM")]
         [Parameter(Mandatory=$false, ParameterSetName="FromVhd")]
         [ValidateNotNull()]
         [string]
-        # Details about the new lab Custom Image being created.
+        # Details about the new lab custom image being created.
         $DestCustomImageDescription = ""
     )
 
@@ -1136,13 +1154,13 @@ function New-AzureRmDtlCustomImage
     {
         Write-Verbose $("Processing cmdlet '" + $PSCmdlet.MyInvocation.InvocationName + "', ParameterSet = '" + $PSCmdlet.ParameterSetName + "'")
 
-        # Pre-condition check for the Custom Image name
+        # Pre-condition check for the custom image name
         if ($true -eq ($DestCustomImageName -match "[^0-9a-zA-Z()_-]"))
         {
-            throw $("Invalid characters detected in the supplied Custom Image name '" + $DestCustomImageName + "'. The Custom Image name can only include alphanumeric characters, underscores, hyphens and parantheses.")
+            throw $("Invalid characters detected in the supplied custom image name '" + $DestCustomImageName + "'. The custom image name can only include alphanumeric characters, underscores, hyphens and parantheses.")
         }
 
-        # Encode the Custom Image name
+        # Encode the custom image name
         $CustomImageNameEncoded = $DestCustomImageName.Replace(" ", "%20")
 
         # Unique name for the deployment
@@ -1198,16 +1216,16 @@ function New-AzureRmDtlCustomImage
                 # Get the lab that contains the source VM
                 $lab = GetLabFromVM_Private -VM $SrcDtlVM
 
-                # Pre-condition check to ensure that a Custom Image with same name doesn't already exist.
+                # Pre-condition check to ensure that a custom image with same name doesn't already exist.
                 $destCustomImageExists = ($null -ne (Get-AzureRmDtlCustomImage -CustomImageName $DestCustomImageName -Lab $lab)) 
 
                 if ($true -eq $destCustomImageExists)
                 {
-                    throw $("A Custom Image with the name '" + $DestCustomImageName + "' already exists in the lab '" + $lab.Name + "'. Please specify another name for the Custom Image to be created.")
+                    throw $("A custom image with the name '" + $DestCustomImageName + "' already exists in the lab '" + $lab.Name + "'. Please specify another name for the custom image to be created.")
                 }
 
-                # Create the Custom Image in the lab's resource group by deploying the RM template
-                Write-Verbose $("Creating Custom Image '" + $DestCustomImageName + "' in lab '" + $lab.ResourceName + "'")
+                # Create the custom image in the lab's resource group by deploying the RM template
+                Write-Verbose $("Creating custom image '" + $DestCustomImageName + "' in lab '" + $lab.ResourceName + "'")
                 $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $CustomImageCreationTemplateFile -existingLabName $lab.ResourceName -existingVMResourceId $SrcDtlVM.Properties.Vms[0].ComputeId -isVMSysPrepped $isSysPrepped -imageName $CustomImageNameEncoded -imageDescription $DestCustomImageDescription -ErrorAction "Stop"
             }
 
@@ -1248,21 +1266,21 @@ function New-AzureRmDtlCustomImage
                     throw $("The specified vhd '" + $SrcDtlVhd.Name + "' could not be located in the lab '" + $SrcDtlLab.Name + "'.")
                 }
 
-                # Pre-condition check to ensure that a Custom Image with same name doesn't already exist.
+                # Pre-condition check to ensure that a custom image with same name doesn't already exist.
                 $destCustomImageExists = ($null -ne (Get-AzureRmDtlCustomImage -CustomImageName $DestCustomImageName -Lab $SrcDtlLab)) 
 
                 if ($true -eq $destCustomImageExists)
                 {
-                    throw $("A Custom Image with the name '" + $DestCustomImageName + "' already exists in the lab '" + $SrcDtlLab.Name + "'. Please specify another name for the Custom Image to be created.")
+                    throw $("A custom image with the name '" + $DestCustomImageName + "' already exists in the lab '" + $SrcDtlLab.Name + "'. Please specify another name for the custom image to be created.")
                 }
 
-                # Create the Custom Image in the lab's resource group by deploying the RM template
-                Write-Verbose $("Creating Custom Image '" + $DestCustomImageName + "' in lab '" + $SrcDtlLab.ResourceName + "'")
+                # Create the custom image in the lab's resource group by deploying the RM template
+                Write-Verbose $("Creating custom image '" + $DestCustomImageName + "' in lab '" + $SrcDtlLab.ResourceName + "'")
                 $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $SrcDtlLab.ResourceGroupName -TemplateFile $CustomImageCreationTemplateFile -existingLabName $SrcDtlLab.ResourceName -existingVhdUri $SrcDtlVhd.ICloudBlob.Uri.AbsoluteUri -imageOsType $SrcImageOSType -isVhdSysPrepped $isSysPrepped -imageName $CustomImageNameEncoded -imageDescription $DestCustomImageDescription -ErrorAction "Stop"
             }
         }
 
-        # fetch and output the newly created Custom Image. 
+        # fetch and output the newly created custom image. 
         if (($null -ne $rgDeployment) -and ($null -ne $rgDeployment.Outputs['customImageId']) -and ($null -ne $rgDeployment.Outputs['customImageId'].Value))
         {
             $customImageId = $rgDeployment.Outputs['customImageId'].Value
@@ -1809,9 +1827,9 @@ function New-AzureRmDtlVirtualMachine
         $customimage = Get-AzureRmDtlCustomImage -Lab $lab -CustomImageName "MyCustomImage"
         New-AzureRmDtlVirtualMachine -VMName "MyVM" -VMSize "Standard_A4" -Lab $lab -Image $customimage
 
-        Creates a new VM "MyVM" from the Custom Image "MyCustomImage" in the lab "MyLab".
+        Creates a new VM "MyVM" from the custom image "MyCustomImage" in the lab "MyLab".
         - No new user account is created during the VM creation.
-        - We assume that the original Custom Image already contains a built-in user account.
+        - We assume that the original custom image already contains a built-in user account.
         - We assume that this built-in account can be used to log into the VM after creation.
 
         .EXAMPLE
@@ -1822,10 +1840,10 @@ function New-AzureRmDtlVirtualMachine
         $secPwd = ConvertTo-SecureString -String "MyPwd" -AsPlainText -Force
         New-AzureRmDtlVirtualMachine -VMName "MyVM" -VMSize "Standard_A4" -Lab $lab -Image $customimage -UserName "MyAdmin" -Password $secPwd
         
-	Creates a new VM "MyVM" from the Custom Image "MyCustomImage" in the lab "MyLab".
+        Creates a new VM "MyVM" from the custom image "MyCustomImage" in the lab "MyLab".
         - A new user account is created using the username/password combination specified.
         - This user account is added to the local administrators group. 
-	
+
         .EXAMPLE
         $lab = $null
 
@@ -1834,7 +1852,7 @@ function New-AzureRmDtlVirtualMachine
         $secPwd = ConvertTo-SecureString -String "MyPwd" -AsPlainText -Force
         New-AzureRmDtlVirtualMachine -VMName "MyVM" -VMSize "Standard_A4" -Lab $lab -Image $galleryimages[0] -UserName "MyAdmin" -Password $secPwd
 
-        Creates a new VM "MyVM" from the Gallery Image in the lab "MyLab".
+        Creates a new VM "MyVM" from the gallery image in the lab "MyLab".
         - A new user account is created using the username/password combination specified.
         - This user account is added to the local administrators group. 
 
@@ -1846,7 +1864,7 @@ function New-AzureRmDtlVirtualMachine
         $sshKey = ConvertTo-SecureString -String "MyKey" -AsPlainText -Force
         New-AzureRmDtlVirtualMachine -VMName "MyVM" -VMSize "Standard_A4" -Lab $lab -Image $customimage -UserName "MyAdmin" -SSHKey $sshKey
         
-	Creates a new VM "MyVM" from the Custom Image "MyCustomImage" in the lab "MyLab".
+        Creates a new VM "MyVM" from the custom image "MyCustomImage" in the lab "MyLab".
         - A new user account is created using the username/SSH-key combination specified.
 
         .EXAMPLE
@@ -1857,7 +1875,7 @@ function New-AzureRmDtlVirtualMachine
         $sshKey = ConvertTo-SecureString -String "MyKey" -AsPlainText -Force
         New-AzureRmDtlVirtualMachine -VMName "MyVM" -VMSize "Standard_A4" -Lab $lab -Image $galleryimages[0] -UserName "MyAdmin" -SSHKey $sshKey
 
-        Creates a new VM "MyVM" from the Gallery Image in the lab "MyLab".
+        Creates a new VM "MyVM" from the gallery image in the lab "MyLab".
         - A new user account is created using the username/SSH-key combination specified.
 
         .INPUTS
@@ -1892,8 +1910,8 @@ function New-AzureRmDtlVirtualMachine
         [Parameter(Mandatory=$true, ParameterSetName="UsernamePwd")] 
         [Parameter(Mandatory=$true, ParameterSetName="UsernameSSHKey")] 
         [ValidateNotNull()]
-        # An existing Custom Image which will be used to create the new VM (please use the Get-AzureRmDtlCustomImage cmdlet to get this CustomImage object).
-        # Note: This Custom Image must exist in the lab identified via the '-LabName' parameter.
+        # An existing custom image which will be used to create the new VM (please use the Get-AzureRmDtlCustomImage cmdlet to get this CustomImage object).
+        # Note: This custom image must exist in the lab identified via the '-LabName' parameter.
         $Image,
 
         [Parameter(Mandatory=$true, ParameterSetName="UsernamePwd")] 
@@ -1920,27 +1938,28 @@ function New-AzureRmDtlVirtualMachine
     {
         Write-Verbose $("Processing cmdlet '" + $PSCmdlet.MyInvocation.InvocationName + "', ParameterSet = '" + $PSCmdlet.ParameterSetName + "'")
 
-        
+        # is this a gallery image?        
         $isGalleryImage = ($null -ne $Image.Properties -and $null -ne $Image.Properties.ImageReference)
+
         # Pre-condition checks for azure gallery images.
         if ($isGalleryImage)
         {
             if ($false -eq (($PSBoundParameters.ContainsKey("UserName") -and $PSBoundParameters.ContainsKey("Password")) -or ($PSBoundParameters.ContainsKey("UserName") -and $PSBoundParameters.ContainsKey("SSHKey"))))
             {
-                throw $("You specified a gallery Image '" + $Image.Name + "'. Please specify either the -UserName and -Password parameters or the -UserName and -SSHKey parameters to use this Gallery Image.")
+                throw $("You specified a gallery Image '" + $Image.Name + "'. Please specify either the -UserName and -Password parameters or the -UserName and -SSHKey parameters to use this gallery image.")
             }
             $ImageNameToPass = $null
         }
         else
         {
-            # Get the same Custom Image object, but with properties attached.
+            # Get the same custom image object, but with properties attached.
             $Image = GetResourceWithProperties_Private -Resource $Image
             # Pre-condition checks for linux vhds.
             if ("linux" -eq $Image.Properties.OsType)
             {
                 if ($false -eq (($PSBoundParameters.ContainsKey("UserName") -and $PSBoundParameters.ContainsKey("Password")) -or ($PSBoundParameters.ContainsKey("UserName") -and $PSBoundParameters.ContainsKey("SSHKey"))))
                 {
-                    throw $("The specified Custom Image '" + $Image.Name + "' uses a linux vhd. Please specify either the -UserName and -Password parameters or the -UserName and -SSHKey parameters to use this Custom Image.")
+                    throw $("The specified custom image '" + $Image.Name + "' uses a linux vhd. Please specify either the -UserName and -Password parameters or the -UserName and -SSHKey parameters to use this custom image.")
                 }
             }
 
@@ -1952,7 +1971,7 @@ function New-AzureRmDtlVirtualMachine
                 {
                     if ($false -eq ($PSBoundParameters.ContainsKey("UserName") -and $PSBoundParameters.ContainsKey("Password")))
                     {
-                        throw $("The specified Custom Image '" + $Image.Name + "' uses a sysprepped vhd. Please specify both the -UserName and -Password parameters to use this Custom Image.")
+                        throw $("The specified custom image '" + $Image.Name + "' uses a sysprepped vhd. Please specify both the -UserName and -Password parameters to use this custom image.")
                     }
                 }
 
@@ -1962,7 +1981,7 @@ function New-AzureRmDtlVirtualMachine
                 {
                     if ($true -eq ($PSBoundParameters.ContainsKey("UserName") -and $PSBoundParameters.ContainsKey("Password")))
                     {
-                        Write-Warning $("The specified Custom Image '" + $Image.Name + "' uses a non-sysprepped vhd with a built-in account. The specified userame and password will not be used.")
+                        Write-Warning $("The specified custom image '" + $Image.Name + "' uses a non-sysprepped vhd with a built-in account. The specified userame and password will not be used.")
                     }                    
                 }
             }
@@ -2105,10 +2124,9 @@ function Remove-AzureRmDtlVirtualMachine
         $VMId,
 
         [Parameter(Mandatory=$true, ParameterSetName="DeleteInLab")] 
-        [ValidateNotNullOrEmpty()]
-        [string]
-        # Name of the lab.
-        $LabName,
+        [ValidateNotNull()]
+        # An existing lab (please use the Get-AzureRmDtlLab cmdlet to get this lab object).
+        $Lab,
 
         [Parameter(Mandatory=$false, ParameterSetName="DeleteInLab")] 
         [ValidateNotNullOrEmpty()]
@@ -2133,25 +2151,25 @@ function Remove-AzureRmDtlVirtualMachine
 
             "DeleteInLab"
             {
-                if($VMName -ne $null -and $VMName -ne '') 
+                if ($PSBoundParameters.ContainsKey("VMName"))
                 {
-                    $vms = Get-AzureRmDtlVirtualMachine -LabName $LabName -VmName $VMName 
-                } else 
-                {
-                    $vms = Get-AzureRmDtlVirtualMachine -LabName $LabName
+                    $vms = Get-AzureRmDtlVirtualMachine -Lab $Lab -VmName $VMName 
                 }
-            }
-            
+                else
+                {
+                    $vms = Get-AzureRmDtlVirtualMachine -Lab $Lab
+                }
+            }            
         }
 
         # Next, for each VM... 
         foreach ($vm in $vms)
         {
             # Pop the confirmation dialog.
-            if ($PSCmdlet.ShouldProcess($vm.ResourceName, "delete VM"))
+            if ($PSCmdlet.ShouldProcess($vm.Name, "delete VM"))
             {
-                Write-Warning $("Deleting VM '" + $vm.ResourceName + "' (Id = " + $vm.ResourceId + ") ...")
-                Write-Verbose $("Deleting VM '" + $vm.ResourceName + "' (Id = " + $vm.ResourceId + ") ...")
+                Write-Warning $("Deleting VM '" + $vm.Name + "' (Id = " + $vm.ResourceId + ") ...")
+                Write-Verbose $("Deleting VM '" + $vm.Name + "' (Id = " + $vm.ResourceId + ") ...")
 
                 # Nuke the VM.
                 $result = Remove-AzureRmResource -ResourceId $vm.ResourceId -Force
