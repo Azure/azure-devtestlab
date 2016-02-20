@@ -9,5 +9,5 @@ This deployment template is generally used with non-sysprepped VHDs containing a
 
 This template creates a new virtual machine in a DevTestLab instance.
 - No new user account is created during the VM creation.
-- We assume that the original VM template already contains a built-in user account.
+- We assume that the original custom image already contains a built-in user account.
 - We assume that this built-in account can be used to log into the VM after creation.
