@@ -1161,7 +1161,7 @@ function New-AzureRmDtlCustomImage
         }
 
         # Encode the custom image name
-        $CustomImageNameEncoded = $DestCustomImageName.Replace(" ", "%20")
+        $destCustomImageNameEncoded = $DestCustomImageName.Replace(" ", "%20")
 
         # Unique name for the deployment
         $deploymentName = [Guid]::NewGuid().ToString()
@@ -1226,7 +1226,7 @@ function New-AzureRmDtlCustomImage
 
                 # Create the custom image in the lab's resource group by deploying the RM template
                 Write-Verbose $("Creating custom image '" + $DestCustomImageName + "' in lab '" + $lab.ResourceName + "'")
-                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $CustomImageCreationTemplateFile -existingLabName $lab.ResourceName -existingVMResourceId $SrcDtlVM.Properties.Vms[0].ComputeId -isVMSysPrepped $isSysPrepped -imageName $CustomImageNameEncoded -imageDescription $DestCustomImageDescription -ErrorAction "Stop"
+                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $CustomImageCreationTemplateFile -existingLabName $lab.ResourceName -existingVMResourceId $SrcDtlVM.Properties.Vms[0].ComputeId -isVMSysPrepped $isSysPrepped -imageName $destCustomImageNameEncoded -imageDescription $DestCustomImageDescription -ErrorAction "Stop"
             }
 
             "FromVhd"
@@ -1276,7 +1276,7 @@ function New-AzureRmDtlCustomImage
 
                 # Create the custom image in the lab's resource group by deploying the RM template
                 Write-Verbose $("Creating custom image '" + $DestCustomImageName + "' in lab '" + $SrcDtlLab.ResourceName + "'")
-                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $SrcDtlLab.ResourceGroupName -TemplateFile $CustomImageCreationTemplateFile -existingLabName $SrcDtlLab.ResourceName -existingVhdUri $SrcDtlVhd.ICloudBlob.Uri.AbsoluteUri -imageOsType $SrcImageOSType -isVhdSysPrepped $isSysPrepped -imageName $CustomImageNameEncoded -imageDescription $DestCustomImageDescription -ErrorAction "Stop"
+                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $SrcDtlLab.ResourceGroupName -TemplateFile $CustomImageCreationTemplateFile -existingLabName $SrcDtlLab.ResourceName -existingVhdUri $SrcDtlVhd.ICloudBlob.Uri.AbsoluteUri -imageOsType $SrcImageOSType -isVhdSysPrepped $isSysPrepped -imageName $destCustomImageNameEncoded -imageDescription $DestCustomImageDescription -ErrorAction "Stop"
             }
         }
 

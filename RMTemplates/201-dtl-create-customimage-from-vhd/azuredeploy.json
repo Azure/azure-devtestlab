@@ -5,13 +5,13 @@
     "existingLabName": {
       "type": "string",
       "metadata": {
-        "description": "Name of an existing lab where the VM template will be created or updated."
+        "description": "Name of an existing lab where the custom image will be created or updated."
       }
     },
     "existingVhdUri": {
       "type": "string",
       "metadata": {
-        "description": "URI of an existing VHD from which the VM template will be created or updated."
+        "description": "URI of an existing VHD from which the custom image will be created or updated."
       }
     },
     "imageOsType": {
@@ -31,14 +31,14 @@
     "imageName": {
       "type": "string",
       "metadata": {
-        "description": "Name of the VM template being created or updated."
+        "description": "Name of the custom image being created or updated."
       }
     },
     "imageDescription": {
       "type": "string",
       "defaultValue": "",
       "metadata": {
-        "description": "Details about the VM template being created or updated."
+        "description": "Details about the custom image being created or updated."
       }
     }
   },
@@ -62,7 +62,7 @@
     }
   ],
   "outputs": {
-    "vmTemplateId": {
+    "customImageId": {
       "type": "string",
       "value": "[resourceId(variables('resourceType'), parameters('existingLabName'), parameters('imageName'))]"
     }

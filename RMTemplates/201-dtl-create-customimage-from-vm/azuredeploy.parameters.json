@@ -12,10 +12,10 @@
       "value": true
     },
     "imageName": {
-      "value": "MyVMTemplate1"
+      "value": "MyCustomImage1"
     },
     "imageDescription": {
-      "value": "Some description for the VM template"
+      "value": "Some description for the custom image"
     }
   }
 }

@@ -9,7 +9,7 @@
       "value": "MyLab1"
     },
     "imageName": {
-      "value": "MyVMTemplate1"
+      "value": "MyGalleryImage1"
     },
     "newVMSize": {
       "value": "Standard_A4"
