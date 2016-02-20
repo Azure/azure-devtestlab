@@ -48,10 +48,10 @@ $RequiredApiVersion = "2015-05-21-preview"
 # Paths to Azure RM templates for the DevTest Lab provider. 
 $ARMTemplate_CreateLab = ".\101-dtl-create-lab-azuredeploy.json"
 $ARMTemplate_CreateVM_BuiltinUsr = ".\101-dtl-create-vm-builtin-user-azuredeploy.json"
-$ARMTemplate_CreateVM_UsrPwd = ".\101-dtl-create-vm-username-pwd-azuredeploy.json"
-$ARMTemplate_CreateVM_UsrPwd_galleryImage = ".\101-dtl-create-vm-username-pwd-galleryimage-azuredeploy.json"
-$ARMTemplate_CreateVM_UsrSSH = ".\101-dtl-create-vm-username-ssh-azuredeploy.json"
-$ARMTemplate_CreateVM_UsrSSH_galleryImage = ".\101-dtl-create-vm-username-ssh-galleryimage-azuredeploy.json"
+$ARMTemplate_CreateVM_UsrPwd_CustomImage = ".\101-dtl-create-vm-username-pwd-customimage-azuredeploy.json"
+$ARMTemplate_CreateVM_UsrPwd_GalleryImage = ".\101-dtl-create-vm-username-pwd-galleryimage-azuredeploy.json"
+$ARMTemplate_CreateVM_UsrSSH_CustomImage = ".\101-dtl-create-vm-username-ssh-customimage-azuredeploy.json"
+$ARMTemplate_CreateVM_UsrSSH_GalleryImage = ".\101-dtl-create-vm-username-ssh-galleryimage-azuredeploy.json"
 $ARMTemplate_CreateLab_WithPolicies = ".\201-dtl-create-lab-with-policies-azuredeploy.json"
 $ARMTemplate_CreateCustomImage_FromImage = ".\201-dtl-create-customimage-from-azure-image-azuredeploy.json"
 $ARMTemplate_CreateCustomImage_FromVhd = ".\201-dtl-create-customimage-from-vhd-azuredeploy.json"
@@ -2002,10 +2002,10 @@ function New-AzureRmDtlVirtualMachine
             {
                 if($isGalleryImage) 
                 {
-                    $VMCreationTemplateFile = Join-Path $PSScriptRoot -ChildPath $ARMTemplate_CreateVM_UsrPwd_galleryImage -Resolve
+                    $VMCreationTemplateFile = Join-Path $PSScriptRoot -ChildPath $ARMTemplate_CreateVM_UsrPwd_GalleryImage -Resolve
                 } else 
                 {
-                    $VMCreationTemplateFile = Join-Path $PSScriptRoot -ChildPath $ARMTemplate_CreateVM_UsrPwd -Resolve
+                    $VMCreationTemplateFile = Join-Path $PSScriptRoot -ChildPath $ARMTemplate_CreateVM_UsrPwd_CustomImage -Resolve
                 }
             }
 
@@ -2013,10 +2013,10 @@ function New-AzureRmDtlVirtualMachine
             {
                 if($isGalleryImage) 
                 {
-                    $VMCreationTemplateFile = Join-Path $PSScriptRoot -ChildPath $ARMTemplate_CreateVM_UsrSSH_galleryImage -Resolve
+                    $VMCreationTemplateFile = Join-Path $PSScriptRoot -ChildPath $ARMTemplate_CreateVM_UsrSSH_GalleryImage -Resolve
                 } else 
                 {
-                    $VMCreationTemplateFile = Join-Path $PSScriptRoot -ChildPath $ARMTemplate_CreateVM_UsrSSH -Resolve
+                    $VMCreationTemplateFile = Join-Path $PSScriptRoot -ChildPath $ARMTemplate_CreateVM_UsrSSH_CustomImage -Resolve
                 }
             }
         }
