@@ -2043,18 +2043,18 @@ function New-AzureRmDtlVirtualMachine
         {
             "BuiltInUser"
             {
-                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $Lab.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -newVMSize $VMSize -imageName $Image.Name
+                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $Lab.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -newVMSize $VMSize -existingCustomImageName $Image.Name -ErrorAction "Stop"
             }
 
             "UsernamePwd"
             {
                 if($isGalleryImage) 
                 {
-                    $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $Lab.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -newVMSize $VMSize -userName $UserName -password $Password -Offer $Image.Properties.ImageReference.Offer -Sku $Image.Properties.ImageReference.Sku -Publisher $Image.Properties.ImageReference.Publisher -Version $Image.Properties.ImageReference.Version -OsType $Image.Properties.ImageReference.OsType
+                    $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $Lab.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -newVMSize $VMSize -userName $UserName -password $Password -Offer $Image.Properties.ImageReference.Offer -Sku $Image.Properties.ImageReference.Sku -Publisher $Image.Properties.ImageReference.Publisher -Version $Image.Properties.ImageReference.Version -OsType $Image.Properties.ImageReference.OsType -ErrorAction "Stop"
                 }
                 else 
                 {                
-                    $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $Lab.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -newVMSize $VMSize -imageName $Image.Name -userName $UserName -password $Password 
+                    $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $Lab.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -newVMSize $VMSize -existingCustomImageName $Image.Name -userName $UserName -password $Password -ErrorAction "Stop"
                 }
             }
 
@@ -2062,11 +2062,11 @@ function New-AzureRmDtlVirtualMachine
             {
                 if($isGalleryImage) 
                 {
-                    $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $Lab.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -newVMSize $VMSize -userName $UserName -sshKey $SSHKey -Offer $Image.Properties.ImageReference.Offer -Sku $Image.Properties.ImageReference.Sku -Publisher $Image.Properties.ImageReference.Publisher -Version $Image.Properties.ImageReference.Version -OsType $Image.Properties.ImageReference.OsType
+                    $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $Lab.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -newVMSize $VMSize -userName $UserName -sshKey $SSHKey -Offer $Image.Properties.ImageReference.Offer -Sku $Image.Properties.ImageReference.Sku -Publisher $Image.Properties.ImageReference.Publisher -Version $Image.Properties.ImageReference.Version -OsType $Image.Properties.ImageReference.OsType -ErrorAction "Stop"
                 }
                 else 
                 { 
-                    $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $Lab.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -newVMSize $VMSize -imageName $Image.Name -userName $UserName -sshKey $SSHKey  
+                    $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $Lab.ResourceGroupName -TemplateFile $VMCreationTemplateFile -newVMName $VMName -existingLabName $Lab.ResourceName -newVMSize $VMSize -existingCustomImageName $Image.Name -userName $UserName -sshKey $SSHKey -ErrorAction "Stop" 
                 }
             }
         }
