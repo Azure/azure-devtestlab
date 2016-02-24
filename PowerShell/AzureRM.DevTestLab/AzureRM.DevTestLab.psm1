@@ -745,7 +745,7 @@ function Get-AzureRmDtlVhd
 
         Write-Verbose $("Successfully extracted a storage account context for the lab '" + $Lab.Name + "'")
 
-        # Extract the 'uploads' container (which houses the vhds).
+        # Extract the 'uploads' and 'generatedvhds' container (which houses the vhds).
         Write-Verbose $("Extracting the 'uploads' container")
         $uploadsContainer = Get-AzureStorageContainer -Name "uploads" -Context $labStorageAccountContext
 
@@ -753,7 +753,15 @@ function Get-AzureRmDtlVhd
         {
             throw $("Unable to extract the 'uploads' container from the default storage account for lab '" + $Lab.Name + "'")
         }
-        
+
+        Write-Verbose $("Extracting the 'generatedvhds' container")
+        $generatedVhdsContainer = Get-AzureStorageContainer -Name "generatedvhds" -Context $labStorageAccountContext
+
+        if ($null -eq $generatedVhdsContainer)
+        {
+            throw $("Unable to extract the 'generatedvhds' container from the default storage account for lab '" + $Lab.Name + "'")
+        }
+
         #
         $output = $null
 
@@ -766,22 +774,37 @@ function Get-AzureRmDtlVhd
                     $VhdName = $($VhdName + ".vhd")
                 }
 
-                $output = Get-AzureStorageBlob -Container $uploadsContainer.Name -Blob $VhdName -Context $labStorageAccountContext
+                $uploadsImages = Get-AzureStorageBlob -Container $uploadsContainer.Name -Blob $VhdName -Context $labStorageAccountContext -ErrorAction "SilentlyContinue"
+                $generatedVhdsImages = Get-AzureStorageBlob -Container $generatedVhdsContainer.Name -Blob $VhdName -Context $labStorageAccountContext -ErrorAction "SilentlyContinue"
+
+                $output = $uploadsImages + $generatedVhdsImages
             }
 
             "ListByVhdUri"
             {
-                $output = Get-AzureStorageBlob -Container $uploadsContainer.Name -Context $labStorageAccountContext | Where-Object {
+                $uploadsImages = Get-AzureStorageBlob -Container $uploadsContainer.Name -Context $labStorageAccountContext | Where-Object {
                     ($null -ne $_.ICloudBlob) -and 
                     ($null -ne $_.ICloudBlob.Uri) -and
                     ($null -ne $_.ICloudBlob.Uri.AbsoluteUri) -and
                     ($VhdAbsoluteUri -eq  $_.ICloudBlob.Uri.AbsoluteUri) 
                 }
+
+                $generatedVhdsImages = Get-AzureStorageBlob -Container $generatedVhdsContainer.Name -Context $labStorageAccountContext | Where-Object {
+                    ($null -ne $_.ICloudBlob) -and 
+                    ($null -ne $_.ICloudBlob.Uri) -and
+                    ($null -ne $_.ICloudBlob.Uri.AbsoluteUri) -and
+                    ($VhdAbsoluteUri -eq  $_.ICloudBlob.Uri.AbsoluteUri) 
+                }
+                
+                $output = $uploadsImages + $generatedVhdsImages
             }
 
             "ListAllInLab"
             {
-                $output = Get-AzureStorageBlob -Container $uploadsContainer.Name -Context $labStorageAccountContext
+                $uploadsImages = Get-AzureStorageBlob -Container $uploadsContainer.Name -Context $labStorageAccountContext
+                $generatedVhdsImages = Get-AzureStorageBlob -Container $generatedVhdsContainer.Name -Context $labStorageAccountContext
+                
+                $output = $uploadsImages + $generatedVhdsImages
             }
         }
 
