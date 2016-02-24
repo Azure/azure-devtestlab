@@ -5,8 +5,8 @@
 </a>
 
 
-This deployment template is  used with gallery image
+This deployment template is used with an Azure gallery image.
 
 This template creates a new virtual machine in a DevTestLab instance.
-- A new user account is created using the username/password combination specified.
+- A new user account is created using the username/password combination specified. 
 - This user account is added to the local administrators group.

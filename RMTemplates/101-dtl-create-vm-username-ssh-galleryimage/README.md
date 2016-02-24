@@ -8,4 +8,4 @@
 This deployment template is generally used with linux VHDs.
 
 This template creates a new virtual machine in a DevTestLab instance.
-- A new user account is created using the username/SSH-key combination specified.
+- A new user account is created using the username/SSH-key combination specified. 
