@@ -10,8 +10,17 @@ elif [ -f /usr/bin/yum ] ; then
     echo "Using YUM package manager"
 
     yum -y update
-    yum install -y docker
+    
+    tee /etc/yum.repos.d/docker.repo <<-'EOF'
+    [dockerrepo]
+    name=Docker Repository
+    baseurl=https://yum.dockerproject.org/repo/main/centos/$releasever/
+    enabled=1
+    gpgcheck=1
+    gpgkey=https://yum.dockerproject.org/gpg
+    EOF    
 
-    systemctl start docker
-    systemctl enable docker
+    yum install -y docker-engine
+
+    service docker start
 fi
