@@ -1,6 +1,5 @@
 #!/bin/bash
 
 set -e
-sudo waagent -force -deprovision+user
-
-sudo shutdown -h +5 &
+(sleep 5; waagent -force -deprovision+user) &
+exit 0
