@@ -1,5 +1,6 @@
 #!/bin/bash
-
 set -e
-(sleep 5; waagent -force -deprovision+user) &
+nohup sh -c 'sleep 15 && /usr/sbin/waagent -force -deprovision+user' > /dev/null  &
+disown
 exit 0
+#shutdown -h +5
