@@ -8,7 +8,7 @@
     "existingVMResourceId": {
       "value": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/MyLabRG/providers/Microsoft.DevTestLab/environments/MyVM1"
     },
-    "windowOsState":{
+    "windowsOsState":{
       "value": "SysprepApplied"  
     },
     "imageName": {
