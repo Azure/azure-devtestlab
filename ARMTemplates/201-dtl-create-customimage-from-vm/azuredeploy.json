@@ -14,12 +14,17 @@
         "description": "Resource ID of an existing VM from which the custom image will be created."
       }
     },
-    "isVMSysPrepped": {
-      "type": "bool",
-      "defaultValue": true,
+    "osType":{
+      "type": "string",
       "metadata": {
-        "description": "If the existing VM is a Windows VM, then specifies whether the VM is sysprepped (Note: If the existing VM is NOT a Windows VM, then please specify 'false')."
-      }
+          "description": "Specify if the OS Type of the target VM is Windows or Linux"
+      }  
+    },
+       "windowsOsState":{
+       "type": "string",
+       "metadata": {
+           "description": "State of Windows on the machine. It can be one of three values NonSysprepped, SysprepRequested, and SysprepApplied"
+       }
     },
     "imageName": {
       "type": "string",
@@ -47,9 +52,13 @@
       "properties": {
         "vm": {
           "sourceVmId": "[parameters('existingVMResourceId')]",
-          "sysPrep": "[parameters('isVMSysPrepped')]"
+          "sysPrep": false,
+          "windowsOsInfo": {
+              "windowsOsState": "[parameters(windowsOsState)]"
+          }
         },
-        "description": "[parameters('imageDescription')]"
+        "description": "[parameters('imageDescription')]",
+        "osType": "[parameters(osType)]"
       }
     }
   ],
