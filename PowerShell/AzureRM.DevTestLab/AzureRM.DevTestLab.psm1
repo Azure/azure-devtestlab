@@ -1157,7 +1157,34 @@ function New-AzureRmDtlCustomImage
         # Note: This parameter is ignored when a linux VHD or VM is used as the source for the new custom image.
         # Note: This parameter is ignored when an Azure gallery image is used as the source for the new custom image.
         $SrcIsSysPrepped,
-
+        
+        [Parameter(Mandatory=$false, ParameterSetName="FromVM")]
+        [Parameter(Mandatory=$false, ParameterSetName="FromVhd")]
+        [string]
+        # Specifies whether the source VM or Vhd is sysprepped. 
+        # Note: This parameter is ignored when a linux VHD or VM is used as the source for the new custom image.
+        # Note: This parameter has three acceptable values, SysprepRequested, SysprepApplied, and NonSysprepped.
+        # Note: This parameter is ignored when an Azure gallery image is used as the source for the new custom image.
+        $windowsOsState,
+        
+        [Parameter(Mandatory=$false, ParameterSetName="FromVM")]
+        [Parameter(Mandatory=$false, ParameterSetName="FromVhd")]
+        [string]
+        # Specifies whether the source VM or Vhd is sysprepped. 
+        # Note: This parameter is ignored when a Windows VHD or VM is used as the source for the new custom image.
+        # Note: This parameter has three acceptable values, DeprovisionRequested, DeprovisionApplied, and NonDeprovisioned.
+        # Note: This parameter is ignored when an Azure gallery image is used as the source for the new custom image.
+        $linuxOsState,
+        
+                [Parameter(Mandatory=$false, ParameterSetName="FromVM")]
+        [Parameter(Mandatory=$false, ParameterSetName="FromVhd")]
+        [string]
+        # Specifies the Linux Distribution. 
+        # Note: This parameter is ignored when a Windows VHD or VM is used as the source for the new custom image.
+        # Note: Acceptable Values for this command are: CentOs, Debian, Oracale, SLES, Ubuntu, Ubuntu15
+        # Note: This parameter is ignored when an Azure gallery image is used as the source for the new custom image.
+        $distribution,
+        
         [Parameter(Mandatory=$true, ParameterSetName="FromVM")]
         [Parameter(Mandatory=$true, ParameterSetName="FromVhd")]
         [ValidateNotNullOrEmpty()]
@@ -1195,10 +1222,16 @@ function New-AzureRmDtlCustomImage
             {
                 # Ignore 'sysprep' for non-Windows VMs.
                 $isSysPrepped = $PSBoundParameters.ContainsKey("SrcIsSysPrepped")
-
+                 
+                if ("windows" -eq $SrcImageOSType)
+                {
+                    $windowsOsState = $PSBoundParameters.ContainsKey("windowsOsState")
+                }
+                
                 if ("linux" -eq $SrcImageOSType)
                 {
-                    $isSysPrepped = $false    
+                    $linuxDistribution = $PSBoundParameters.ContainsKey("distribution")
+                    $linuxOsState= $PSBoundParameters.ContainsKey("linuxOsState")
                 }
 
                 # Get the same VM object, but with properties attached.
@@ -1249,7 +1282,7 @@ function New-AzureRmDtlCustomImage
 
                 # Create the custom image in the lab's resource group by deploying the RM template
                 Write-Verbose $("Creating custom image '" + $DestCustomImageName + "' in lab '" + $lab.ResourceName + "'")
-                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $CustomImageCreationTemplateFile -existingLabName $lab.ResourceName -existingVMResourceId $SrcDtlVM.Properties.Vms[0].ComputeId -isVMSysPrepped $isSysPrepped -imageName $destCustomImageNameEncoded -imageDescription $DestCustomImageDescription -ErrorAction "Stop"
+                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $CustomImageCreationTemplateFile -existingLabName $lab.ResourceName -existingVMResourceId $SrcDtlVM.Properties.Vms[0].ComputeId -windowsOsStatus $windowsOsStatus -linuxOsStatus $linuxOsStatus -distribution $linuxDistribution -imageName $destCustomImageNameEncoded -imageDescription $DestCustomImageDescription -ErrorAction "Stop"
             }
 
             "FromVhd"

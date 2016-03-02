@@ -11,6 +11,12 @@
     "windowsOsState":{
       "value": "SysprepApplied"  
     },
+    "linuxOsState":{
+      "value": ""  
+    },
+    "distribution":{
+      "value": ""  
+    },
     "imageName": {
       "value": "MyCustomImage1"
     },
