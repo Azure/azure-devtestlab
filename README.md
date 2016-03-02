@@ -1,4 +1,4 @@
-# Azure DevTest Lab Community
+# Azure DevTest Labs Community
 This is a public, community-contributed repository that contains:
 - **Artifacts for Azure DevTest Labs:** These artifacts can be deployed onto VMs in Azure DevTest Labs in the new Azure portal.
 
@@ -19,7 +19,7 @@ Contributions guidelines:
 
 ---
 ### Azure Resource Manager Quickstart Templates
-- The latest, *developer* versions of the Azure RM Templates for Azure DevTest Labs can be found in the ['RMTemplates'](RMTemplates) folder of this repo.
+- The latest, *developer* versions of the Azure Resource Manager Quickstart Templates for Azure DevTest Labs can be found in the ['RMTemplates'](RMTemplates) folder of this repo.
 
 ---
 ### Miscellaneous
