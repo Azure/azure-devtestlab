@@ -2,7 +2,7 @@
 This is a public, community-contributed repository that contains:
 - **Artifacts for Azure DevTest Labs:** These artifacts can be deployed onto VMs in Azure DevTest Labs in the new Azure portal.
 
-- **Azure RM templates for Azure DevTest Labs:** These templates help with creation and deployment of resources related to Azure DevTest Labs (e.g. Labs, VMs and VM templates etc).
+- **Azure Resource Manager Quickstart Templates for Azure DevTest Labs:** These templates help with creation and deployment of resources related to Azure DevTest Labs (e.g. Labs, VMs and VM templates etc).
 
 ---
 ### Artifacts Authoring:
@@ -18,7 +18,7 @@ Contributions guidelines:
 - It is highly recommended that a **Readme.md** file be included to explain how the artifact works and how to troubleshoot any failures.
 
 ---
-### Azure RM Templates
+### Azure Resource Manager Quickstart Templates
 - The latest, *developer* versions of the Azure RM Templates for Azure DevTest Labs can be found in the ['RMTemplates'](RMTemplates) folder of this repo.
 
 ---
