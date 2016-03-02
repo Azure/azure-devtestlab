@@ -17,7 +17,7 @@
     "imageDescription": {
       "value": "Some description for the custom image"
     },
-    "ostype" :{
+    "osType" :{
         "value": "Windows"
     }
   }
