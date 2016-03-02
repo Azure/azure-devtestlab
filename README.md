@@ -19,7 +19,7 @@ Contributions guidelines:
 
 ---
 ### Azure Resource Manager Quickstart Templates
-- The latest, *developer* versions of the Azure Resource Manager Quickstart Templates for Azure DevTest Labs can be found in the ['RMTemplates'](RMTemplates) folder of this repo.
+- The latest, *developer* versions of the Azure Resource Manager Quickstart Templates for Azure DevTest Labs can be found in the ['ARMTemplates'](ARMTemplates) folder of this repo.
 
 ---
 ### Miscellaneous
