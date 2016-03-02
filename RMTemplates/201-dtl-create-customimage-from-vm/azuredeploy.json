@@ -23,7 +23,7 @@
        "windowsOsState":{
        "type": "string",
        "metadata": {
-           "description": "State of the Windows on the machine it can be one of three values NonSysprepped, SysprepRequested, and SysprepApplied"
+           "description": "State of Windows on the machine. It can be one of three values NonSysprepped, SysprepRequested, and SysprepApplied"
        }
     },
     "imageName": {
