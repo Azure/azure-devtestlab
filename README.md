@@ -24,4 +24,4 @@ Contributions guidelines:
 ---
 ### Miscellaneous
 
-Some useful scripts, related to Azure DevTest labs can be found in the ['scripts'](scripts) folder.
+Some useful scripts, related to Azure DevTest labs can be found in the ['scripts'](../../tree/master/Scripts) folder.
