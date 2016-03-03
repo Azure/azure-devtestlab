@@ -34,7 +34,7 @@
     },
     "imageDescription": {
       "type": "string",
-      "defaultValue": "",
+      "defaultValue": "description",
       "metadata": {
         "description": "Details about the custom image being created or updated."
       }
@@ -54,11 +54,12 @@
           "sourceVmId": "[parameters('existingVMResourceId')]",
           "sysPrep": false,
           "windowsOsInfo": {
-              "windowsOsState": "[parameters(windowsOsState)]"
-          }
+              "windowsOsState": "[parameters('windowsOsState')]"
+          },
+      
         },
         "description": "[parameters('imageDescription')]",
-        "osType": "[parameters(osType)]"
+        "osType": "[parameters('osType')]"
       }
     }
   ],
