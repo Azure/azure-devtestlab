@@ -1220,9 +1220,7 @@ function New-AzureRmDtlCustomImage
         {
             "FromVM"
             {
-                # For Linux image copy, just pass the sysprep bool to allow creation of Image from VM
-                $isSysPrepped = $PSBoundParameters.ContainsKey("SrcIsSysPrepped")
-                 
+                                
                 if ("windows" -eq $SrcImageOSType)
                 {
                     $windowsOsState = $PSBoundParameters.ContainsKey("windowsOsState")
