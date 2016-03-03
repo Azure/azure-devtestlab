@@ -26,18 +26,6 @@
         "description": "State of Windows on the machine. It can be one of three values NonSysprepped, SysprepRequested, and SysprepApplied"
       }
     },
-    "linuxOsState": {
-      "type": "string",
-      "metadata": {
-        "description": "State of linux on the machine. It can be one of three values NonDeprovisioned, DeprovisionRequested, and DeprovisionApplied"
-      }
-    },
-       "distribution":{
-       "type": "string",
-       "metadata": {
-           "description": "The Azure supported Linux Distribution of the target Vm. Acceptable values are CentOs, Oracle, SLES, Ubuntu, and Ubuntu15"
-       }
-    },
     "imageName": {
       "type": "string",
       "metadata": {
@@ -67,10 +55,6 @@
           "sysPrep": false,
           "windowsOsInfo": {
             "windowsOsState": "[parameters('windowsOsState')]"
-          },
-          "linuxOSInfo": {
-            "linuxOsState": "[parameters('linuxOsState')]",
-            "distribution": "[parameters('distribution')]"
           }
         },
         "description": "[parameters('imageDescription')]",
