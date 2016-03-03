@@ -1176,7 +1176,7 @@ function New-AzureRmDtlCustomImage
         # Note: This parameter is ignored when an Azure gallery image is used as the source for the new custom image.
         $linuxOsState,
         
-                [Parameter(Mandatory=$false, ParameterSetName="FromVM")]
+        [Parameter(Mandatory=$false, ParameterSetName="FromVM")]
         [Parameter(Mandatory=$false, ParameterSetName="FromVhd")]
         [string]
         # Specifies the Linux Distribution. 
@@ -1220,20 +1220,14 @@ function New-AzureRmDtlCustomImage
         {
             "FromVM"
             {
-                # Ignore 'sysprep' for non-Windows VMs.
+                # For Linux image copy, just pass the sysprep bool to allow creation of Image from VM
                 $isSysPrepped = $PSBoundParameters.ContainsKey("SrcIsSysPrepped")
                  
                 if ("windows" -eq $SrcImageOSType)
                 {
                     $windowsOsState = $PSBoundParameters.ContainsKey("windowsOsState")
                 }
-                
-                if ("linux" -eq $SrcImageOSType)
-                {
-                    $linuxDistribution = $PSBoundParameters.ContainsKey("distribution")
-                    $linuxOsState= $PSBoundParameters.ContainsKey("linuxOsState")
-                }
-
+                               
                 # Get the same VM object, but with properties attached.
                 $SrcDtlVM = GetResourceWithProperties_Private -Resource $SrcDtlVM
 
@@ -1280,9 +1274,18 @@ function New-AzureRmDtlCustomImage
                     throw $("A custom image with the name '" + $DestCustomImageName + "' already exists in the lab '" + $lab.Name + "'. Please specify another name for the custom image to be created.")
                 }
 
-                # Create the custom image in the lab's resource group by deploying the RM template
-                Write-Verbose $("Creating custom image '" + $DestCustomImageName + "' in lab '" + $lab.ResourceName + "'")
-                $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $CustomImageCreationTemplateFile -existingLabName $lab.ResourceName -existingVMResourceId $SrcDtlVM.Properties.Vms[0].ComputeId -windowsOsStatus $windowsOsStatus -linuxOsStatus $linuxOsStatus -distribution $linuxDistribution -imageName $destCustomImageNameEncoded -imageDescription $DestCustomImageDescription -ErrorAction "Stop"
+                # If the Os Type is Linux we will seed the Old property bag excluding WindowsOsInfo
+                # Is sysprepped is set to false in the Arm Template
+                if("linux" -eq $SrcImageOSType)
+                {
+                    $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $CustomImageCreationTemplateFile -existingLabName $lab.ResourceName -existingVMResourceId $SrcDtlVM.Properties.Vms[0].ComputeId -imageName $destCustomImageNameEncoded -imageDescription $DestCustomImageDescription -ErrorAction "Stop"
+                }
+                else
+                {
+                    # Create the custom image in the lab's resource group by deploying the RM template
+                    Write-Verbose $("Creating custom image '" + $DestCustomImageName + "' in lab '" + $lab.ResourceName + "'")
+                    $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $CustomImageCreationTemplateFile -existingLabName $lab.ResourceName -existingVMResourceId $SrcDtlVM.Properties.Vms[0].ComputeId -windowsOsStatus $windowsOsStatus -linuxOsStatus $linuxOsStatus -distribution $linuxDistribution -imageName $destCustomImageNameEncoded -imageDescription $DestCustomImageDescription -ErrorAction "Stop"
+                }
             }
 
             "FromVhd"
