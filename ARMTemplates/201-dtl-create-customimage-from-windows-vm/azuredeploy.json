@@ -16,11 +16,11 @@
     },
       "windowsOsState": {
       "type": "string",
-           "allowedValues": [
-              "NonSysprepped",
-              "SysprepRequested",
-              "SysprepApplied"
-      ],
+      "allowedValues": [
+        "NonSysprepped",
+        "SysprepRequested",
+        "SysprepApplied"
+        ],
       "defaultValue": "NonSysprepped",
       "metadata": {
         "description": "State of Windows on the machine. It can be one of three values NonSysprepped, SysprepRequested, and SysprepApplied"
@@ -51,14 +51,13 @@
       "type": "Microsoft.DevTestLab/labs/customimages",
       "properties": {
         "description": "[parameters('imageDescription')]",
-        "osType": "Windows"
+        "osType": "Windows",
         "vm": {
           "sourceVmId": "[parameters('existingVMResourceId')]",
-            "windowsOsInfo": {
+          "windowsOsInfo": {
             "windowsOsState": "[parameters('windowsOsState')]"
           }
         },
-
       }
     }
   ],
