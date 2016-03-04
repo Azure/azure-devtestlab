@@ -14,19 +14,12 @@
         "description": "Resource ID of an existing VM from which the custom image will be created."
       }
     },
-    "osType":{
-      "type": "string",
-      "defaultValue": "Windows",
-      "metadata": {
-          "description": "Specify if the OS Type of the target VM is Windows or Linux"
-      }  
-    },
-    "windowsOsState": {
+      "windowsOsState": {
       "type": "string",
            "allowedValues": [
-        "NonSysprepped",
-        "SysprepRequested",
-        "SysprepApplied"
+              "NonSysprepped",
+              "SysprepRequested",
+              "SysprepApplied"
       ],
       "defaultValue": "NonSysprepped",
       "metadata": {
@@ -57,15 +50,15 @@
       "name": "[variables('resourceName')]",
       "type": "Microsoft.DevTestLab/labs/customimages",
       "properties": {
+        "description": "[parameters('imageDescription')]",
+        "osType": "Windows"
         "vm": {
           "sourceVmId": "[parameters('existingVMResourceId')]",
-          "sysPrep": false,
-          "windowsOsInfo": {
+            "windowsOsInfo": {
             "windowsOsState": "[parameters('windowsOsState')]"
           }
         },
-        "description": "[parameters('imageDescription')]",
-        "osType": "[parameters('osType')]"
+
       }
     }
   ],
