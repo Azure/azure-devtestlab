@@ -33,32 +33,30 @@
       }
     }
   },
+  "variables": {
+    "resourceName": "[concat(parameters('existingLabName'), '/', parameters('newVMName'))]",
+    "resourceType": "Microsoft.DevTestLab/labs/virtualMachines"
+  },
   "resources": [
     {
       "apiVersion": "2015-05-21-preview",
-      "type": "Microsoft.DevTestLab/environments",
-      "name": "[parameters('newVMName')]",
+      "type": "Microsoft.DevTestLab/labs/virtualMachines",
+      "name": "[variables('resourceName')]",
       "location": "[resourceGroup().location]",
       "properties": {
-        "labId": "[resourceId(parameters('existingLabResourceGroupName'), 'Microsoft.DevTestLab/labs', parameters('existingLabName'))]",
-        "vms": [
-          {
-            "name": "[parameters('newVMName')]",
-            "vmTemplateName": "[parameters('existingVMTemplateName')]",
-            "size": "[parameters('newVMSize')]",
-            "isAuthenticationWithSshKey": false,
-            "sshKey": "",
-            "userName": "",
-            "password": ""
-          }
-        ]
+        "vmTemplateName": "[parameters('existingVMTemplateName')]",
+        "size": "[parameters('newVMSize')]",
+        "isAuthenticationWithSshKey": false,
+        "sshKey": "",
+        "userName": "",
+        "password": ""
       }
     }
   ],
   "outputs": {
     "vmId": {
       "type": "string",
-      "value": "[resourceId('Microsoft.DevTestLab/environments', parameters('newVMName'))]"
+      "value": "[resourceId(variables('resourceType'), parameters('existingLabName'), parameters('newVMName'))]"
     }
   }
 }
