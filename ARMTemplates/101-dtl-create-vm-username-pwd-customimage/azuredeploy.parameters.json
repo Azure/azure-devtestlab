@@ -6,10 +6,10 @@
       "value": "MyVM1"
     },
     "existingLabName": {
-      "value": "vinagesh-localrp-lab"
+      "value": "MyLab1"
     },
     "existingCustomImageName": {
-      "value": "template1"
+      "value": "MyCustomImage1"
     },
     "newVMSize": {
       "value": "Standard_A4"
