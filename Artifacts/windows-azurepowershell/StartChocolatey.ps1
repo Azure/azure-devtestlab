@@ -1,8 +1,7 @@
-﻿Param(
-    # comma- or semicolon-separated list of Chocolatey packages.
+Param(
+    #
     [ValidateNotNullOrEmpty()]
-    [Parameter(Mandatory=$True)]
-    [string] $packageList
+    $ProductId
 )
 
 Function Get-TempPassword() {
@@ -39,15 +38,17 @@ $group.add("WinNT://$env:ComputerName/$userName")
 $secPassword = ConvertTo-SecureString $password -AsPlainText -Force
 $credential = New-Object System.Management.Automation.PSCredential("$env:COMPUTERNAME\$($username)", $secPassword)
 
-$command = $PSScriptRoot + "\ChocolateyPackageInstaller.ps1"
+$command = $PSScriptRoot + "\InstallViaWebPICmd.ps1"
+$scriptContent = Get-Content -Path $command -Delimiter ([char]0)
+$scriptBlock = [scriptblock]::Create($scriptContent)
 
 # Run Chocolatey as the artifactInstaller user
-Enable-PSRemoting -force -SkipNetworkProfileCheck
+Enable-PSRemoting -Force -SkipNetworkProfileCheck
 
 # Ensure that current process can run scripts. 
 Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force 
 
-Invoke-Command -FilePath $command -Credential $credential -ComputerName $env:COMPUTERNAME -ArgumentList $packageList
+$exitCode = Invoke-Command -ScriptBlock $scriptBlock -Credential $credential -ComputerName $env:COMPUTERNAME -ArgumentList @($ProductId, $PSScriptRoot)
 Disable-PSRemoting -Force
 
 # Delete the artifactInstaller user
@@ -55,3 +56,5 @@ $cn.Delete("User", $userName)
 
 # Delete the artifactInstaller user profile
 gwmi win32_userprofile | where { $_.LocalPath -like "*$userName*" } | foreach { $_.Delete() }
+
+exit $exitCode
