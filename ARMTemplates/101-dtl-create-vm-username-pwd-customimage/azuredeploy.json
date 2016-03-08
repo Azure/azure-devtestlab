@@ -53,7 +53,7 @@
         "vms": [
           {
             "name": "[parameters('newVMName')]",
-            "vmTemplateName": "[parameters('existingCustomImageName')]",
+            "customImageName": "[parameters('existingCustomImageName')]",
             "size": "[parameters('newVMSize')]",
             "isAuthenticationWithSshKey": false,
             "userName": "[parameters('userName')]",
