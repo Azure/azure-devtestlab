@@ -49,14 +49,14 @@
       "type": "Microsoft.DevTestLab/labs/virtualMachines",
       "name": "[variables('resourceName')]",
       "location": "[resourceGroup().location]",
-      "properties": {        
+      "properties": {
         "customImageName": "[parameters('existingCustomImageName')]",
-        "size": "[parameters('newVMSize')]",
-        "isAuthenticationWithSshKey": true,
-        "userName": "[parameters('userName')]",
-        "sshKey": "[parameters('sshKey')]",
-        "password": ""
-      }
+            "size": "[parameters('newVMSize')]",
+            "isAuthenticationWithSshKey": true,
+            "userName": "[parameters('userName')]",
+            "sshKey": "[parameters('sshKey')]",
+            "password": ""
+          }
     }
   ],
   "outputs": {

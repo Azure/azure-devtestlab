@@ -51,12 +51,12 @@
       "location": "[resourceGroup().location]",
       "properties": {
         "customImageName": "[parameters('existingCustomImageName')]",
-        "size": "[parameters('newVMSize')]",
-        "isAuthenticationWithSshKey": false,
-        "userName": "[parameters('userName')]",
-        "sshKey": "",
-        "password": "[parameters('password')]"
-      }
+            "size": "[parameters('newVMSize')]",
+            "isAuthenticationWithSshKey": false,
+            "userName": "[parameters('userName')]",
+            "sshKey": "",
+            "password": "[parameters('password')]"
+          }
     }
   ],
   "outputs": {

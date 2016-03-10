@@ -39,12 +39,12 @@
       "location": "[resourceGroup().location]",
       "properties": {
         "customImageName": "[parameters('existingCustomImageName')]",
-        "size": "[parameters('newVMSize')]",
-        "isAuthenticationWithSshKey": false,
-        "sshKey": "",
-        "userName": "",
-        "password": ""
-      }
+            "size": "[parameters('newVMSize')]",
+            "isAuthenticationWithSshKey": false,
+            "sshKey": "",
+            "userName": "",
+            "password": ""
+          }
     }
   ],
   "outputs": {
