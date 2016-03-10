@@ -12,7 +12,7 @@
   "parameters": {
      "installMethod": {
       "type": "string",
-      "displayName": "Method to install Syscoin. From_PPA: unofficial community bianaries.  From_Source: official Syscoin repo on GitHub."
+      "displayName": "Method to install Syscoin. From_PPA: unofficial community bianaries.  From_Source: official Syscoin repo on GitHub.",
       "defaultValue": "From_Source",
       "allowedValues": [
         "From_PPA",
