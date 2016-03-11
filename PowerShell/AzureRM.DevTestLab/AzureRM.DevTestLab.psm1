@@ -33,7 +33,7 @@
 
 # Resource types exposed by the DevTestLab provider.
 $LabResourceType = "microsoft.devtestlab/labs"
-$EnvironmentResourceType = "microsoft.devtestlab/labs/environments"
+$VirtualMachineResourceType = "microsoft.devtestlab/labs/virtualmachines"
 $CustomImageResourceType = "microsoft.devtestlab/labs/customimages"
 $GalleryImageResourceType = "microsoft.devtestlab/labs/galleryimages"
 $ArtifactSourceResourceType = "microsoft.devtestlab/labs/artifactsources"
@@ -884,7 +884,7 @@ function Get-AzureRmDtlVirtualMachine
             "ListByVMId"
             {
                 $output = Get-AzureRmResource | Where-Object { 
-                    $_.ResourceType -eq $EnvironmentResourceType -and 
+                    $_.ResourceType -eq $VirtualMachineResourceType -and 
                     $_.ResourceId -eq $VMId 
                 }
             }
@@ -901,7 +901,7 @@ function Get-AzureRmDtlVirtualMachine
                 # errors originating while expanding properties (especially in internal test and
                 # pre-production subscriptions).                
                 $output = Get-AzureRmResource -ExpandProperties -ErrorAction "SilentlyContinue" | Where-Object { 
-                    $_.ResourceType -eq $EnvironmentResourceType -and
+                    $_.ResourceType -eq $VirtualMachineResourceType -and
                     $_.ResourceGroupName -eq $Lab.ResourceGroupName
                 }
                 
