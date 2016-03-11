@@ -55,7 +55,8 @@ $ARMTemplate_CreateVM_UsrSSH_GalleryImage = ".\101-dtl-create-vm-username-ssh-ga
 $ARMTemplate_CreateLab_WithPolicies = ".\201-dtl-create-lab-with-policies-azuredeploy.json"
 $ARMTemplate_CreateCustomImage_FromImage = ".\201-dtl-create-customimage-from-azure-image-azuredeploy.json"
 $ARMTemplate_CreateCustomImage_FromVhd = ".\201-dtl-create-customimage-from-vhd-azuredeploy.json"
-$ARMTemplate_CreateCustomImage_FromVM = ".\201-dtl-create-customimage-from-vm-azuredeploy.json"
+$ARMTemplate_CreateCustomImage_FromWindowsVM = ".\201-dtl-create-customimage-from-windows-vm-azuredeploy.json"
+$ARMTemplate_CreateCustomImage_FromLinuxVM = ".\201-dtl-create-customimage-from-linux-vm-azuredeploy.json"
 
 ##################################################################################################
 
@@ -1243,13 +1244,25 @@ function New-AzureRmDtlCustomImage
                 }
 
                 # Pre-condition checks to ensure that we're able to extract the Resource Id of the compute VM.
-                if (($null -eq $SrcDtlVM.Properties) -or ($null -eq $SrcDtlVM.Properties.Vms) -or ($null -eq $SrcDtlVM.Properties.Vms[0]) -or ($null -eq $SrcDtlVM.Properties.Vms[0].ComputeId) )
+                if ($null -eq $SrcDtlVM.ResourceId)
                 {
                     throw $("Unable to determine the Resource Id of the compute VM '" + $SrcDtlVM.ResourceName + "'.")
                 }
 
                 # Folder location of VM creation script, the template file and template parameters file.
-                $CustomImageCreationTemplateFile = Join-Path $PSScriptRoot -ChildPath $ARMTemplate_CreateCustomImage_FromVM -Resolve
+                if ((($null -ne $SrcDtlVM.Properties.OsProfile) -and ($null -ne $SrcDtlVM.Properties.OsProfile.WindowsConfiguration)) -or
+                    (($null -ne $SrcDtlVM.Properties.GalleryImageReference) -and ("Windows" -eq $SrcDtlVM.Properties.GalleryImageReference.OsType)))
+                {
+                    Write-Verbose "Detected OS type: Windows"
+                    $templateName = $ARMTemplate_CreateCustomImage_FromWindowsVM
+                }
+                else
+                {
+                    Write-Verbose "Detected OS type: Linux"
+                    $templateName = $ARMTemplate_CreateCustomImage_FromLinuxVM
+                }
+
+                $CustomImageCreationTemplateFile = Join-Path $PSScriptRoot -ChildPath $templateName -Resolve
 
                 # Pre-condition check to ensure the RM template file exists.
                 if ($false -eq (Test-Path -Path $CustomImageCreationTemplateFile))
@@ -1276,13 +1289,13 @@ function New-AzureRmDtlCustomImage
                 # Is sysprepped is set to false in the Arm Template
                 if("linux" -eq $SrcImageOSType)
                 {
-                    $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $CustomImageCreationTemplateFile -existingLabName $lab.ResourceName -existingVMResourceId $SrcDtlVM.Properties.Vms[0].ComputeId -imageName $destCustomImageNameEncoded -imageDescription $DestCustomImageDescription -ErrorAction "Stop"
+                    $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $CustomImageCreationTemplateFile -existingLabName $lab.ResourceName -existingVMResourceId $SrcDtlVM.ResourceId -imageName $destCustomImageNameEncoded -imageDescription $DestCustomImageDescription -ErrorAction "Stop"
                 }
                 else
                 {
                     # Create the custom image in the lab's resource group by deploying the RM template
                     Write-Verbose $("Creating custom image '" + $DestCustomImageName + "' in lab '" + $lab.ResourceName + "'")
-                    $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $CustomImageCreationTemplateFile -existingLabName $lab.ResourceName -existingVMResourceId $SrcDtlVM.Properties.Vms[0].ComputeId -windowsOsStatus $windowsOsStatus -linuxOsStatus $linuxOsStatus -distribution $linuxDistribution -imageName $destCustomImageNameEncoded -imageDescription $DestCustomImageDescription -ErrorAction "Stop"
+                    $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $CustomImageCreationTemplateFile -existingLabName $lab.ResourceName -existingVMResourceId $SrcDtlVM.ResourceId -windowsOsState $windowsOsState -imageName $destCustomImageNameEncoded -imageDescription $DestCustomImageDescription -ErrorAction "Stop"
                 }
             }
 
