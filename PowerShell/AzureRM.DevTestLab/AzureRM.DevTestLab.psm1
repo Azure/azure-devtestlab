@@ -1289,7 +1289,7 @@ function New-AzureRmDtlCustomImage
                 # Is sysprepped is set to false in the Arm Template
                 if("linux" -eq $SrcImageOSType)
                 {
-                    $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $CustomImageCreationTemplateFile -existingLabName $lab.ResourceName -existingVMResourceId $SrcDtlVM.ResourceId -imageName $destCustomImageNameEncoded -imageDescription $DestCustomImageDescription -ErrorAction "Stop"
+                    $rgDeployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $lab.ResourceGroupName -TemplateFile $CustomImageCreationTemplateFile -existingLabName $lab.ResourceName -existingVMResourceId $SrcDtlVM.ResourceId -linuxOsState $linuxOsState -imageName $destCustomImageNameEncoded -imageDescription $DestCustomImageDescription -ErrorAction "Stop"
                 }
                 else
                 {
