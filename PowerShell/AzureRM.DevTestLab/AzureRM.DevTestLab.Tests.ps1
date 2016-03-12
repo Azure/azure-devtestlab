@@ -33,7 +33,6 @@ Describe "Testing GET Verbs" {
         $vm.Properties | Should Not BeNullOrEmpty
         $vm.Name | Should Be $existingVMName
         $vm.Properties.ProvisioningState | Should Be "succeeded"
-        $vm.Properties.LabId | Should Be $lab.ResourceId
     }
 
     # Fetch an existing gallery image from the lab.
@@ -90,17 +89,16 @@ Describe "Testing NEW Verbs" {
         $newVM.Properties | Should Not BeNullOrEmpty
         $newVM.Name | Should Be $newVMName       
         $newVM.Properties.ProvisioningState | Should Be "succeeded"
-        $newVM.Properties.LabId | Should Be $newLab.ResourceId
-        $newVM.Properties.Vms[0].Name | Should Be $newVMName
-        $newVM.Properties.Vms[0].Size | Should Be $newVMSize
-        $newVM.Properties.Vms[0].UserName | Should Be $newVMUserName
-        $newVM.Properties.Vms[0].VmTemplateName | Should Be $existingGalleryImageName
+        $newVM.Properties.Fqdn | Should Be "$newVMName.eastus.cloudapp.azure.com"
+        $newVM.Properties.Size | Should Be $newVMSize
+        $newVM.Properties.UserName | Should Be $newVMUserName
+        $newVM.Properties.GalleryImageReference.Sku | Should Be "2012-R2-Datacenter"
     }
 
     # Save the new VM to a VM template.
     $newCustomImageName = $("RegrVMTemplate" + (Get-Random -Maximum 9999))
     $newCustomImageDescription = "VM Template created for regression testing. Please delete after use."
-    $newCustomImage = New-AzureRmDtlVMTemplate -SrcDtlVM $newVM -SrcIsSysPrepped -DestVMTemplateName $newCustomImageName -DestVMTemplateDescription $newCustomImageDescription -Verbose
+    $newCustomImage = New-AzureRmDtlCustomImage -SrcDtlVM $newVM -windowsOsState "SysprepApplied" -DestCustomImageName $newCustomImageName -DestCustomImageDescription $newCustomImageDescription -Verbose
     
     # Asserts / post-condition checks
     It "New VM Template" {
@@ -108,7 +106,6 @@ Describe "Testing NEW Verbs" {
         $newCustomImage.Properties | Should Not BeNullOrEmpty
         $newCustomImage.Name | Should Be $newCustomImageName
         $newCustomImage.Properties.ProvisioningState | Should Be "succeeded"
-        $newCustomImage.Properties.ParentResourceName | Should Be $newLab.ResourceName
         $newCustomImage.Properties.Vhd | Should Not BeNullOrEmpty
         $newCustomImage.Properties.Vhd.SysPrep | Should Be $true
     }
