@@ -4,7 +4,7 @@
   "description": "Installs SublimeText using the Chocolatey package manager",
   "tags": [
     "Windows",
-    "Fiddler"
+    "SublimeText"
   ],
   "iconUri": "https://chocolatey.org/content/packageimages/SublimeText3.PackageControl.2.0.0.20140915.png",
   "targetOsType": "Windows",
