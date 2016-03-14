@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
-  "title": "Syscoin (Business on the blockchain)",
-  "description": "Add an Linux Syscoin node to the Lab",
+  "title": "Syscoin",
+  "description": "Add an Linux Syscoin Decentralized Marketplace node to the Lab",
   "tags": [
     "Syscoin",
     "Blockchain",
