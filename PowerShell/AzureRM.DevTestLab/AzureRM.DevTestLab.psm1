@@ -1251,7 +1251,8 @@ function New-AzureRmDtlCustomImage
 
                 # Folder location of VM creation script, the template file and template parameters file.
                 if ((($null -ne $SrcDtlVM.Properties.OsProfile) -and ($null -ne $SrcDtlVM.Properties.OsProfile.WindowsConfiguration)) -or
-                    (($null -ne $SrcDtlVM.Properties.GalleryImageReference) -and ("Windows" -eq $SrcDtlVM.Properties.GalleryImageReference.OsType)))
+                    (($null -ne $SrcDtlVM.Properties.GalleryImageReference) -and ("Windows" -eq $SrcDtlVM.Properties.GalleryImageReference.OsType)) -or
+                    ($null -ne $windowsOsState))
                 {
                     Write-Verbose "Detected OS type: Windows"
                     $templateName = $ARMTemplate_CreateCustomImage_FromWindowsVM
