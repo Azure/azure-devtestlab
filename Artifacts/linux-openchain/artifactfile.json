@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
-  "title": "Multichain on Linux",
-  "description": "Deploys MultiChain a new lab private blockchain.",
+  "title": "Openchain on Linux",
+  "description": "Deploys Openchain a new lab private blockchain.",
   "iconUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/Artifacts/linux-openchain/labArtifact.png",
   "linux-bootstrap-chef/chefArtifact.png": null,
   "targetOsType": "Linux",
@@ -27,7 +27,7 @@
     },
     "openPermissions": {
       "type": "bool",
-      "displayName": "Admin Key",
+      "displayName": "Openchain Permissions",
       "description": "If true anyone can join your blockchain",
       "defaultValue": false
     }
