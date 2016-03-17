@@ -12,12 +12,12 @@
         "installUsername": {
             "type": "string",
             "displayName": "Install User Name",
-            "description": "User with admin rights to install Slack"
+            "description": "The user name for which the artifact will be installed"
         },
         "installPassword": {
             "type": "securestring",
             "displayName": "Install Password",
-            "description": "Password for the install"
+            "description": "User password"
         }
     },
     "runCommand": {
