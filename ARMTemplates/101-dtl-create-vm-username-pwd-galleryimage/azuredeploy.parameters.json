@@ -3,13 +3,13 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "newVMName": {
-      "value": "lvvmqs3"
+      "value": "MyVM1"
     },
     "existingLabName": {
-      "value": "lvlabqs2"
+      "value": "MyLab1"
     },
     "newVMSize": {
-      "value": "Standard_A2"
+      "value": "Standard_A4"
     },
     "userName": {
       "value": "SomeAdmin"
@@ -18,13 +18,13 @@
       "value": "SomePassword!"
     },
     "offer": {
-      "value": "VisualStudio"
+      "value": "WindowsServer"
     },
     "publisher": {
-      "value": "MicrosoftVisualStudio"
+      "value": "MicrosoftWindowsServer"
     },
     "sku": {
-      "value": "VS-2015-Ent-VSU1-AzureSDK-2.8-WS2012R2"
+      "value": "2012-R2-Datacenter"
     },
     "osType": {
       "value": "Windows"
