@@ -177,10 +177,10 @@
     }
   },
   "variables": {
-    "newLabId": "[concat(resourceGroup().id, '/providers/Microsoft.DevTestLab/labs/', parameters('newLabName'))]",
+    "newLabId": "[resourceId('Microsoft.DevTestLab/labs', parameters('newLabName'))]",
     "labSubnetName": "[concat(variables('labVirtualNetworkName'), 'Subnet')]",
     "labVirtualNetworkName": "[concat('Dtl', parameters('newLabName'))]",
-    "labVirtualNetworkId": "[concat(variables('newLabId'), '/virtualnetworks/', variables('labVirtualNetworkName'))]",
+    "labVirtualNetworkId": "[resourceId('Microsoft.DevTestLab/labs/virtualNetworks', parameters('newLabName'), variables('labVirtualNetworkName'))]",
     "devTemplateResourceName": "[concat(parameters('newLabName'), '/', parameters('devBoxTemplateName'))]",
     "goldenImageTemplateResourceName": "[concat(parameters('newLabName'), '/', parameters('goldenImageTemplateName'))]",
     "testTemplateResourceName": "[concat(parameters('newLabName'), '/', parameters('testBoxTemplateName'))]"
@@ -194,10 +194,18 @@
       "resources": [
         {
           "apiVersion": "2015-05-21-preview",
+          "name": "[variables('labVirtualNetworkName')]",
+          "type": "virtualNetworks",
+          "dependsOn": [
+            "[variables('newLabId')]"
+          ]
+        },
+        {
+          "apiVersion": "2015-05-21-preview",
           "name": "LabVmsShutdown",
           "type": "schedules",
           "dependsOn": [
-            "[resourceId('Microsoft.DevTestLab/labs', parameters('newLabName'))]"
+            "[variables('newLabId')]"
           ],
           "properties": {
             "status": "enabled",
@@ -212,7 +220,7 @@
           "name": "default/MaxVmsAllowedPerUser",
           "type": "policySets/policies",
           "dependsOn": [
-            "[resourceId('Microsoft.DevTestLab/labs', parameters('newLabName'))]"
+            "[variables('newLabId')]"
           ],
           "properties": {
             "description": "",
@@ -227,7 +235,7 @@
           "name": "default/MaxVmsAllowedPerLab",
           "type": "policySets/policies",
           "dependsOn": [
-            "[resourceId('Microsoft.DevTestLab/labs', parameters('newLabName'))]"
+            "[variables('newLabId')]"
           ],
           "properties": {
             "description": "",
@@ -242,7 +250,7 @@
           "name": "default/AllowedVmSizesInLab",
           "type": "policySets/policies",
           "dependsOn": [
-            "[resourceId('Microsoft.DevTestLab/labs', parameters('newLabName'))]"
+            "[variables('newLabId')]"
           ],
           "properties": {
             "description": "",
@@ -257,7 +265,7 @@
           "name": "privaterepo885",
           "type": "artifactSources",
           "dependsOn": [
-            "[resourceId('Microsoft.DevTestLab/labs', parameters('newLabName'))]"
+            "[variables('newLabId')]"
           ],
           "properties": {
             "uri": "[parameters('artifactRepoUri')]",
@@ -268,14 +276,6 @@
             "sourceType": "[parameters('artifactRepoType')]",
             "status": "Enabled"
           }
-        },
-        {
-          "apiVersion": "2015-05-21-preview",
-          "name": "[variables('labVirtualNetworkName')]",
-          "type": "virtualNetworks",
-          "dependsOn": [
-            "[resourceId('Microsoft.DevTestLab/labs', parameters('newLabName'))]"
-          ]
         }
       ]
     },
@@ -285,7 +285,7 @@
       "name": "[concat(parameters('newLabName'), '/', parameters('pilotVMName'))]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.DevTestLab/labs', parameters('newLabName'))]"
+        "[variables('labVirtualNetworkId')]"
       ],
       "properties": {
         "galleryImageReference": {
@@ -355,7 +355,8 @@
       "name": "[concat(parameters('newLabName'), '/', parameters('devBoxVMName'))]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.DevTestLab/labs/customImages', parameters('newLabName'), parameters('devBoxTemplateName'))]"
+        "[resourceId('Microsoft.DevTestLab/labs/customImages', parameters('newLabName'), parameters('devBoxTemplateName'))]",
+        "[variables('labVirtualNetworkId')]"
       ],
       "properties": {
         "customImageName": "[parameters('devBoxTemplateName')]",
@@ -374,7 +375,8 @@
       "name": "[concat(parameters('newLabName'), '/', parameters('testBoxVMName'))]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.DevTestLab/labs/customImages', parameters('newLabName'), parameters('testBoxTemplateName'))]"
+        "[resourceId('Microsoft.DevTestLab/labs/customImages', parameters('newLabName'), parameters('testBoxTemplateName'))]",
+        "[variables('labVirtualNetworkId')]"
       ],
       "properties": {
         "customImageName": "[parameters('testBoxTemplateName')]",
@@ -393,7 +395,8 @@
       "name": "[concat(parameters('newLabName'), '/', parameters('goldenImageVMName'))]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.DevTestLab/labs/customImages', parameters('newLabName'), parameters('goldenImageTemplateName'))]"
+        "[resourceId('Microsoft.DevTestLab/labs/customImages', parameters('newLabName'), parameters('goldenImageTemplateName'))]",
+        "[variables('labVirtualNetworkId')]"
       ],
       "properties": {
         "customImageName": "[parameters('goldenImageTemplateName')]",

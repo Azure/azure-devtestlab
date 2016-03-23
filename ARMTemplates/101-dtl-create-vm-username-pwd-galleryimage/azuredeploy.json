@@ -65,9 +65,8 @@
     }
   },
   "variables": {
-    "existingLabId": "[concat(resourceGroup().id, '/providers/Microsoft.DevTestLab/labs/', parameters('existingLabName'))]",
     "labSubnetName": "[concat(variables('labVirtualNetworkName'), 'Subnet')]",
-    "labVirtualNetworkId": "[concat(variables('existingLabId'), '/virtualnetworks/', variables('labVirtualNetworkName'))]",
+    "labVirtualNetworkId": "[resourceId('Microsoft.DevTestLab/labs/virtualnetworks', parameters('existingLabName'), variables('labVirtualNetworkName'))]",
     "labVirtualNetworkName": "[concat('Dtl', parameters('existingLabName'))]",
     "resourceName": "[concat(parameters('existingLabName'), '/', parameters('newVMName'))]",
     "resourceType": "Microsoft.DevTestLab/labs/virtualMachines"
