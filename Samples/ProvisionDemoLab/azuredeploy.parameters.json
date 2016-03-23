@@ -5,8 +5,6 @@
     "newLabName": {
       "value": "FabrikamDemoLab"
     },
-    
-    // parameters to set lab policies
     "labVmShutDownTime": {
       "value": "21:00"
     },
@@ -19,8 +17,6 @@
     "allowedVmSizes": {
       "value": "\"Standard_A2\", \"Standard_A4\""
     },
-    
-    // parameters to set the private artifact repo
     "artifactRepoUri": {
         "value": "https://xiaoying.visualstudio.com/DefaultCollection/_git/azure-devtestlabsdemo"
     },
@@ -39,13 +35,9 @@
     "artifactRepoType": {
         "value": "VsoGit"
     },
-    
-    // parameters to create the 1st VM to be created in the lab
     "pilotVMName": {
       "value": "TestBox001"
     },
-    
-    // parameters to VM properties used for all the VMs to be created in the lab
     "VMSize": {
       "value": "Standard_A2"
     },
@@ -55,8 +47,6 @@
     "password": {
       "value": "<3DevTestLabs!"
     },
-    
-    // parameters for the 3 custom VM images (aka. Templates) to be created in the lab
     "devBoxTemplateName": {
       "value": "Fabrikam Dev Box"
     },
@@ -75,8 +65,6 @@
     "goldenImageTemplateDescription": {
       "value": "Latest testing build 100219 from VSO"
     },
-    
-    // parameters for the 3 new VMs to be created in the lab using the new custom VM images respectively
     "devBoxVMName": {
       "value": "DevBox001"
     },
