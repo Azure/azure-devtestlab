@@ -14,10 +14,10 @@
         "description": "The name of an existing lab where the new vm will be created."
       }
     },
-    "existingCustomImageName": {
+    "existingCustomImageId": {
       "type": "string",
       "metadata": {
-        "description": "The name of an existing custom image which will be used to create the new vm. The specified image must exist in the lab (identified via the 'existingLabName' parameter)."
+        "description": "The id of an existing custom image which will be used to create the new vm. The specified image must exist in the lab (identified via the 'existingLabName' parameter)."
       }
     },
     "newVMSize": {
@@ -38,7 +38,7 @@
       "name": "[variables('resourceName')]",
       "location": "[resourceGroup().location]",
       "properties": {
-        "customImageName": "[parameters('existingCustomImageName')]",
+        "customImageId": "[parameters('existingCustomImageId')]",
             "size": "[parameters('newVMSize')]",
             "isAuthenticationWithSshKey": false,
             "sshKey": "",

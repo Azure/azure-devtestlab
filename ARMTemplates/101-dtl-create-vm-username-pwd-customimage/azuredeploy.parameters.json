@@ -8,8 +8,8 @@
     "existingLabName": {
       "value": "MyLab1"
     },
-    "existingCustomImageName": {
-      "value": "MyCustomImage1"
+    "existingCustomImageId": {
+      "value": "MyCustomImageId1"
     },
     "newVMSize": {
       "value": "Standard_A4"
