@@ -8,9 +8,6 @@
     "existingLabName": {
       "value": "MyLab1"
     },
-    "imageName": {
-      "value": "MyGalleryImage1"
-    },
     "newVMSize": {
       "value": "Standard_A4"
     },
@@ -34,6 +31,6 @@
     },
     "version": {
       "value": "latest"
-    },
+    }
   }
 }

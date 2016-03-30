@@ -28,6 +28,9 @@
     }
   },
   "variables": {
+    "labSubnetName": "[concat(variables('labVirtualNetworkName'), 'Subnet')]",
+    "labVirtualNetworkId": "[resourceId('Microsoft.DevTestLab/labs/virtualnetworks', parameters('existingLabName'), variables('labVirtualNetworkName'))]",
+    "labVirtualNetworkName": "[concat('Dtl', parameters('existingLabName'))]",
     "resourceName": "[concat(parameters('existingLabName'), '/', parameters('newVMName'))]",
     "resourceType": "Microsoft.DevTestLab/labs/virtualMachines"
   },
@@ -39,12 +42,14 @@
       "location": "[resourceGroup().location]",
       "properties": {
         "customImageId": "[parameters('existingCustomImageId')]",
-            "size": "[parameters('newVMSize')]",
-            "isAuthenticationWithSshKey": false,
-            "sshKey": "",
-            "userName": "",
-            "password": ""
-          }
+        "size": "[parameters('newVMSize')]",
+        "isAuthenticationWithSshKey": false,
+        "sshKey": "",
+        "userName": "",
+        "password": "",
+        "labVirtualNetworkId": "[variables('labVirtualNetworkId')]",
+        "labSubnetName": "[variables('labSubnetName')]"
+      }
     }
   ],
   "outputs": {

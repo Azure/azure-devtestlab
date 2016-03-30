@@ -65,6 +65,9 @@
     }
   },
   "variables": {
+    "labSubnetName": "[concat(variables('labVirtualNetworkName'), 'Subnet')]",
+    "labVirtualNetworkId": "[resourceId('Microsoft.DevTestLab/labs/virtualnetworks', parameters('existingLabName'), variables('labVirtualNetworkName'))]",
+    "labVirtualNetworkName": "[concat('Dtl', parameters('existingLabName'))]",
     "resourceName": "[concat(parameters('existingLabName'), '/', parameters('newVMName'))]",
     "resourceType": "Microsoft.DevTestLab/labs/virtualMachines"
   },
@@ -80,6 +83,8 @@
         "userName": "[parameters('userName')]",
         "sshKey": "",
         "password": "[parameters('password')]",
+        "labVirtualNetworkId": "[variables('labVirtualNetworkId')]",
+        "labSubnetName": "[variables('labSubnetName')]",
         "galleryImageReference": {
           "Sku": "[parameters('sku')]",
           "OsType": "[parameters('osType')]",
