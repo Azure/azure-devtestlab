@@ -1,0 +1,7 @@
+{
+  "itemDisplayName": "Create a new custom windows image in Azure DevTest Labs",
+  "description": "This template creates a new custom image from an existing DevTest Lab / DTL VM",
+  "summary": "This template creates a new custom image from an existing DevTest Lab VM it also allows the user to specify wether they would like to sysprep the VM or not",
+  "githubUsername": "mithunshanbhag",
+  "dateUpdated": "2016-03-04"
+}

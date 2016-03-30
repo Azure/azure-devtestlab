@@ -6,7 +6,7 @@
     "Windows",
     "VSCode"
   ],
-  "iconUri": "https://code.visualstudio.com/Content/images/vscode.ico",
+  "iconUri": "http://into.hu/uploads/images2/2015/06/05-09-15-visual-studio-code-logo.png",
   "targetOsType": "Windows",
   "runCommand": {
     "commandToExecute": "powershell.exe -ExecutionPolicy bypass -File installVSCode.ps1"

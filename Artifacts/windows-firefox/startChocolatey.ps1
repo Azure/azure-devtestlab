@@ -1,4 +1,4 @@
-﻿Param(
+Param(
     # comma- or semicolon-separated list of Chocolatey packages.
     [ValidateNotNullOrEmpty()]
     [Parameter(Mandatory=$True)]
@@ -42,11 +42,7 @@ $credential = New-Object System.Management.Automation.PSCredential("$env:COMPUTE
 $command = $PSScriptRoot + "\ChocolateyPackageInstaller.ps1"
 
 # Run Chocolatey as the artifactInstaller user
-Enable-PSRemoting -force -SkipNetworkProfileCheck
-
-# Ensure that current process can run scripts. 
-Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force 
-
+Enable-PSRemoting -Force -SkipNetworkProfileCheck
 Invoke-Command -FilePath $command -Credential $credential -ComputerName $env:COMPUTERNAME -ArgumentList $packageList
 Disable-PSRemoting -Force
 

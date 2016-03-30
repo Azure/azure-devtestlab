@@ -1,0 +1,13 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+    "title": "de-provision",
+    "description": "Uses Azure Linux VM Agent to de-provision linux vm in preperation for saving VM as Image",
+    "tags": [
+		"Linux"
+    ],
+    "iconUri": "",
+    "targetOsType": "Linux",
+    "runCommand": {
+            "commandToExecute": "['sh depro.sh']"
+    }
+}
