@@ -14,7 +14,7 @@
         "description": "Resource ID of an existing VM from which the custom image will be created."
       }
     },
-      "imageName": {
+    "imageName": {
       "type": "string",
       "metadata": {
         "description": "Name of the custom image being created or updated."
@@ -41,8 +41,8 @@
         "description": "[parameters('imageDescription')]",
         "osType": "Linux",
         "vm": {
-                "sourceVmId": "[parameters('existingVMResourceId')]",
-              },
+          "sourceVmId": "[parameters('existingVMResourceId')]"
+        }
       }
     }
   ],

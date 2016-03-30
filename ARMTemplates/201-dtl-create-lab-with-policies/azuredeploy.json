@@ -39,6 +39,9 @@
       }
     }
   },
+  "variables": {
+    "labVirtualNetworkName": "[concat('Dtl', parameters('newLabName'))]"
+  },
   "resources": [
     {
       "apiVersion": "2015-05-21-preview",
@@ -46,6 +49,14 @@
       "name": "[trim(parameters('newLabName'))]",
       "location": "[resourceGroup().location]",
       "resources": [
+        {
+          "apiVersion": "2015-05-21-preview",
+          "name": "[variables('labVirtualNetworkName')]",
+          "type": "virtualNetworks",
+          "dependsOn": [
+            "[resourceId('Microsoft.DevTestLab/labs', parameters('newLabName'))]"
+          ]
+        },
         {
           "apiVersion": "2015-05-21-preview",
           "name": "LabVmsShutdown",
