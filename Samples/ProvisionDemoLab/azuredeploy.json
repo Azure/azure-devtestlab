@@ -183,7 +183,10 @@
     "labVirtualNetworkId": "[resourceId('Microsoft.DevTestLab/labs/virtualNetworks', parameters('newLabName'), variables('labVirtualNetworkName'))]",
     "devTemplateResourceName": "[concat(parameters('newLabName'), '/', parameters('devBoxTemplateName'))]",
     "goldenImageTemplateResourceName": "[concat(parameters('newLabName'), '/', parameters('goldenImageTemplateName'))]",
-    "testTemplateResourceName": "[concat(parameters('newLabName'), '/', parameters('testBoxTemplateName'))]"
+    "testTemplateResourceName": "[concat(parameters('newLabName'), '/', parameters('testBoxTemplateName'))]",
+    "devVmTemplateId": "[resourceId('Microsoft.DevTestLab/labs/customImages', parameters('newLabName'), parameters('devBoxTemplateName'))]",
+    "testVmTemplateId": "[resourceId('Microsoft.DevTestLab/labs/customImages', parameters('newLabName'), parameters('testBoxTemplateName'))]",
+    "goldenImageTemplateId": "[resourceId('Microsoft.DevTestLab/labs/customImages', parameters('newLabName'), parameters('goldenImageTemplateName'))]"
   },
   "resources": [
     {
@@ -355,11 +358,11 @@
       "name": "[concat(parameters('newLabName'), '/', parameters('devBoxVMName'))]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.DevTestLab/labs/customImages', parameters('newLabName'), parameters('devBoxTemplateName'))]",
+        "[variables('devVmTemplateId')]",
         "[variables('labVirtualNetworkId')]"
       ],
       "properties": {
-        "customImageName": "[parameters('devBoxTemplateName')]",
+        "customImageId": "[variables('devVmTemplateId')]",
         "size": "[parameters('VMSize')]",
         "isAuthenticationWithSshKey": false,
         "userName": "[parameters('userName')]",
@@ -375,11 +378,11 @@
       "name": "[concat(parameters('newLabName'), '/', parameters('testBoxVMName'))]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.DevTestLab/labs/customImages', parameters('newLabName'), parameters('testBoxTemplateName'))]",
+        "[variables('testVmTemplateId')]",
         "[variables('labVirtualNetworkId')]"
       ],
       "properties": {
-        "customImageName": "[parameters('testBoxTemplateName')]",
+        "customImageId": "[variables('testVmTemplateId')]",
         "size": "[parameters('VMSize')]",
         "isAuthenticationWithSshKey": false,
         "userName": "[parameters('userName')]",
@@ -395,11 +398,11 @@
       "name": "[concat(parameters('newLabName'), '/', parameters('goldenImageVMName'))]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.DevTestLab/labs/customImages', parameters('newLabName'), parameters('goldenImageTemplateName'))]",
+        "[variables('goldenImageTemplateId')]",
         "[variables('labVirtualNetworkId')]"
       ],
       "properties": {
-        "customImageName": "[parameters('goldenImageTemplateName')]",
+        "customImageId": "[variables('goldenImageTemplateId')]",
         "size": "[parameters('VMSize')]",
         "isAuthenticationWithSshKey": false,
         "userName": "[parameters('userName')]",
@@ -421,15 +424,15 @@
     },
     "devVmTemplateId": {
       "type": "string",
-      "value": "[resourceId('Microsoft.DevTestLab/labs/customImages', parameters('newLabName'), parameters('devBoxTemplateName'))]"
+      "value": "[variables('devVmTemplateId')]"
     },
     "testVmTemplateId": {
       "type": "string",
-      "value": "[resourceId('Microsoft.DevTestLab/labs/customImages', parameters('newLabName'), parameters('testBoxTemplateName'))]"
+      "value": "[variables('testVmTemplateId')]"
     },
     "goldenImageVmTemplateId": {
       "type": "string",
-      "value": "[resourceId('Microsoft.DevTestLab/labs/customImages', parameters('newLabName'), parameters('goldenImageTemplateName'))]"
+      "value": "[variables('goldenImageTemplateId')]"
     },
     "devVmId": {
       "type": "string",
