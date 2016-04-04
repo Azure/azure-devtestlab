@@ -93,7 +93,7 @@ Get-ChildItem -Path $agentInstallationPath | Unblock-File | out-null
 Get-ChildItem -Recurse -Path $agentInstallationPath\Agent | Unblock-File | out-null
 
 # Retrieve the path to the VSTSAgent.exe file.
-$agentExePath = [System.IO.Path]::Combine($agentInstallationPath, 'Agent', 'VSTSAgent.exe')
+$agentExePath = [System.IO.Path]::Combine($agentInstallationPath, 'Agent', 'VSOAgent.exe')
 Write-Verbose "Agent Location = $agentExePath" -Verbose
 if (![System.IO.File]::Exists($agentExePath))
 {
