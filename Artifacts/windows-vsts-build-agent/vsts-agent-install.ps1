@@ -1,7 +1,6 @@
-# Downloads the Visual Studio Online Build Agent and installs on the new machine
-# and registers with the Visual Studio Online account and build agent pool
+# Downloads the Visual Studio Online Build Agent, installs on the new machine, registers with the Visual
+# Studio Online account, and adds to the specified build agent pool
 
-# Enable -Verbose option
 [CmdletBinding()]
 Param(
     [Parameter(Mandatory=$true)]
@@ -24,30 +23,29 @@ Write-Verbose "Entering vsts-agent-install.ps1" -verbose
 
 if ($driveLetter.length -ne 1)
 {
-    #Write-Host "The drive letter must be 1 character only; exiting."
-    #exit 1
-    throw [System.ArgumentException] "The drive letter must be 1 character only."
+    Write-Error "The drive letter must be 1 character only; exiting."
+    exit -1
 }
 
 $vstsUser = "AzureDevTestLabs"
 
 $currentLocation = Split-Path -parent $MyInvocation.MyCommand.Definition
-Write-Verbose "Current folder: $currentLocation" -verbose
+Write-Verbose "Current folder: $currentLocation" -Verbose
 
-#Create a temporary directory where to download from VSTS the agent package (agent.zip) and then launch the configuration.
+# Create a temporary directory to download from VSTS the agent package (agent.zip) to, and then launch the configuration.
 $agentTempFolderName = Join-Path $env:temp ([System.IO.Path]::GetRandomFileName())
 New-Item -ItemType Directory -Force -Path $agentTempFolderName
-Write-Verbose "Temporary Agent download folder: $agentTempFolderName" -verbose
+Write-Verbose "Temporary agent download folder: $agentTempFolderName" -Verbose
 
 $serverUrl = "https://$vstsAccount.visualstudio.com"
-Write-Verbose "Server URL: $serverUrl" -verbose
+Write-Verbose "Server URL: $serverUrl" -Verbose
 
 $vstsAgentUrl = "$serverUrl/_apis/distributedtask/packages/agent"
-Write-Verbose "VSTS Agent URL: $vstsAgentUrl" -verbose
+Write-Verbose "VSTS agent URL: $vstsAgentUrl" -Verbose
 
 $retryCount = 3
 $retries = 1
-Write-Verbose "Downloading Agent install files" -verbose
+Write-Verbose "Downloading agent install files" -Verbose
 do
 {
     try
@@ -58,13 +56,13 @@ do
         $headers = @{ Authorization = ("Basic {0}" -f $basicAuth) }
 
         Invoke-WebRequest -Uri $vstsAgentUrl -headers $headers -Method Get -OutFile "$agentTempFolderName\agent.zip"
-        Write-Verbose "Downloaded agent successfully on attempt $retries" -verbose
+        Write-Verbose "Downloaded agent successfully on attempt $retries" -Verbose
         break
     }
     catch
     {
         $exceptionText = ($_ | Out-String).Trim()
-        Write-Verbose "Exception occured downloading agent: $exceptionText in try number $retries" -verbose
+        Write-Verbose "Exception occured downloading agent: $exceptionText in try number $retries" -Verbose
         $retries++
         Start-Sleep -Seconds 30 
     }
@@ -81,23 +79,23 @@ New-Item -ItemType Directory -Force -Path $agentInstallationPath
 New-Item -ItemType Directory -Force -Path (Join-Path $agentInstallationPath $WorkFolder)
 
 
-Write-Verbose "Extracting the zip file for the agent" -verbose
+Write-Verbose "Extracting the zip file for the agent" -Verbose
 $destShellFolder = (new-object -com shell.application).namespace("$agentInstallationPath")
 $destShellFolder.CopyHere((new-object -com shell.application).namespace("$agentTempFolderName\agent.zip").Items(), 16)
 
 # Removing the ZoneIdentifier from files downloaded from the internet so the plugins can be loaded
 # Don't recurse down _work or _diag, those files are not blocked and cause the process to take much longer
-Write-Verbose "Unblocking files" -verbose
+Write-Verbose "Unblocking files" -Verbose
 Get-ChildItem -Path $agentInstallationPath | Unblock-File | out-null
 Get-ChildItem -Recurse -Path $agentInstallationPath\Agent | Unblock-File | out-null
 
 # Retrieve the path to the VSTSAgent.exe file.
 $agentExePath = [System.IO.Path]::Combine($agentInstallationPath, 'Agent', 'VSOAgent.exe')
-Write-Verbose "Agent Location = $agentExePath" -Verbose
+Write-Verbose "Agent location = $agentExePath" -Verbose
 if (![System.IO.File]::Exists($agentExePath))
 {
     Write-Error "File not found: $agentExePath" -Verbose
-    return
+    exit -1
 }
 
 # Call the agent with the configure command and all the options (this creates the settings file) without prompting
@@ -110,11 +108,16 @@ Write-Verbose "Configuring agent" -Verbose
 Push-Location -Path $agentInstallationPath
 # The actual install of the agent. Using NetworkService as default service logon account, and some other values that could be turned into paramenters if needed 
 &start cmd.exe "/k $agentExePath /configure /RunningAsService /login:$vstsUser,$vstsUserPassword /serverUrl:$serverUrl ""/WindowsServiceLogonAccount:NT AUTHORITY\NetworkService"" /WindowsServiceLogonPassword /WindowsServiceDisplayName:VSTSBuildAgent /name:$agentName /poolname:$poolname /WorkFolder:$WorkFolder /StartMode:Automatic /force /NoPrompt &exit"
+
+if ($LASTEXITCODE -ne 0)
+{
+    Write-Error "VSTS agent failed to configure."
+    exit $LASTEXITCODE
+}
+
 # Restore original current directory.
 Pop-Location
-
 
 Write-Verbose "Agent install output: $LASTEXITCODE" -Verbose
 
 Write-Verbose "Exiting vsts-agent-install.ps1" -Verbose
-
