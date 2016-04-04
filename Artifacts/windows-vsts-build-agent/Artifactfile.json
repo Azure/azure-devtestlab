@@ -35,9 +35,18 @@
             "type": "string",
             "displayName": "Agent Pool",
             "description": "The agent pool this build agent should be added to."
+        },
+        "driveLetter": {
+            "type": "string",
+            "displayName": "Install to Drive",
+            "description": "The drive to install the build agent to.",
+            "defaultValue": "C",
+            "allowedValues": [
+                "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"
+            ]
         }
     },
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File vsts-agent-install.ps1 ', parameters('vstsAccount'), ' ', parameters('vstsUser'), ' ', parameters('vstsPassword'), ' ', parameters('agentName'), ' ', parameters('poolName'))]"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File vsts-agent-install.ps1 ', parameters('vstsAccount'), ' ', parameters('vstsUser'), ' ', parameters('vstsPassword'), ' ', parameters('agentName'), ' ', parameters('poolName'), ' ', parameters('driveLetter'))]"
     }
 }
