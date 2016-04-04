@@ -38,9 +38,11 @@
         },
         "driveLetter": {
             "type": "string",
-            "displayName": "Install to Drive",
-            "description": "The drive to install the build agent to.",
+            "displayName": "Install Drive Letter",
+            "description": "The drive letter to install the build agent to. The specified drive must already exist.",
             "defaultValue": "C",
+            "maxLength": 1,
+            "minLength": 1, 
             "allowedValues": [
                 "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"
             ]
