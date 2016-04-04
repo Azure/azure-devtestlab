@@ -8,9 +8,6 @@ Param(
     $vstsAccount,
     
     [Parameter(Mandatory=$true)]
-    $vstsUser,
-    
-    [Parameter(Mandatory=$true)]
     $vstsUserPassword,
     
     [Parameter(Mandatory=$true)]
@@ -31,6 +28,8 @@ if ($driveLetter.length -ne 1)
     #exit 1
     throw [System.ArgumentException] "The drive letter must be 1 character only."
 }
+
+$vstsUser = "AzureDevTestLabs"
 
 $currentLocation = Split-Path -parent $MyInvocation.MyCommand.Definition
 Write-Verbose "Current folder: $currentLocation" -verbose

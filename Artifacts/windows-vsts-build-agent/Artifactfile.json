@@ -16,15 +16,10 @@
             "displayName": "VSTS Account",
             "description": "The name of the VSTS account to add the build agent to. This is the value of in your VSTS URL: e.g. 'myaccount' in https://myaccount.visualstudio.com."
         },
-        "vstsUser": {
-            "type": "string",
-            "displayName": "VSTS User",
-            "description": "User login name for a user with permissions to add build agents."
-        },
         "vstsPassword": {
             "type": "securestring",
-            "displayName": "VSTS Credentials",
-            "description": "Password or personal access token for the user with permissions to add build agents."
+            "displayName": "VSTS Personal Access Token",
+            "description": "The personal access token for the user with permissions to add build agents."
         },
         "agentName": {
             "type": "string",
@@ -49,6 +44,6 @@
         }
     },
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File vsts-agent-install.ps1 ', parameters('vstsAccount'), ' ', parameters('vstsUser'), ' ', parameters('vstsPassword'), ' ', parameters('agentName'), ' ', parameters('poolName'), ' ', parameters('driveLetter'))]"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File vsts-agent-install.ps1 ', parameters('vstsAccount'), ' ', parameters('vstsPassword'), ' ', parameters('agentName'), ' ', parameters('poolName'), ' ', parameters('driveLetter'))]"
     }
 }
