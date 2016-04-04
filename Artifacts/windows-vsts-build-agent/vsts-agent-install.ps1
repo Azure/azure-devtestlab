@@ -19,13 +19,13 @@ Param(
     [Parameter(Mandatory=$true)]
     $poolname,
     
-    [Param(Mandatory=$true)]
+    [Parameter(Mandatory=$true)]
     $driveLetter
 )
 
 Write-Verbose "Entering vsts-agent-install.ps1" -verbose
 
-if ($driveLetter.length != 1)
+if ($driveLetter.length -ne 1)
 {
     #Write-Host "The drive letter must be 1 character only; exiting."
     #exit 1
