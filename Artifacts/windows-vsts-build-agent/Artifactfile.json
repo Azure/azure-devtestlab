@@ -19,7 +19,7 @@
         "vstsPassword": {
             "type": "securestring",
             "displayName": "VSTS Personal Access Token",
-            "description": "The personal access token for the user with permissions to add build agents."
+            "description": "The personal access token for the user with permissions to add build agents. It will only be used to register the agent."
         },
         "agentName": {
             "type": "string",
