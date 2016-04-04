@@ -1,15 +1,14 @@
 {
-  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
-  "title": "git",
-  "description": "Installs git using the Chocolatey package manager",
-  "tags": [
-    "Windows",
-    "Git"
-  ],
-  "iconUri": "https://cdn.rawgit.com/ferventcoder/chocolatey-packages/02c21bebe5abb495a56747cbb9b4b5415c933fc0/icons/git.svg",
-  "targetOsType": "Windows",
-  "runCommand": {
-    "commandToExecute": "powershell.exe -ExecutionPolicy bypass -File startChocolatey.ps1 -PackageList git.install"
-
-  }
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+    "title": "git",
+    "description": "Installs git using the Chocolatey package manager",
+    "tags": [
+        "Windows",
+        "Git"
+    ],
+    "iconUri": "https://cdn.rawgit.com/ferventcoder/chocolatey-packages/02c21bebe5abb495a56747cbb9b4b5415c933fc0/icons/git.svg",
+    "targetOsType": "Windows",
+    "runCommand": {
+        "commandToExecute": "powershell.exe -ExecutionPolicy bypass -File startChocolatey.ps1 -PackageList git.install"
+    }
 }

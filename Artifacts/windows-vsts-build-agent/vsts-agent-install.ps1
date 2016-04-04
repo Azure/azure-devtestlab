@@ -17,10 +17,20 @@ Param(
     $agentName,
     
     [Parameter(Mandatory=$true)]
-    $poolname
+    $poolname,
+    
+    [Param(Mandatory=$true)]
+    $driveLetter
 )
 
 Write-Verbose "Entering vsts-agent-install.ps1" -verbose
+
+if ($driveLetter.length != 1)
+{
+    #Write-Host "The drive letter must be 1 character only; exiting."
+    #exit 1
+    throw [System.ArgumentException] "The drive letter must be 1 character only."
+}
 
 $currentLocation = Split-Path -parent $MyInvocation.MyCommand.Definition
 Write-Verbose "Current folder: $currentLocation" -verbose
@@ -41,30 +51,30 @@ $retries = 1
 Write-Verbose "Downloading Agent install files" -verbose
 do
 {
-  try
-  {
-    $basicAuth = ("{0}:{1}" -f $vstsUser,$vstsUserPassword) 
-    $basicAuth = [System.Text.Encoding]::UTF8.GetBytes($basicAuth)
-    $basicAuth = [System.Convert]::ToBase64String($basicAuth)
-    $headers = @{Authorization=("Basic {0}" -f $basicAuth)}
+    try
+    {
+        $basicAuth = ("{0}:{1}" -f $vstsUser, $vstsUserPassword) 
+        $basicAuth = [System.Text.Encoding]::UTF8.GetBytes($basicAuth)
+        $basicAuth = [System.Convert]::ToBase64String($basicAuth)
+        $headers = @{ Authorization = ("Basic {0}" -f $basicAuth) }
 
-    Invoke-WebRequest -Uri $vstsAgentUrl -headers $headers -Method Get -OutFile "$agentTempFolderName\agent.zip"
-    Write-Verbose "Downloaded agent successfully on attempt $retries" -verbose
-    break
-  }
-  catch
-  {
-    $exceptionText = ($_ | Out-String).Trim()
-    Write-Verbose "Exception occured downloading agent: $exceptionText in try number $retries" -verbose
-    $retries++
-    Start-Sleep -Seconds 30 
-  }
+        Invoke-WebRequest -Uri $vstsAgentUrl -headers $headers -Method Get -OutFile "$agentTempFolderName\agent.zip"
+        Write-Verbose "Downloaded agent successfully on attempt $retries" -verbose
+        break
+    }
+    catch
+    {
+        $exceptionText = ($_ | Out-String).Trim()
+        Write-Verbose "Exception occured downloading agent: $exceptionText in try number $retries" -verbose
+        $retries++
+        Start-Sleep -Seconds 30 
+    }
 } 
 while ($retries -le $retryCount)
 
 
-# Construct the agent folder under the main (hardcoded) C: drive.
-$agentInstallationPath = Join-Path "C:" $agentName 
+# Construct the agent folder under the specified drive.
+$agentInstallationPath = Join-Path -Path ($driveLetter + ":") -ChildPath $agentName 
 # Create the directory for this agent.
 New-Item -ItemType Directory -Force -Path $agentInstallationPath 
 

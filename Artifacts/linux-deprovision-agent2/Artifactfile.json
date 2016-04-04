@@ -3,11 +3,11 @@
     "title": "Linux Agent 2.0",
     "description": "Use Linux Agent to de-provision linux vm. This artifact makes the VM unusable",
     "tags": [
-		"Linux"
+        "Linux"
     ],
     "iconUri": "",
     "targetOsType": "Linux",
     "runCommand": {
-            "commandToExecute": "['sh depro.sh']"
+        "commandToExecute": "['sh depro.sh']"
     }
 }

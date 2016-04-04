@@ -3,11 +3,11 @@
     "title": "de-provision",
     "description": "Uses Azure Linux VM Agent to de-provision linux vm in preperation for saving VM as Image",
     "tags": [
-		"Linux"
+        "Linux"
     ],
     "iconUri": "",
     "targetOsType": "Linux",
     "runCommand": {
-            "commandToExecute": "['sh depro.sh']"
+        "commandToExecute": "['sh depro.sh']"
     }
 }
