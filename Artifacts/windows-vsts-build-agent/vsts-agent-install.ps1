@@ -116,12 +116,6 @@ Push-Location -Path $agentInstallationPath
 # The actual install of the agent. Using NetworkService as default service logon account, and some other values that could be turned into paramenters if needed 
 &start cmd.exe "/k $agentExePath /configure /RunningAsService /login:$vstsUser,$vstsUserPassword /serverUrl:$serverUrl ""/WindowsServiceLogonAccount:NT AUTHORITY\NetworkService"" /WindowsServiceLogonPassword /WindowsServiceDisplayName:VSTSBuildAgent /name:$agentName /poolname:$poolname /WorkFolder:$WorkFolder /StartMode:Automatic /force /NoPrompt &exit"
 
-if ($LASTEXITCODE -ne 0)
-{
-    Write-Error "VSTS agent failed to configure. Exit code was $LASTEXITCODE."
-    exit $LASTEXITCODE
-}
-
 # Restore original current directory.
 Pop-Location
 
