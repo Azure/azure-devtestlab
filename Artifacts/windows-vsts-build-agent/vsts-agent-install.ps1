@@ -71,7 +71,17 @@ while ($retries -le $retryCount)
 
 
 # Construct the agent folder under the specified drive.
-$agentInstallationPath = Join-Path -Path ($driveLetter + ":") -ChildPath $agentName 
+$installPathDir = $driveLetter + ":"
+try
+{
+    $agentInstallationPath = Join-Path -Path $installPathDir -ChildPath $agentName
+}
+catch
+{
+    Write-Error "Failed to create the agent directory at $installPathDir."
+    exit -1
+}
+
 # Create the directory for this agent.
 New-Item -ItemType Directory -Force -Path $agentInstallationPath 
 
