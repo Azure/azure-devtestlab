@@ -118,7 +118,7 @@ Push-Location -Path $agentInstallationPath
 
 if ($LASTEXITCODE -ne 0)
 {
-    Write-Error "VSTS agent failed to configure."
+    Write-Error "VSTS agent failed to configure. Exit code was $LASTEXITCODE."
     exit $LASTEXITCODE
 }
 
