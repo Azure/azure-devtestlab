@@ -14,7 +14,7 @@
         "vstsAccount": {
             "type": "string",
             "displayName": "VSTS Account",
-            "description": "The name of the VSTS account to add the build agent to. This is the value of in your VSTS URL: e.g. 'myaccount' in https://myaccount.visualstudio.com."
+            "description": "The name of the VSTS account to add the build agent to. This is the value in your VSTS URL: e.g. 'myaccount' in https://myaccount.visualstudio.com."
         },
         "vstsPassword": {
             "type": "securestring",
