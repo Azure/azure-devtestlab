@@ -11,7 +11,7 @@
         "scriptFileUris": {
             "type": "array",
             "displayName": "File URI(s)",
-            "description": "All the files to download to the VM for script execution. To specify multiple files, format them as a JSON array, e.g. [\"file1\", \"file2\"]."
+            "description": "All the files to download to the VM for script execution. To specify multiple files, format them as a JSON array (e.g. [\"file1\", \"file2\"])."
         },
         "scriptToRun": {
             "type": "string",
