@@ -74,7 +74,7 @@ while ($retries -le $retryCount)
 $installPathDir = $driveLetter + ":"
 try
 {
-    $agentInstallationPath = Join-Path -Path $installPathDir -ChildPath $agentName
+    $agentInstallationPath = Join-Path -Path $installPathDir -ChildPath $agentName -ErrorAction "Stop"
 }
 catch
 {
