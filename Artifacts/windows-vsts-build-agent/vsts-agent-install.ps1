@@ -32,7 +32,7 @@ trap
     if ($vstsAccount -match "https*://" -or $vstsAccount -match "visualstudio.com")
     {
         Write-Error "VSTS account should not be the URL, just the account name."
-        exit -1
+        exit 1
     }
 
     $currentLocation = Split-Path -parent $MyInvocation.MyCommand.Definition
@@ -51,7 +51,7 @@ trap
     {
         try
         {
-            $basicAuth = "$vstsUser:$vstsUserPassword" 
+            $basicAuth = ("{0}:{1}" -f $vstsUser, $vstsUserPassword) 
             $basicAuth = [System.Text.Encoding]::UTF8.GetBytes($basicAuth)
             $basicAuth = [System.Convert]::ToBase64String($basicAuth)
             $headers = @{ Authorization = ("Basic {0}" -f $basicAuth) }
@@ -67,7 +67,7 @@ trap
             if ($retries -ge $retryCount)
             {
                 Write-Error "Failed to download agent due to $exceptionText"
-                exit -1
+                exit 2
             }
             
             Start-Sleep -Seconds 30 
@@ -85,7 +85,7 @@ trap
     catch
     {
         Write-Error "Failed to create the agent directory at $installPathDir."
-        exit -1
+        exit 3
     }
 
     # Create the directory for this agent.
@@ -107,7 +107,7 @@ trap
     if (![System.IO.File]::Exists($agentExePath))
     {
         Write-Error "File not found: $agentExePath" -Verbose
-        exit -1
+        exit 4
     }
 
     # Call the agent with the configure command and all the options (this creates the settings file) without prompting
@@ -116,9 +116,12 @@ trap
     # Set the current directory to the agent dedicated one previously created.
     Push-Location -Path $agentInstallationPath
     # The actual install of the agent. Using NetworkService as default service logon account, and some other values that could be turned into paramenters if needed 
-    &start cmd.exe "/k $agentExePath /configure /RunningAsService /login:$vstsUser,$vstsUserPassword /serverUrl:$serverUrl ""/WindowsServiceLogonAccount:NT AUTHORITY\NetworkService"" /WindowsServiceLogonPassword /WindowsServiceDisplayName:VSTSBuildAgent /name:$agentName /poolname:$poolname /WorkFolder:$WorkFolder /StartMode:Automatic /force /NoPrompt &exit"
+    $serviceDisplayName = "VSTS Agent ($vstsAccount.$agentName)"
+    &start cmd.exe "/k $agentExePath /configure /RunningAsService /login:$vstsUser,$vstsUserPassword /serverUrl:$serverUrl ""/WindowsServiceLogonAccount:NT AUTHORITY\NetworkService"" /WindowsServiceLogonPassword /WindowsServiceDisplayName:""$serviceDisplayName"" /name:""$agentName"" /poolname:$poolname /WorkFolder:$WorkFolder /StartMode:Automatic /force /NoPrompt &exit"
 
     # Restore original current directory.
     Pop-Location
+    
+    exit 0
 }
 throw "Failed to apply artifact"
