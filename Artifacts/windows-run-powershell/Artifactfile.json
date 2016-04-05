@@ -25,7 +25,13 @@
             "allowEmpty": true
         }
     },
-    "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File', ' ', parameters('scriptToRun'), ' ', parameters('scriptArguments'))]"
+    "runAzureVMExtension": {
+        "publisher": "Microsoft.Compute",
+        "type": "CustomScriptExtension",
+        "typeHandlerVersion": "1.7",
+        "settings": {
+            "fileUris": "[parameters('scriptFileUris')]",
+            "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File', ' ', parameters('scriptToRun'), ' ', parameters('scriptArguments'))]"
+        }
     }
 }
