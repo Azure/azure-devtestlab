@@ -14,6 +14,18 @@
         "description": "Resource ID of an existing VM from which the custom image will be created."
       }
     },
+      "linuxOsState": {
+      "type": "string",
+      "allowedValues": [
+        "NonDeprovisioned",
+        "DeprovisionRequested",
+        "DeprovisionApplied"
+        ],
+      "defaultValue": "NonDeprovisioned",
+      "metadata": {
+        "description": "State of Linux on the machine. It can be one of three values NonDeprovisioned, DeprovisionRequested, and DeprovisionApplied"
+      }
+    },
     "imageName": {
       "type": "string",
       "metadata": {
@@ -41,7 +53,10 @@
         "description": "[parameters('imageDescription')]",
         "osType": "Linux",
         "vm": {
-          "sourceVmId": "[parameters('existingVMResourceId')]"
+          "sourceVmId": "[parameters('existingVMResourceId')]",
+          "linuxOsInfo":{
+              "linuxOsState":  "[parameters('linuxOsState')]"
+          }
         }
       }
     }
