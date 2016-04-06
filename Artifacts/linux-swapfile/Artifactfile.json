@@ -3,7 +3,7 @@
     "title": "Swap File",
     "description": "Configure swap file on Linux",
     "tags": [
-		"Linux"
+        "Linux"
     ],
     "iconUri": "",
     "targetOsType": "Linux",
@@ -17,6 +17,6 @@
         }
     },
     "runCommand": {
-            "commandToExecute": "[concat('sh linux_swapfile.sh ', parameters('size'))]"
+        "commandToExecute": "[concat('sh linux_swapfile.sh ', parameters('size'))]"
     }
 }
