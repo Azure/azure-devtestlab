@@ -28,7 +28,8 @@
     "runAzureVMExtension": {
         "publisher": "Microsoft.Compute",
         "type": "CustomScriptExtension",
-        "typeHandlerVersion": "1.7",
+        "typeHandlerVersion": "1.8",
+        "autoUpgradeMinorVersion": "true",
         "settings": {
             "fileUris": "[parameters('scriptFileUris')]",
             "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File', ' ', parameters('scriptToRun'), ' ', parameters('scriptArguments'))]"
