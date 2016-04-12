@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+  "title": "Chrome",
+  "description": "Installs Chrome using the Chocolatey package manager",
+  "tags": [
+    "Windows",
+    "Chrome"
+  ],
+  "iconUri": "https://chocolatey.org/content/packageimages/GoogleChrome.48.0.2564.103.svg",
+  "targetOsType": "Windows",
+  "runCommand": {
+    "commandToExecute": "powershell.exe -executionpolicy bypass -File startChocolatey.ps1 -PackageList googlechrome"
+
+  }
+}
