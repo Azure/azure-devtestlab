@@ -4,7 +4,8 @@
   "description": "Installs Chrome using the Chocolatey package manager",
   "tags": [
     "Windows",
-    "Chrome"
+    "Chrome",
+    "Google"
   ],
   "iconUri": "https://chocolatey.org/content/packageimages/GoogleChrome.48.0.2564.103.svg",
   "targetOsType": "Windows",
