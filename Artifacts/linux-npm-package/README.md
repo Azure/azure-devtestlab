@@ -33,7 +33,7 @@ value can be any valid path (ie. /var/tmp/dev) to install the npm packages into.
 *options*
 
 Any other valid arguments that the npm-install command accepts. Since these additional parameters allow for relatively infinite permutations
-they will likely be susceptible to failure on the images supplied by the Azure DevTest Labs. Advanced users who wish to push the limiatations
+they will likely be susceptible to failure on the images supplied by the Azure DevTest Labs. Advanced users who wish to push the limitations
 of the extra options parameter will potentially have to experiment with certain switches to see if they work (and correct the state of
 the VM using the linux-bash artifact ahead of time if necessary).
 

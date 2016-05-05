@@ -1,7 +1,7 @@
 {
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
     "title": "NPM Package",
-    "description": "Install NPM packages on linux using the Node Package Manager.",
+    "description": "Install NPM packages on Linux using the Node Package Manager.",
     "tags": [
         "NPM",
         "Linux",
@@ -20,14 +20,14 @@
         "packages": {
             "type": "string",
             "displayName": "Packages to Install",
-            "description": "The package names you wish to have installed via NPM, separated by commas. The packages will be installed globally. If NPM is not yet on the system, it also will be installed. You can find NPM package names in the index found at https://www.npmjs.com. All npm install commands are supported, however if a git/bitbucket/gist scope is given then you must have installed the git artifact prior to this npm package artifact."
+            "description": "The package names you wish to have installed via NPM, separated by spaces. You can find NPM package names in the index found at https://www.npmjs.com. All npm install commands are supported, however if a Git/bitbucket/gist scope is given then you must have installed the Git artifact prior to this NPM package artifact."
         },
         "otherOptions": {
             "type": "string",
             "displayName": "Additional Options",
             "allowEmpty": true,
             "defaultValue": "",
-            "description": "Any additional options you wish to supply on the command line. See npm install man page here: https://docs.npmjs.com/cli/install"
+            "description": "Any additional options you wish to supply on the command line. See NPM install man page here: https://docs.npmjs.com/cli/install"
         }
     },
     "runCommand": {
