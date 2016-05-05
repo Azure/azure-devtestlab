@@ -1,4 +1,4 @@
-# Linux APT Package Manager Artifact
+# Linux Apt Package Manager Artifact
 This Azure DevTest artifact allows the user to specify packages to install onto an Azure DevTest Lab VM
 via the apt-get package system. This artifact applies to any Linux distribution that is by default managed 
 by the Apt system (Debian, Ubuntu, and other Debian derivatives) or that has had apt set up on it.
@@ -44,35 +44,8 @@ our Linux DevTest Lab VMs, a reasonable effort is made to support the nuance of 
 permutations and combinations that the command can be used to manipulate the state of a machine, we recommend that for the most advanced
 of users with specific needs use the linux-bash artifact to satisfy their specific needs.
 
-For posterity, here is the apt-get man page section on the install command at the time of authoring this artifact:
-
----
-
-> install
->
-> install is followed by one or more packages desired for installation or upgrading. Each package is a package name, not a fully qualified filename (for instance, in a Debian system,
-> apt-utils would be the argument provided, not apt-utils_1.0.9.8.3_amd64.deb). All packages required by the package(s) specified for installation will also be retrieved and
-> installed. The /etc/apt/sources.list file is used to locate the desired packages. If a hyphen is appended to the package name (with no intervening space), the identified package
-> will be removed if it is installed. Similarly a plus sign can be used to designate a package to install. These latter features may be used to override decisions made by apt-get's
-> conflict resolution system.
-> 
-> A specific version of a package can be selected for installation by following the package name with an equals and the version of the package to select. This will cause that version
-> to be located and selected for install. Alternatively a specific distribution can be selected by following the package name with a slash and the version of the distribution or the
-> Archive name (stable, testing, unstable).
-> 
-> Both of the version selection mechanisms can downgrade packages and must be used with care.
-> 
-> This is also the target to use if you want to upgrade one or more already-installed packages without upgrading every package you have on your system. Unlike the "upgrade" target,
-> which installs the newest version of all currently installed packages, "install" will install the newest version of only the package(s) specified. Simply provide the name of the
-> package(s) you wish to upgrade, and if a newer version is available, it (and its dependencies, as described above) will be downloaded and installed.
-> 
-> Finally, the apt_preferences(5) mechanism allows you to create an alternative installation policy for individual packages.
-> 
-> If no package matches the given expression and the expression contains one of '.', '?' or '*' then it is assumed to be a POSIX regular expression, and it is applied to all package
-> names in the database. Any matches are then installed (or removed). Note that matching is done by substring so 'lo.*' matches 'how-lo' and 'lowest'. If this is undesired, anchor the
-> regular expression with a '^' or '$' character, or create a more specific regular expression.
-> 
-[Source: debian manpages](http://manpages.debian.org/cgi-bin/man.cgi?query=apt-get)
+Please see [debian manpages on apt-get](http://manpages.debian.org/cgi-bin/man.cgi?query=apt-get) for further details on what can be 
+specified for apt-get packages and additional options. 
 
 ---
 

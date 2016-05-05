@@ -1,7 +1,7 @@
 {
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
     "title": "Apt-Get",
-    "description": "Install packages on a Linux Azure DevTest Lab VM via apt-get",
+    "description": "Install packages on a Linux Azure DevTest Lab VM via the Apt package management system, using the apt-get utility. This system is the default package manager installed on Debian distributions and Debian-based distributions such as Ubuntu.",
     "tags": [
         "Package Management",
         "Apt",
@@ -22,7 +22,12 @@
             "type": "string",
             "displayName": "Run Update First",
             "defaultValue": "true",
-            "description": "Run apt-get update prior to running the full install command. Allowed values are 'true' and 'false', or blank (which will evaluate to false). Note that no additional options are passed to the update command. It is recommended for you to run update."
+            "allowEmpty": false,
+            "allowedValues": [
+                "true",
+                "false"
+            ],
+            "description": "Run apt-get update prior to running the full install command. Allowed values are 'true' and 'false'. Note that no additional options are passed to the 'apt-get update' command other than --quiet --assume-yes. It is recommended for you to set this to true and run update."
         },
         "options": {
             "type": "string",
