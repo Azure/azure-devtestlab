@@ -1,0 +1,21 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+    "title": "WinRM Configuration",
+    "description": "Configures WinRM with a self signed Https listner also handles firewall configuration to allow traffic on https through specified port",
+    "tags": [
+        "Windows",
+        "WinRM"
+    ],
+    "iconUri": "",
+    "targetOsType": "Windows",
+    "parameters": {     
+        "hostDnsName": {
+            "type": "string",
+            "displayName": "Host DNS Name",
+            "description": "The FQDN of machine or Domain, default is *.<azureregion>.cloudapp.azure.com"
+        }
+    },
+    "runCommand": {
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File winrm-configuration-install.ps1 ', parameters('winrmIbPort'), ' ', parameters('hostDnsName'))]"
+    }
+}
