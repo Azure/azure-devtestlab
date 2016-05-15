@@ -24,6 +24,7 @@ function Delete-WinRMListener
     try
     {
         $config = Winrm enumerate winrm/config/listener
+		
         foreach($conf in $config)
         {
             if($conf.Contains("HTTPS"))
@@ -49,11 +50,12 @@ function Configure-WinRMHttpsListener
     
     # Create a test certificate
     $thumbprint = (Get-ChildItem cert:\LocalMachine\My | Where-Object { $_.Subject -eq "CN=" + $HostName } | Select-Object -Last 1).Thumbprint
-    if(-not $thumbprint)
+    
+	if(-not $thumbprint)
     {
-    # makecert ocassionally produces negative serial numbers
-	# which golang tls/crypto <1.6.1 cannot handle
-	# https://github.com/golang/go/issues/8265
+    	# makecert ocassionally produces negative serial numbers
+		# which golang tls/crypto <1.6.1 cannot handle
+		# https://github.com/golang/go/issues/8265
         $serial = Get-Random
         .\makecert -r -pe -n CN=$Hostname -b 01/01/2012 -e 01/01/2022 -eku 1.3.6.1.5.5.7.3.1 -ss my -sr localmachine -sky exchange -sp "Microsoft RSA SChannel Cryptographic Provider" -sy 12 -# $serial
         $thumbprint=(Get-ChildItem cert:\Localmachine\my | Where-Object { $_.Subject -eq "CN=" + $HostName } | Select-Object -Last 1).Thumbprint
@@ -64,10 +66,8 @@ function Configure-WinRMHttpsListener
         }
     }    
 
-    #$response = cmd.exe /c $currentLocation\winrmconf.cmd $HostName $thumbprint
-	$resonse = cmd.exe .\winrmconf.cmd $hostname $thumbprint
+    $response = cmd.exe /c $currentLocation\winrmconf.cmd $HostName $thumbprint
 	
-    Write-Host "The response is... "
     Write-Host $response
 }
 
@@ -87,7 +87,7 @@ function Add-FirewallException
 #################################################################################################################################
 
 $winrmHttpsPort=5986
-$currentLocation=Split-Path -parent $MyInvocation.MyCommand.Definition
+$currentLocation = Split-Path -parent $MyInvocation.MyCommand.Definition
 
 # Configure https listener
 Configure-WinRMHttpsListener $HostName
