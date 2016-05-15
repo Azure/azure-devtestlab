@@ -12,7 +12,7 @@
         "hostDnsName": {
             "type": "string",
             "displayName": "Host DNS Name",
-            "description": "The FQDN of machine or Domain, default is *.<azureregion>.cloudapp.azure.com"
+            "description": "The FQDN of machine or Domain, use the format *.azureregion.cloudapp.azure.com. For example *.northeurope.cloudapp.azure.com"
         }
     },
     "runCommand": {
