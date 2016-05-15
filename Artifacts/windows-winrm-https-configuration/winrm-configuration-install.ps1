@@ -67,8 +67,7 @@ function Configure-WinRMHttpsListener
         }
     }    
 
-    #$response = cmd.exe /c $currentLocation\winrmconf.cmd $HostName $thumbprint
-	$resonse = cmd.exe .\winrmconf.cmd $hostname $thumbprint
+    $response = cmd.exe /c $currentLocation\winrmconf.cmd $HostName $thumbprint
 	
     Write-Host "The response is... "
     Write-Host $response
