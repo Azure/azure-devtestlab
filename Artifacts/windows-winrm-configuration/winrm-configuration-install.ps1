@@ -10,7 +10,7 @@
 param
 (    
     [Parameter(Mandatory = $true)]
-    [string] $HostName
+    [string] $hostDnsName
 )
 
 Set-PSDebug -Strict 

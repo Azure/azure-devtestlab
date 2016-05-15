@@ -9,13 +9,13 @@
     "iconUri": "",
     "targetOsType": "Windows",
     "parameters": {     
-        "hostDnsName": {
+        "HostName": {
             "type": "string",
             "displayName": "Host DNS Name",
             "description": "The FQDN of machine or Domain, use the format *.azureregion.cloudapp.azure.com. For example *.northeurope.cloudapp.azure.com"
         }
     },
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File winrm-configuration-install.ps1 ', parameters('hostDnsName'))]"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File winrm-configuration-install.ps1 ', parameters('HostName'))]"
     }
 }
