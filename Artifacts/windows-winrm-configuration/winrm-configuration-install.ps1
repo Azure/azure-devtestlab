@@ -13,6 +13,8 @@ param
     [string] $HostName
 )
 
+Set-PSDebug -Strict 
+$ErrorActionPreference = "Stop"
 #################################################################################################################################
 #                                             Helper Functions                                                                  #
 #################################################################################################################################
@@ -86,7 +88,7 @@ function Add-FirewallException
 $winrmHttpsPort=5986
 
 # Configure https listener
-Configure-WinRMHttpsListener $HostName $port
+Configure-WinRMHttpsListener $HostName $winrmHttpsPort
 
 # Add firewall exception
 Add-FirewallException -port $winrmHttpsPort
