@@ -16,6 +16,6 @@
         }
     },
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File winrm-configuration-install.ps1 ', parameters('winrmIbPort'), ' ', parameters('hostDnsName'))]"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File winrm-configuration-install.ps1 ', parameters('hostDnsName'))]"
     }
 }
