@@ -16,10 +16,10 @@
             "allowEmpty": false
         },
         "Port": {
-            "type": "int",
+            "type": "string",
             "displayName": "Port",
             "description": "Specify the port to be used for default Https traffic.",
-            "defaultValue": 5986,
+            "defaultValue": "5986",
             "allowEmpty": false
         }
     },
