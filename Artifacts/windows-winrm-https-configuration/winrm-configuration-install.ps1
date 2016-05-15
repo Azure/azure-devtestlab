@@ -10,7 +10,9 @@
 param
 (    
     [Parameter(Mandatory = $true)]
-    [string] $HostName
+    [string] $HostName,
+    [Parameter(Mandatory = $true)]
+    [string] $Port
 )
 
 Set-PSDebug -Strict 
@@ -87,14 +89,13 @@ function Add-FirewallException
 #                                              Configure WinRM                                                                  #
 #################################################################################################################################
 
-$winrmHttpsPort=5986
 $currentLocation=Split-Path -parent $MyInvocation.MyCommand.Definition
 
 # Configure https listener
 Configure-WinRMHttpsListener $HostName
 
 # Add firewall exception
-Add-FirewallException -port $winrmHttpsPort
+Add-FirewallException -port $port
 
 #################################################################################################################################
 #################################################################################################################################

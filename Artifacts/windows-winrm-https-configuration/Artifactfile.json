@@ -17,7 +17,8 @@
         "Port": {
             "type": "int",
             "displayName": "Port",
-            "description": "Specify the port to be used for default Https traffic."
+            "description": "Specify the port to be used for default Https traffic.",
+            "defaultValue": 5986
         }
     },
     "runCommand": {
