@@ -229,7 +229,7 @@
             "description": "",
             "factName": "UserOwnedLabVmCount",
             "threshold": "[string(parameters('maxAllowedVmsPerUser'))]",
-            "policyEvaluatorType": "MaxValuePolicy",
+            "evaluatorType": "MaxValuePolicy",
             "status": "enabled"
           }
         },
@@ -244,7 +244,7 @@
             "description": "",
             "factName": "LabVmCount",
             "threshold": "[string(parameters('maxAllowedVmsPerLab'))]",
-            "policyEvaluatorType": "MaxValuePolicy",
+            "evaluatorType": "MaxValuePolicy",
             "status": "enabled"
           }
         },
@@ -259,7 +259,7 @@
             "description": "",
             "factName": "LabVmSize",
             "threshold": "[concat('[', trim(parameters('allowedVmSizes')), ']')]",
-            "policyEvaluatorType": "AllowedValuesPolicy",
+            "evaluatorType": "AllowedValuesPolicy",
             "status": "enabled"
           }
         },
