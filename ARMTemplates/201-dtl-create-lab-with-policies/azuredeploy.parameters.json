@@ -8,11 +8,14 @@
     "labVmShutDownTime": {
       "value": "21:00"
     },
+    "timeZoneId": {
+      "value": "UTC"
+    },
     "maxAllowedVmsPerUser": {
-      "value": 10
+      "value": 2
     },
     "maxAllowedVmsPerLab": {
-      "value": 2
+      "value": 10
     },
     "allowedVmSizes": {
       "value": "\"Standard_A2\", \"Standard_A4\""
