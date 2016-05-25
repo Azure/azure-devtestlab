@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "newLabName": {
-      "value": "FabrikamDemoLab3"
+      "value": "FabrikamDemoLab"
     },
     "labVmShutDownTime": {
       "value": "21:00"
@@ -51,31 +51,31 @@
       "value": "<3DevTestLabs!"
     },
     "devBoxTemplateName": {
-      "value": "Fabrikam Dev Box23"
+      "value": "Fabrikam Dev Box"
     },
     "devBoxTemplateDescription": {
       "value": "Fabrikam Dev box environment"
     },
     "testBoxTemplateName": {
-      "value": "Fabrikam Test Box23"
+      "value": "Fabrikam Test Box"
     },
     "testBoxTemplateDescription": {
       "value": "Fabrikam Test box environment"
     },
     "goldenImageTemplateName": {
-      "value": "Fabrikam Latest Testing Build 021923"
+      "value": "Fabrikam Latest Testing Build 0219"
     },
     "goldenImageTemplateDescription": {
       "value": "Latest testing build 100219 from VSO"
     },
     "devBoxVMName": {
-      "value": "DevBox00123"
+      "value": "DevBox001"
     },
     "testBoxVMName": {
-      "value": "TestBox00223"
+      "value": "TestBox002"
     },
     "goldenImageVMName": {
-      "value": "TestLatest021923"
+      "value": "TestLatest0219"
     }
   }
 }
