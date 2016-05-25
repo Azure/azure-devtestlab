@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "newLabName": {
-      "value": "FabrikamDemoLab"
+      "value": "FabrikamDemoLab3"
     },
     "labVmShutDownTime": {
       "value": "21:00"
@@ -30,7 +30,7 @@
       "value": "master"
     },
     "artifactRepoDisplayName": {
-      "value": "FabrikamPrivateRepo"
+      "value": "FabrikamPrivateRepo3"
     },
     "artifactRepoSecurityToken": {
       "value": "r6q3xzzswszoync4qm7kn3abrovvbox3ar4zabzmkzortjiiutua"
@@ -39,7 +39,7 @@
       "value": "VsoGit"
     },
     "pilotVMName": {
-      "value": "TestBox001"
+      "value": "TestBox0013"
     },
     "VMSize": {
       "value": "Standard_A2"
@@ -51,31 +51,31 @@
       "value": "<3DevTestLabs!"
     },
     "devBoxTemplateName": {
-      "value": "Fabrikam Dev Box"
+      "value": "Fabrikam Dev Box23"
     },
     "devBoxTemplateDescription": {
       "value": "Fabrikam Dev box environment"
     },
     "testBoxTemplateName": {
-      "value": "Fabrikam Test Box"
+      "value": "Fabrikam Test Box23"
     },
     "testBoxTemplateDescription": {
       "value": "Fabrikam Test box environment"
     },
     "goldenImageTemplateName": {
-      "value": "Fabrikam Latest Testing Build 0219"
+      "value": "Fabrikam Latest Testing Build 021923"
     },
     "goldenImageTemplateDescription": {
       "value": "Latest testing build 100219 from VSO"
     },
     "devBoxVMName": {
-      "value": "DevBox001"
+      "value": "DevBox00123"
     },
     "testBoxVMName": {
-      "value": "TestBox002"
+      "value": "TestBox00223"
     },
     "goldenImageVMName": {
-      "value": "TestLatest0219"
+      "value": "TestLatest021923"
     }
   }
 }
