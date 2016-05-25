@@ -325,7 +325,9 @@
       "properties": {
         "vm": {
           "sourceVmId": "[resourceId('Microsoft.DevTestLab/labs/virtualMachines', parameters('newLabName'), parameters('pilotVMName'))]",
-          "sysPrep": false
+          "windowsOsInfo": {
+            "windowsOsState": "NonSysprepped"
+          }
         },
         "description": "[parameters('devBoxTemplateDescription')]"
       }
@@ -340,7 +342,9 @@
       "properties": {
         "vm": {
           "sourceVmId": "[resourceId('Microsoft.DevTestLab/labs/virtualMachines', parameters('newLabName'), parameters('pilotVMName'))]",
-          "sysPrep": false
+          "windowsOsInfo": {
+            "windowsOsState": "NonSysprepped"
+          }
         },
         "description": "[parameters('testBoxTemplateDescription')]"
       }
@@ -355,7 +359,9 @@
       "properties": {
         "vm": {
           "sourceVmId": "[resourceId('Microsoft.DevTestLab/labs/virtualMachines', parameters('newLabName'), parameters('pilotVMName'))]",
-          "sysPrep": false
+          "windowsOsInfo": {
+            "windowsOsState": "NonSysprepped"
+          }
         },
         "description": "[parameters('goldenImageTemplateDescription')]"
       }
