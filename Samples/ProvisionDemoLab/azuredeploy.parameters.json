@@ -18,7 +18,7 @@
       "value": 100
     },
     "allowedVmSizes": {
-      "value": "Standard_A2\", \"Standard_A4"
+      "value": "\"Standard_A2\", \"Standard_A4\""
     },
     "artifactRepoUri": {
       "value": "https://xiaoying.visualstudio.com/DefaultCollection/_git/azure-devtestlabsdemo"
