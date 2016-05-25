@@ -18,6 +18,13 @@
         "description": "Set 'Auto Shutdown' policy: The UTC time at which the Lab VMs will be automatically shutdown (E.g. 17:30, 20:00, 09:00)."
       }
     },
+    "labVmShutDownTimeZoneId": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "The Windows time zone id associated with labVmShutDownTime (E.g. UTC, Pacific Standard Time, Central Europe Standard Time)."
+      }
+    },
     "maxAllowedVmsPerUser": {
       "type": "int",
       "minValue": 0,
@@ -36,7 +43,7 @@
     },
     "allowedVmSizes": {
       "type": "string",
-      "defaultValue": "\"Standard_A5\", \"Standard_A3\", \"Standard_A2\"",
+      "defaultValue": "Standard_A5\", \"Standard_A3\", \"Standard_A2",
       "minLength": 3,
       "metadata": {
         "description": "Set 'allowed VM sizes' policy: A comma-separated list of VM sizes that are allowed in the lab."
@@ -212,9 +219,10 @@
           ],
           "properties": {
             "status": "enabled",
-            "time": {
-              "hour": "[split(trim(parameters('labVmShutDownTime')), ':')[0]]",
-              "minute": "[split(trim(parameters('labVmShutDownTime')), ':')[1]]"
+            "taskType": "LabVmsShutdownTask",
+            "timeZoneId": "[string(parameters('labVmShutDownTimeZoneId'))]",
+            "dailyRecurrence": {
+              "time": "[string(parameters('labVmShutDownTime'))]"
             }
           }
         },
