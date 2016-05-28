@@ -8,6 +8,9 @@
     "labVmShutDownTime": {
       "value": "21:00"
     },
+    "labVmShutDownTimeZoneId": {
+      "value": "Atlantic Standard Time"
+    },
     "maxAllowedVmsPerUser": {
       "value": 10
     },
@@ -18,22 +21,22 @@
       "value": "\"Standard_A2\", \"Standard_A4\""
     },
     "artifactRepoUri": {
-        "value": "https://xiaoying.visualstudio.com/DefaultCollection/_git/azure-devtestlabsdemo"
+      "value": "https://xiaoying.visualstudio.com/DefaultCollection/_git/azure-devtestlabsdemo"
     },
     "artifactRepoFolder": {
-        "value": "AzureConDemo"
+      "value": "AzureConDemo"
     },
     "artifactRepoBranch": {
-        "value": "master"
+      "value": "master"
     },
     "artifactRepoDisplayName": {
-        "value": "FabrikamPrivateRepo"
+      "value": "FabrikamPrivateRepo"
     },
     "artifactRepoSecurityToken": {
-        "value": "r6q3xzzswszoync4qm7kn3abrovvbox3ar4zabzmkzortjiiutua" 
+      "value": "r6q3xzzswszoync4qm7kn3abrovvbox3ar4zabzmkzortjiiutua"
     },
     "artifactRepoType": {
-        "value": "VsoGit"
+      "value": "VsoGit"
     },
     "pilotVMName": {
       "value": "TestBox001"

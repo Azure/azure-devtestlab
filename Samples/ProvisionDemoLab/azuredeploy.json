@@ -18,6 +18,13 @@
         "description": "Set 'Auto Shutdown' policy: The UTC time at which the Lab VMs will be automatically shutdown (E.g. 17:30, 20:00, 09:00)."
       }
     },
+    "labVmShutDownTimeZoneId": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "The Windows time zone id associated with labVmShutDownTime (E.g. UTC, Pacific Standard Time, Central Europe Standard Time)."
+      }
+    },
     "maxAllowedVmsPerUser": {
       "type": "int",
       "minValue": 0,
@@ -212,9 +219,10 @@
           ],
           "properties": {
             "status": "enabled",
-            "time": {
-              "hour": "[split(trim(parameters('labVmShutDownTime')), ':')[0]]",
-              "minute": "[split(trim(parameters('labVmShutDownTime')), ':')[1]]"
+            "taskType": "LabVmsShutdownTask",
+            "timeZoneId": "[string(parameters('labVmShutDownTimeZoneId'))]",
+            "dailyRecurrence": {
+              "time": "[string(parameters('labVmShutDownTime'))]"
             }
           }
         },
@@ -317,7 +325,9 @@
       "properties": {
         "vm": {
           "sourceVmId": "[resourceId('Microsoft.DevTestLab/labs/virtualMachines', parameters('newLabName'), parameters('pilotVMName'))]",
-          "sysPrep": false
+          "windowsOsInfo": {
+            "windowsOsState": "NonSysprepped"
+          }
         },
         "description": "[parameters('devBoxTemplateDescription')]"
       }
@@ -332,7 +342,9 @@
       "properties": {
         "vm": {
           "sourceVmId": "[resourceId('Microsoft.DevTestLab/labs/virtualMachines', parameters('newLabName'), parameters('pilotVMName'))]",
-          "sysPrep": false
+          "windowsOsInfo": {
+            "windowsOsState": "NonSysprepped"
+          }
         },
         "description": "[parameters('testBoxTemplateDescription')]"
       }
@@ -347,7 +359,9 @@
       "properties": {
         "vm": {
           "sourceVmId": "[resourceId('Microsoft.DevTestLab/labs/virtualMachines', parameters('newLabName'), parameters('pilotVMName'))]",
-          "sysPrep": false
+          "windowsOsInfo": {
+            "windowsOsState": "NonSysprepped"
+          }
         },
         "description": "[parameters('goldenImageTemplateDescription')]"
       }
