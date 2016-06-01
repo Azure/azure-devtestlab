@@ -9,6 +9,13 @@
         "description": "The name of the new lab instance to be created."
       }
     },
+    "timeZoneId": {
+      "type": "string",
+      "defaultValue": "UTC",
+      "metadata": {
+        "description": "The timezone of the lab."
+      }
+    },
     "labVmShutDownTime": {
       "type": "string",
       "minLength": 5,
@@ -190,13 +197,13 @@
   },
   "resources": [
     {
-      "apiVersion": "2015-05-21-preview",
+      "apiVersion": "2016-05-15",
       "type": "Microsoft.DevTestLab/labs",
       "name": "[trim(parameters('newLabName'))]",
       "location": "[resourceGroup().location]",
       "resources": [
         {
-          "apiVersion": "2015-05-21-preview",
+          "apiVersion": "2016-05-15",
           "name": "[variables('labVirtualNetworkName')]",
           "type": "virtualNetworks",
           "dependsOn": [
@@ -204,7 +211,7 @@
           ]
         },
         {
-          "apiVersion": "2015-05-21-preview",
+          "apiVersion": "2016-05-15",
           "name": "LabVmsShutdown",
           "type": "schedules",
           "dependsOn": [
@@ -212,14 +219,15 @@
           ],
           "properties": {
             "status": "enabled",
-            "time": {
-              "hour": "[split(trim(parameters('labVmShutDownTime')), ':')[0]]",
-              "minute": "[split(trim(parameters('labVmShutDownTime')), ':')[1]]"
+            "timeZoneId": "[parameters('timeZoneId')]",
+            "taskType": "LabVmsShutdownTask",
+            "dailyRecurrence": {
+                "time": "[replace(parameters('labVmShutDownTime'),':','')]"
             }
           }
         },
         {
-          "apiVersion": "2015-05-21-preview",
+          "apiVersion": "2016-05-15",
           "name": "default/MaxVmsAllowedPerUser",
           "type": "policySets/policies",
           "dependsOn": [
@@ -234,7 +242,7 @@
           }
         },
         {
-          "apiVersion": "2015-05-21-preview",
+          "apiVersion": "2016-05-15",
           "name": "default/MaxVmsAllowedPerLab",
           "type": "policySets/policies",
           "dependsOn": [
@@ -249,7 +257,7 @@
           }
         },
         {
-          "apiVersion": "2015-05-21-preview",
+          "apiVersion": "2016-05-15",
           "name": "default/AllowedVmSizesInLab",
           "type": "policySets/policies",
           "dependsOn": [
@@ -264,7 +272,7 @@
           }
         },
         {
-          "apiVersion": "2015-05-21-preview",
+          "apiVersion": "2016-05-15",
           "name": "privaterepo885",
           "type": "artifactSources",
           "dependsOn": [
@@ -283,7 +291,7 @@
       ]
     },
     {
-      "apiVersion": "2015-05-21-preview",
+      "apiVersion": "2016-05-15",
       "type": "Microsoft.DevTestLab/labs/virtualMachines",
       "name": "[concat(parameters('newLabName'), '/', parameters('pilotVMName'))]",
       "location": "[resourceGroup().location]",
@@ -308,7 +316,7 @@
       }
     },
     {
-      "apiVersion": "2015-05-21-preview",
+      "apiVersion": "2016-05-15",
       "name": "[variables('devTemplateResourceName')]",
       "type": "Microsoft.DevTestLab/labs/customImages",
       "dependsOn": [
@@ -317,13 +325,15 @@
       "properties": {
         "vm": {
           "sourceVmId": "[resourceId('Microsoft.DevTestLab/labs/virtualMachines', parameters('newLabName'), parameters('pilotVMName'))]",
-          "sysPrep": false
+          "windowsOsInfo": {
+            "windowsOsState": "NonSysprepped"
+          }
         },
         "description": "[parameters('devBoxTemplateDescription')]"
       }
     },
     {
-      "apiVersion": "2015-05-21-preview",
+      "apiVersion": "2016-05-15",
       "name": "[variables('testTemplateResourceName')]",
       "type": "Microsoft.DevTestLab/labs/customImages",
       "dependsOn": [
@@ -332,13 +342,15 @@
       "properties": {
         "vm": {
           "sourceVmId": "[resourceId('Microsoft.DevTestLab/labs/virtualMachines', parameters('newLabName'), parameters('pilotVMName'))]",
-          "sysPrep": false
+          "windowsOsInfo": {
+            "windowsOsState": "NonSysprepped"
+          }
         },
         "description": "[parameters('testBoxTemplateDescription')]"
       }
     },
     {
-      "apiVersion": "2015-05-21-preview",
+      "apiVersion": "2016-05-15",
       "name": "[variables('goldenImageTemplateResourceName')]",
       "type": "Microsoft.DevTestLab/labs/customImages",
       "dependsOn": [
@@ -347,13 +359,15 @@
       "properties": {
         "vm": {
           "sourceVmId": "[resourceId('Microsoft.DevTestLab/labs/virtualMachines', parameters('newLabName'), parameters('pilotVMName'))]",
-          "sysPrep": false
+          "windowsOsInfo": {
+            "windowsOsState": "NonSysprepped"
+          }
         },
         "description": "[parameters('goldenImageTemplateDescription')]"
       }
     },
     {
-      "apiVersion": "2015-05-21-preview",
+      "apiVersion": "2016-05-15",
       "type": "Microsoft.DevTestLab/labs/virtualMachines",
       "name": "[concat(parameters('newLabName'), '/', parameters('devBoxVMName'))]",
       "location": "[resourceGroup().location]",
@@ -373,7 +387,7 @@
       }
     },
     {
-      "apiVersion": "2015-05-21-preview",
+      "apiVersion": "2016-05-15",
       "type": "Microsoft.DevTestLab/labs/virtualMachines",
       "name": "[concat(parameters('newLabName'), '/', parameters('testBoxVMName'))]",
       "location": "[resourceGroup().location]",
@@ -393,7 +407,7 @@
       }
     },
     {
-      "apiVersion": "2015-05-21-preview",
+      "apiVersion": "2016-05-15",
       "type": "Microsoft.DevTestLab/labs/virtualMachines",
       "name": "[concat(parameters('newLabName'), '/', parameters('goldenImageVMName'))]",
       "location": "[resourceGroup().location]",

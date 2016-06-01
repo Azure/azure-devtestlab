@@ -42,7 +42,7 @@ $ArtifactResourceType = "microsoft.devtestlab/labs/artifactsources/artifacts"
 $StorageAccountResourceType = "microsoft.storage/storageAccounts"
 
 # The API version required to query DTL resources
-$RequiredApiVersion = "2015-05-21-preview"
+$RequiredApiVersion = "2016-05-15"
 
 # Paths to Azure RM templates for the DevTest Lab provider.
 $ARMTemplate_CreateLab = ".\101-dtl-create-lab-azuredeploy.json"

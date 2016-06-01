@@ -15,7 +15,7 @@
       "value": true
     },
     "imageName": {
-      "value": "MyCustomImage1"
+      "value": "MyCustomImageFromVM1"
     },
     "imageDescription": {
       "value": "Some description for the custom image"

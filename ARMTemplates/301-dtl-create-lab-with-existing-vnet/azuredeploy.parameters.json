@@ -9,7 +9,7 @@
       "value": "MyLabVNet1"
     },
     "existingVirtualNetworkId": {
-      "value": "/subscriptions/MuSub1/resourceGroups/MyRg1/providers/Microsoft.Network/virtualNetworks/MyVNet1"
+      "value": "/subscriptions/1234a3bc-ee4e-4c7a-9709-1868a28b1d4d/resourceGroups/myRG234/providers/Microsoft.Network/virtualNetworks/MyVNet1"
     },
     "existingSubnetName": {
       "value": "default"

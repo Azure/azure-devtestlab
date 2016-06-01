@@ -41,13 +41,13 @@
   },
   "resources": [
     {
-      "apiVersion": "2015-05-21-preview",
+      "apiVersion": "2016-05-15",
       "type": "Microsoft.DevTestLab/labs",
       "name": "[trim(parameters('newLabName'))]",
       "location": "[resourceGroup().location]",
       "resources": [
         {
-          "apiVersion": "2015-05-21-preview",
+          "apiVersion": "2016-05-15",
           "name": "LabVmsShutdown",
           "type": "schedules",
           "dependsOn": [
@@ -62,7 +62,7 @@
           }
         },
         {
-          "apiVersion": "2015-05-21-preview",
+          "apiVersion": "2016-05-15",
           "name": "MaxVmsAllowedPerUser",
           "type": "policies",
           "dependsOn": [
@@ -77,7 +77,7 @@
           }
         },
         {
-          "apiVersion": "2015-05-21-preview",
+          "apiVersion": "2016-05-15",
           "name": "MaxVmsAllowedPerLab",
           "type": "policies",
           "dependsOn": [
@@ -92,7 +92,7 @@
           }
         },
         {
-          "apiVersion": "2015-05-21-preview",
+          "apiVersion": "2016-05-15",
           "name": "AllowedVmSizesInLab",
           "type": "policies",
           "dependsOn": [
