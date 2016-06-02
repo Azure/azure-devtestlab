@@ -48,7 +48,7 @@
   },
   "resources": [
     {
-      "apiVersion": "2015-05-21-preview",
+      "apiVersion": "2016-05-15",
       "name": "[variables('resourceName')]",
       "type": "Microsoft.DevTestLab/labs/customimages",
       "properties": {
