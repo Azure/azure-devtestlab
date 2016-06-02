@@ -18,7 +18,7 @@ Function Try-Install-Service-Fabric {
         [System.Management.Automation.PSCredential] $credential
     )
 
-    $exitCode = $true
+    $exitCode = 0
 
     try
     {
@@ -78,4 +78,8 @@ $cn.Delete("User", $userName)
 # Delete the artifactInstaller user profile
 gwmi win32_userprofile | where { $_.LocalPath -like "*$userName*" } | foreach { $_.Delete() }
 
-exit $exitCodeVS2015 -and $exitCodeDev15
+if ($exitCodeVS2015 -eq -1 -or $exitCodeDev15 -eq -1)
+{
+    exit -1;
+}
+return 0
