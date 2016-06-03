@@ -117,7 +117,7 @@ trap
     Push-Location -Path $agentInstallationPath
     # The actual install of the agent. Using NetworkService as default service logon account, and some other values that could be turned into paramenters if needed 
     $serviceDisplayName = "VSTS Agent ($vstsAccount.$agentName)"
-    &start cmd.exe "/k $agentExePath /configure /RunningAsService /login:$vstsUser,$vstsUserPassword /serverUrl:$serverUrl ""/WindowsServiceLogonAccount:NT AUTHORITY\NetworkService"" /WindowsServiceLogonPassword /WindowsServiceDisplayName:""$serviceDisplayName"" /name:""$agentName"" /poolname:$poolname /WorkFolder:$WorkFolder /StartMode:Automatic /force /NoPrompt &exit"
+    &start cmd.exe "/k $agentExePath /configure /RunningAsService /login:$vstsUser,$vstsUserPassword /serverUrl:$serverUrl ""/WindowsServiceLogonAccount:NT AUTHORITY\NetworkService"" /WindowsServiceLogonPassword /WindowsServiceDisplayName:""$serviceDisplayName"" /name:""$agentName"" /poolname:""$poolname"" /WorkFolder:$WorkFolder /StartMode:Automatic /force /NoPrompt &exit"
 
     # Restore original current directory.
     Pop-Location

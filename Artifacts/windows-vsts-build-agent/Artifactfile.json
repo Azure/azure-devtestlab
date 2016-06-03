@@ -44,6 +44,6 @@
         }
     },
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File vsts-agent-install.ps1 ', parameters('vstsAccount'), ' ', parameters('vstsPassword'), ' ', parameters('agentName'), ' ', parameters('poolName'), ' ', parameters('driveLetter'))]"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File vsts-agent-install.ps1 ', parameters('vstsAccount'), ' ', parameters('vstsPassword'), ' ', parameters('agentName'), ' \"', parameters('poolName'), '\" ', parameters('driveLetter'))]"
     }
 }
