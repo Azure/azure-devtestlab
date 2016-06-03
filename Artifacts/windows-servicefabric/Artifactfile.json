@@ -1,7 +1,7 @@
 {
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
     "title": "Service Fabric",
-    "description": " Installs the latest available version of the Microsoft Azure Service Fabric SDK. Microsoft Visual Studio 2015 or Microsoft Visual Studio “15” is required to be previously installed.",
+    "description": "Installs the latest available version of the Microsoft Azure Service Fabric SDK. Microsoft Visual Studio 2015 or Microsoft Visual Studio “15” is required to be previously installed.",
     "tags": [
         "Microsoft",
         "Windows",
