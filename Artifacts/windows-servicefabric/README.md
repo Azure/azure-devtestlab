@@ -4,7 +4,7 @@ This extension does the following:
 
  - Installs Chocolatey.
  - Installs WebPICmd (Web Platform Installer Command Line) via Chocolatey.
- - Installs latest available version of Microsoft Azure Service Fabric SDK for Visual Studio 2015 and/or 15.
+ - Installs the latest available version of the Microsoft Azure Service Fabric SDK. Microsoft Visual Studio 2015 or Microsoft Visual Studio “15” is required to be previously installed.
 
 Logs
 ====
