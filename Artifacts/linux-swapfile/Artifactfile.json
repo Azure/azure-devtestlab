@@ -1,6 +1,7 @@
 {
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
     "title": "Swap File",
+    "publisher": "Microsoft",
     "description": "Configure swap file on Linux",
     "tags": [
         "Linux"
