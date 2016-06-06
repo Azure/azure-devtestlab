@@ -1,6 +1,7 @@
 {
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
     "title": "Deploy App from Azure Storage",
+    "publisher": "Microsoft",
     "description": "Deploy an app stored in an Azure container to Linux",
     "tags": [
         "Blob",

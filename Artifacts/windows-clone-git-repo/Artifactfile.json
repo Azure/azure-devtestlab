@@ -1,6 +1,7 @@
 {
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
     "title": "Clone a git repository",
+    "publisher": "Microsoft",
     "description": "Installs git and clones specified repository",
     "tags": [
         "Windows",
