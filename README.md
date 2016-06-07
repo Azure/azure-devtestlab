@@ -17,7 +17,7 @@ Contributions guidelines:
 
 - It is highly recommended that a **Readme.md** file be included to explain how the artifact works and how to troubleshoot any failures.
 
-- It is encouraged to add the "publisher" field while authoring artifacts.   
+- For authors who create the artifact and take responsibility of maintaining it, it is encouraged to add your name in the "publisher" field while authoring artifacts.   
 
 
 ---
