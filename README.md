@@ -17,6 +17,9 @@ Contributions guidelines:
 
 - It is highly recommended that a **Readme.md** file be included to explain how the artifact works and how to troubleshoot any failures.
 
+- It is highly encouraged to add the "publisher" field while authoring artifacts.   
+
+
 ---
 ### Azure Resource Manager Quickstart Templates
 - The latest, *developer* versions of the Azure Resource Manager Quickstart Templates for Azure DevTest Labs can be found in the ['ARMTemplates'](ARMTemplates) folder of this repo.
