@@ -41,7 +41,7 @@ Function Try-Install-Service-Fabric {
 
 $exitCode = 0
 
-$userName = "serviceFabricArtifactInstaller"
+$userName = "artifactInstaller"
 $ascii=$NULL;For ($a=33;$a -le 126;$a++) {$ascii+=,[char][byte]$a }
 $password = Get-TempPassword -length 43 -sourcedata $ascii
 $cn = [ADSI]"WinNT://$env:ComputerName"
