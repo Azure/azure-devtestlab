@@ -44,8 +44,7 @@ function Delete-WinRMListener
 
 function Configure-WinRMHttpsListener
 {
-    param([string] $HostName,
-          [string] $port)
+    param([string] $HostName)
 
     #Delete the WinRM Https listener if it is already configure
     Delete-WinRMListener
