@@ -210,7 +210,7 @@ function InstallWebPICmd
 
     WriteLog $("Installing chocolatey package: " + $package)
 
-    # install git via chocolatey
+    # install WebPICmd via chocolatey
     choco install $package --force --yes --acceptlicense --verbose | Out-Null 
 
     if ($? -eq $false)
