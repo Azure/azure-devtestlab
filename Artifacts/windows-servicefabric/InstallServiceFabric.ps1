@@ -46,7 +46,8 @@ $ascii=$NULL;For ($a=33;$a -le 126;$a++) {$ascii+=,[char][byte]$a }
 $password = Get-TempPassword -length 43 -sourcedata $ascii
 $cn = [ADSI]"WinNT://$env:ComputerName"
 
-
+try
+{
     $ErrorActionPreference = "Stop"
 
     # Create user
@@ -77,7 +78,13 @@ $cn = [ADSI]"WinNT://$env:ComputerName"
     {
         $exitCode = -1;
     }
-
+}
+catch
+{
+    $exitCode = -1
+}
+finally
+{
     $ErrorActionPreference = "Continue"
     
     Disable-PSRemoting -Force
@@ -87,7 +94,7 @@ $cn = [ADSI]"WinNT://$env:ComputerName"
     
     # Delete the artifactInstaller user profile
     gwmi win32_userprofile | where { $_.LocalPath -like "*$userName*" } | foreach { $_.Delete() }
-
+}
 
 if ($exitCode -eq -1)
 {
