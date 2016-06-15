@@ -1,6 +1,6 @@
 {
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
-    "title": "Create a web shortcut",
+    "title": "Create web shortcut",
     "description": "Creates a shortcut to a URL in the public desktop folder.",
     "publisher": "Microsoft",
     "tags": [
