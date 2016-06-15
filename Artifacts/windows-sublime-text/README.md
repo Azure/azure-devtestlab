@@ -8,10 +8,3 @@ Information about the Chocolatey package and version of the distributive availab
 For manual installation run the following command
 
     > powershell.exe -ExecutionPolicy bypass -File startChocolatey.ps1 -PackageList sublimetext3
-
-
-
-
-   
-
-  

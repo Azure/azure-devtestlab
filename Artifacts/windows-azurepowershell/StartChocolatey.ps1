@@ -4,14 +4,16 @@ Param(
     $ProductId
 )
 
-Function Get-TempPassword() {
+Function Get-TempPassword() 
+{
     Param(
-        [int]$length=10,
-        [string[]]$sourcedata
+        [int] $length=10,
+        [string[]] $sourcedata
     )
 
-    For ($loop=1; $loop -le $length; $loop++) {
-            $tempPassword+=($sourcedata | GET-RANDOM)
+    For ($loop=1; $loop -le $length; $loop++) 
+    {
+        $tempPassword+=($sourcedata | GET-RANDOM)
     }
 
     return $tempPassword

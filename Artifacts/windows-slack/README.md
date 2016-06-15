@@ -11,11 +11,4 @@ For manual installation run the following command
 
     > powershell.exe -ExecutionPolicy bypass -File startChocolatey.ps1 -PackageList slackmsix64 -Username {userName} -Password {password}
 
-{userName} and {password} - This is credentials of the user for which you want to install the package. After executing this command, you must  make a logout. 
-
-
-
-
-   
-
-  
+{userName} and {password} - This is credentials of the user for which you want to install the package. After executing this command, you must relogin. 
