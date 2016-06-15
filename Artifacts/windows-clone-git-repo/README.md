@@ -4,8 +4,8 @@ This extension does the following –
 
  - Installs Chocolatey.
  - Installs Git.
- - Clones specified git repository (hosted on Visual Studio Online or Github) to specified destination on the VM.
- - Creates the necessary desktop shortcuts to the local repository and VSO/github page.  
+ - Clones specified git repository (hosted on Visual Studio Team Services or Github) to specified destination on the VM.
+ - Creates the necessary desktop shortcuts to the local repository and VSTS/github page.  
 
 Parameters
 ==========

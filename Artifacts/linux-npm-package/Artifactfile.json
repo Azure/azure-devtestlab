@@ -20,7 +20,7 @@
         "packages": {
             "type": "string",
             "displayName": "Packages to Install",
-            "description": "The package names you wish to have installed via NPM, separated by spaces. You can find NPM package names in the index found at https://www.npmjs.com. All npm install commands are supported, however if a Git/bitbucket/gist scope is given then you must have installed the Git artifact prior to this NPM package artifact."
+            "description": "The package names you wish to have installed via NPM separated by spaces. You can find NPM package names in the index found at https://www.npmjs.com. All npm install commands are supported, however if a Git/bitbucket/gist scope is given then you must have installed the Git artifact prior to this NPM package artifact."
         },
         "otherOptions": {
             "type": "string",

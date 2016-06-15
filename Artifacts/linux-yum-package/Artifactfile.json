@@ -1,11 +1,10 @@
 {
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
     "title": "YUM",
-    "description": "Install packages on a Linux Azure DevTest Lab VM via YUM",
+    "description": "Install YUM packages on Linux",
     "tags": [
-        "Package Management",
+        "Packages",
         "YUM",
-        "install",
         "Linux"
     ],
     "iconUri": "http://fedoraproject.org/w/uploads/7/77/Echo-package-48px.png",
@@ -15,7 +14,7 @@
             "type": "string",
             "displayName": "Packages",
             "allowEmpty": false,
-            "description": "The packages to install on the VM, separated by spaces. All of the package declarations supported by YUM are supported here as well, see http://man7.org/linux/man-pages/man8/yum.8.html for an in-depth look at the package specifications available."
+            "description": "The packages to install on the VM, separated by spaces. All of the package declarations supported by YUM are supported here as well. See http://man7.org/linux/man-pages/man8/yum.8.html for an in-depth look at the package specifications available."
         },
         "update": {
             "type": "string",
@@ -32,7 +31,7 @@
             "type": "string",
             "displayName": "Additional Options",
             "allowEmpty": true,
-            "description": "Any additional options to pass to the YUM command line. These options will precede the install command when executed. Please see http://man7.org/linux/man-pages/man8/yum.8.html for an in-depth look at the options available. Note that --assumeyes and --quiet are always passed automatically."
+            "description": "Any additional options to pass to the YUM command-line. These options will precede the install command when executed. Please see http://man7.org/linux/man-pages/man8/yum.8.html for an in-depth look at the options available. Note that --assumeyes and --quiet are always passed automatically."
         }
     },
     "runCommand": {

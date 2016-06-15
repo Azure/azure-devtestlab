@@ -1,7 +1,7 @@
 {
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
     "title": "Create a web shortcut",
-    "description": "Creates a shortcut to an internet or intranet URL (shortcut file is created in the public desktop folder).",
+    "description": "Creates a shortcut to a URL (shortcut file is created in the public desktop folder).",
     "tags": [
         "Windows",
         "Url",
@@ -19,7 +19,7 @@
         "ShortcutTargetPath": {
             "type": "string",
             "displayName": "Shortcut Target",
-            "description": "The intranet or internet URL that'll be invoked by this shortcut (Please ensure that the string is url-encoded).",
+            "description": "The URL that'll be invoked by this shortcut. Please ensure that the string is url-encoded.",
             "defaultValue": "http://portal.azure.com"
         }
     },

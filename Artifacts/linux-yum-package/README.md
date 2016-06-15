@@ -54,7 +54,7 @@ See [linux manpages for YUM (man7)](http://man7.org/linux/man-pages/man8/yum.8.h
  - RHEL 7.2
  - RHEL 6.7
 
-*Working, but problems (with workarounds) exist:*    
+*Working, but problems (with workarounds) exist:*
  - CentOS 6.6 - Works without update.
  - CentOS 7.0 - Works without update.
  - CentOS 7.1 - Works without update.
