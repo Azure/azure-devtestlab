@@ -2,6 +2,7 @@
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
     "title": "Run PowerShell",
     "description": "Use this to run a script using PowerShell",
+    "publisher": "Microsoft",
     "tags": [
         "PowerShell"
     ],

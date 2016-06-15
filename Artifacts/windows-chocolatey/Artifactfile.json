@@ -1,6 +1,7 @@
 {
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
     "title": "Install Chocolatey Packages",
+    "publisher": "Microsoft",
     "description": "Installs the Chocolatey package manager along with a user selected set of packages",
     "tags": [
         "Windows",
