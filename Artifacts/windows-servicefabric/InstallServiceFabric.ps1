@@ -27,7 +27,7 @@ Function Try-Install-Service-Fabric {
             $command = $PSScriptRoot + "\InstallViaWebPICmd.ps1"
             $scriptContent = Get-Content -Path $command -Delimiter ([char]0)
             $scriptBlock = [scriptblock]::Create($scriptContent)
-            $ProductId = 'MicrosoftAzure-ServiceFabric-{0}-2_1' -f $packageVersion
+            $ProductId = 'MicrosoftAzure-ServiceFabric-{0}' -f $packageVersion
             $exitCode = Invoke-Command -ScriptBlock $scriptBlock -Credential $credential -ComputerName $env:COMPUTERNAME -ArgumentList @($ProductId, $PSScriptRoot)
         }
     }
