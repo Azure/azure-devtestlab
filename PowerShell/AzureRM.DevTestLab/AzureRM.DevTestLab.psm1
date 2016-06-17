@@ -1042,7 +1042,7 @@ function New-AzureRmDtlLabStorageContext
         Write-Verbose $("Successfully extracted the storage account key for lab '" + $Lab.Name +"'")
 
         # Create a new storage context using the lab's default storage account .
-        New-AzureStorageContext -StorageAccountName $labStorageAccount.ResourceName -StorageAccountKey $labStorageAccountKey.Key1 | Write-Output
+        New-AzureStorageContext -StorageAccountName $labStorageAccount.ResourceName -StorageAccountKey $labStorageAccountKey[0].Value | Write-Output
     }
 }
 
