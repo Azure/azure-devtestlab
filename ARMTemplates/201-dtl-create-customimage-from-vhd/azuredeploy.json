@@ -54,9 +54,9 @@
       "properties": {
         "vhd": {
           "imageName": "[parameters('existingVhdUri')]",
-          "sysPrep": "[parameters('isVhdSysPrepped')]"
+          "sysPrep": "[parameters('isVhdSysPrepped')]",
+          "osType": "[parameters('imageOsType')]"
         },
-        "osType": "[parameters('imageOsType')]",
         "description": "[parameters('imageDescription')]"
       }
     }
