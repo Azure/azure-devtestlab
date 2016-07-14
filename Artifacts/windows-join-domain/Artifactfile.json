@@ -1,0 +1,57 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+    "title": "Join Domain",
+    "description": "Use this to join a Windows Domain",
+    "publisher": "Microsoft",
+    "tags": [
+        "AD"
+    ],
+    "targetOsType": "Windows",
+    "parameters": {
+        "domainToJoin": {
+            "type": "string",
+            "displayName": "Domain to join",
+            "description": "fully qualified name of the domain to join"
+        },
+        "domainUsername": {
+            "type": "string",
+            "displayName": "Username",
+            "description": "Username for user with credentials to join the domain"
+        },
+        "domainPassword": {
+            "type": "string",
+            "displayName": "Password",
+            "description": "Password for user with credentials to join the domain",
+            "controlType": "passwordBox"
+        },
+        "domainJoinOptions": {
+            "type": "string",
+            "displayName": "Domain join options",
+            "description": "Set of bit flags that define the join options. Default value of 3 is a combination of NETSETUP_JOIN_DOMAIN (0x00000001) & NETSETUP_ACCT_CREATE (0x00000002) i.e. will join the domain and create the account on the domain. For more information see https://msdn.microsoft.com/en-us/library/aa392154(v=vs.85).aspx",
+            "defaultValue": 3
+        },
+        "ouPath": {
+            "type": "string",
+            "displayName": "Organizatoinal Unit",
+            "defaultValue": "",
+            "allowEmpty": true,
+            "description": "Specifies an organizational unit (OU) for the domain account. Enter the full distinguished name of the OU in quotation marks. Example: 'OU=testOU; DC=domain; DC=Domain; DC=com"
+        }
+    },
+    "runAzureVMExtension": {
+        "publisher": "Microsoft.Compute",
+        "type": "JsonADDomainExtension",
+        "typeHandlerVersion": "1.3",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+            "Name": "[parameters('domainToJoin')]",
+            "OUPath": "[parameters('ouPath')]",
+            "User": "[concat(parameters('domainToJoin'), '\\', parameters('domainUsername'))]",
+            "Restart": "true",
+            "Options": "[parameters('domainJoinOptions')]"
+        },
+        "protectedsettings": {
+            "Password": "[parameters('domainPassword')]"
+        }
+    }
+}
