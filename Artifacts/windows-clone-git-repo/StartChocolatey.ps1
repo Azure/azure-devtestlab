@@ -59,7 +59,6 @@ $scriptBlock = [scriptblock]::Create($scriptContent)
 # Run Chocolatey as the artifactInstaller user
 Enable-PSRemoting -Force -SkipNetworkProfileCheck
 $exitCode = Invoke-Command -ScriptBlock $scriptBlock -Credential $credential -ComputerName $env:COMPUTERNAME -ArgumentList @($GitRepoLocation, $GitLocalRepoLocation, $GitBranch, $PersonalAccessToken, $PSScriptRoot)
-Disable-PSRemoting -Force
 
 # Delete the artifactInstaller user
 $cn.Delete("User", $userName)

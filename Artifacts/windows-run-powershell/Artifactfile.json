@@ -33,6 +33,9 @@
         "autoUpgradeMinorVersion": "true",
         "settings": {
             "fileUris": "[parameters('scriptFileUris')]",
+            "commandToExecute": ""
+        },
+        "protectedSettings": {
             "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File', ' ', parameters('scriptToRun'), ' ', parameters('scriptArguments'))]"
         }
     }

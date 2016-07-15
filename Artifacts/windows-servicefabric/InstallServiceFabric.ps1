@@ -86,8 +86,6 @@ catch
 finally
 {
     $ErrorActionPreference = "Continue"
-    
-    Disable-PSRemoting -Force
 
     # Delete the artifactInstaller user
     $cn.Delete("User", $userName)
