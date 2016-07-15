@@ -39,8 +39,7 @@ function SetAuthHeaders
 function GetBuildDefinitionId
 {
     $buildDefinitionUri = ("{0}/_apis/build/definitions?api-version={1}&name={2}" -f $vstsProjectUri, $vstsApiVersion, $buildDefinitionName)
-    $buildDef = Invoke-RestMethod -Uri $buildDefinitionUri -Headers $headers -method Get | ConvertTo-Json
-    $buildDef = ConvertFrom-Json $buildDef
+    $buildDef = Invoke-RestMethod -Uri $buildDefinitionUri -Headers $headers -method Get 
     return $buildDef.value.id
 }
 
