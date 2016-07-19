@@ -46,7 +46,6 @@ $command = $PSScriptRoot + "\ChocolateyPackageInstaller.ps1"
 # Run Chocolatey as the artifactInstaller user
 Enable-PSRemoting –Force -SkipNetworkProfileCheck
 Invoke-Command -FilePath $command -Credential $credential -ComputerName $env:COMPUTERNAME -ArgumentList $packageList
-#Disable-PSRemoting -Force
 
 # Delete the artifactInstaller user
 $cn.Delete("User", $userName)

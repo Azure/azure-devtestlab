@@ -29,4 +29,3 @@ Invoke-Command -Credential $credential -ComputerName $env:COMPUTERNAME -ScriptBl
 }
 
 Invoke-Command -FilePath $command -Credential $credential -ComputerName $env:COMPUTERNAME -ArgumentList $packageList
-Disable-PSRemoting -Force
