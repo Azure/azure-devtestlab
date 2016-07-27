@@ -6,7 +6,7 @@
     "Windows",
     "Active Directory"
   ],
-  "iconUri": "https://raw.githubusercontent.com/jamesbannan/azure-devtestlab/master/Artifacts/windows-domain-join/domainJoinArtifact.png",
+  "iconUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/Artifacts/windows-domain-join/domainJoinArtifact.png",
   "targetOsType": "Windows",
   "parameters": { 
       "domainName": {
