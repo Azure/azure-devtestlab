@@ -2,6 +2,7 @@
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
     "title": "PowerShell on Linux",
     "description": "Installs PowerShell on Linux either on CentOS 7 or Ubuntu 14.04 or 16.04 LTS.",
+    "publisher": "PowerShell Magazine",    
     "tags": [
         "powershell",
         "Linux"
