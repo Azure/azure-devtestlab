@@ -216,7 +216,7 @@ function InstallPackages
         WriteLog $("Installing package: " + $package)
 
         # install git via chocolatey
-        choco install $package --force --yes --acceptlicense --verbose | Out-Null 
+        choco install $package --force --yes --acceptlicense --verbose --allow-empty-checksums | Out-Null 
 
         if ($? -eq $false)
         {
