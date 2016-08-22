@@ -17,6 +17,6 @@
         }
     },
     "runCommand": {
-        "commandToExecute": "[concat('bash linux-apt-package.sh ', parameters('update'))]"
+        "commandToExecute": "[concat('bash linux-powershell.sh ', parameters('update'))]"
     }
 }
