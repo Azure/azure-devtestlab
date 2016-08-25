@@ -1,8 +1,12 @@
+#!/bin/sh
 
+main () {
+    { # try
+        echo 'waagent -force -deprovision+user && poweroff' | at now + 1 minute > /dev/null 2>&1
+        exit 0
+    } || { # catch
+        exit 1
+    }
+}
 
-#!/bin/bash
-nohup sh -c 'sleep 15 && /usr/sbin/waagent -force -deprovision+user' > /dev/null  &
-
-exit 0
-
-
+main "$@"
