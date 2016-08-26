@@ -1,0 +1,33 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+    "title": "Reset VM Password",
+    "description": "Uses the VMAccess extension to reset the built-in administrator account and reset the Remote Desktop service configuration.",
+    "tags": [
+        "Windows"
+    ],
+    "targetOsType": "Windows",
+    "parameters": {
+        "userName": {
+            "type": "string",
+            "displayName": "User name",
+            "description": "The user account to reset)"
+        },
+        "password": {
+            "type": "securestring",
+            "displayName": "Password",
+            "description": "New password for the user name"
+        }
+    },
+    "runAzureVMExtension": {
+        "publisher": "Microsoft.Compute",
+        "type": "VMAccessAgent",
+        "typeHandlerVersion": "2.0",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+            "UserName": "[parameters('userName')]"
+        },
+        "protectedSettings": {
+            "Password": "[parameters('password')]"
+        }
+    }
+}
