@@ -18,6 +18,13 @@ Function Get-TempPassword() {
     return $tempPassword
 }
 
+# Ensure Powershell 3 or more is installed.
+if ($PSVersionTable.PSVersion.Major -lt 3)
+{
+    Write-Error "Prior to running this artifact, ensure you have Powershell 3 or higher installed."
+    [System.Environment]::Exit(1)
+}
+
 $ascii=$NULL;For ($a=33;$a –le 126;$a++) {$ascii+=,[char][byte]$a }
 
 $userName = "artifactInstaller"
