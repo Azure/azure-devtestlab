@@ -65,7 +65,7 @@ foreach($lab in $labs){
         
         $labStorageAccountName =  $labStorageAccountId[$labStorageAccountId.Length-1]
 
-        $labStorageAccountKey = (Get-AzureRMStorageAccountKey -StorageAccountName $labStorageAccountName -ResourceGroupName $lab.ResourceGroupName).key1 
+        $labStorageAccountKey = (Get-AzureRMStorageAccountKey -Name $labStorageAccountName -ResourceGroupName $lab.ResourceGroupName)[0].Value 
 
         Write-Host 'Successfully fetched the storage account and storage account key for the Lab..'
 
@@ -145,7 +145,7 @@ foreach($vm in $vms){
                     }
             }
 
-             $vmStorageAccountKey = (Get-AzureRMStorageAccountKey  -StorageAccountName $vmStorageAccountName -ResourceGroupName $vmStorageAccountRG).key1
+             $vmStorageAccountKey = (Get-AzureRMStorageAccountKey -Name $vmStorageAccountName -ResourceGroupName $vmStorageAccountRG)[0].Value
 
              Write-Host 'Successfully fetched the storage account and storage account key for the VM.'
 
