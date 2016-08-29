@@ -11,6 +11,13 @@
     [string] $password
 )
 
+# Ensure Powershell 3 or more is installed.
+if ($PSVersionTable.PSVersion.Major -lt 3)
+{
+    Write-Error "Prior to running this artifact, ensure you have Powershell 3 or higher installed."
+    [System.Environment]::Exit(1)
+}
+
 $secPassword = ConvertTo-SecureString $password -AsPlainText -Force
 $credential = New-Object System.Management.Automation.PSCredential("$env:COMPUTERNAME\$($username)", $secPassword)
 
