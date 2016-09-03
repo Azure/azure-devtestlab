@@ -6,25 +6,8 @@ Param(
 cd $($PSScriptRoot)
 
 #Check if System is Domain-Joined
-if((gwmi win32_computersystem).partofdomain -eq $false)
+if((gwmi win32_computersystem).partofdomain -eq $true)
 {
-    #Create new Domain
-    Install-windowsfeature AD-domain-services
-    Import-Module ADDSDeployment
-    Install-ADDSForest -CreateDnsDelegation:$false `
- -DatabasePath "C:\Windows\NTDS" `
- -DomainMode "Win2012R2" `
- -DomainName "contoso.com" `
- -DomainNetbiosName "contoso" `
- -ForestMode "Win2012R2" `
- -InstallDns:$true `
- -LogPath "C:\Windows\NTDS" `
- -NoRebootOnCompletion:$false `
- -SysvolPath "C:\Windows\SYSVOL" `
- -Force:$true `
- -SafeModeAdministratorPassword (ConvertTo-SecureString 'P@ssw0rd' –AsPlainText –Force)
- } else  {
-
  #Check if an unattend File already exists; otherwise create a new one...
  if(!(Test-Path c:\sccmsetup.ini))
 {
@@ -105,8 +88,16 @@ if((gwmi win32_computersystem).partofdomain -eq $false)
     #Copy-Item .\sccmsetup.ini c:\ -Force
     & ".\ADK10_setup.exe"
     & ".\CMCB_setup.exe"
-    & ".\SCCMCmdletLibrary_setup.exe"
 
+    #Add Tools
+	& ".\SCCMCmdletLibrary_setup.exe"
+    & ".\ConfigMgrTools_setup.exe"
+    & ".\CollectionCommander_setup.exe"
+    & ".\SCCMCliCtr_setup.exe"
+    & ".\RuckZuck4SCCM_setup.exe"
+    & ".\SCUP_setup.exe"
+    & ".\RightClickTools_setup.exe"
+	
     #Add Domain Admins as Full Admins
     #import-module (Join-Path $(Split-Path $env:SMS_ADMIN_UI_PATH) ConfigurationManager.psd1) 
     import-module ("C:\Microsoft Configuration Manager\AdminConsole\bin\ConfigurationManager.psd1")   
@@ -114,14 +105,4 @@ if((gwmi win32_computersystem).partofdomain -eq $false)
     cd ((Get-PSDrive -PSProvider CMSite).Name + ':')
     
     New-CMAdministrativeUser -Name "$($env:userdomain)\domain admins" -RoleName "Full Administrator"
-
-
-    #Add Tools
-    & ".\ConfigMgrTools_setup.exe"
-    & ".\CollectionCommander_setup.exe"
-    & ".\SCCMCliCtr_setup.exe"
-    & ".\RuckZuck4SCCM_setup.exe"
-    & ".\SCUP_setup.exe"
-    & ".\RightClickTools_setup.exe"
-
  }

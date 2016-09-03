@@ -1,0 +1,34 @@
+{
+	"title": "Create Domaint",
+	"description": "Create a new AD Forest",
+	"publisher": "Roger Zander",
+	"tags": ["Windows"],
+	"iconUri": "",
+	"targetOsType": "Windows",
+	"parameters": {
+        "DomainName": {
+            "type": "string",
+            "displayName": "Domain NetBIOS Name",
+            "description": "NetBIOS Name of the Domain",
+			"defaultValue": "contoso",
+            "allowEmpty": false
+        },
+		"DoaminFQDN": {
+            "type": "string",
+            "displayName": "FQDN Name of the Domain",
+            "description": "DNS Domain Name",
+			"defaultValue": "contoso.com",
+            "allowEmpty": false
+        },
+		"SafeModePW": {
+            "type": "string",
+            "displayName": "Recovery Password",
+            "description": "Safe Mode Admin Password",
+			"defaultValue": "P@ssw0rd",
+            "allowEmpty": false
+        }
+    },
+    "runCommand": {
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File SetupDomain.ps1', ' -DomainName ', parameters('DomainName'), ' -DoaminFQDN ', parameters('DoaminFQDN'), ' -SafeModePW ', parameters('SafeModePW'))]"
+	}
+}
