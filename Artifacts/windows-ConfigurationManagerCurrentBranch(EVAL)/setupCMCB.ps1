@@ -81,14 +81,18 @@ if((gwmi win32_computersystem).partofdomain -eq $true)
 
     #Set SQL to run as LocalSystem
     $service = gwmi win32_service -filter "name='MSSQLSERVER'"
+    if($service -eq $null) { exit 1 }
     $service.Change($null, $null, $null, $null, $null, $null, "LocalSystem", $null, $null, $null, $null)
     Stop-Service 'MSSQLSERVER' -Force
     Start-Service 'MSSQLSERVER'
 
     #Copy-Item .\sccmsetup.ini c:\ -Force
     & ".\ADK10_setup.exe"
+    if(test-path "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots" -eq $false) { exit 2 }
+    
     & ".\CMCB_setup.exe"
-
+    if(test-path "HKLM:\SOFTWARE\Microsoft\SMS\COMPONENTS" -eq $false) { exit 3 }
+    
     #Add Tools
 	& ".\SCCMCmdletLibrary_setup.exe"
     & ".\ConfigMgrTools_setup.exe"

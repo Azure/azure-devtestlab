@@ -1,6 +1,6 @@
 {
-	"title": "Create Domaint",
-	"description": "Create a new AD Forest",
+	"title": "Create new Domain",
+	"description": "Create a new AD Domain in a new Forest",
 	"publisher": "Roger Zander",
 	"tags": ["Windows"],
 	"iconUri": "",

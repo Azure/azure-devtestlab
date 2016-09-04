@@ -1,7 +1,7 @@
 {
 	"title": "Configuration Manager Current Branch",
-	"description": "FOR TESTING ONLY! ; This Product requires SQL Server, .NET 3.5 and .NET 4.5 as Prerequisite ; With System Center Configuration Manager, you can manage PCs and servers, keeping software up-to-date, setting configuration and security policies, and monitoring system status while giving your employees access to corporate applications on the devices that they choose. Through integration with Microsoft Intune, you can extend your existing System Center Configuration Manager infrastructure to manage corporate-connected PCs, Macs and Unix/Linux servers along with cloud-based mobile devices running Windows, Windows Phone, iOS, and Android, all from a single management console.",
-	"publisher": "Microsoft Corporation",
+	"description": "FOR TESTING ONLY! ; This Product requires SQL Server, .NET 3.5 and .NET 4.5 as Prerequisite ; With System Center Configuration Manager, you can manage PCs and servers, keeping software up-to-date, setting configuration and security policies, and monitoring system status while giving your employees access to corporate applications on the devices that they choose.",
+	"publisher": "Microsoft",
 	"tags": ["Windows", "SysAdmin"],
 	"iconUri": "https://ruckzuck.azurewebsites.net/wcf/GetIcon.ashx?Id=509715",
 	"targetOsType": "Windows",
