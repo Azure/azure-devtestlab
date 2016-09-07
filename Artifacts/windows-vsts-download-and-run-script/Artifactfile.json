@@ -1,7 +1,7 @@
 {
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
     "title": "Download VSTS Drop and Run Script",
-    "description": "Downloads the latest build artifact for a given build definition and then executes a script from that drop",
+    "description": "Downloads the latest build artifact for a given build definition and then executes a script from that drop.  The download will be in c:\\<vsts project>\\",
     "publisher": "Microsoft",
     "iconUri": "http://www.visualstudio.com/favicon.ico",
     "targetOsType": "Windows",
