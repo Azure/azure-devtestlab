@@ -26,7 +26,7 @@ $projectName = $uriParts[$uriParts.Length - 1]
 
 # Script Variables
 $outfile = $PSScriptRoot + "\" + $projectName + ".zip";
-$destination = $PSScriptRoot + "\" + $projectName;
+$destination = $env:HOMEDRIVE + "\" + $projectName;
 
 function SetAuthHeaders
 {
