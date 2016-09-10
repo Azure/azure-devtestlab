@@ -19,14 +19,16 @@ param(
 
 Set-PSDebug -Strict
 
+$ErrorActionPreference = "Stop"
+
 # VSTS Variables
 $vstsApiVersion = "2.0"
+
 $uriParts = $vstsProjectUri.Split("/")
-$projectName = $uriParts[$uriParts.Length - 1]
 
 # Script Variables
-$outfile = $PSScriptRoot + "\" + $projectName + ".zip";
-$destination = $env:HOMEDRIVE + "\" + $projectName;
+$outfile = $PSScriptRoot + "\" + $buildDefinitionName + ".zip";
+$destination = $env:HOMEDRIVE + "\" + $buildDefinitionName;
 
 function SetAuthHeaders
 {
@@ -39,7 +41,7 @@ function SetAuthHeaders
 function GetBuildDefinitionId
 {
     $buildDefinitionUri = ("{0}/_apis/build/definitions?api-version={1}&name={2}" -f $vstsProjectUri, $vstsApiVersion, $buildDefinitionName)
-    $buildDef = Invoke-RestMethod -Uri $buildDefinitionUri -Headers $headers -method Get 
+    $buildDef = Invoke-RestMethod -Uri $buildDefinitionUri -Headers $headers -method Get
     return $buildDef.value.id
 }
 
@@ -87,3 +89,5 @@ function RunScript
 
 DownloadBuildArtifacts
 RunScript
+
+$ErrorActionPreference = "Continue"
