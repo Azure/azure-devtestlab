@@ -19,6 +19,8 @@ param(
 
 Set-PSDebug -Strict
 
+$ErrorActionPreference = "Stop"
+
 # VSTS Variables
 $vstsApiVersion = "2.0"
 
@@ -39,7 +41,7 @@ function SetAuthHeaders
 function GetBuildDefinitionId
 {
     $buildDefinitionUri = ("{0}/_apis/build/definitions?api-version={1}&name={2}" -f $vstsProjectUri, $vstsApiVersion, $buildDefinitionName)
-    $buildDef = Invoke-RestMethod -Uri $buildDefinitionUri -Headers $headers -method Get -ErrorAction Stop
+    $buildDef = Invoke-RestMethod -Uri $buildDefinitionUri -Headers $headers -method Get
     return $buildDef.value.id
 }
 
@@ -50,7 +52,7 @@ function GetLatestBuild
         [int] $buildDefinitionId 
     )
     $buildUri = ("{0}/_apis/build/builds?api-version={1}&definitions={2}&resultFilter=succeeded" -f $vstsProjectUri, $vstsApiVersion, $buildDefinitionId);
-    $builds = Invoke-RestMethod -Uri $buildUri -Headers $headers -Method Get -ErrorAction Stop | ConvertTo-Json | ConvertFrom-Json
+    $builds = Invoke-RestMethod -Uri $buildUri -Headers $headers -Method Get | ConvertTo-Json | ConvertFrom-Json
     return $builds.value[0].id
 }
 
@@ -59,7 +61,7 @@ function DownloadBuildArtifacts
     $headers = SetAuthHeaders
     $buildId = GetLatestBuild ( GetBuildDefinitionId )
     $artifactsUri = ("{0}/_apis/build/builds/{1}/Artifacts?api-version={2}" -f $vstsProjectUri, $buildId, $vstsApiVersion);
-    $artifacts = Invoke-RestMethod -Uri $artifactsUri -Headers $headers -Method Get -ErrorAction Stop | ConvertTo-Json -Depth 3 | ConvertFrom-Json
+    $artifacts = Invoke-RestMethod -Uri $artifactsUri -Headers $headers -Method Get | ConvertTo-Json -Depth 3 | ConvertFrom-Json
     $DownloadUri = $artifacts.value.resource.downloadUrl
 
     Invoke-RestMethod -Uri $DownloadUri -Headers $headers -Method Get -Outfile $outfile 
@@ -87,3 +89,5 @@ function RunScript
 
 DownloadBuildArtifacts
 RunScript
+
+$ErrorActionPreference = "Continue"
