@@ -19,8 +19,6 @@ param(
 
 Set-PSDebug -Strict
 
-$ErrorActionPreference = "Stop"
-
 # VSTS Variables
 $vstsApiVersion = "2.0"
 
@@ -43,7 +41,8 @@ function GetBuildDefinitionId
     $buildDefinitionUri = ("{0}/_apis/build/definitions?api-version={1}&name={2}" -f $vstsProjectUri, $vstsApiVersion, $buildDefinitionName)
     try
     {
-        $buildDef = Invoke-RestMethod -Uri $buildDefinitionUri -Headers $headers -method Get
+        Write-Host "GetBuildDefinitionId from $buildDefinitionUri"
+        $buildDef = Invoke-RestMethod -Uri $buildDefinitionUri -Headers $headers -method Get -ErrorAction Stop
         return $buildDef.value.id
     }
     catch
@@ -51,7 +50,6 @@ function GetBuildDefinitionId
         if (($null -ne $Error[0]) -and ($null -ne $Error[0].Exception) -and ($null -ne $Error[0].Exception.Message))
         {
             $errMsg = $Error[0].Exception.Message
-            WriteLog $errMsg
             Write-Host $errMsg
         }
         exit -1
@@ -68,7 +66,8 @@ function GetLatestBuild
 
     try 
     {
-        $builds = Invoke-RestMethod -Uri $buildUri -Headers $headers -Method Get | ConvertTo-Json | ConvertFrom-Json
+        Write-Host "GetLatestBuild from $buildUri"
+        $builds = Invoke-RestMethod -Uri $buildUri -Headers $headers -Method Get -ErrorAction Stop | ConvertTo-Json | ConvertFrom-Json
         return $builds.value[0].id
     }
     catch
@@ -76,7 +75,6 @@ function GetLatestBuild
         if (($null -ne $Error[0]) -and ($null -ne $Error[0].Exception) -and ($null -ne $Error[0].Exception.Message))
         {
             $errMsg = $Error[0].Exception.Message
-            WriteLog $errMsg
             Write-Host $errMsg
         }
         exit -1
@@ -92,10 +90,12 @@ function DownloadBuildArtifacts
 
     try 
     {
-        $artifacts = Invoke-RestMethod -Uri $artifactsUri -Headers $headers -Method Get | ConvertTo-Json -Depth 3 | ConvertFrom-Json
+        Write-Host "Get artifacts from $artifactsUri"
+        $artifacts = Invoke-RestMethod -Uri $artifactsUri -Headers $headers -Method Get  -ErrorAction Stop | ConvertTo-Json -Depth 3 | ConvertFrom-Json
         $DownloadUri = $artifacts.value.resource.downloadUrl
 
-        Invoke-RestMethod -Uri $DownloadUri -Headers $headers -Method Get -Outfile $outfile 
+        Write-Host "Download from $DownloadUri"
+        Invoke-RestMethod -Uri $DownloadUri -Headers $headers -Method Get -Outfile $outfile -ErrorAction Stop
 
         if (Test-Path $destination -PathType Container)
         {
@@ -110,7 +110,6 @@ function DownloadBuildArtifacts
         if (($null -ne $Error[0]) -and ($null -ne $Error[0].Exception) -and ($null -ne $Error[0].Exception.Message))
         {
             $errMsg = $Error[0].Exception.Message
-            WriteLog $errMsg
             Write-Host $errMsg
         }
         exit -1
@@ -132,4 +131,3 @@ function RunScript
 DownloadBuildArtifacts
 RunScript
 
-$ErrorActionPreference = "Continue"
