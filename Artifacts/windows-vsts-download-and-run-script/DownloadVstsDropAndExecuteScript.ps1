@@ -82,7 +82,7 @@ function GetLatestBuild
 
 function DownloadBuildArtifacts
 {
-	if($vstsProjectUri.EndsWith("/")){
+	if ($vstsProjectUri.EndsWith("/")) {
         $vstsProjectUri = $vstsProjectUri.Substring(0, $vstsProjectUri.Length -1)
     }
 
