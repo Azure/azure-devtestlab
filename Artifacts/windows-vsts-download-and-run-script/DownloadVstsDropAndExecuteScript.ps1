@@ -22,8 +22,6 @@ Set-PSDebug -Strict
 # VSTS Variables
 $vstsApiVersion = "2.0"
 
-$uriParts = $vstsProjectUri.Split("/")
-
 # Script Variables
 $outfile = $PSScriptRoot + "\" + $buildDefinitionName + ".zip";
 $destination = $env:HOMEDRIVE + "\" + $buildDefinitionName;
@@ -84,6 +82,10 @@ function GetLatestBuild
 
 function DownloadBuildArtifacts
 {
+	if ($vstsProjectUri.EndsWith("/")) {
+        $vstsProjectUri = $vstsProjectUri.Substring(0, $vstsProjectUri.Length -1)
+    }
+
     $headers = SetAuthHeaders
     $buildId = GetLatestBuild ( GetBuildDefinitionId )
     $artifactsUri = ("{0}/_apis/build/builds/{1}/Artifacts?api-version={2}" -f $vstsProjectUri, $buildId, $vstsApiVersion);
