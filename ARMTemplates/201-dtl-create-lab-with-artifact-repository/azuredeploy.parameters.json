@@ -1,0 +1,19 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "labName": {
+      "value": "MyLab1"
+    },
+    "artifactRepoUri": {
+      "value": "https://MyProject1.visualstudio.com/DefaultCollection/_git/ProjectArtifacts"
+    },
+    "artifactRepoType": {
+      "value": "VsoGit"
+    },
+    "artifactRepoSecurityToken": {
+      "value": "1111111111111111111111111111111111111111111111111111"
+    }
+  }
+}
+
