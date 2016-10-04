@@ -1,0 +1,41 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+    "title": "Apt-Get",
+    "description": "Install Apt packages on Linux using the apt-get utility. This system is the default package manager installed on Debian and Debian-based distributions such as Ubuntu.",
+    "tags": [
+        "Packages",
+        "Apt",
+        "apt-get",
+        "Linux"
+    ],
+    "iconUri": "http://www.debian.org/favicon.ico",
+    "targetOsType": "Linux",
+    "parameters": {
+        "packages": {
+            "type": "string",
+            "displayName": "Packages",
+            "allowEmpty": false,
+            "description": "The packages to install on the VM, separated by spaces. All of the package declarations supported by apt-get are supported here as well, see http://manpages.debian.org/cgi-bin/man.cgi?query=apt-get for an in-depth look at the package specifications available."
+        },
+        "update": {
+            "type": "string",
+            "displayName": "Run Update First",
+            "defaultValue": "true",
+            "allowEmpty": false,
+            "allowedValues": [
+                "true",
+                "false"
+            ],
+            "description": "Run apt-get update prior to running the full install command. Allowed values are 'true' and 'false'. Note that no additional options are passed to the 'apt-get update' command other than --quiet --assume-yes. It is recommended for you to set this to true and run update."
+        },
+        "options": {
+            "type": "string",
+            "displayName": "Additional Options",
+            "allowEmpty": true,
+            "description": "Any additional options to pass to the apt-get command line. These options will precede the install command when executed. Please see http://manpages.debian.org/cgi-bin/man.cgi?query=apt-get for an in-depth look at the options available. Note that --assume-yes and --quiet are always passed automatically."
+        }
+    },
+    "runCommand": {
+        "commandToExecute": "[concat('bash linux-apt-package.sh ', ' --update ', parameters('update'), ' --packages ', parameters('packages'), ' --options ', parameters('options'))]"
+    }
+}

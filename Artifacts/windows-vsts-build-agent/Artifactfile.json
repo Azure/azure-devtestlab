@@ -1,0 +1,50 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+    "title": "VSTS Build Agent",
+    "publisher": "Microsoft",
+    "description": "Downloads and installs the VSTS build agent, registers with the specified Visual Studio Team Services account, and adds the VM to the specified agent pool.",
+    "tags": [
+        "VSTS",
+        "Build",
+        "CI",
+        "Windows"
+    ],
+    "iconUri": "http://www.visualstudio.com/favicon.ico",
+    "targetOsType": "Windows",
+    "parameters": {
+        "vstsAccount": {
+            "type": "string",
+            "displayName": "VSTS Account Name",
+            "description": "The name of the VSTS account to add the build agent to. This is the value in your VSTS URL: e.g. 'myaccount' in https://myaccount.visualstudio.com."
+        },
+        "vstsPassword": {
+            "type": "securestring",
+            "displayName": "VSTS Personal Access Token",
+            "description": "A personal access token with permissions to add build agents. It will only be used to register the agent."
+        },
+        "agentName": {
+            "type": "string",
+            "displayName": "Agent Name",
+            "description": "The name to give to the agent, as seen by VSTS."
+        },
+        "poolName": {
+            "type": "string",
+            "displayName": "Agent Pool",
+            "description": "The agent pool this build agent should be added to."
+        },
+        "driveLetter": {
+            "type": "string",
+            "displayName": "Install Drive Letter",
+            "description": "The drive letter to install the build agent to. The specified drive must already exist.",
+            "defaultValue": "C",
+            "maxLength": 1,
+            "minLength": 1, 
+            "allowedValues": [
+                "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"
+            ]
+        }
+    },
+    "runCommand": {
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File vsts-agent-install.ps1 ', parameters('vstsAccount'), ' ', parameters('vstsPassword'), ' ', parameters('agentName'), ' \"', parameters('poolName'), '\" ', parameters('driveLetter'))]"
+    }
+}

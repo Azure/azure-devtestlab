@@ -1,0 +1,7 @@
+{
+  "itemDisplayName": "Create a new VM in Azure DevTest Labs with new user account and set expiration for the VM",
+  "description": "This template creates a new VM in a DevTest Lab / DTL instance using a custom image",
+  "summary": "This template creates a new VM in a DevTest Lab instance and creates a new user account on the VM. The VM will be deleted within 24 hrs after expiration date.",
+  "githubUsername": "mithunshanbhag",
+  "dateUpdated": "2016-07-15"
+}

@@ -1,0 +1,33 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+    "title": "Download VSTS Drop and Run Script",
+    "description": "Downloads the latest build artifact for a given build definition and then executes a script from that drop.  The download will be in c:\\<build definition name>\\",
+    "publisher": "Microsoft",
+    "iconUri": "http://www.visualstudio.com/favicon.ico",
+    "targetOsType": "Windows",
+    "parameters": {
+        "vstsProjectUri": {
+            "type": "string",
+            "displayName": "VSTS Project URL",
+            "description": "The URL for the VSTS project that contains the build, eg https://accountName.visualstudio.com/defaultcollection/projectName"
+        },
+        "buildDefinitionName": {
+            "type": "string",
+            "displayName": "Build Definition Name",
+            "description": "Name of the build definition to be retrieved"
+        },
+        "PersonalAccessToken": {
+            "type": "securestring",
+            "displayName": "Personal Access Token",
+            "description": "Personal Access Token for accessing VSTS build"
+        },
+        "pathToScript": {
+            "type": "string",
+            "displayName": "Path to Script",
+            "description": "Path to Script for execution, eg 'drop\\bin\\Debug\\scriptName.ps1'"
+        }
+    },
+    "runCommand": {
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File DownloadVstsDropAndExecuteScript.ps1', ' -accessToken ', parameters('PersonalAccessToken'), ' -buildDefinitionName ', parameters('buildDefinitionName'), ' -vstsProjectUri ', parameters('vstsProjectUri'), ' -pathToScript ', parameters('pathToScript'))]"
+    }
+}

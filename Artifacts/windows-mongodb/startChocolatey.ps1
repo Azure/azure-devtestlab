@@ -5,17 +5,26 @@
     [string] $packageList
 )
 
-Function Get-TempPassword() {
+Function Get-TempPassword() 
+{
     Param(
-        [int]$length=10,
-        [string[]]$sourcedata
+        [int] $length=10,
+        [string[]] $sourcedata
     )
 
-    For ($loop=1; $loop –le $length; $loop++) {
-            $tempPassword+=($sourcedata | GET-RANDOM)
+    For ($loop=1; $loop –le $length; $loop++) 
+    {
+        $tempPassword+=($sourcedata | GET-RANDOM)
     }
 
     return $tempPassword
+}
+
+# Ensure Powershell 3 or more is installed.
+if ($PSVersionTable.PSVersion.Major -lt 3)
+{
+    Write-Error "Prior to running this artifact, ensure you have Powershell 3 or higher installed."
+    [System.Environment]::Exit(1)
 }
 
 $ascii=$NULL;For ($a=33;$a –le 126;$a++) {$ascii+=,[char][byte]$a }
@@ -48,7 +57,6 @@ Enable-PSRemoting –Force -SkipNetworkProfileCheck
 Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force 
 
 Invoke-Command -FilePath $command -Credential $credential -ComputerName $env:COMPUTERNAME -ArgumentList $packageList
-Disable-PSRemoting -Force
 
 # Delete the artifactInstaller user
 $cn.Delete("User", $userName)

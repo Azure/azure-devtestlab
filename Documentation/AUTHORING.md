@@ -135,13 +135,9 @@ Create your custom artifact by following steps below:
   
      Here is how an artifact folder might look:
      
-     ![Artifact folder in Github][artifact-folder]
+     ![Artifact-folder]( .../../../Documentation/images/artifact-folder-github.png)
  
 
 - Add an Artifacts Repository in Lab
 
   Please [check out instructions here](https://azure.microsoft.com/en-us/documentation/articles/devtest-lab-add-artifact-repo/) to add an Artifacts Repository in Lab
-
-
-
-[artifact-folder]: images\artifact-folder-github.png

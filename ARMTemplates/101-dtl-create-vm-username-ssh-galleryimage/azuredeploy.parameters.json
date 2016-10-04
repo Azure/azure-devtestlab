@@ -1,0 +1,36 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "newVMName": {
+      "value": "MyVM1sshgal"
+    },
+    "existingLabName": {
+      "value": "MyLab1"
+    },
+    "newVMSize": {
+      "value": "Standard_A4"
+    },
+    "sshKey": {
+      "value": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC58VMvlVXGyD9W/CrsJi4mvBIAmb5KyuGajUmfTh878Z8Dij3sEgsSoEMj1n9tAfPUna5zoHGAA+anKiGwK4PgPQ4D5o8bawOeekyMe0hUHdB85ziFt+oTyxeiA89DmDKYrO/Ui8c0F4mpCy8fzfmzjdlkPngpnBBrGo5fNR1ucUI+JKgY9UTDWjkQEuWpCh840gTXb4oIkjmRCtY8RSWy0iyBNUkFJxuGNWYnCbc/a0PAnW3y0ZXKZVtkUd6x0JXe4WuaigqMMTcfQ8hSzmTCOyPIzm47Rut8iVYGpj1c+oTzXk6jp4pxcIzrx9GYKlqmo3F5UwyyD/C5Gf7NEzfi5hAPD0DGzkW8xNON2nRJ2q7CPaRk3J8H/Qp7GI1ojWwOu0moAlMrPFKeZisTxOqyVgYrq2iQN0dFla5WeJcqh62jQV8EoemtU3Jt/jsKqVPsZrvzJVHIkAuCYMffHLGAu8Bhwh3r/2mPZfcR3zZt4P1irdKjHsssnXgvYpd38HqFP2CHkq7FVzPZ7bsagwZd99UMUeKiXEyXBqqDRTC5Ux4pzT6SCGgyjjWSef5zJzArGI7IJdF6CS1Zz4zVQ/1t5wg6ufqaJz8zF/tmqAIXMclfPvoPl0hKhhnm6BQCZHHMFWrvR2//NJZAFj8OjxA4LU9rBhCH2awxj4IJcmFEvw== your_email@example.com"
+    },
+    "userName": {
+      "value": "SomeAdmin"
+    },
+    "offer": {
+      "value": "UbuntuServer"
+    },
+    "publisher": {
+      "value": "Canonical"
+    },
+    "sku": {
+      "value": "16.04.0-LTS"
+    },
+    "osType": {
+      "value": "Linux"
+    },
+    "version": {
+      "value": "latest"
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+    "title": "Service Fabric SDK",
+    "description": "Installs the latest available version of the Microsoft Azure Service Fabric SDK. Microsoft Visual Studio 2015 Update 2 or Microsoft Visual Studio “15” Preview is required to be previously installed.",
+    "publisher": "Microsoft",
+    "tags": [
+        "Microsoft",
+        "Windows",
+        "Azure",
+        "ServiceFabric"
+    ],
+    "iconUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/Artifacts/windows-servicefabric/servicefabric.png",
+    "targetOsType": "Windows",
+    "runCommand": {
+        "commandToExecute": "powershell.exe -ExecutionPolicy bypass -File InstallServiceFabric.ps1"
+    }
+}

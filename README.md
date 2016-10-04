@@ -1,15 +1,33 @@
-# Azure DevTest Lab Artifacts
-This is the public repository that contains all the currently available Azure DevTest Lab Artifacts contributed by the community. These artifacts can be deployed onto VMs in 
-Azure DevTest Labs in the new Azure portal.
+# Azure DevTest Labs Community
+This is a public, community-contributed repository that contains:
+- **Artifacts for Azure DevTest Labs:** These artifacts can be deployed onto VMs in Azure DevTest Labs in the new Azure portal.
 
-## Guidelines 
-- Every artifact is contained in its own **folder** under the **artifacts** folder.
-- The artifact definition file is named **artifactfile.json**. The name of the artifact that shows up in Azure DevTest Labs is from the title field in the artifact definition.
-- The artifact folder will also include any files the artifact depends on such as icons and so on. It will optionally include  a **Readme.md** file that explains how the artifact works.
+- **Azure Resource Manager Quickstart Templates for Azure DevTest Labs:** These templates help with creation and deployment of resources related to Azure DevTest Labs (e.g. Labs, VMs and VM templates etc).
+- **Open Source Code of Conduct:** This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
-We will also add scripts and samples related to Azure DevTest labs in the **scripts** and **samples** folders respectively.
+---
+### Artifacts Authoring:
+- Please see the document ['AUTHORING'](Documentation/AUTHORING.md) in the Documentation folder for details.
 
-## Authoring
+Contributions guidelines:
+- Every artifact should be contained in its own **folder** under the **Artifacts** folder.
 
-See [the document 'AUTHORING' in the Documentation folder](Documentation/AUTHORING.md) for details.
+- The artifact definition file should be named **Artifactfile.json**. The name of the artifact that shows up in Azure DevTest Labs is from the title field in the artifact definition.
+
+- All dependencies of the artifact (such as scripts, icons etc) should be included in the artifact folder itself.
+
+- It is highly recommended that a **Readme.md** file be included to explain how the artifact works and how to troubleshoot any failures.
+
+- For authors who create the artifact and take responsibility of maintaining it, it is encouraged to add your name in the "publisher" field while authoring artifacts.   
+
+
+---
+### Azure Resource Manager Quickstart Templates
+- The latest, *developer* versions of the Azure Resource Manager Quickstart Templates for Azure DevTest Labs can be found in the ['ARMTemplates'](ARMTemplates) folder of this repo.
+
+---
+### Miscellaneous
+
+Some useful scripts, related to Azure DevTest labs can be found in the ['scripts'](../../tree/master/Scripts) folder.
+
 

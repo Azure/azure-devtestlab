@@ -1,0 +1,23 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+    "title": "PowerShell on Linux",
+    "description": "Installs PowerShell on Linux either on CentOS 7 or Ubuntu 14.04 or 16.04 LTS.",
+    "publisher": "PowerShell Magazine",    
+    "tags": [
+        "powershell",
+        "Linux"
+    ],
+    "iconUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/Artifacts/windows-run-powershell/powershell.png",
+    "targetOsType": "Linux",
+    "parameters": {
+        "packageUrl": {
+            "type": "string",
+            "displayName": "Package URL",
+            "allowEmpty": false,
+            "description": "The PowerShell on Linux package URL based on the distribution type. The supported list of distributions and URLs are available at https://github.com/PowerShell/PowerShell/blob/master/docs/installation/linux.md"
+        }
+    },
+    "runCommand": {
+        "commandToExecute": "[concat('bash linux-powershell.sh ', parameters('packageUrl'))]"
+    }
+}

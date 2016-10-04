@@ -212,9 +212,8 @@ function InstallPackages
     {
         WriteLog $("Installing package: " + $package)
 
-        # install git via chocolatey
-        choco install $package --force --yes --acceptlicense --verbose | Out-Null 
-
+        # install git via chocolatey      
+        choco install $package --force --yes --acceptlicense --verbose --allow-empty-checksums | Out-Null 
         if ($? -eq $false)
         {
             $errMsg = $("Error! Installation failed. Please see the chocolatey logs in %ALLUSERSPROFILE%\chocolatey\logs folder for details.")
