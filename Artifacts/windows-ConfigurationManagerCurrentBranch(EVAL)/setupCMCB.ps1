@@ -88,7 +88,7 @@ if((gwmi win32_computersystem).partofdomain -eq $true)
 
     #Copy-Item .\sccmsetup.ini c:\ -Force
     & ".\ADK10_setup.exe"
-    if(test-path "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots" -eq $false) { exit 2 }
+    if((test-path "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots") -eq $false) { exit 2 }
     
 	#Cleanup Files from previous attempts..
 	if(Test-Path "$($env:temp)\SMSSETUP") { Remove-Item "$($env:temp)\SMSSETUP" -Force -Recurse  }
