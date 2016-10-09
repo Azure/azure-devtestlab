@@ -7,7 +7,7 @@ Tested with the base Image: "SQL Server 2014 SP1 Standard on Windows Server 2012
 - .NET 3.5
 - .NET 4.5
 - MS SQL 2014 SP1 (or newer)
-- ** Server must be Domain Joined !!! **. You can use the Artifact "Create new Domain" to create a new AD Domain.
+- **Server must be Domain Joined !!!**. You can use the Artifact "**Create new Domain**" to create a new AD Domain.
 
 ### Input Parameters:
 The Artifact contains two Parameters:
@@ -19,7 +19,7 @@ If you leave these Parameters blank, it will use the Site-Code "TST" and Site Na
 
 ###Installation Steps
 If Server is not Domain-Joined:
-- Add the Artifact "Create new Domain"
+- Add the Artifact "Create new Domain" before installing the ConfigMgr Artifact.
 
 Sub-Tasks of the Artifact:
 ```
