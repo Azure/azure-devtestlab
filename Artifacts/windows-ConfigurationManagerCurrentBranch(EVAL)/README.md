@@ -40,4 +40,9 @@ Sub-Tasks of the Artifact:
 End-to-End setup on a single core Machine with 4GB Memory took a bit more than one hour...
 
 ###Troubleshooting
-- If CM is missing, check if ADK was installed
+- If CM is missing
+ - check if Server is member of a Domain
+ - check if ADK is installed
+ - check c:\windows\temp if there is a .CAB File in a subfolder with ~600MB
+ - check c:\windows\temp\smsetup, to size of all files should be ~1GB
+ - check c:\ConfigMgrSetup.log
