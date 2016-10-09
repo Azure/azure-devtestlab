@@ -90,11 +90,14 @@ if((gwmi win32_computersystem).partofdomain -eq $true)
     & ".\ADK10_setup.exe"
     if(test-path "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots" -eq $false) { exit 2 }
     
-    & ".\CMCB_setup.exe"
-    if(test-path "HKLM:\SOFTWARE\Microsoft\SMS\COMPONENTS" -eq $false) { exit 3 }
+	#Cleanup Files from previous attempts..
+	if(Test-Path "$($env:temp)\SMSSETUP") { Remove-Item "$($env:temp)\SMSSETUP" -Force -Recurse  }
+    
+	& ".\CMCB_setup.exe"
+    if((test-path "HKLM:\SOFTWARE\Microsoft\SMS\COMPONENTS") -eq $false) { exit 3 }
     
     #Add Tools
-	& ".\SCCMCmdletLibrary_setup.exe"
+	#& ".\SCCMCmdletLibrary_setup.exe"
     & ".\ConfigMgrTools_setup.exe"
     & ".\CollectionCommander_setup.exe"
     & ".\SCCMCliCtr_setup.exe"

@@ -7,10 +7,7 @@ Tested with the base Image: "SQL Server 2014 SP1 Standard on Windows Server 2012
 - .NET 3.5
 - .NET 4.5
 - MS SQL 2014 SP1 (or newer)
-
-### Domain Join:
-If ther Server is not Domain-Joined, the Artifact will create a "contoso.com" Domain on the target Server and reboot.
-For Workgroup Servers: **you have to assign this Artifact twice !** The first time to create and join the Domain and the second time to install ConfigMgr.
+- ** Server must be Domain Joined !!! **. You can use the Artifact "Create new Domain" to create a new AD Domain.
 
 ### Input Parameters:
 The Artifact contains two Parameters:
@@ -21,18 +18,16 @@ If you leave these Parameters blank, it will use the Site-Code "TST" and Site Na
 
 
 ###Installation Steps
+If Server is not Domain-Joined:
+- Add the Artifact "Create new Domain"
+
+Sub-Tasks of the Artifact:
 ```
-If not Domain-Joined:
-- Create a new Domain Controller for "contoso.com" -> Reboot
-```
-```
-If Domain-Joined:
 - Create c:\sccmsetup.ini (unattend File for SCCM Setup) if the File does not exist
 - Tweak SQL to grant LocalSystem SysAdmin rights
 - Change SQL to run as LocalSystem
 - Install ADK10
 - Install CMCB
-- Install SCCM PowerShell CMDLets
 - Grant "Domain Admins" full Admin rights in SCCM
 - Install ConfigMgr Toolkit
 - Install Collection Commander
@@ -43,3 +38,6 @@ If Domain-Joined:
 
 ###Duration:
 End-to-End setup on a single core Machine with 4GB Memory took a bit more than one hour...
+
+###Troubleshooting
+- If CM is missing, check if ADK was installed
