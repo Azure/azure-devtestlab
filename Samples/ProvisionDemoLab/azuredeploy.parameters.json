@@ -15,7 +15,7 @@
       "value": 100
     },
     "allowedVmSizes": {
-      "value": "\"Standard_A2\", \"Standard_A4\""
+      "value": "\"Standard_DS1_v2\", \"Standard_DS11_v2\""
     },
     "artifactRepoUri": {
         "value": "https://xiaoying.visualstudio.com/DefaultCollection/_git/azure-devtestlabsdemo"
@@ -39,7 +39,10 @@
       "value": "TestBox001"
     },
     "VMSize": {
-      "value": "Standard_A2"
+      "value": "Standard_DS1_v2"
+    },
+    "VMStorageType": {
+      "value": "Premium"
     },
     "username": {
       "value": "demolab"
