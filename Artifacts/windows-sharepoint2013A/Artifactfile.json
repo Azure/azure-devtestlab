@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+  "title": "SharePoint Server 2013 (1) Prerequisites installer",
+  "description": "Installs SharePoint Server 2013 Prerequisites.",
+  "tags": [
+    "Windows"
+  ],
+  "iconUri": "https://i-msdn.sec.s-msft.com/dynimg/IC792065.jpg",
+  "targetOsType": "Windows",
+  "parameters": {
+    "downloadUrl": {
+      "type": "string",
+      "displayName": "Download URL for SharePoint",
+      "description": "The download URL for SharePoint 2013.",
+      "defaultValue": "https://download.microsoft.com/download/6/E/3/6E3A0B03-F782-4493-950B-B106A1854DE1/sharepoint.exe"
+    }
+  },
+  "runCommand": {
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File SharePoint2013SP1P1.ps1', ' -downloadUrl ', parameters('downloadUrl'))]"
+  }
+}
