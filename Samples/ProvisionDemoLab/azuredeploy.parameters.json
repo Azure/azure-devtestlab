@@ -42,7 +42,7 @@
       "value": "Standard_DS1_v2"
     },
     "VMStorageType": {
-      "value": "Premium"
+      "value": "Standard"
     },
     "username": {
       "value": "demolab"
