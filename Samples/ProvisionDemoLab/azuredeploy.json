@@ -345,7 +345,7 @@
       "name": "[variables('testTemplateResourceName')]",
       "type": "Microsoft.DevTestLab/labs/customimages",
       "dependsOn": [
-        "[resourceId('Microsoft.DevTestLab/labs/virtualMachines', parameters('newLabName'), parameters('pilotVMName'))]"
+        "[resourceId('Microsoft.DevTestLab/labs/customimages', parameters('newLabName'), parameters('devBoxTemplateName'))]"
       ],
       "properties": {
         "vm": {
@@ -362,7 +362,7 @@
       "name": "[variables('goldenImageTemplateResourceName')]",
       "type": "Microsoft.DevTestLab/labs/customimages",
       "dependsOn": [
-        "[resourceId('Microsoft.DevTestLab/labs/virtualMachines', parameters('newLabName'), parameters('pilotVMName'))]"
+        "[resourceId('Microsoft.DevTestLab/labs/customimages', parameters('newLabName'), parameters('testBoxTemplateName'))]"
       ],
       "properties": {
         "vm": {
