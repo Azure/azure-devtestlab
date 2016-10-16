@@ -1,0 +1,15 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+    "title": "PowerShell 3.0 and Windows Management Framework 3.0",
+    "publisher": "Microsoft",
+    "description": "Windows Management Framework 3.0 includes new installation or updates to Windows PowerShell, Windows Remote Management (WinRM), Windows Management Instrumentation (WMI), Windows Management Instrumentation (WMI), and Server Manager CIM Provider.",
+    "tags": [
+        "Windows",
+        "PowerShell"
+    ],
+    "iconUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/Artifacts/windows-powershell3/powershell.png",
+    "targetOsType": "Windows",
+    "runCommand": {
+        "commandToExecute": "install.cmd"
+    }
+}
