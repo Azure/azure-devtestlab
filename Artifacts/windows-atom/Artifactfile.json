@@ -22,6 +22,6 @@
         }
     },
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File startChocolatey.ps1 -PackageList atom -Username ',  parameters('installUsername'), ' -Password ', parameters('installPassword'))]"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', 'atom', ' -UserName ', parameters('installUsername'), ' -Password ', parameters('installPassword'), '\"')]"
     }
 }

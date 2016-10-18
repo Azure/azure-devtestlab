@@ -10,6 +10,6 @@
     "iconUri": "https://cdn.rawgit.com/dtgm/chocolatey-packages/8f7101024b11677be45a74b45114000b428a9c9b/icons/mongodb.png",
     "targetOsType": "Windows",
     "runCommand": {
-        "commandToExecute": "powershell.exe -ExecutionPolicy bypass -File startChocolatey.ps1 -PackageList mongodb"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', 'mongodb', '\"')]"
     }
 }
