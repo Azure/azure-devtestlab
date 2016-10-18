@@ -9,6 +9,6 @@
     "iconUri": "https://chocolatey.org/content/packageimages/Firefox.45.0.1.png",
     "targetOsType": "Windows",
     "runCommand": {
-        "commandToExecute": "powershell.exe -ExecutionPolicy bypass -File startChocolatey.ps1 -PackageList firefox"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', 'firefox', '\"')]"
     }
 }

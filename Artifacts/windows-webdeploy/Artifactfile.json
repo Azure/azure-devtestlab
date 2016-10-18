@@ -9,6 +9,6 @@
   "iconUri": "https://raw.githubusercontent.com/kulov/WebDeploy/master/MSDeployIcon-16x16.png",
   "targetOsType": "Windows",
   "runCommand": {
-    "commandToExecute": "powershell.exe -executionpolicy bypass -File startChocolatey.ps1 -PackageList webdeploy"
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', 'webdeploy', '\"')]"
   }
 }
