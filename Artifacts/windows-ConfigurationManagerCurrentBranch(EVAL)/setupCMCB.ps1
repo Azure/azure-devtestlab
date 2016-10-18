@@ -41,45 +41,10 @@ if((gwmi win32_computersystem).partofdomain -eq $true)
     '[HierarchyExpansionOption]' | out-file -filepath C:\sccmsetup.ini -append 
 }
 
-    #Add LocalSystem as SysAdmin
-    #GITHUB Link : https://github.com/codykonior/HackSql
     
-    #. .\InvokeTokenManipulation.ps1
+    #Make SYSTEM a SYSADMIN in SQL : https://gallery.technet.microsoft.com/scriptcenter/Reset-SQL-SA-Password-15fb488d#content
 	import-module .\Reset-SqlAdmin.psm1
 	Reset-SqlAdmin -SqlServer $env:COMPUTERNAME -Login "NT AUTHORITY\SYSTEM"
-
-    <# $userName = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
-
-    $services = Get-Service | Where { ($_.Name -eq 'MSSQLSERVER' -or $_.Name -like 'MSSQL$*') -and $_.Status -eq "Running" }
-    foreach ($service in $services) {
-        if ($service.Name -eq "MSSQLSERVER") {
-            $sqlName = ".\"
-        } else {
-            $sqlName = ".\$($service.Name.Substring(6))"
-        }
-
-        Write-Host "Attempting $sqlName"
-        $serviceProcess = Get-WmiObject -Class Win32_Service -Filter "Name = '$($service.Name)'"
-
-        Invoke-TokenManipulation -ProcessId $serviceProcess.ProcessID -ImpersonateUser | Out-Null
-        $impersonatedUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
-        Write-Host "Service $($service.Name) on PID $($serviceProcess.ProcessID) will connect to $sqlName as $impersonatedUser"
-
-        $sqlConnection = New-Object System.Data.SqlClient.SqlConnection("Data Source=$sqlName;Trusted_Connection=True")
-        $sqlConnection.Open()
-        $sqlCommand = New-Object System.Data.SqlClient.SqlCommand("If Not Exists (Select Top 1 0 From sys.server_principals Where name = '$userName')
-    Begin
-        Create Login [$userName] From Windows
-    End
-
-    If Not Exists (Select Top 1 0 From master.sys.server_principals sp Join master.sys.server_role_members srp On sp.principal_id = srp.member_principal_id Join master.sys.server_principals spr On srp.role_principal_id = spr.principal_id Where sp.name = '$userName' And spr.name = 'sysadmin')
-    Begin
-        Exec sp_addsrvrolemember '$userName', 'sysadmin'
-    End", $sqlConnection)
-        $sqlCommand.ExecuteNonQuery() | Out-Null
-        $sqlConnection.Close()
-        Invoke-TokenManipulation -RevToSelf | Out-Null
-    } #>
 
     #Set SQL to run as LocalSystem
     $service = gwmi win32_service -filter "name='MSSQLSERVER'"
@@ -99,7 +64,6 @@ if((gwmi win32_computersystem).partofdomain -eq $true)
     if((test-path "HKLM:\SOFTWARE\Microsoft\SMS\COMPONENTS") -eq $false) { exit 3 }
     
     #Add Tools
-	#& ".\SCCMCmdletLibrary_setup.exe"
     & ".\ConfigMgrTools_setup.exe"
     & ".\CollectionCommander_setup.exe"
     & ".\SCCMCliCtr_setup.exe"
