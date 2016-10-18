@@ -44,9 +44,11 @@ if((gwmi win32_computersystem).partofdomain -eq $true)
     #Add LocalSystem as SysAdmin
     #GITHUB Link : https://github.com/codykonior/HackSql
     
-    . .\InvokeTokenManipulation.ps1
+    #. .\InvokeTokenManipulation.ps1
+	import-module .\Reset-SqlAdmin.psm1
+	Reset-SqlAdmin -SqlServer $env:COMPUTERNAME -Login "NT AUTHORITY\SYSTEM"
 
-    $userName = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+    <# $userName = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
 
     $services = Get-Service | Where { ($_.Name -eq 'MSSQLSERVER' -or $_.Name -like 'MSSQL$*') -and $_.Status -eq "Running" }
     foreach ($service in $services) {
@@ -77,7 +79,7 @@ if((gwmi win32_computersystem).partofdomain -eq $true)
         $sqlCommand.ExecuteNonQuery() | Out-Null
         $sqlConnection.Close()
         Invoke-TokenManipulation -RevToSelf | Out-Null
-    }
+    } #>
 
     #Set SQL to run as LocalSystem
     $service = gwmi win32_service -filter "name='MSSQLSERVER'"
