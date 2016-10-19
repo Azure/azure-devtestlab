@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+  "title": "Selenium",
+  "description": "Installs Firefox, Chrome, Selenium Driver for Chrome and IE using the Chocolatey package manager (Firefox already has it)",
+  "tags": [
+    "Windows",
+    "Firefox",
+    "Chrome",
+    "Selenium-Chrome",
+    "Selenium-IE"
+  ],
+  "iconUri": "http://www.seleniumhq.org/images/selenium-logo.png",
+  "targetOsType": "Windows",
+  "runCommand": {
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ''', 'firefox,googlechrome,selenium-chrome-driver,selenium-ie-driver,iedriverserver', '''\"')]"
+  }
+}

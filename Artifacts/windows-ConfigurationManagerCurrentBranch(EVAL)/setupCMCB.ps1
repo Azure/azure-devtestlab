@@ -79,3 +79,4 @@ if((gwmi win32_computersystem).partofdomain -eq $true)
     
     New-CMAdministrativeUser -Name "$($env:userdomain)\domain admins" -RoleName "Full Administrator"
  }
+

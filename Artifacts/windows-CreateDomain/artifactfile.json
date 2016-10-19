@@ -1,34 +1,37 @@
 {
-	"title": "Create new Domain",
-	"description": "Create a new AD Domain in a new Forest",
-	"publisher": "Roger Zander",
-	"tags": ["Windows"],
-	"iconUri": "",
-	"targetOsType": "Windows",
-	"parameters": {
+    "title": "Create Domain",
+    "description": "Create an AD Domain in a new Forest",
+    "publisher": "Roger Zander",
+    "tags": [
+        "Windows",
+        "Domain",
+        "AD"
+    ],
+    "iconUri": "",
+    "targetOsType": "Windows",
+    "parameters": {
         "DomainName": {
             "type": "string",
             "displayName": "Domain NetBIOS Name",
             "description": "NetBIOS Name of the Domain",
-			"defaultValue": "contoso",
+            "defaultValue": "contoso",
             "allowEmpty": false
         },
-		"DoaminFQDN": {
+        "DomainFQDN": {
             "type": "string",
             "displayName": "FQDN Name of the Domain",
             "description": "DNS Domain Name",
-			"defaultValue": "contoso.com",
+            "defaultValue": "contoso.com",
             "allowEmpty": false
         },
-		"SafeModePW": {
-            "type": "string",
+        "SafeModePW": {
+            "type": "securestring",
             "displayName": "Recovery Password",
             "description": "Safe Mode Admin Password",
-			"defaultValue": "P@ssw0rd",
             "allowEmpty": false
         }
     },
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File SetupDomain.ps1', ' -DomainName ', parameters('DomainName'), ' -DoaminFQDN ', parameters('DoaminFQDN'), ' -SafeModePW ', parameters('SafeModePW'))]"
-	}
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File SetupDomain.ps1', ' -DomainName ', parameters('DomainName'), ' -DomainFQDN ', parameters('DomainFQDN'), ' -SafeModePW ', , '\"', parameters('SafeModePW')), '\"']"
+    }
 }

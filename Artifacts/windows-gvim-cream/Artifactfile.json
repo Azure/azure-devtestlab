@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+  "title": "gVim (Cream) for Windows",
+  "description": "Installs gVim for Windows, with the Cream superset of functionality added. You can view the current status of the Cream project here: http://cream.sourceforge.net/. The application is installed to the default location and should show up in the recently installed list for all users on the VM (depending on the quantity of software being installed prior to logging in). Vim is not installed in such a way as to be made available on the system path.",
+  "tags": [
+    "Windows",
+    "gVim",
+    "vim",
+    "Editors"
+  ],
+  "iconUri": "http://www.vim.org/images/vim_shortcut.ico",
+  "parameters": {
+  "VimInstallerPath": {
+    "type": "string",
+    "displayName": "Installer Path",
+    "description": "The full path to the installer file on the local VM. This should be a full path specification including the file name itself.",
+    "defaultValue": "C:\\Temp\\gvim.exe"
+    }
+  },
+  "targetOsType": "Windows",
+  "runCommand": {
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File Install-gVim.ps1', ' -VimInstallerPath ', parameters('VimInstallerPath'))]"
+  }
+}

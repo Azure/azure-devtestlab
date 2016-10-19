@@ -17,6 +17,6 @@
         }
     },
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File startChocolatey.ps1', ' -packageList ', parameters('packages'))]"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ''', parameters('packages'), '''\"')]"
     }
 }

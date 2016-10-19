@@ -4,7 +4,7 @@
 #
 # Usage: 
 #
-# linux-apt-package.sh PACKAGE-URL
+# linux-powershell.sh PACKAGE-URL
 #
 
 #!/bin/bash
@@ -21,6 +21,11 @@ if [ -f /usr/bin/yum ] ; then
     yum install -y $FILE_NAME
 elif [ -f /usr/bin/apt ] ; then
     echo "Using apt package manager"
-    apt-get -q -y install libunwind8 libicu55
-    dpkg -i $FILE_NAME
+    if [ $(lsb_release -r -s) = "16.04" ]; then
+        apt-get -q -y install libunwind8 libicu55
+        dpkg -i $FILE_NAME
+    elif [ $(lsb_release -r -s) = "14.04" ]; then
+        apt-get -q -y install libunwind8 libicu52
+        dpkg -i $FILE_NAME
+    fi
 fi

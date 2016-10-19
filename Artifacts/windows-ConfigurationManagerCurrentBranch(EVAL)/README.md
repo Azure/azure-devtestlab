@@ -46,3 +46,4 @@ End-to-End setup on a single core Machine with 4GB Memory took a bit more than o
  - check c:\windows\temp if there is a .CAB File in a subfolder with ~600MB
  - check c:\windows\temp\smsetup, to size of all files should be ~1GB
  - check c:\ConfigMgrSetup.log
+
