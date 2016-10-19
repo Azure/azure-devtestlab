@@ -21,6 +21,6 @@
         }
     },
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', 'slackmsix64', ' -UserName ', parameters('installUsername'), ' -Password ', parameters('installPassword'), '\"')]"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', 'slack', ' -UserName ', parameters('installUsername'), ' -Password ', parameters('installPassword'), '\"')]"
     }
 }
