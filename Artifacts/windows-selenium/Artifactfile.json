@@ -12,6 +12,6 @@
   "iconUri": "http://www.seleniumhq.org/images/selenium-logo.png",
   "targetOsType": "Windows",
   "runCommand": {
-    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', 'firefox,googlechrome,selenium-chrome-driver,selenium-ie-driver,iedriverserver', '\"')]"
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', '''firefox,googlechrome,selenium-chrome-driver,selenium-ie-driver,iedriverserver''', '\"')]"
   }
 }
