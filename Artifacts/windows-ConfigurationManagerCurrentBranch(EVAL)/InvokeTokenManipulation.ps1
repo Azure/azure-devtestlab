@@ -661,7 +661,7 @@ Blog on this script: http://clymb3r.wordpress.com/2013/11/03/powershell-and-toke
     elseif ($PsCmdlet.ParameterSetName -ieq "CreateProcess" -or $PsCmdlet.ParameterSetName -ieq "ImpersonateUser")
     {
         $AllTokens = Enum-AllTokens
-        
+
         #Select the token to use
         [IntPtr]$hToken = [IntPtr]::Zero
         $UniqueTokens = (Get-UniqueTokens -AllTokens $AllTokens).TokenByUser
@@ -897,7 +897,7 @@ function Create-ProcessWithToken
         {
             $ProcessArgsPtr = [System.Runtime.InteropServices.Marshal]::StringToHGlobalUni("`"$ProcessName`" $ProcessArgs")
         }
-        
+
         $FunctionName = ""
         if ([System.Diagnostics.Process]::GetCurrentProcess().SessionId -eq 0)
         {
@@ -922,17 +922,17 @@ function Create-ProcessWithToken
             $CloseHandle.Invoke($ProcessInfo.hProcess) | Out-Null
             $CloseHandle.Invoke($ProcessInfo.hThread) | Out-Null
 
-	#Pass created System.Diagnostics.Process object to pipeline
-	if ($PassThru) {
-		#Retrieving created System.Diagnostics.Process object
-		$returnProcess = Get-Process -Id $ProcessInfo.dwProcessId
+    #Pass created System.Diagnostics.Process object to pipeline
+    if ($PassThru) {
+        #Retrieving created System.Diagnostics.Process object
+        $returnProcess = Get-Process -Id $ProcessInfo.dwProcessId
 
-		#Caching process handle so we don't lose it when the process exits
-		$null = $returnProcess.Handle
+        #Caching process handle so we don't lose it when the process exits
+        $null = $returnProcess.Handle
 
-		#Passing System.Diagnostics.Process object to pipeline
-		$returnProcess
-	}
+        #Passing System.Diagnostics.Process object to pipeline
+        $returnProcess
+    }
         }
         else
         {
@@ -1523,46 +1523,46 @@ function Get-TokenInformation
 #Used to add 64bit memory addresses
 Function Add-SignedIntAsUnsigned
 {
-	Param(
-	[Parameter(Position = 0, Mandatory = $true)]
-	[Int64]
-	$Value1,
-	
-	[Parameter(Position = 1, Mandatory = $true)]
-	[Int64]
-	$Value2
-	)
-	
-	[Byte[]]$Value1Bytes = [BitConverter]::GetBytes($Value1)
-	[Byte[]]$Value2Bytes = [BitConverter]::GetBytes($Value2)
-	[Byte[]]$FinalBytes = [BitConverter]::GetBytes([UInt64]0)
+    Param(
+    [Parameter(Position = 0, Mandatory = $true)]
+    [Int64]
+    $Value1,
+    
+    [Parameter(Position = 1, Mandatory = $true)]
+    [Int64]
+    $Value2
+    )
 
-	if ($Value1Bytes.Count -eq $Value2Bytes.Count)
-	{
-		$CarryOver = 0
-		for ($i = 0; $i -lt $Value1Bytes.Count; $i++)
-		{
-			#Add bytes
-			[UInt16]$Sum = $Value1Bytes[$i] + $Value2Bytes[$i] + $CarryOver
+    [Byte[]]$Value1Bytes = [BitConverter]::GetBytes($Value1)
+    [Byte[]]$Value2Bytes = [BitConverter]::GetBytes($Value2)
+    [Byte[]]$FinalBytes = [BitConverter]::GetBytes([UInt64]0)
 
-			$FinalBytes[$i] = $Sum -band 0x00FF
-			
-			if (($Sum -band 0xFF00) -eq 0x100)
-			{
-				$CarryOver = 1
-			}
-			else
-			{
-				$CarryOver = 0
-			}
-		}
-	}
-	else
-	{
-		Throw "Cannot add bytearrays of different sizes"
-	}
-	
-	return [BitConverter]::ToInt64($FinalBytes, 0)
+    if ($Value1Bytes.Count -eq $Value2Bytes.Count)
+    {
+        $CarryOver = 0
+        for ($i = 0; $i -lt $Value1Bytes.Count; $i++)
+        {
+            #Add bytes
+            [UInt16]$Sum = $Value1Bytes[$i] + $Value2Bytes[$i] + $CarryOver
+
+            $FinalBytes[$i] = $Sum -band 0x00FF
+
+            if (($Sum -band 0xFF00) -eq 0x100)
+            {
+                $CarryOver = 1
+            }
+            else
+            {
+                $CarryOver = 0
+            }
+        }
+    }
+    else
+    {
+        Throw "Cannot add bytearrays of different sizes"
+    }
+
+    return [BitConverter]::ToInt64($FinalBytes, 0)
 }
 
 function Get-ThreadToken
@@ -1616,4 +1616,3 @@ function Get-ThreadToken
     $RetStruct | Add-Member -MemberType NoteProperty -Name hThreadToken -Value $hThreadToken
     return $RetStruct
 }
-
