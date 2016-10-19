@@ -9,7 +9,8 @@ cd $($PSScriptRoot)
 	
 if([string]::IsNullOrEmpty($PackageList))
 {
-    Start-Process "RZUpdate.exe" -ArgumentList "/Update"
+    $proc = (Start-Process -FilePath "RZUpdate.exe" -ArgumentList "/Update");$proc.WaitForExit();$ExitCode = $proc.ExitCode
+    Exit($ExitCode)
 }
 else 
     {
