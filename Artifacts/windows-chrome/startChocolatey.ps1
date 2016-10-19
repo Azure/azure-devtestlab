@@ -171,7 +171,14 @@ function Remove-LocalAdminUser
     {
         $computer = [ADSI]"WinNT://$env:ComputerName"
         $computer.Delete('User', $UserName)
-        gwmi win32_userprofile | ? { $_.LocalPath -like "*$UserName*" -and -not $_.Loaded } | % { $_.Delete() | Out-Null }
+        try
+        {
+            gwmi win32_userprofile | ? { $_.LocalPath -like "*$UserName*" -and -not $_.Loaded } | % { $_.Delete() | Out-Null }
+        }
+        catch
+        {
+            # Ignore any errors, specially with locked folders/files. It will get cleaned up at a later time, when another artifact is installed.
+        }
     }
 }
 
