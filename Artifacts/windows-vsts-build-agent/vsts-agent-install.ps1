@@ -42,7 +42,7 @@ trap
     New-Item -ItemType Directory -Force -Path $agentTempFolderName
 
     $serverUrl = "https://$vstsAccount.visualstudio.com"
-    $vstsAgentUrl = "$serverUrl/_apis/distributedtask/packages/agent"
+    $vstsAgentUrl = "$serverUrl/_apis/distributedtask/packages/agent?api-version=2.3"
     $vstsUser = "AzureDevTestLabs"
 
     $retryCount = 3
