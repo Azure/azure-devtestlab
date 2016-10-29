@@ -53,6 +53,9 @@ if((gwmi win32_computersystem).partofdomain -eq $true)
     Stop-Service 'MSSQLSERVER' -Force
     Start-Service 'MSSQLSERVER'
 
+	#Disable defender to reduce load during setup	
+	try { Set-MpPreference -DisableRealtimeMonitoring $true } catch{}
+	
     #Copy-Item .\sccmsetup.ini c:\ -Force
     & ".\ADK10_setup.exe"
     if((test-path "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots") -eq $false) { exit 2 }
