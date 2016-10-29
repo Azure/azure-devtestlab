@@ -32,6 +32,6 @@
         }
     },
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File SetupDomain.ps1', ' -DomainName ', parameters('DomainName'), ' -DomainFQDN ', parameters('DomainFQDN'), ' -SafeModePW ', , '\"', parameters('SafeModePW')), '\"']"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File SetupDomain.ps1', ' -DomainName ', parameters('DomainName'), ' -DomainFQDN ', parameters('DomainFQDN'), ' -SafeModePW \"', parameters('SafeModePW'), '\"')]"
     }
 }
