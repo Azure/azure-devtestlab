@@ -26,6 +26,6 @@
         }
     },
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File SetupCMCB.ps1', ' -SiteCode ', parameters('SiteCode'), ' -SiteName ', , '\", parameters('SiteName')), '\"']"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File SetupCMCB.ps1', ' -SiteCode ', parameters('SiteCode'), ' -SiteName \"', parameters('SiteName'), '\"')]"
     }
 }
