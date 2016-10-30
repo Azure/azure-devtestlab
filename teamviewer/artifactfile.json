@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+  "title": "Teamviewer",
+  "description": "Installs Teamviewer - desktop sharing / collaboration tool",
+  "tags": [
+    "Teamviewer",
+    "Collaboration"
+  ],
+    "iconUri": "https://chocolatey.org/content/packageimages/teamviewer.11.0.66695.png",
+  "targetOsType": "Windows",
+  "runCommand": {
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ''', 'teamviewer', '''\"')]"
+  }
+}
