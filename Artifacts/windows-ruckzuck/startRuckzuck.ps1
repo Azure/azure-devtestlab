@@ -13,13 +13,10 @@ if([string]::IsNullOrEmpty($PackageList))
     Exit($ExitCode)
 }
 else 
-    {
-        foreach($pkg in $PackageList.Split(",;")) 
-        {
-		    try
-		    {
-			    $proc = (Start-Process -FilePath "RZUpdate.exe" -ArgumentList "$($pkg)");$proc.WaitForExit();$ExitCode = $proc.ExitCode
-		    } 
-            catch{}
-	}
+{
+	try
+	{
+	    $proc = (Start-Process -FilePath "RZUpdate.exe" -ArgumentList "$($PackageList)");$proc.WaitForExit();$ExitCode = $proc.ExitCode
+	} 
+    catch{}
 }
