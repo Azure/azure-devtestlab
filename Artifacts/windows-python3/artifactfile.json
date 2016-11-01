@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+  "title": "Python 3",
+  "description": "Installs Python 3 (latest version) ",
+  "tags": [
+    "Python"
+  ],
+  "iconUri": "http://www.pngall.com/wp-content/uploads/2016/05/Python-Logo-Free-PNG-Image.png",
+  "targetOsType": "Windows",
+  "runCommand": {
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ''', 'python3', '''\"')]"
+  }
+}
