@@ -13,15 +13,15 @@ if ((gwmi win32_computersystem).partofdomain -eq $false)
   Install-windowsfeature AD-domain-services
   Import-Module ADDSDeployment
   Install-ADDSForest -CreateDnsDelegation:$false `
-    -DatabasePath "C:\Windows\NTDS" `
+    -DatabasePath "$($env:windir)\NTDS" `
     -DomainMode "Win2012R2" `
     -DomainName $DomainFQDN `
     -DomainNetbiosName $DomainName `
     -ForestMode "Win2012R2" `
     -InstallDns:$true `
-    -LogPath "C:\Windows\NTDS" `
+    -LogPath "$($env:windir)\NTDS" `
     -NoRebootOnCompletion:$false `
-    -SysvolPath "C:\Windows\SYSVOL" `
+    -SysvolPath "$($env:windir)\SYSVOL" `
     -Force:$true `
     -SafeModeAdministratorPassword (ConvertTo-SecureString $SafeModePW -AsPlainText -Force)
 }
