@@ -2,7 +2,7 @@
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
     "title": "Sysinternals",
     "publisher": "Microsoft",
-    "description": "Installs Sysinternals using the Chocolatey package manager",
+    "description": "Installs Sysinternals using the Chocolatey package manager. It is installed under %ALLUSERSPROFILE%\\chocolatey\\lib\\sysinternals\\tools. All Sysinternals tools are immediately accessible from the command line after install (e.g. Start -> Run, \"procexp.exe\").",
     "tags": [
         "Windows",
         "Sysinternals"
