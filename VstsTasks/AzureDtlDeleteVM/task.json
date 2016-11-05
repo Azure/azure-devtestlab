@@ -12,7 +12,7 @@
     "version": {
         "Major": 1,
         "Minor": 0,
-        "Patch": 6
+        "Patch": 7
     },
     "demands": [
         "azureps"
@@ -39,7 +39,7 @@
     "instanceNameFormat": "Delete Azure DevTest Labs VM",
     "execution": {
         "AzurePowerShell": {
-            "target": "$(currentDirectory)\\Delete-AzureDtlVM.ps1",
+            "target": "$(currentDirectory)\\task.ps1",
             "argumentFormat": "",
             "workingDirectory": "$(currentDirectory)"
         }
