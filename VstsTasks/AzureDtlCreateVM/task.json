@@ -12,7 +12,7 @@
     "version": {
         "Major": 1,
         "Minor": 0,
-        "Patch": 8
+        "Patch": 9
     },
     "demands": [
         "azureps"
@@ -83,7 +83,7 @@
     "instanceNameFormat": "Create Azure DevTest Labs VM",
     "execution": {
         "AzurePowerShell": {
-            "target": "$(currentDirectory)\\New-AzureDtlVM.ps1",
+            "target": "$(currentDirectory)\\task.ps1",
             "argumentFormat": "",
             "workingDirectory": "$(currentDirectory)"
         }
