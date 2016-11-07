@@ -62,8 +62,36 @@ function Invoke-AzureDtlTask
     {
         throw "Unable to locate template file '$TemplateName'. Make sure the template file exists or the path is correctly specified."
     }
+    $templateParameterObject = ConvertTo-TemplateParameterObject -TemplateParameters "$TemplateParameters"
 
-    return Invoke-Expression -Command "New-AzureRmResourceGroupDeployment -Name `"$deploymentName`" -ResourceGroupName `"$resourceGroupName`" -TemplateFile `"$templateFile`" $TemplateParameters"
+    Test-AzureRmResourceGroupDeployment -ResourceGroupName "$resourceGroupName" -TemplateFile "$templateFile" -TemplateParameterObject $templateParameterObject
+
+    return New-AzureRmResourceGroupDeployment -Name "$deploymentName" -ResourceGroupName "$resourceGroupName" -TemplateFile "$templateFile" -TemplateParameterObject $templateParameterObject
+}
+
+function ConvertTo-TemplateParameterObject
+{
+    [CmdletBinding()]
+    Param(
+        [string] $TemplateParameters
+    )
+
+    # The following regular expression is used to extract a parameter that is defined following PS rules.
+    #
+    # For example, given the following parameters:
+    #
+    #    -newVMName '$(Build.BuildNumber)' -userName '$(User.Name)' -password (ConvertTo-SecureString -String '$(User.Password)' -AsPlainText -Force)
+    #
+    # the regular expression can be used to match newName, userName, password, etc.
+    $pattern = '\-(?<k>\w+)\s+(?<v>[''"].*?[''"]|\$\(.*\)?|\(.*\)?)'
+
+    $templateParameterObject = @{}
+
+    $null = @(
+        [regex]::Matches($TemplateParameters, $pattern) | % { $templateParameterObject[$_.Groups[1].Value] = $_.Groups[2].Value.Trim("`"'") }
+    )
+
+    return $templateParameterObject
 }
 
 function Get-AzureDtlLab
@@ -82,38 +110,11 @@ function Get-AzureDtlLab
     return Get-AzureRmResource -ResourceId "$LabId"
 }
 
-function Get-TemplateParameterValue
-{
-    [CmdletBinding()]
-    Param(
-        [string]$Parameters,
-        [string]$ParameterName
-    )
-
-    # The following regular expression is used to extract a parameter that is defined following PS rules.
-    #
-    # For example, given the following parameters:
-    #
-    #    -newVMName '$(Build.BuildNumber)' -userName '$(User.Name)' -password (ConvertTo-SecureString -String '$(User.Password)' -AsPlainText -Force)
-    #
-    # the regular expression can be used to match newName, userName, password, etc.
-
-    $pattern = '\-(?<k>\w+)\s+(?<v>\''.*?\''|\$\(.*\)?|\(.*\)?)'
-
-    $value = [regex]::Matches($Parameters, $pattern) | % { if ($_.Groups[1].Value -eq $ParameterName) { return $_.Groups[2].Value } }
-    if ($value)
-    {
-        $value = $value.Trim("'")
-    }
-    
-    return $value
-}
-
 function Validate-TemplateParameters
 {
     [CmdletBinding()]
     Param(
-        [string] $Parameters
+        $TemplateParameterObject
     )
 
     $defaultValues = @{
@@ -122,9 +123,9 @@ function Validate-TemplateParameters
         Password = '<Enter User Password>'
     }
 
-    $vmName = Get-TemplateParameterValue -Parameters $Parameters -ParameterName 'newVMName'
-    $userName = Get-TemplateParameterValue -Parameters $Parameters -ParameterName 'userName'
-    $password = Get-TemplateParameterValue -Parameters $Parameters -ParameterName 'password'
+    $vmName = $TemplateParameterObject.Item('newVMName')
+    $userName = $TemplateParameterObject.Item('userName')
+    $password = $TemplateParameterObject.Item('password')
 
     $mustReplaceDefaults = $false
     if ($vmName -and $vmName.Contains($defaultValues.NewVMName))
@@ -182,7 +183,12 @@ function Validate-InputParameters
     )
 
     Write-Host 'Validating input parameters'
-    $vmName = Get-TemplateParameterValue -Parameters "$TemplateParameters" -ParameterName 'newVMName'
-    Validate-TemplateParameters -Parameters "$TemplateParameters"
+
+    $templateParameterObject = ConvertTo-TemplateParameterObject -TemplateParameters "$TemplateParameters"
+
+    # Only required for backward compatibility with earlier versions of the task.
+    Validate-TemplateParameters -TemplateParameterObject $templateParameterObject
+
+    $vmName = $templateParameterObject.Item('newVMName')
     Validate-VMName -Name "$vmName"
 }
