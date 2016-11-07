@@ -90,6 +90,14 @@ function Get-TemplateParameterValue
         [string]$ParameterName
     )
 
+    # The following regular expression is used to extract a parameter that is defined following PS rules.
+    #
+    # For example, given the following parameters:
+    #
+    #    -newVMName '$(Build.BuildNumber)' -userName '$(User.Name)' -password (ConvertTo-SecureString -String '$(User.Password)' -AsPlainText -Force)
+    #
+    # the regular expression can be used to match newName, userName, password, etc.
+
     $pattern = '\-(?<k>\w+)\s+(?<v>\''.*?\''|\$\(.*\)?|\(.*\)?)'
 
     $value = [regex]::Matches($Parameters, $pattern) | % { if ($_.Groups[1].Value -eq $ParameterName) { return $_.Groups[2].Value } }

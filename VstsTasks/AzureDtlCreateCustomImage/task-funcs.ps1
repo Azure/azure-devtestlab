@@ -86,35 +86,33 @@ function Get-TemplateParameterObject
     param(
     )
 
-    $null = @(
-        $author = $Env:RELEASE_RELEASENAME
-        $authorType = 'release'
-        if ([string]::IsNullOrWhiteSpace($author))
-        {
-            $author = $Env:BUILD_BUILDNUMBER
-            $authorType = 'build'
-        }
-        $requestedFor = $Env:RELEASE_REQUESTEDFOR
-        if ([string]::IsNullOrWhiteSpace($requestedFor))
-        {
-            $requestedFor = $Env:BUILD_REQUESTEDFOR
-        }
-        if ([string]::IsNullOrWhiteSpace($Description))
-        {
-            $Description = "Custom image created from $authorType $author requested for $requestedFor."
-        }
+    $author = $Env:RELEASE_RELEASENAME
+    $authorType = 'release'
+    if ([string]::IsNullOrWhiteSpace($author))
+    {
+        $author = $Env:BUILD_BUILDNUMBER
+        $authorType = 'build'
+    }
+    $requestedFor = $Env:RELEASE_REQUESTEDFOR
+    if ([string]::IsNullOrWhiteSpace($requestedFor))
+    {
+        $requestedFor = $Env:BUILD_REQUESTEDFOR
+    }
+    if ([string]::IsNullOrWhiteSpace($Description))
+    {
+        $Description = "Custom image created from $authorType $author requested for $requestedFor."
+    }
 
-        $templateParameterObject = @{
-            author = $author
-            description = $Description
-            labName = $lab.Name
-            linuxOsState = $LinuxOsState
-            newCustomImageName = $NewCustomImageName
-            osType = $OsType
-            sourceLabVmId = $SourceLabVMId
-            windowsOsState = $WindowsOsState
-        }
-    )
+    $templateParameterObject = @{
+        author = $author
+        description = $Description
+        labName = $lab.Name
+        linuxOsState = $LinuxOsState
+        newCustomImageName = $NewCustomImageName
+        osType = $OsType
+        sourceLabVmId = $SourceLabVMId
+        windowsOsState = $WindowsOsState
+    }
 
     return $templateParameterObject
 }
