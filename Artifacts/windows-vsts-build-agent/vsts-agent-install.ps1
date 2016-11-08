@@ -18,6 +18,14 @@ Param(
     [Parameter(Mandatory=$true)]
     [ValidateNotNullOrEmpty()]
     $poolname,
+
+    [Parameter(Mandatory=$true)]
+    [ValidateNotNullOrEmpty()]
+    $windowsLogonAccount,
+
+    [Parameter(Mandatory=$true)]
+    [AllowEmptyString()]
+    $windowsLogonPassword,
     
     [Parameter(Mandatory=$true)]
     [ValidatePattern("[c-zC-Z]")]
@@ -109,8 +117,11 @@ trap
 
     # Set the current directory to the agent dedicated one previously created.
     Push-Location -Path $agentInstallationPath
-    # The actual install of the agent. Using NetworkService as default service logon account, and some other values that could be turned into paramenters if needed 
-    $agentConfigArgs = "--unattended", "--url", $serverUrl, "--auth", "PAT", "--token", $vstsUserPassword, "--pool", $poolname, "--agent", $agentName, "--runasservice", "--windowslogonaccount", "NT AUTHORITY\NetworkService"
+    # The actual install of the agent. Using --runasservice, and some other values that could be turned into paramenters if needed.
+    $agentConfigArgs = "--unattended", "--url", $serverUrl, "--auth", "PAT", "--token", $vstsUserPassword, "--pool", $poolname, "--agent", $agentName, "--runasservice", "--windowslogonaccount", $windowsLogonAccount
+    if ($windowsLogonPassword -ne "") {
+        $agentConfigArgs += "--windowslogonpassword", $windowsLogonPassword
+    }
     & $agentExePath $agentConfigArgs
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Agent configuration failed with exit code: $LASTEXITCODE"

@@ -32,6 +32,19 @@
             "displayName": "Agent Pool",
             "description": "The agent pool this build agent should be added to."
         },
+        "windowsLogonAccount": {
+            "type": "string",
+            "displayName": "Service Account Name",
+            "description": "The Windows logon account name which will run the agent service.",
+            "defaultValue": "NT AUTHORITY\\NetworkService"
+        },
+        "windowsLogonPassword": {
+            "type": "securestring",
+            "displayName": "Service Account Password",
+            "description": "The Windows logon account password which will run the agent service.  This is not required for the default NT AUTHORITY\\NetworkService account.",
+            "defaultValue": "",
+            "allowEmpty": true
+        },
         "driveLetter": {
             "type": "string",
             "displayName": "Install Drive Letter",
@@ -45,6 +58,6 @@
         }
     },
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File vsts-agent-install.ps1 ', parameters('vstsAccount'), ' ', parameters('vstsPassword'), ' ', parameters('agentName'), ' \"', parameters('poolName'), '\" ', parameters('driveLetter'))]"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File vsts-agent-install.ps1 ', parameters('vstsAccount'), ' ', parameters('vstsPassword'), ' ', parameters('agentName'), ' \"', parameters('poolName'), '\" \"', parameters('windowsLogonAccount'), '\" \"', parameters('windowsLogonPassword'), '\" ', parameters('driveLetter'))]"
     }
 }
