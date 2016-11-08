@@ -30,7 +30,11 @@ Param(
     [Parameter(Mandatory=$true)]
     [ValidatePattern("[c-zC-Z]")]
     [ValidateLength(1, 1)]
-    $driveLetter
+    $driveLetter,
+    
+    [Parameter(Mandatory=$true)]
+    [AllowEmptyString()]
+    $workDirectory
 )
 
 $ErrorActionPreference = "Stop"
@@ -41,6 +45,11 @@ trap
     {
         Write-Error "VSTS account should not be the URL, just the account name."
         exit 1
+    }
+
+    if ($workDirectory -ne "" -and !(Test-Path -Path $workDirectory -IsValid -ErrorAction Ignore)) {
+        Write-Error "Work Directory '$workDirectory' is not a valid path."
+        exit 6
     }
 
     $currentLocation = Split-Path -parent $MyInvocation.MyCommand.Definition
@@ -121,6 +130,9 @@ trap
     $agentConfigArgs = "--unattended", "--url", $serverUrl, "--auth", "PAT", "--token", $vstsUserPassword, "--pool", $poolname, "--agent", $agentName, "--runasservice", "--windowslogonaccount", $windowsLogonAccount
     if ($windowsLogonPassword -ne "") {
         $agentConfigArgs += "--windowslogonpassword", $windowsLogonPassword
+    }
+    if ($workDirectory -ne "") {
+        $agentConfigArgs += "--work", $workDirectory
     }
     & $agentExePath $agentConfigArgs
     if ($LASTEXITCODE -ne 0) {
