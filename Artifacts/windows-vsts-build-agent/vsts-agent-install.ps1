@@ -39,7 +39,8 @@ Param(
 
 $ErrorActionPreference = "Stop"
 
-trap {
+trap
+{
     $_ | Write-Error -ErrorAction Continue
     exit 1
 }
@@ -49,7 +50,8 @@ if ($vstsAccount -match "https*://" -or $vstsAccount -match "visualstudio.com")
     Write-Error "VSTS account should not be the URL, just the account name."
 }
 
-if ($workDirectory -ne "" -and !(Test-Path -Path $workDirectory -IsValid -ErrorAction Ignore)) {
+if ($workDirectory -ne "" -and !(Test-Path -Path $workDirectory -IsValid -ErrorAction Ignore))
+{
     Write-Error "Work Directory '$workDirectory' is not a valid path."
 }
 
