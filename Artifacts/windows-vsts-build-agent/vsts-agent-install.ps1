@@ -128,14 +128,17 @@ if (![System.IO.File]::Exists($agentExePath))
 Push-Location -Path $agentInstallationPath
 # The actual install of the agent. Using --runasservice, and some other values that could be turned into paramenters if needed.
 $agentConfigArgs = "--unattended", "--url", $serverUrl, "--auth", "PAT", "--token", $vstsUserPassword, "--pool", $poolname, "--agent", $agentName, "--runasservice", "--windowslogonaccount", $windowsLogonAccount
-if ($windowsLogonPassword -ne "") {
+if ($windowsLogonPassword -ne "")
+{
     $agentConfigArgs += "--windowslogonpassword", $windowsLogonPassword
 }
-if ($workDirectory -ne "") {
+if ($workDirectory -ne "")
+{
     $agentConfigArgs += "--work", $workDirectory
 }
 & $agentExePath $agentConfigArgs
-if ($LASTEXITCODE -ne 0) {
+if ($LASTEXITCODE -ne 0)
+{
     Write-Error "Agent configuration failed with exit code: $LASTEXITCODE"
 }
 
