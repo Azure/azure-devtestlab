@@ -119,17 +119,20 @@ Function Reset-SqlAdmin {
 					[string]$sql
 				)
 			try { 
-				$connstring = "Data Source=$sqlserver;Integrated Security=True;Connect Timeout=2;Application Name=Reset-SqlAdmin"
+				$connstring = "Data Source=$sqlserver;Integrated Security=True;Application Name=Reset-SqlAdmin"
 				$conn = New-Object System.Data.SqlClient.SqlConnection $connstring
 				$conn.Open() 
 				$cmd = New-Object system.data.sqlclient.sqlcommand($null, $conn)
 				$cmd.CommandText = $sql
 				$cmd.ExecuteNonQuery() | Out-Null
 				$cmd.Dispose()
-				$conn.Close()
-				$conn.Dispose()
 				return $true
-			} catch { return $false }
+			} 
+            catch { return $false } 
+            finally { 
+                $conn.Close(); 
+                $conn.Dispose() 
+            }
 		}
 	}
 
@@ -161,7 +164,7 @@ Function Reset-SqlAdmin {
 			Write-Output "Resolving IP address"
 			try{
 				$hostentry = [System.Net.Dns]::GetHostEntry($baseaddress) 
-				$ipaddr = ($hostentry.AddressList | Where-Object { $_ -notlike '169.*' } | Select -First 1).IPAddressToString
+				$ipaddr = ($hostentry.AddressList | Select -First 1).IPAddressToString
 			} catch { throw "Could not resolve SqlServer IP or NetBIOS name" }
 		
 			Write-Output "Resolving NetBIOS name"
@@ -191,8 +194,8 @@ Function Reset-SqlAdmin {
 					$sid = $account.Translate([System.Security.Principal.SecurityIdentifier])
 				} else {
 					Invoke-Command -ErrorAction Stop -Session $session -Args $login -ScriptBlock {
-					$account = New-Object System.Security.Principal.NTAccount($login)
-					$sid = $account.Translate([System.Security.Principal.SecurityIdentifier])
+					    $account = New-Object System.Security.Principal.NTAccount($login)
+					    $sid = $account.Translate([System.Security.Principal.SecurityIdentifier])
 					}
 				}
 			} catch { throw "SQL Server cannot resolve Windows User or Group $login." }
@@ -200,8 +203,7 @@ Function Reset-SqlAdmin {
 			
 		# If it's not a Windows login, it's a SQL login, so it needs a password.
 		if ($windowslogin -ne $true) {
-			Write-Output "SQL login detected"
-			do {$Password = Read-Host -AsSecureString "Please enter a new password for $login" } while ( $Password.Length -eq 0 )
+			throw  "SQL login detected"
 		}
 		
 		# Get instance and service display name, then get services
@@ -234,7 +236,6 @@ Function Reset-SqlAdmin {
 			try { $clusterResource | Where-Object { $_.Name -eq "SQL Server" } | ForEach-Object { $_.TakeOffline(60) } }
 			catch {
 				$clusterResource |  Where-Object { $_.Name -eq "SQL Server" }  | ForEach-Object { $_.BringOnline(60) }
-				$clusterResource |  Where-Object { $_.Name -ne "SQL Server" }  | ForEach-Object { $_.BringOnline(60) }
 				throw  "Could not stop the SQL Service. Restarted SQL Service and quit."
 			}
 		} else {
@@ -252,7 +253,7 @@ Function Reset-SqlAdmin {
 		try {
 			if ($hostname -eq $env:COMPUTERNAME) { 
 				$netstart = net start ""$displayname"" /mReset-SqlAdmin 2>&1
-				if ("$netstart" -notmatch "success") { throw }
+				if ("$netstart" -notmatch "success") { throw "Unable to start SQL from commandline" }
 			} 
 			else {
 				$netstart = Invoke-Command -ErrorAction Stop -Session $session -Args $displayname -ScriptBlock { net start ""$args"" /mReset-SqlAdmin } 2>&1
@@ -282,7 +283,6 @@ Function Reset-SqlAdmin {
 				Stop-Service Input-Object $sqlservice -Force -ErrorAction SilentlyContinue
 				if ($isclustered) { 
 					$clusterResource |  Where-Object { $_.Name -eq "SQL Server" } | ForEach-Object { $_.BringOnline(60) }
-					$clusterResource |  Where-Object { $_.Name -ne "SQL Server" } | ForEach-Object { $_.BringOnline(60) } 
 				} else { Start-Service -InputObject $instanceservices -ErrorAction SilentlyContinue }
 				throw  "Could not stop the SQL Service. Restarted SQL Service and quit."
 			}
