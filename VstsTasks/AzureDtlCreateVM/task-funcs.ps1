@@ -83,12 +83,21 @@ function ConvertTo-TemplateParameterObject
     #    -newVMName '$(Build.BuildNumber)' -userName '$(User.Name)' -password (ConvertTo-SecureString -String '$(User.Password)' -AsPlainText -Force)
     #
     # the regular expression can be used to match newName, userName, password, etc.
-    $pattern = '\-(?<k>\w+)\s+(?<v>[''"].*?[''"]|\$\(.*?\)?|\(.*?\)[^\s]?)'
+    $pattern = '\-(?<k>\w+)\s+(?<v>[''"].*?[''"]|\(.*?\))'
+    $pattern2 = '\-String\s+(?<v>[''"]?.*?[''"])'
 
     $templateParameterObject = @{}
 
     $null = @(
-        [regex]::Matches($TemplateParameters, $pattern) | % { $templateParameterObject[$_.Groups[1].Value] = $_.Groups[2].Value.Trim("`"'") }
+        [regex]::Matches($TemplateParameters, $pattern) | % {
+            $value = $_.Groups[2].Value.Trim("`"'")
+            $m = [regex]::Match($value, $pattern2)
+            if ($m.Success)
+            {
+                $value = $m.Groups[1].Value.Trim("`"'")
+            }
+            $templateParameterObject[$_.Groups[1].Value] = $value
+        }
     )
 
     return $templateParameterObject
