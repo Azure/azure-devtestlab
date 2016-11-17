@@ -34,6 +34,6 @@
         }
     },
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File StartChocolatey.ps1', ' -GitRepoLocation ', parameters('GitRepoURI'), ' -GitLocalRepoLocation ''', parameters('Destination'), ''' -GitBranch ', parameters('Branch'), ' -PersonalAccessToken ', parameters('PersonalAccessToken'))]"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File StartChocolatey.ps1', ' -GitRepoLocation ', parameters('GitRepoURI'), ' -GitLocalRepoLocation \"', parameters('Destination'), '\" -GitBranch ', parameters('Branch'), ' -PersonalAccessToken ', parameters('PersonalAccessToken'))]"
     }
 }
