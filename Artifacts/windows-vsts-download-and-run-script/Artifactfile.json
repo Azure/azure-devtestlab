@@ -3,7 +3,7 @@
     "title": "Download VSTS Drop and Run Script",
     "description": "Downloads the latest build artifact for a given build definition and then executes a script from that drop.  The download will be in c:\\<build definition name>\\",
     "publisher": "Microsoft",
-    "iconUri": "http://www.visualstudio.com/favicon.ico",
+    "iconUri": "https://www.visualstudio.com/favicon.ico",
     "targetOsType": "Windows",
     "parameters": {
         "vstsProjectUri": {

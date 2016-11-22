@@ -9,7 +9,7 @@
         "CI",
         "Windows"
     ],
-    "iconUri": "http://www.visualstudio.com/favicon.ico",
+    "iconUri": "https://www.visualstudio.com/favicon.ico",
     "targetOsType": "Windows",
     "parameters": {
         "vstsAccount": {
