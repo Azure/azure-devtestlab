@@ -16,6 +16,8 @@ Contributions guidelines:
 
 - All dependencies of the artifact (such as scripts, icons etc) should be included in the artifact folder itself.
 
+- All references to icons must use SSL, otherwise they will not load in the Azure portal.
+
 - It is highly recommended that a **Readme.md** file be included to explain how the artifact works and how to troubleshoot any failures.
 
 - For authors who create the artifact and take responsibility of maintaining it, it is encouraged to add your name in the "publisher" field while authoring artifacts.   
