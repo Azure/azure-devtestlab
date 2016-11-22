@@ -4,9 +4,10 @@
     "description": "Installs Visual Studio Code",
     "tags": [
         "Windows",
-        "VSCode"
+        "VSCode",
+        "Visual Studio"
     ],
-    "iconUri": "http://into.hu/uploads/images2/2015/06/05-09-15-visual-studio-code-logo.png",
+    "iconUri": "https://github.com/Azure/azure-devtestlab/raw/drwill/vscode/Artifacts/windows-vscode/vscode%20icon.png",
     "targetOsType": "Windows",
     "runCommand": {
         "commandToExecute": "powershell.exe -ExecutionPolicy bypass -File installVSCode.ps1"
