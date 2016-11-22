@@ -17,7 +17,7 @@
             "defaultValue": "contoso",
             "allowEmpty": false
         },
-        "DoaminFQDN": {
+        "DomainFQDN": {
             "type": "string",
             "displayName": "FQDN Name of the Domain",
             "description": "DNS Domain Name",
@@ -32,6 +32,6 @@
         }
     },
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File SetupDomain.ps1', ' -DomainName ', parameters('DomainName'), ' -DoaminFQDN ', parameters('DoaminFQDN'), ' -SafeModePW \"', parameters('SafeModePW'), '\"')]"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File SetupDomain.ps1', ' -DomainName ', parameters('DomainName'), ' -DomainFQDN ', parameters('DomainFQDN'), ' -SafeModePW \"', parameters('SafeModePW'), '\"')]"
     }
 }

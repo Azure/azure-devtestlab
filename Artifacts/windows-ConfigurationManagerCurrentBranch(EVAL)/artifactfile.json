@@ -11,21 +11,21 @@
     "targetOsType": "Windows",
     "parameters": {
         "SiteCode": {
-            "type": "string",
-            "displayName": "Site Code (3-Digit)",
-            "description": "SCCM 3-Digit Site Code",
-            "defaultValue": "TST",
-            "allowEmpty": true
+			"type": "string",
+			"displayName": "Site Code (3-Digit)",
+			"description": "SCCM 3-Digit Site Code",
+			"defaultValue": "TST",
+			"allowEmpty": true
         },
         "SiteName": {
-            "type": "string",
-            "displayName": "Site Name",
-            "description": "SCCM Site Name",
-            "defaultValue": "Test Site",
-            "allowEmpty": true
+			"type": "string",
+			"displayName": "Site Name",
+			"description": "SCCM Site Name",
+			"defaultValue": "Test Site",
+			"allowEmpty": true
         }
     },
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File SetupCMCB.ps1', ' -SiteCode ', parameters('SiteCode'), ' -SiteName ', , '\", parameters('SiteName')), '\"']"
+		"commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File SetupCMCB.ps1', ' -SiteCode ', parameters('SiteCode'), ' -SiteName \"', parameters('SiteName'), '\"')]"
     }
 }
