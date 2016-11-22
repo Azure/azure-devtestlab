@@ -18,110 +18,131 @@ Param(
     [Parameter(Mandatory=$true)]
     [ValidateNotNullOrEmpty()]
     $poolname,
+
+    [Parameter(Mandatory=$true)]
+    [ValidateNotNullOrEmpty()]
+    $windowsLogonAccount,
+
+    [Parameter(Mandatory=$true)]
+    [AllowEmptyString()]
+    $windowsLogonPassword,
     
     [Parameter(Mandatory=$true)]
     [ValidatePattern("[c-zC-Z]")]
     [ValidateLength(1, 1)]
-    $driveLetter
+    $driveLetter,
+    
+    [Parameter(Mandatory=$true)]
+    [AllowEmptyString()]
+    $workDirectory
 )
 
 $ErrorActionPreference = "Stop"
 
 trap
 {
-    if ($vstsAccount -match "https*://" -or $vstsAccount -match "visualstudio.com")
-    {
-        Write-Error "VSTS account should not be the URL, just the account name."
-        exit 1
-    }
+    $_ | Write-Error -ErrorAction Continue
+    exit 1
+}
 
-    $currentLocation = Split-Path -parent $MyInvocation.MyCommand.Definition
+if ($vstsAccount -match "https*://" -or $vstsAccount -match "visualstudio.com")
+{
+    Write-Error "VSTS account should not be the URL, just the account name."
+}
 
-    # Create a temporary directory to download from VSTS the agent package (agent.zip) to, and then launch the configuration.
-    $agentTempFolderName = Join-Path $env:temp ([System.IO.Path]::GetRandomFileName())
-    New-Item -ItemType Directory -Force -Path $agentTempFolderName
+if ($workDirectory -ne "" -and !(Test-Path -Path $workDirectory -IsValid -ErrorAction Ignore))
+{
+    Write-Error "Work Directory '$workDirectory' is not a valid path."
+}
 
-    $serverUrl = "https://$vstsAccount.visualstudio.com"
-    $vstsAgentUrl = "$serverUrl/_apis/distributedtask/packages/agent"
-    $vstsUser = "AzureDevTestLabs"
+$currentLocation = Split-Path -parent $MyInvocation.MyCommand.Definition
 
-    $retryCount = 3
-    $retries = 1
-    do
-    {
-        try
-        {
-            $basicAuth = ("{0}:{1}" -f $vstsUser, $vstsUserPassword) 
-            $basicAuth = [System.Text.Encoding]::UTF8.GetBytes($basicAuth)
-            $basicAuth = [System.Convert]::ToBase64String($basicAuth)
-            $headers = @{ Authorization = ("Basic {0}" -f $basicAuth) }
+# Create a temporary directory to download from VSTS the agent package (agent.zip) to, and then launch the configuration.
+$agentTempFolderName = Join-Path $env:temp ([System.IO.Path]::GetRandomFileName())
+New-Item -ItemType Directory -Force -Path $agentTempFolderName
 
-            Invoke-WebRequest -Uri $vstsAgentUrl -headers $headers -Method Get -OutFile "$agentTempFolderName\agent.zip"
-            break
-        }
-        catch
-        {
-            $exceptionText = ($_ | Out-String).Trim()
-            $retries++
-            
-            if ($retries -ge $retryCount)
-            {
-                Write-Error "Failed to download agent due to $exceptionText"
-                exit 2
-            }
-            
-            Start-Sleep -Seconds 30 
-        }
-    } 
-    while ($retries -le $retryCount)
+$serverUrl = "https://$vstsAccount.visualstudio.com"
+$vstsAgentUrl = $serverUrl + '/_apis/distributedtask/packages/agent/win7-x64?$top=1&api-version=3.0'
+$vstsUser = "AzureDevTestLabs"
 
-
-    # Construct the agent folder under the specified drive.
-    $installPathDir = $driveLetter + ":"
+$retryCount = 3
+$retries = 1
+do
+{
     try
     {
-        $agentInstallationPath = Join-Path -Path $installPathDir -ChildPath $agentName
+        $basicAuth = ("{0}:{1}" -f $vstsUser, $vstsUserPassword) 
+        $basicAuth = [System.Text.Encoding]::UTF8.GetBytes($basicAuth)
+        $basicAuth = [System.Convert]::ToBase64String($basicAuth)
+        $headers = @{ Authorization = ("Basic {0}" -f $basicAuth) }
+
+        $agentList = Invoke-RestMethod -Uri $vstsAgentUrl -Headers $headers -Method Get -ContentType application/json
+        $downloadUrl = $agentList.value[0].downloadUrl
+        Invoke-WebRequest -Uri $downloadUrl -Headers $headers -Method Get -OutFile "$agentTempFolderName\agent.zip"
+        break
     }
     catch
     {
-        Write-Error "Failed to create the agent directory at $installPathDir."
-        exit 3
+        $exceptionText = ($_ | Out-String).Trim()
+        $retries++
+            
+        if ($retries -ge $retryCount)
+        {
+            Write-Error "Failed to download agent due to $exceptionText"
+        }
+            
+        Start-Sleep -Seconds 30 
     }
+} 
+while ($retries -le $retryCount)
 
-    # Create the directory for this agent.
-    New-Item -ItemType Directory -Force -Path $agentInstallationPath 
 
-    # Create a folder for the build work
-    New-Item -ItemType Directory -Force -Path (Join-Path $agentInstallationPath $WorkFolder)
-
-    $destShellFolder = (new-object -com shell.application).namespace("$agentInstallationPath")
-    $destShellFolder.CopyHere((new-object -com shell.application).namespace("$agentTempFolderName\agent.zip").Items(), 16)
-
-    # Removing the ZoneIdentifier from files downloaded from the internet so the plugins can be loaded
-    # Don't recurse down _work or _diag, those files are not blocked and cause the process to take much longer
-    Get-ChildItem -Path $agentInstallationPath | Unblock-File | out-null
-    Get-ChildItem -Recurse -Path $agentInstallationPath\Agent | Unblock-File | out-null
-
-    # Retrieve the path to the VSTSAgent.exe file.
-    $agentExePath = [System.IO.Path]::Combine($agentInstallationPath, 'Agent', 'VSOAgent.exe')
-    if (![System.IO.File]::Exists($agentExePath))
-    {
-        Write-Error "File not found: $agentExePath" -Verbose
-        exit 4
-    }
-
-    # Call the agent with the configure command and all the options (this creates the settings file) without prompting
-    # the user or blocking the cmd execution
-
-    # Set the current directory to the agent dedicated one previously created.
-    Push-Location -Path $agentInstallationPath
-    # The actual install of the agent. Using NetworkService as default service logon account, and some other values that could be turned into paramenters if needed 
-    $serviceDisplayName = "VSTS Agent ($vstsAccount.$agentName)"
-    &start cmd.exe "/k $agentExePath /configure /RunningAsService /login:$vstsUser,$vstsUserPassword /serverUrl:$serverUrl ""/WindowsServiceLogonAccount:NT AUTHORITY\NetworkService"" /WindowsServiceLogonPassword /WindowsServiceDisplayName:""$serviceDisplayName"" /name:""$agentName"" /poolname:""$poolname"" /WorkFolder:$WorkFolder /StartMode:Automatic /force /NoPrompt &exit"
-
-    # Restore original current directory.
-    Pop-Location
-    
-    exit 0
+# Construct the agent folder under the specified drive.
+$installPathDir = $driveLetter + ":"
+try
+{
+    $agentInstallationPath = Join-Path -Path $installPathDir -ChildPath $agentName
 }
-throw "Failed to apply artifact"
+catch
+{
+    Write-Error "Failed to create the agent directory at $installPathDir."
+}
+
+# Create the directory for this agent.
+New-Item -ItemType Directory -Force -Path $agentInstallationPath 
+
+$destShellFolder = (new-object -com shell.application).namespace("$agentInstallationPath")
+$destShellFolder.CopyHere((new-object -com shell.application).namespace("$agentTempFolderName\agent.zip").Items(), 16)
+
+# Retrieve the path to the VSTSAgent.exe file.
+$agentExePath = [System.IO.Path]::Combine($agentInstallationPath, 'config.cmd')
+if (![System.IO.File]::Exists($agentExePath))
+{
+    Write-Error "File not found: $agentExePath"
+}
+
+# Call the agent with the configure command and all the options (this creates the settings file) without prompting
+# the user or blocking the cmd execution
+
+# Set the current directory to the agent dedicated one previously created.
+Push-Location -Path $agentInstallationPath
+# The actual install of the agent. Using --runasservice, and some other values that could be turned into paramenters if needed.
+$agentConfigArgs = "--unattended", "--url", $serverUrl, "--auth", "PAT", "--token", $vstsUserPassword, "--pool", $poolname, "--agent", $agentName, "--runasservice", "--windowslogonaccount", $windowsLogonAccount
+if ($windowsLogonPassword -ne "")
+{
+    $agentConfigArgs += "--windowslogonpassword", $windowsLogonPassword
+}
+if ($workDirectory -ne "")
+{
+    $agentConfigArgs += "--work", $workDirectory
+}
+& $agentExePath $agentConfigArgs
+if ($LASTEXITCODE -ne 0)
+{
+    Write-Error "Agent configuration failed with exit code: $LASTEXITCODE"
+}
+
+# Restore original current directory.
+Pop-Location
+    
+exit 0

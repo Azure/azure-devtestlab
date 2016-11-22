@@ -6,7 +6,7 @@
         "Windows",
         "IntelliJ"
     ],
-    "iconUri": "https://chocolatey.org/content/packageimages/intellijidea-community.2016.1.1.png",
+    "iconUri": "https://cdn.rawgit.com/AnthonyMastrean/chocolateypackages/17c712c0bf345eb3dcb8326049a8198230228008/public/icons/intellijidea.png",
     "targetOsType": "Windows",
     "runCommand": {
         "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', 'intellijidea-community', '\"')]"

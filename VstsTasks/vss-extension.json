@@ -1,0 +1,109 @@
+{
+    "manifestVersion": 1,
+    "id": "tasks",
+    "version": "1.0.9",
+    "name": "Azure DevTest Labs Tasks",
+    "publisher": "ms-azuredevtestlabs",
+    "description": "Collection of build/release tasks to interact with Azure DevTest Labs.",
+    "galleryFlags": [
+        "Public"
+    ],
+    "targets": [
+        {
+            "id": "Microsoft.VisualStudio.Services"
+        }
+    ],
+    "icons": {
+        "default": "images/azure-dtl128.png"
+    },
+    "categories": [
+        "Build and release"
+    ],
+    "tags": [
+        "azure",
+        "devtest",
+        "dtl",
+        "labs",
+        "tasks"
+    ],
+    "screenshots": [
+        {
+            "path": "screenshots/azure-dtl.png"
+        }
+    ],
+    "content": {
+        "details": {
+            "path": "docs/overview.md"
+        }
+    },
+    "links": {
+        "support": {
+            "uri": "https://social.msdn.microsoft.com/Forums/en-US/home?forum=AzureDevTestLabs"
+        },
+        "learn": {
+            "uri": "https://blogs.msdn.microsoft.com/devtestlab/2016/06/15/azure-devtest-labs-vsts-extension/"
+        }
+    },
+    "branding": {
+        "color": "rgb(34, 34, 34)",
+        "theme": "dark"
+    },
+    "scopes": [
+        "vso.build_execute",
+        "vso.serviceendpoint_manage"
+    ],
+    "contributions": [
+        {
+            "id": "azure-dtl-task-createCustomImage",
+            "type": "ms.vss-distributed-task.task",
+            "targets": [
+                "ms.vss-distributed-task.tasks"
+            ],
+            "properties": {
+                "name": "AzureDtlCreateCustomImage"
+            }
+        },
+        {
+            "id": "azure-dtl-task-createVM",
+            "type": "ms.vss-distributed-task.task",
+            "targets": [
+                "ms.vss-distributed-task.tasks"
+            ],
+            "properties": {
+                "name": "AzureDtlCreateVM"
+            }
+        },
+        {
+            "id": "azure-dtl-task-deleteVM",
+            "type": "ms.vss-distributed-task.task",
+            "targets": [
+                "ms.vss-distributed-task.tasks"
+            ],
+            "properties": {
+                "name": "AzureDtlDeleteVM"
+            }
+        }
+    ],
+    "files": [
+        {
+            "path": "AzureDtlCreateCustomImage",
+            "addressable": true
+        },
+        {
+            "path": "AzureDtlCreateVM",
+            "addressable": true
+        },
+        {
+            "path": "AzureDtlDeleteVM",
+            "addressable": true
+        },
+        {
+            "path": "images",
+            "addressable": true
+        },
+        {
+            "path": "screenshots",
+            "addressable": true
+        }
+    ]
+}

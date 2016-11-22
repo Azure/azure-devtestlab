@@ -1,0 +1,91 @@
+{
+    "id": "65B23B71-D518-4074-8370-CF84EBFC909B",
+    "name": "AzureDevTestLabsCreateVM",
+    "friendlyName": "Azure DevTest Labs Create VM",
+    "description": "Create an Azure DevTest Labs VM",
+    "category": "Deploy",
+    "visibility": [
+        "Build",
+        "Release"
+    ],
+    "author": "Microsoft Corporation",
+    "version": {
+        "Major": 1,
+        "Minor": 0,
+        "Patch": 13
+    },
+    "demands": [
+        "azureps"
+    ],
+    "minimumAgentVersion": "1.95.1",
+    "groups": [
+        {
+            "name": "output",
+            "displayName": "Output Variables",
+            "isExpanded": true
+        }
+    ],
+    "inputs": [
+        {
+            "name": "ConnectedServiceName",
+            "type": "connectedService:AzureRM",
+            "label": "Azure RM Subscription",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Azure Resource Manager subscription to configure before running."
+        },
+        {
+            "name": "LabId",
+            "type": "pickList",
+            "label": "Lab Name",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Name of an existing lab in which the lab VM will be created. This is a pick list generated as a result of selecting an **Azure RM Subscription**.",
+            "properties": {
+                "EditableOptions": "True"
+            }
+        },
+        {
+            "name": "TemplateName",
+            "type": "filePath",
+            "label": "Template Name",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Path to the ARM template. You can generate the ARM template from the **View ARM template** section when creating a Lab VM. Select the ARM template by browsing to the file that you have saved in your VSTS source control. It can be either a relative path in a build output or a relative path inside an artifacts package."
+        },
+        {
+            "name": "TemplateParameters",
+            "type": "multiLine",
+            "label": "Template Parameters",
+            "defaultValue": "-newVMName '$(<Enter VM Name>)' -userName '$(<Enter User Name>)' -password (ConvertTo-SecureString -String '$(<Enter User Password>)' -AsPlainText -Force)",
+            "required": false,
+            "helpMarkDown": "ARM template parameters to use. You can use any variable such as `$(Build.BuildNumber)` or `$(Release.ReleaseName)` when in a build or a release, respectively, for the `newVMName`. Similarly, you can create variables such as `User.Name` and `User.Password`, where the latter is marked as a _secret_."
+        },
+        {
+            "name": "OutputResourceId",
+            "type": "string",
+            "label": "Lab VM ID",
+            "required": false,
+            "defaultValue": "labVMId",
+            "groupName": "output",
+            "helpMarkDown": "Variable to capture the created lab VM ID. Default is `labVMId`. The variable can be referred as `$(labVMId)` in subsequent tasks. You can use a name other than the default."
+        }
+    ],
+    "sourceDefinitions": [
+        {
+            "target": "LabId",
+            "endpoint": "https://management.azure.com/subscriptions/$(authKey.SubscriptionId)/resources?$filter=resourceType+EQ+'Microsoft.DevTestLab/labs'&api-version=2015-01-01",
+            "selector": "jsonpath:$.value[*].name",
+            "keySelector": "jsonpath:$.value[*].id",
+            "authKey": "$(ConnectedServiceName)"
+        }
+    ],
+    "instanceNameFormat": "Create Azure DevTest Labs VM",
+    "execution": {
+        "AzurePowerShell": {
+            "target": "$(currentDirectory)\\task.ps1",
+            "argumentFormat": "",
+            "workingDirectory": "$(currentDirectory)"
+        }
+    }
+}
