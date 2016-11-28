@@ -7,7 +7,7 @@
         "YUM",
         "Linux"
     ],
-    "iconUri": "http://fedoraproject.org/w/uploads/7/77/Echo-package-48px.png",
+    "iconUri": "https://fedoraproject.org/w/uploads/7/77/Echo-package-48px.png",
     "targetOsType": "Linux",
     "parameters": {
         "packages": {
