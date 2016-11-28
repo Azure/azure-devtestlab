@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "id": "http://schema.management.azure.com/schemas/2015-01-01/dtlArtifacts.json",
+    "id": "http://schema.management.azure.com/schemas/2015-11-28/dtlArtifacts.json",
     "type": "object",
     "required": [ "title", "description", "targetOsType" ],
     "oneOf": [
@@ -14,14 +14,16 @@
     "properties": {
         "title": {
             "type": "string",
-            "description": "The title of your artifact."
+            "description": "The artifact's title."
         },
         "description": {
             "type": "string",
-            "description": "The description of your artifact."
+            "description": "The artifact's description."
         },
         "iconUri": {
-            "type": "string"
+            "type": "string",
+            "description": "An icon to identify and distinguish the artifact in a list. URL referencing the icon must use SSL.",
+            "pattern": "^https:\/\/.*|^$"
         },
         "tags": {
             "type": "array",
@@ -46,7 +48,7 @@
             "properties": {
                 "commandToExecute": {
                     "type": "string",
-                    "description": "Command to run"
+                    "description": "The command to run"
                 }
             },
             "additionalProperties": false
@@ -62,6 +64,7 @@
     "definitions": {
         "parameter": {
             "type": "object",
+            "description": "Input parameter definitions",
             "required": [ "type" ],
             "properties": {
                 "type": {
@@ -74,7 +77,7 @@
                 },
                 "defaultValue": {
                     "$ref": "#/definitions/parameterValueTypes",
-                    "description": "Default value to be used if one is not provided"
+                    "description": "Default value to be used, if a value is not provided"
                 },
                 "allowedValues": {
                     "type": "array",
@@ -82,7 +85,7 @@
                 },
                 "minLength": {
                     "type": "integer",
-                    "description": "Minimum number of characters that must be used"
+                    "description": "Minimum number of characters that can be used"
                 },
                 "maxLength": {
                     "type": "integer",
@@ -90,18 +93,17 @@
                 },
                 "allowEmpty": {
                     "type": "boolean",
-                    "description": "If an empty value is allowed, by default false"
+                    "description": "If an empty value is allowed - false by default"
                 },
                 "description": {
                     "type": "string",
-                    "description": "The description of the parameter"
+                    "description": "The parameter description"
                 },
                 "displayName": {
                     "type": "string",
-                    "description": "The display name of the parameter"
+                    "description": "The parameter display name"
                 }
-            },
-            "description": "Input parameter definitions"
+            }
         },
         "parameterTypes": {
             "enum": [
