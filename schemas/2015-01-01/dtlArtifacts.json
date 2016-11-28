@@ -23,7 +23,7 @@
         "iconUri": {
             "type": "string",
             "description": "An icon to identify and distinguish the artifact in a list. URL referencing the icon must use SSL.",
-            "pattern": "^https://.*"
+            "pattern": "(^https:\/\/.*)|(^$)"
         },
         "tags": {
             "type": "array",
