@@ -8,7 +8,7 @@
         "apt-get",
         "Linux"
     ],
-    "iconUri": "http://www.debian.org/favicon.ico",
+    "iconUri": "https://www.debian.org/favicon.ico",
     "targetOsType": "Linux",
     "parameters": {
         "packages": {
