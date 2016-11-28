@@ -6,7 +6,6 @@
     "tags": [
         "Windows"
     ],
-    "iconUri": "",
     "targetOsType": "Windows",
     "parameters": {},
     "runCommand": {

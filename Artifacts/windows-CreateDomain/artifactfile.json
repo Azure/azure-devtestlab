@@ -7,7 +7,6 @@
         "Domain",
         "AD"
     ],
-    "iconUri": "",
     "targetOsType": "Windows",
     "parameters": {
         "DomainName": {
