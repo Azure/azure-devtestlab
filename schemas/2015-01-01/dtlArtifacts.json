@@ -14,11 +14,11 @@
     "properties": {
         "title": {
             "type": "string",
-            "description": "The title of the artifact."
+            "description": "The artifact's title."
         },
         "description": {
             "type": "string",
-            "description": "The description of the artifact."
+            "description": "The artifact's description."
         },
         "iconUri": {
             "type": "string",

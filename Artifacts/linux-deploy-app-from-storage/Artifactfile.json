@@ -8,7 +8,6 @@
         "Linux",
         "Deploy"
     ],
-    "iconUri": "",
     "targetOsType": "Linux",
     "parameters": {
         "container": {
