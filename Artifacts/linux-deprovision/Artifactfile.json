@@ -6,7 +6,6 @@
     "tags": [
         "Linux"
     ],
-    "iconUri": "",
     "targetOsType": "Linux",
     "runCommand": {
         "commandToExecute": "['sh depro.sh']"

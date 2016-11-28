@@ -7,7 +7,6 @@
         "Linux",
         "Swapfile"
     ],
-    "iconUri": "",
     "targetOsType": "Linux",
     "parameters": {
         "size": {

@@ -8,7 +8,6 @@
         "Url",
         "Shortcut"
     ],
-    "iconUri": "",
     "targetOsType": "Windows",
     "parameters": {
         "ShortcutName": {

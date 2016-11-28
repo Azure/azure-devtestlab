@@ -7,7 +7,6 @@
         "Bash",
         "Linux"
     ],
-    "iconUri": "",
     "targetOsType": "Linux",
     "parameters": {
         "scriptFileUris": {

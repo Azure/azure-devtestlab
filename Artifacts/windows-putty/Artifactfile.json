@@ -7,7 +7,6 @@
         "Windows",
         "PuTTY"
     ],
-    "iconUri": "",
     "targetOsType": "Windows",
     "runCommand": {
         "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', 'putty', '\"')]"
