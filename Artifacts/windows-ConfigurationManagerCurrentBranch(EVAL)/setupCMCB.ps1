@@ -8,6 +8,12 @@ cd $($PSScriptRoot)
 #Check if System is Domain-Joined
 if((gwmi win32_computersystem).partofdomain -eq $true)
 {
+	#Download RZUpdate if missing...
+	if((Test-Path "$($env:temp)\RZUpdate.exe") -eq $false) 
+	{ 
+		(New-Object System.Net.WebClient).DownloadFile("https://ruckzuck.azurewebsites.net/DL/RZUpdate.exe", "$($env:temp)\RZUpdate.exe") 
+	}
+
  #Check if an unattend File already exists; otherwise create a new one...
  if(!(Test-Path c:\sccmsetup.ini))
 	{
@@ -36,7 +42,7 @@ if((gwmi win32_computersystem).partofdomain -eq $true)
 		'DistributionPointInstallIIS=0' | out-file -filepath C:\sccmsetup.ini -append  
 		'[SQLConfigOptions]' | out-file -filepath C:\sccmsetup.ini -append 
 		"SQLServerName=$($hostname)" | out-file -filepath C:\sccmsetup.ini -append 
-		'DatabaseName=CM_TST' | out-file -filepath C:\sccmsetup.ini -append 
+		'DatabaseName=CM_' + $SiteCode | out-file -filepath C:\sccmsetup.ini -append 
 		'SQLSSBPort=4022' | out-file -filepath C:\sccmsetup.ini -append 
 		'[HierarchyExpansionOption]' | out-file -filepath C:\sccmsetup.ini -append 
 	}
@@ -53,24 +59,27 @@ if((gwmi win32_computersystem).partofdomain -eq $true)
     Stop-Service 'MSSQLSERVER' -Force
     Start-Service 'MSSQLSERVER'
 
-	#Install ADK10 
-    & ".\ADK10_setup.exe"
+	#Install ADK10
+	$proc = (Start-Process -FilePath "$($env:temp)\RZUpdate.exe" -ArgumentList "ADK10")
+	$proc.WaitForExit()
+
     if((test-path "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots") -eq $false) { exit 2 }
     
 	#Cleanup Files from previous attempts..
 	if(Test-Path "$($env:temp)\SMSSETUP") { Remove-Item "$($env:temp)\SMSSETUP" -Force -Recurse  }
     
 	#Install Configuration Manager
-	& ".\CMCB_setup.exe"
+	$proc = (Start-Process -FilePath "$($env:temp)\RZUpdate.exe" -ArgumentList "Configuration Manager Current Branch (EVAL) ")
+	$proc.WaitForExit()
+
     if((test-path "HKLM:\SOFTWARE\Microsoft\SMS\COMPONENTS") -eq $false) { exit 3 }
     
+	#Cleanup Files..
+	if(Test-Path "$($env:temp)\SMSSETUP") { Remove-Item "$($env:temp)\SMSSETUP" -Force -Recurse  }
+	
     #Add Tools
-    & ".\ConfigMgrTools_setup.exe"
-    & ".\CollectionCommander_setup.exe"
-    & ".\SCCMCliCtr_setup.exe"
-    & ".\RuckZuck4SCCM_setup.exe"
-    & ".\SCUP_setup.exe"
-    & ".\RightClickTools_setup.exe"
+	$proc = (Start-Process -FilePath "$($env:temp)\RZUpdate.exe" -ArgumentList "ConfigMgrTools;Collection Commander;SCCMCliCtr;RuckZuck import for Configuration Manager;SCUP;Right Click Tools")
+	$proc.WaitForExit()
 	
     #Add Domain Admins as Full Admins
     #import-module (Join-Path $(Split-Path $env:SMS_ADMIN_UI_PATH) ConfigurationManager.psd1) 
