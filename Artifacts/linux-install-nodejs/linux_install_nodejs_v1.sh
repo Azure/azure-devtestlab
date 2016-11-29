@@ -7,7 +7,7 @@ if [ -f /usr/bin/apt ] ; then
 
     apt-get -y update
     
-    curl --silent --location https://deb.nodesource.com/setup_0.12 | bash -
+    curl --silent --location https://deb.nodesource.com/setup_4.x | bash -
     apt-get -y install nodejs
     
 elif [ -f /usr/bin/yum ] ; then 
