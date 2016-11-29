@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "id": "http://schema.management.azure.com/schemas/2015-11-28/dtlArtifacts.json",
+    "id": "http://schema.management.azure.com/schemas/2016-11-28/dtlArtifacts.json",
     "type": "object",
     "required": [ "title", "description", "targetOsType" ],
     "oneOf": [
