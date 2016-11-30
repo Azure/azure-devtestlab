@@ -8,7 +8,7 @@
         "AzureSDK",
         "PowerShell"
     ],
-    "iconUri": "http://i.microsoft.com/global/ImageStore/PublishingImages/logos/56x56/windows_symbol_clr_56x56.png",
+    "iconUri": "https://i.microsoft.com/global/ImageStore/PublishingImages/logos/56x56/windows_symbol_clr_56x56.png",
     "targetOsType": "Windows",
     "runCommand": {
         "commandToExecute": "powershell.exe -ExecutionPolicy bypass -File StartChocolatey.ps1 -ProductId WindowsAzurePowershellGet"

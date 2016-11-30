@@ -8,7 +8,7 @@
     "vim",
     "Editors"
   ],
-  "iconUri": "http://www.vim.org/images/vim_shortcut.ico",
+  "iconUri": "https://github.com/Azure/azure-devtestlab/raw/master/Artifacts/windows-gvim-cream/vim.ico",
   "parameters": {
   "VimInstallerPath": {
     "type": "string",
