@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 # Check if docker is already installed.
 docker -v
 installationStatus=$(echo $?)
