@@ -670,6 +670,8 @@ function CreateFileExplorerDesktopShortcut
 
 try
 {
+    InitializeFolders
+
     # extract the leaf node/name of the git repo url.
     $gitRepoLeaf = GetGitRepoLeaf -gitRepoLocation $GitRepoLocation
 
@@ -682,9 +684,6 @@ try
     # ensure that the git repo leaf is appended to the local repo path (e.g. c:\Repos\coreclr).
     $GitLocalRepoLocation = Join-Path -Path $GitLocalRepoLocation -ChildPath $gitRepoLeaf
 
-
-    #
-    InitializeFolders
 
     #
     DisplayArgValues
@@ -714,15 +713,23 @@ try
 
 catch
 {
-    if (($null -ne $Error[0]) -and ($null -ne $Error[0].Exception) -and ($null -ne $Error[0].Exception.Message))
+    try
     {
-        $errMsg = $Error[0].Exception.Message
-        WriteLog $errMsg
-        Write-Host $errMsg
-    }
+        if (($null -ne $Error[0]) -and ($null -ne $Error[0].Exception) -and ($null -ne $Error[0].Exception.Message))
+        {
+            $errMsg = $Error[0].Exception.Message
+            WriteLog $errMsg
+            Write-Host $errMsg
+        }
 
-    # Important note: Throwing a terminating error (using $ErrorActionPreference = "stop") still returns exit 
-    # code zero from the powershell script. The workaround is to use try/catch blocks and return a non-zero 
-    # exit code from the catch block. 
-    return -1
+        # Important note: Throwing a terminating error (using $ErrorActionPreference = "stop") still returns exit 
+        # code zero from the powershell script. The workaround is to use try/catch blocks and return a non-zero 
+        # exit code from the catch block. 
+        return -1
+    }
+    catch
+    {
+        # Trying to log a message threw an exception
+        return -2
+    }
 }

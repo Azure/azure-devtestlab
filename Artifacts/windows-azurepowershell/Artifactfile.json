@@ -1,5 +1,5 @@
 {
-    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
     "title": "Azure PowerShell",
     "description": "Installs the latest version of Microsoft Azure PowerShell",
     "publisher": "Microsoft",
@@ -8,7 +8,7 @@
         "AzureSDK",
         "PowerShell"
     ],
-    "iconUri": "http://i.microsoft.com/global/ImageStore/PublishingImages/logos/56x56/windows_symbol_clr_56x56.png",
+    "iconUri": "https://i.microsoft.com/global/ImageStore/PublishingImages/logos/56x56/windows_symbol_clr_56x56.png",
     "targetOsType": "Windows",
     "runCommand": {
         "commandToExecute": "powershell.exe -ExecutionPolicy bypass -File StartChocolatey.ps1 -ProductId WindowsAzurePowershellGet"

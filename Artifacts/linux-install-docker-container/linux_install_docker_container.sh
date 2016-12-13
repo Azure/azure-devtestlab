@@ -1,30 +1,21 @@
 #!/bin/bash
 
-set -e
-
 ###
 # Arguments:
 #
 # $1    Container name
 # $2    Docker run options
 # $3    Image name
-# 4$    Additional image arguments
+# $4    Additional image arguments
 #
 ###
 
-if [ -f /usr/bin/apt ] ; then
-    echo "Using APT package manager"
+# Check if docker is already installed.
+docker -v
+installationStatus=$(echo $?)
 
-    apt-get -y update
-    apt-get -y install docker.io
-elif [ -f /usr/bin/yum ] ; then 
-    echo "Using YUM package manager"
-
-    yum -y update
-    yum install -y docker
-
-    systemctl start docker
-    systemctl enable docker
+if [ $installationStatus -eq 127 ] ; then
+    wget -qO- https://get.docker.com/ | sh
 fi
 
 if [ -z "$1" ] ; then
@@ -33,8 +24,8 @@ else
     NAME_ARG=" --name $1"
 fi
 
-# Docker run syntax: docker run [OPTIONS] IMAGE:TAG [COMMAND] [ARG...]
-#                               |__1-2__| |___3___| |_______ 4_______|
+# Docker run syntax: docker run [OPTIONS] IMAGE [COMMAND] [ARG...]
+#                               |__1-2__| |_3_| |_______ 4_______|
 
 cmd="docker run $NAME_ARG $2 -d $3 $4"
 
