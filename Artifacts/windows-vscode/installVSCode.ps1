@@ -23,7 +23,7 @@ $vscodeSetup = "${env:Temp}\VSCodeSetup.exe"
 
 try
 {
-    Invoke-WebRequest -Uri $codeSetupUrl -OutFile $vscodeSetup
+    (New-Object System.Net.WebClient).DownloadFile($codeSetupUrl, $vscodeSetup)
 }
 catch
 {
@@ -32,7 +32,7 @@ catch
 
 try
 {
-    Start-Process -FilePath $vscodeSetup -ArgumentList "/VERYSILENT /LOADINF=$infPath"
+    Start-Process -FilePath $vscodeSetup -ArgumentList "/VERYSILENT /MERGETASKS=!runcode /LOADINF=$infPath"
 }
 catch
 {
