@@ -3,7 +3,6 @@ Azure PowerShell
 This extension does the following – 
 
  - Installs Chocolatey.
- - Installs WebPICmd (Web Platform Installer Command Line) via Chocolatey.
  - Installs latest available version of Microsoft Azure PowerShell.
 
 Logs
