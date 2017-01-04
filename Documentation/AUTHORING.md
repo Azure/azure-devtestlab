@@ -15,7 +15,7 @@ The following example shows the sections that make up the basic structure of a d
 file.
 
     {
-      "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+      "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
       "title": "",
       "description": "",
       "iconUri": "",
