@@ -95,10 +95,11 @@ The following list shows common functions.
 The following example shows how to use expression and functions to construct a value. 
 
     runCommand": { 
-         "commandToExecute": "[concat('powershell.exe -File startChocolatey.ps1'
-    , ' -RawPackagesList ', parameters('packages')
-    , ' -Username ', parameters('installUsername')
-    , ' -Password ', parameters('installPassword'))]" 
+      "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1'
+        , ' -RawPackagesList ', parameters('packages')
+        , ' -Username ', parameters('installUsername')
+        , ' -Password ', parameters('installPassword')
+        , '\"')]" 
     }
 
 -------------------------------------------------------------------------------
