@@ -16,7 +16,11 @@
     },
     "imageOsType": {
       "type": "string",
-      "defaultValue": "windows",
+      "defaultValue": "Windows",
+      "allowedValues": [
+        "Linux",
+        "Windows"
+      ],
       "metadata": {
         "description": "Specifies the OS type of the VHD. Currently 'Windows' and 'Linux' are the only supported values."
       }

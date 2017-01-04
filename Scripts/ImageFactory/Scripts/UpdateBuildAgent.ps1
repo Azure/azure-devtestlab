@@ -6,7 +6,7 @@
     [Parameter(Mandatory=$true, HelpMessage="The name of the Image Factory resource group")]
     [string] $ResourceGroupName,
     
-    [Parameter(Mandatory=$true, HelpMessage="The name of the Image Factory Dev Test Lab")]
+    [Parameter(Mandatory=$true, HelpMessage="The name of the Image Factory DevTest Lab")]
     [string] $DevTestLabName,
 
 	[Parameter(Mandatory=$true, HelpMessage="The name of the build agent")]
@@ -33,6 +33,6 @@ if ($agentVM -ne $null) {
     }
 }
 else {
-    Write-Error "##[error]$BuildAgent was not found in the Dev Test Lab, unable to update the agent"
+    Write-Error "##[error]$BuildAgent was not found in the DevTest Lab, unable to update the agent"
 }
 

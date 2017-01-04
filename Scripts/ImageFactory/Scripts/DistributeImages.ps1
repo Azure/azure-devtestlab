@@ -21,8 +21,8 @@ param
 $ConfigurationLocation = (Resolve-Path $ConfigurationLocation).Path
 
 $scriptFolder = Split-Path $Script:MyInvocation.MyCommand.Path
-$ModulePath = Join-Path $scriptFolder "DistributionHelpers.psm1"
-Import-Module $ModulePath
+$modulePath = Join-Path $scriptFolder "DistributionHelpers.psm1"
+Import-Module $modulePath
 SelectSubscription $SubscriptionId
 
 #get the list of labs from the json file
@@ -125,7 +125,7 @@ foreach ($targetLab in $labInfo.Labs){
             $sourceObject = $sourceImageInfos[$imageName]
 
             #make sure the destination has a generatedvhds container
-            $destContext = New-AzureStorageContext –StorageAccountName $targetStorageAcctName -StorageAccountKey $targetStorageKey
+            $destContext = New-AzureStorageContext -StorageAccountName $targetStorageAcctName -StorageAccountKey $targetStorageKey
             $existingContainer = Get-AzureStorageContainer -Context $destContext -Name 'generatedvhds' -ErrorAction Ignore
             if($existingContainer -eq $null) 
             {
@@ -159,12 +159,12 @@ $jobs = @()
 SaveProfile
 
 $copyVHDBlock = {
-    Param($ModulePath, $copyObject, $scriptFolder, $SubscriptionId)
-    Import-Module $ModulePath
+    Param($modulePath, $copyObject, $scriptFolder, $SubscriptionId)
+    Import-Module $modulePath
     LoadProfile
 
-    $srcContext = New-AzureStorageContext –StorageAccountName $copyObject.sourceStorageAccountName -StorageAccountKey $copyObject.sourceStorageAccountKey 
-    $destContext = New-AzureStorageContext –StorageAccountName $copyObject.targetStorageAccountName -StorageAccountKey $copyObject.targetStorageKey
+    $srcContext = New-AzureStorageContext -StorageAccountName $copyObject.sourceStorageAccountName -StorageAccountKey $copyObject.sourceStorageAccountKey 
+    $destContext = New-AzureStorageContext -StorageAccountName $copyObject.targetStorageAccountName -StorageAccountKey $copyObject.targetStorageKey
     $copyHandle = Start-AzureStorageBlobCopy -srcUri $copyObject.sourceVHDLocation -SrcContext $srcContext -DestContainer 'generatedvhds' -DestBlob $copyObject.fileName -DestContext $destContext -Force
 
     Write-Output ("Started copying " + $copyObject.fileName + " to " + $copyObject.targetStorageAccountName + " at " + (Get-Date -format "h:mm:ss tt"))
@@ -228,7 +228,7 @@ foreach ($copyObject in $thingsToCopy){
 
     $jobIndex++
     Write-Output "Creating background task to distribute image $jobIndex of $copyCount"
-    $jobs += Start-Job -ScriptBlock $copyVHDBlock -ArgumentList $ModulePath, $copyObject, $scriptFolder, $SubscriptionId
+    $jobs += Start-Job -ScriptBlock $copyVHDBlock -ArgumentList $modulePath, $copyObject, $scriptFolder, $SubscriptionId
 }
 
 if($jobs.Count -ne 0)

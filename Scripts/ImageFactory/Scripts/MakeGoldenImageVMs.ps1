@@ -53,8 +53,8 @@ function IsVirtualMachineReady ($vmName, $status)
 #resolve any relative paths in ConfigurationLocation 
 $ConfigurationLocation = (Resolve-Path $ConfigurationLocation).Path
 
-$ModulePath = Join-Path (Split-Path ($Script:MyInvocation.MyCommand.Path)) "DistributionHelpers.psm1"
-Import-Module $ModulePath
+$modulePath = Join-Path (Split-Path ($Script:MyInvocation.MyCommand.Path)) "DistributionHelpers.psm1"
+Import-Module $modulePath
 $scriptFolder = Split-Path $Script:MyInvocation.MyCommand.Path
 $makeVmScriptLocation = Join-Path $scriptFolder "MakeVM.ps1"
 $imageListLocation = Join-Path $ConfigurationLocation "GoldenImages"
@@ -92,7 +92,7 @@ foreach ($file in $files)
     $usedVmNames += $vmName
 
     Write-Output "Starting job to create a VM named $vmName for $imagePath"
-    $jobs += Start-Job -Name $file.Name -FilePath $makeVmScriptLocation -ArgumentList $ModulePath, $file.FullName, $ResourceGroupName, $DevTestLabName, $vmName, $imagePath, $machineUserName, $machinePassword, $vmSize
+    $jobs += Start-Job -Name $file.Name -FilePath $makeVmScriptLocation -ArgumentList $modulePath, $file.FullName, $ResourceGroupName, $DevTestLabName, $vmName, $imagePath, $machineUserName, $machinePassword, $vmSize
 }
 
 try{

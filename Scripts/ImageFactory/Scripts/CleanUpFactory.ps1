@@ -1,21 +1,21 @@
 ﻿param
 (
-    [Parameter(Mandatory=$true, HelpMessage="The name of the Dev Test Lab resource group")]
+    [Parameter(Mandatory=$true, HelpMessage="The name of the DevTest Lab resource group")]
     [string] $ResourceGroupName,
 
-    [Parameter(Mandatory=$true, HelpMessage="The name of the Dev Test Lab to clean up")]
+    [Parameter(Mandatory=$true, HelpMessage="The name of the DevTest Lab to clean up")]
     [string] $DevTestLabName
 )
-$ModulePath = Join-Path (Split-Path ($Script:MyInvocation.MyCommand.Path)) "DistributionHelpers.psm1"
-Import-Module $ModulePath
+$modulePath = Join-Path (Split-Path ($Script:MyInvocation.MyCommand.Path)) "DistributionHelpers.psm1"
+Import-Module $modulePath
 SaveProfile
 
 $allVms = Find-AzureRmResource -ResourceType "Microsoft.DevTestLab/labs/virtualMachines" -ResourceNameContains $DevTestLabName
 $jobs = @()
 
 $deleteVmBlock = {
-    Param($ModulePath, $vmName, $resourceId)
-    Import-Module $ModulePath
+    Param($modulePath, $vmName, $resourceId)
+    Import-Module $modulePath
     LoadProfile
     Write-Output "##[section]Deleting VM: $vmName"
     Remove-AzureRmResource -ResourceId $resourceId -ApiVersion 2016-05-15 -Force
@@ -24,8 +24,8 @@ $deleteVmBlock = {
 
 # Script block for deleting images
 $deleteImageBlock = {
-    Param($ModulePath, $imageResourceName, $resourceGroupName)
-    Import-Module $ModulePath
+    Param($modulePath, $imageResourceName, $resourceGroupName)
+    Import-Module $modulePath
     LoadProfile
     deleteImage $resourceGroupName $imageResourceName
 }
@@ -41,7 +41,7 @@ foreach ($currentVm in $allVms){
     if(($provisioningState -ne "Succeeded") -and ($provisioningState -ne "Creating")){
         #these VMs failed to provision. log an error to make sure they get attention from the lab owner then delete them
         Write-Error "$vmName failed to provision properly. Deleting it from Factory"
-        $jobs += Start-Job -ScriptBlock $deleteVmBlock -ArgumentList $ModulePath, $vmName, $currentVm.ResourceId
+        $jobs += Start-Job -ScriptBlock $deleteVmBlock -ArgumentList $modulePath, $vmName, $currentVm.ResourceId
     }
     elseif(!$factoryIgnoreTag -and !$imagePathTag){
         #if a VM has neither the ignore or imagePath then log an error
@@ -52,7 +52,7 @@ foreach ($currentVm in $allVms){
     }
     else {
         Write-Output "Starting job to delete VM $vmName"
-        $jobs += Start-Job -ScriptBlock $deleteVmBlock -ArgumentList $ModulePath, $vmName, $currentVm.ResourceId
+        $jobs += Start-Job -ScriptBlock $deleteVmBlock -ArgumentList $modulePath, $vmName, $currentVm.ResourceId
     }
 }
 
@@ -61,7 +61,7 @@ $bustedLabCustomImages = Get-AzureRmResource -ResourceName $DevTestLabName -Reso
 
 # Delete the custom images we found in the search above
 foreach ($imageToDelete in $bustedLabCustomImages) {
-    $jobs += Start-Job -Name $imageToDelete.ResourceName -ScriptBlock $deleteImageBlock -ArgumentList $ModulePath, $imageToDelete.ResourceName, $imageToDelete.ResourceGroupName
+    $jobs += Start-Job -Name $imageToDelete.ResourceName -ScriptBlock $deleteImageBlock -ArgumentList $modulePath, $imageToDelete.ResourceName, $imageToDelete.ResourceGroupName
 }
 
 if($jobs.Count -ne 0)

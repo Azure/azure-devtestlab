@@ -7,8 +7,8 @@
     [string] $ResourceGroupName
 )
 
-$ModulePath = Join-Path (Split-Path ($Script:MyInvocation.MyCommand.Path)) "DistributionHelpers.psm1"
-Import-Module $ModulePath
+$modulePath = Join-Path (Split-Path ($Script:MyInvocation.MyCommand.Path)) "DistributionHelpers.psm1"
+Import-Module $modulePath
 
 SaveProfile
 
@@ -16,8 +16,8 @@ $jobs = @()
 
 # Script block for deleting images
 $createImageBlock = {
-    Param($ModulePath, $imageToCreate)
-    Import-Module $ModulePath
+    Param($modulePath, $imageToCreate)
+    Import-Module $modulePath
     LoadProfile
 
     $imageName = $imageToCreate.imagename 
@@ -91,7 +91,7 @@ foreach ($currentVm in $allVms){
         }
         else{
             Write-Output "Starting job to create image $newimagename"
-            $jobs += Start-Job -Name $imageToCreate.ImageName -ScriptBlock $createImageBlock -ArgumentList $ModulePath, $imageToCreate
+            $jobs += Start-Job -Name $imageToCreate.ImageName -ScriptBlock $createImageBlock -ArgumentList $modulePath, $imageToCreate
         }
     }
 }

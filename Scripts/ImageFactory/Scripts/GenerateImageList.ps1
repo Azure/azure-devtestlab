@@ -83,10 +83,10 @@ $imageListLocation = (Resolve-Path $ImageDefinitionsLocation).Path
 
 # get a list of artifacts & load up names/descriptions into a hashtable for reference later
 $artifactDescriptions = @{}
-$ALList = $ArtifactLocations | ForEach-Object {$_ | Resolve-Path | Get-ChildItem -Recurse -Filter "ArtifactFile.json"}
-foreach ($AL in $ALList) {
-    $ALDetails = (Get-Content $AL.FullName -Raw | ConvertFrom-Json)
-    $artifactDescriptions.add($AL.Directory.Name, @{Description=$ALDetails.description; IconURI=$ALDetails.iconUri; TargetOS=$ALDetails.targetOsType})
+$artifactLocationList = $ArtifactLocations | ForEach-Object {$_ | Resolve-Path | Get-ChildItem -Recurse -Filter "ArtifactFile.json"}
+foreach ($artifactLocation in $artifactLocationList) {
+    $ArtifactDetails = (Get-Content $artifactLocation.FullName -Raw | ConvertFrom-Json)
+    $artifactDescriptions.add($artifactLocation.Directory.Name, @{Description=$ArtifactDetails.description; IconURI=$ArtifactDetails.iconUri; TargetOS=$ArtifactDetails.targetOsType})
 }
 
 # get the list of labs from the json file
