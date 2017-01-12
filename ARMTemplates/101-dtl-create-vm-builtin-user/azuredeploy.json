@@ -3,25 +3,25 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "newVMName": {
-      "type": "string",
+      "type": "String",
       "metadata": {
         "description": "The name of the new vm to be created."
       }
     },
     "existingLabName": {
-      "type": "string",
+      "type": "String",
       "metadata": {
         "description": "The name of an existing lab where the new vm will be created."
       }
     },
     "existingCustomImageId": {
-      "type": "string",
+      "type": "String",
       "metadata": {
         "description": "The id of an existing custom image which will be used to create the new vm. The specified image must exist in the lab (identified via the 'existingLabName' parameter)."
       }
     },
     "newVMSize": {
-      "type": "string",
+      "type": "String",
       "metadata": {
         "description": "The size of the new vm to be created."
       }
