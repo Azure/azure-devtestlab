@@ -1,7 +1,7 @@
 {
-  "itemDisplayName": "Create a new lab in Azure DevTest Labs",
-  "description": "This template creates a new DevTest Lab / DTL instance",
-  "summary": "This template creates a new DevTest Lab instance",
-  "githubUsername": "mithunshanbhag",
+  "itemDisplayName": "Create a new lab in Azure DevTest Labs 0 grwann",
+  "description": "This template creates a new DevTest Lab / DTL instancegrwann",
+  "summary": "This template creates a new DevTest Lab instancegrwann",
+  "githubUsername": "grwann",
   "dateUpdated": "2015-11-11"
 }
