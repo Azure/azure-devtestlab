@@ -1,7 +1,8 @@
+
 {
-  "itemDisplayName": "Create a new VM in a lab",
-  "description": "This template creates a new VM in a DevTestLab / DTL instance",
-  "summary": "This template creates a new VM in a DevTestLab instance",
+  "itemDisplayName": "GRWANN - CASING TEST - Deploy a Virtual Machine with Custom Data",
+  "description": "This template allows you to create a Virtual Machine with Custom Data passed down to the VM. This template also deploys a Storage Account, Virtual Network, Public IP addresses and a Network Interface.",
+  "summary": "Deploy a Virtual Machine with Custom Data",
   "githubUsername": "grwann",
-  "dateUpdated": "2015-11-11"
+  "dateUpdated": "2016-04-07"
 }
