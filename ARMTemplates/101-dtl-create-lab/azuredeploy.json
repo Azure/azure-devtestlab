@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "newLabName": {
-      "type": "string",
+      "type": "STring",
       "metadata": {
         "description": "The name of the new lab instance to be created"
       }
