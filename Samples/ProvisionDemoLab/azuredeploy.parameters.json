@@ -17,9 +17,6 @@
     "allowedVmSizes": {
       "value": "\"Standard_DS1_v2\", \"Standard_DS11_v2\""
     },
-    "artifactRepoUri": {
-        "value": "https://xiaoying.visualstudio.com/DefaultCollection/_git/azure-devtestlabsdemo"
-    },
     "artifactRepoFolder": {
         "value": "AzureConDemo"
     },
@@ -28,12 +25,6 @@
     },
     "artifactRepoDisplayName": {
         "value": "FabrikamPrivateRepo"
-    },
-    "artifactRepoSecurityToken": {
-        "value": "r6q3xzzswszoync4qm7kn3abrovvbox3ar4zabzmkzortjiiutua" 
-    },
-    "artifactRepoType": {
-        "value": "VsoGit"
     },
     "pilotVMName": {
       "value": "TestBox001"

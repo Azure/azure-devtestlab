@@ -59,7 +59,6 @@
             }
         }
     },
-
     "definitions": {
         "parameter": {
             "type": "object",
