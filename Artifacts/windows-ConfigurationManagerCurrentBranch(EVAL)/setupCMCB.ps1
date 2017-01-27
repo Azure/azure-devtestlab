@@ -69,7 +69,7 @@ if((gwmi win32_computersystem).partofdomain -eq $true)
 	if(Test-Path "$($env:temp)\SMSSETUP") { Remove-Item "$($env:temp)\SMSSETUP" -Force -Recurse  }
     
 	#Install Configuration Manager
-	$proc = (Start-Process -FilePath "$($env:temp)\RZUpdate.exe" -ArgumentList "Configuration Manager Current Branch (EVAL) ")
+	$proc = (Start-Process -FilePath "$($env:temp)\RZUpdate.exe" -ArgumentList "`"Configuration Manager Current Branch (EVAL)`"")
 	$proc.WaitForExit()
 
     if((test-path "HKLM:\SOFTWARE\Microsoft\SMS\COMPONENTS") -eq $false) { exit 3 }

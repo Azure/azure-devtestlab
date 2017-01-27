@@ -3,7 +3,7 @@ This Artifact will install System Center Configuration Manager Technical-Preview
 More Details on: https://docs.microsoft.com/en-us/sccm/core/get-started/technical-preview 
 
 ### Requirements:
-Tested with the base Image: "SQL Server 2014 SP1 Standard on Windows Server 2012 R2". If you choose another Image, make sure that the following componets are installed:
+Tested with the base Image: "SQL Server 2016 SP1 Standard on Windows Server 2016". If you choose another Image, make sure that the following componets are installed:
 - Windows Server 2012 R2 (or newer)
 - .NET 3.5
 - .NET 4.5
