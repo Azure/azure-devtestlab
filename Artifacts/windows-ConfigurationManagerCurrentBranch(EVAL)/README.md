@@ -1,5 +1,5 @@
 #System Center Configuration Manager CurrentBranch (EVAL)
-This Artifact will install System Center Configuration Manager CurrentBranch (Build 1606) Evaluation Edition (usable for 180 Days).
+This Artifact will install System Center Configuration Manager CurrentBranch Evaluation Edition (usable for 180 Days).
 
 ### Requirements:
 Tested with the base Image: "SQL Server 2014 SP1 Standard on Windows Server 2012 R2". If you choose another Image, make sure that the following componets are installed:

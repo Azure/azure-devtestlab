@@ -1,6 +1,6 @@
 {
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
-    "title": "Configuration Manager Current Branch",
+    "title": "Configuration Manager Technical Preview",
     "description": "FOR TESTING ONLY! ; This Product requires SQL Server, .NET 3.5 and .NET 4.5 as Prerequisite ; With System Center Configuration Manager, you can manage PCs and servers, keeping software up-to-date, setting configuration and security policies, and monitoring system status while giving your employees access to corporate applications on the devices that they choose.",
     "publisher": "Microsoft",
     "tags": [
