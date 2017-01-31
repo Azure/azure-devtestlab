@@ -59,6 +59,28 @@
         "userName": "[parameters('userName')]",
         "password": "[parameters('password')]",
         "isAuthenticationWithSshKey": false,
+        "artifacts": 
+                [
+                  /* Configure WinRm using Windows Run Powershell artifact */
+                  {
+                    "artifactId": 
+                        "[resourceId('Microsoft.DevTestLab/labs/artifactSources/artifacts', parameters('labName'), 'Public Repo', 'windows-run-powershell')]",
+                    "parameters": [
+                      {
+                        "name": "scriptFileUris",
+                        "value": "[parameters('Run_PowerShell.scriptFileUris')]"
+                      },
+                      {
+                        "name": "scriptToRun",
+                        "value": "[parameters('Run_PowerShell.scriptToRun')]"
+                      },
+                      {
+                        "name": "scriptArguments",
+                        "value": "[variables('hostDNSNameScriptArgument')]"
+                      }
+                    ]
+                  }
+                ],        
         "labSubnetName": "[variables('labSubnetName')]",
         "disallowPublicIpAddress": true,
         "storageType": "Standard",
@@ -76,28 +98,6 @@
       }
     }
   ],
-"artifacts": 
-        [
-          /* Configure WinRm using Windows Run Powershell artifact */
-          {
-            "artifactId": 
-                "[resourceId('Microsoft.DevTestLab/labs/artifactSources/artifacts', parameters('labName'), 'Public Repo', 'windows-run-powershell')]",
-            "parameters": [
-              {
-                "name": "scriptFileUris",
-                "value": "[parameters('Run_PowerShell.scriptFileUris')]"
-              },
-              {
-                "name": "scriptToRun",
-                "value": "[parameters('Run_PowerShell.scriptToRun')]"
-              },
-              {
-                "name": "scriptArguments",
-                "value": "[variables('hostDNSNameScriptArgument')]"
-              }
-            ]
-          }
-        ],
   "outputs": {
     "labVMId": {
       "type": "string",
