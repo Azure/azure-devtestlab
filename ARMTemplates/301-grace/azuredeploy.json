@@ -1,0 +1,107 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+     "Run_PowerShell.scriptFileUris": {
+      "type": "string",
+      "defaultValue": "[[\"https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/201-vm-winrm-windows/ConfigureWinRM.ps1\", \"https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/201-vm-winrm-windows/makecert.exe\", \"https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/201-vm-winrm-windows/winrmconf.cmd\"]"
+    },
+    "Run_PowerShell.scriptToRun": {
+      "type": "string",
+      "defaultValue": "ConfigureWinRM.ps1"
+    },
+    "newVMName": {
+      "type": "string",
+      "defaultValue": "winRmTest"
+    },
+    "labName": {
+      "type": "string",
+      "defaultValue": "GracesARMTest"
+    },
+    "size": {
+      "type": "string",
+      "defaultValue": "Standard_A0"
+    },
+    "userName": {
+      "type": "string",
+      "defaultValue": "grwann"
+    },
+    "password": {
+      "type": "securestring"
+    }
+  },
+  "variables": {
+    "labSubnetName": "Subnet",
+    "labVirtualNetworkId": "[resourceId('Microsoft.DevTestLab/labs/virtualnetworks', parameters('labName'), variables('labVirtualNetworkName'))]",
+    "labVirtualNetworkName": "MyVNET",
+    "vmId": "[resourceId ('Microsoft.DevTestLab/labs/virtualmachines', parameters('labName'), parameters('newVMName'))]",
+    "vmName": "[concat(parameters('labName'), '/', parameters('newVMName'))]",
+    "hostDNSNameScriptArgument": 
+        "[concat('*.',resourceGroup().location,'.cloudapp.azure.com')]"    
+  },
+  "resources": [
+    {
+      "apiVersion": "2016-05-15",
+      "type": "Microsoft.DevTestLab/labs/virtualmachines",
+      "name": "[variables('vmName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "labVirtualNetworkId": "[variables('labVirtualNetworkId')]",
+        "notes": "HPC Pack 2012 R2 Compute Node on Windows Server 2012 R2",
+        "galleryImageReference": {
+          "offer": "WindowsServerHPCPack",
+          "publisher": "MicrosoftWindowsServerHPCPack",
+          "sku": "2012R2CN",
+          "osType": "Windows",
+          "version": "latest"
+        },
+        "size": "[parameters('size')]",
+        "userName": "[parameters('userName')]",
+        "password": "[parameters('password')]",
+        "isAuthenticationWithSshKey": false,
+        "labSubnetName": "[variables('labSubnetName')]",
+        "disallowPublicIpAddress": true,
+        "storageType": "Standard",
+        "allowClaim": false,
+        "networkInterface": {
+          "sharedPublicIpAddressConfiguration": {
+            "inboundNatRules": [
+              {
+                "transportProtocol": "tcp",
+                "backendPort": 3389
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+"artifacts": 
+        [
+          /* Configure WinRm using Windows Run Powershell artifact */
+          {
+            "artifactId": 
+                "[resourceId('Microsoft.DevTestLab/labs/artifactSources/artifacts', parameters('labName'), 'Public Repo', 'windows-run-powershell')]",
+            "parameters": [
+              {
+                "name": "scriptFileUris",
+                "value": "[parameters('Run_PowerShell.scriptFileUris')]"
+              },
+              {
+                "name": "scriptToRun",
+                "value": "[parameters('Run_PowerShell.scriptToRun')]"
+              },
+              {
+                "name": "scriptArguments",
+                "value": "[variables('hostDNSNameScriptArgument')]"
+              }
+            ]
+          }
+        ],
+  "outputs": {
+    "labVMId": {
+      "type": "string",
+      "value": "[variables('vmId')]"
+    }
+  }
+}
