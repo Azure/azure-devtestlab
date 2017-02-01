@@ -1,107 +1,152 @@
 ﻿{
-  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-     "Run_PowerShell.scriptFileUris": {
+    "EnvName": {
       "type": "string",
-      "defaultValue": "[[\"https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/201-vm-winrm-windows/ConfigureWinRM.ps1\", \"https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/201-vm-winrm-windows/makecert.exe\", \"https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/201-vm-winrm-windows/winrmconf.cmd\"]"
+      "defaultValue": "DevXX",
+      "metadata": {
+        "description": "Name of the Environment - VM name will be Environment Name backend or frontend"
+      }
     },
-    "Run_PowerShell.scriptToRun": {
+    "vmSize": {
       "type": "string",
-      "defaultValue": "ConfigureWinRM.ps1"
+      "defaultValue": "Standard_A2m_v2",
+      "metadata": {
+        "description": "Size of the VM"
+      }
     },
-    "newVMName": {
+    "existingVirtualNetworkName": {
       "type": "string",
-      "defaultValue": "winRmTest"
+      "defaultValue": "ReassureDev",
+      "metadata": {
+        "description": "Name of the existing VNET"
+      }
     },
-    "labName": {
+    "existingVirtualNetworkResourceGroup": {
       "type": "string",
-      "defaultValue": "GracesARMTest"
+      "defaultValue": "DevNetworks",
+      "metadata": {
+        "description": "Name of the existing VNET resource group"
+      }
     },
-    "size": {
+    "subnetName": {
       "type": "string",
-      "defaultValue": "Standard_A0"
+      "defaultValue": "development",
+      "allowedValues": [
+        "development",
+        "DtlGracesARMTestSubnet"
+      ],
+      "metadata": {
+        "description": "Name of the subnet in the virtual network you want to use"
+      }
     },
-    "userName": {
+    "adminUsername": {
       "type": "string",
-      "defaultValue": "grwann"
+      "defaultValue": "devadmin"
     },
-    "password": {
+    "adminPassword": {
       "type": "securestring"
     }
   },
   "variables": {
-    "labSubnetName": "Subnet",
-    "labVirtualNetworkId": "[resourceId('Microsoft.DevTestLab/labs/virtualnetworks', parameters('labName'), variables('labVirtualNetworkName'))]",
-    "labVirtualNetworkName": "MyVNET",
-    "vmId": "[resourceId ('Microsoft.DevTestLab/labs/virtualmachines', parameters('labName'), parameters('newVMName'))]",
-    "vmName": "[concat(parameters('labName'), '/', parameters('newVMName'))]",
-    "hostDNSNameScriptArgument": 
-        "[concat('*.',resourceGroup().location,'.cloudapp.azure.com')]"    
+    "vmName": "[toLower(concat(parameters('EnvName'), '-backend'))]",
+    "publicIPAddressType": "Dynamic",
+    "vnetID": "[resourceId(parameters('existingVirtualNetworkResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('existingVirtualNetworkName'))]",
+    "subnetRef": "[concat(variables('vnetID'),'/subnets/', parameters('subnetName'))]",
+    "nicName": "[concat(variables('vmName'), '-nic1')]",
+    "storageAccountName": "[toLower(replace(concat(resourceGroup().name, parameters('EnvName')),'-',''))]",
+    "storageAccountType": "Standard_LRS"
   },
   "resources": [
     {
-      "apiVersion": "2016-05-15",
-      "type": "Microsoft.DevTestLab/labs/virtualmachines",
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "name": "[variables('storageAccountName')]",
+      "properties": {
+        "accountType": "[variables('storageAccountType')]"
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('nicName')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "NetworkInterface"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('subnetRef')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Compute/virtualMachines",
       "name": "[variables('vmName')]",
       "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "VirtualMachine"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]",
+        "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
+      ],
       "properties": {
-        "labVirtualNetworkId": "[variables('labVirtualNetworkId')]",
-        "notes": "HPC Pack 2012 R2 Compute Node on Windows Server 2012 R2",
-        "galleryImageReference": {
-          "offer": "WindowsServerHPCPack",
-          "publisher": "MicrosoftWindowsServerHPCPack",
-          "sku": "2012R2CN",
-          "osType": "Windows",
-          "version": "latest"
+        "osProfile": {
+            "computerName": "[variables('vmName')]",
+            "adminUsername": "[parameters('adminUsername')]",
+            "adminPassword": "[parameters('adminPassword')]"
         },
-        "size": "[parameters('size')]",
-        "userName": "[parameters('userName')]",
-        "password": "[parameters('password')]",
-        "isAuthenticationWithSshKey": false,
-        "artifacts": 
-                [
-                  /* Configure WinRm using Windows Run Powershell artifact */
-                  {
-                    "artifactId": 
-                        "[resourceId('Microsoft.DevTestLab/labs/artifactSources/artifacts', parameters('labName'), 'Public Repo', 'windows-run-powershell')]",
-                    "parameters": [
-                      {
-                        "name": "scriptFileUris",
-                        "value": "[parameters('Run_PowerShell.scriptFileUris')]"
-                      },
-                      {
-                        "name": "scriptToRun",
-                        "value": "[parameters('Run_PowerShell.scriptToRun')]"
-                      },
-                      {
-                        "name": "scriptArguments",
-                        "value": "[variables('hostDNSNameScriptArgument')]"
-                      }
-                    ]
-                  }
-                ],        
-        "labSubnetName": "[variables('labSubnetName')]",
-        "disallowPublicIpAddress": true,
-        "storageType": "Standard",
-        "allowClaim": false,
-        "networkInterface": {
-          "sharedPublicIpAddressConfiguration": {
-            "inboundNatRules": [
-              {
-                "transportProtocol": "tcp",
-                "backendPort": 3389
-              }
-            ]
-          }
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+              "publisher": "RedHat",
+              "offer": "RHEL",
+              "sku": "7.2",
+              "version": "latest"
+                    },
+          "osDisk": {
+            "name": "[concat(variables('vmName'),'-osDisk')]",
+            "createOption": "fromImage",
+            "caching": "ReadWrite",
+            "vhd": {
+              "uri": "[concat('http://',variables('storageAccountName'), '.blob.core.windows.net/vhds/', variables('vmName'), '-osdisk.vhd')]"
+            }
+          },
+          "dataDisks": [
+            {
+              "name": "datadisk1",
+              "diskSizeGB": "125",
+              "lun": 0,
+              "vhd": {
+                "uri": "[concat('http://',variables('storageAccountName'), '.blob.core.windows.net/vhds/', variables('vmName'), '-datadisk1.vhd')]"
+              },
+              "createOption": "Empty"
+            }
+          ]
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
+            }
+          ]
         }
       }
     }
-  ],
-  "outputs": {
-    "labVMId": {
-      "type": "string",
-      "value": "[variables('vmId')]"
-    }
-  }
+  ]
 }
