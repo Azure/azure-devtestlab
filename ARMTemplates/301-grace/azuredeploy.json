@@ -1,4 +1,4 @@
-﻿{
+{
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
@@ -35,7 +35,7 @@
       "defaultValue": "development",
       "allowedValues": [
         "development",
-        "DtlGracesARMTestSubnet"
+        "cit"
       ],
       "metadata": {
         "description": "Name of the subnet in the virtual network you want to use"
@@ -46,7 +46,8 @@
       "defaultValue": "devadmin"
     },
     "adminPassword": {
-      "type": "securestring"
+      "type": "string",
+      "defaultValue": "Microsoft~1"
     }
   },
   "variables": {
@@ -59,15 +60,6 @@
     "storageAccountType": "Standard_LRS"
   },
   "resources": [
-    {
-      "type": "Microsoft.Storage/storageAccounts",
-      "apiVersion": "2015-06-15",
-      "location": "[resourceGroup().location]",
-      "name": "[variables('storageAccountName')]",
-      "properties": {
-        "accountType": "[variables('storageAccountType')]"
-      }
-    },
     {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Network/networkInterfaces",
@@ -92,7 +84,7 @@
       }
     },
     {
-      "apiVersion": "2015-06-15",
+      "apiVersion": "2016-04-30-preview",
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[variables('vmName')]",
       "location": "[resourceGroup().location]",
@@ -100,8 +92,7 @@
         "displayName": "VirtualMachine"
       },
       "dependsOn": [
-        "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]",
-        "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
+        "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
       ],
       "properties": {
         "osProfile": {
@@ -116,25 +107,18 @@
           "imageReference": {
               "publisher": "RedHat",
               "offer": "RHEL",
-              "sku": "7.2",
+              "sku": "7.3",
               "version": "latest"
                     },
           "osDisk": {
-            "name": "[concat(variables('vmName'),'-osDisk')]",
-            "createOption": "fromImage",
-            "caching": "ReadWrite",
-            "vhd": {
-              "uri": "[concat('http://',variables('storageAccountName'), '.blob.core.windows.net/vhds/', variables('vmName'), '-osdisk.vhd')]"
-            }
-          },
+               "name": "[concat(variables('vmName'),'-osDisk')]",
+               "createOption": "fromImage"
+            },
           "dataDisks": [
             {
-              "name": "datadisk1",
+              "name": "[concat(variables('vmName'),'-datadisk1')]",
               "diskSizeGB": "125",
               "lun": 0,
-              "vhd": {
-                "uri": "[concat('http://',variables('storageAccountName'), '.blob.core.windows.net/vhds/', variables('vmName'), '-datadisk1.vhd')]"
-              },
               "createOption": "Empty"
             }
           ]
