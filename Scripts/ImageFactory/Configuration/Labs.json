@@ -1,0 +1,13 @@
+{
+  "Labs": [
+    {
+      "ResourceGroup": "<resource group name>",
+      "SubscriptionId": "<subscription ID that contains the lab>",
+      "LabName": "<Name of the DevTest Lab>",
+      "ImagePaths": [
+        "Win2012R2",
+        "Win2016/Datacenter.json"
+      ]
+    }
+  ]
+}
