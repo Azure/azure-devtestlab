@@ -53,6 +53,17 @@
             },
             "additionalProperties": false
         },
+        "postDeployActions": {
+            "type": "array",
+            "description": "Actions performed after successful completion of either runAzureVMExtension or runCommand.",
+            "items": [
+                {
+                    "$ref": "#/definitions/postDeployAction"
+                }
+            ],
+            "minItems": 1,
+            "uniqueItems": true
+        },
         "parameters": {
             "type": "object",
             "description": "Input parameter definitions",
@@ -131,6 +142,28 @@
                 "object",
                 "array",
                 "null"
+            ]
+        },
+        "postDeployAction": {
+            "type": "object",
+            "required": [
+                "action"
+            ],
+            "properties": {
+                "action": {
+                    "$ref": "#/definitions/postDeployActionTypes"
+                },
+                "delayStart": {
+                    "type": "integer",
+                    "defaultValue": 0,
+                    "description": "Value in seconds to wait before performing the action."
+                }
+            }
+        },
+        "postDeployActionTypes": {
+            "enum": [
+                "restart",
+                "deallocate"
             ]
         }
     }
