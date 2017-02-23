@@ -30,7 +30,7 @@ Param(
     [Parameter(Mandatory=$true)]
     [ValidatePattern("[c-zC-Z]")]
     [ValidateLength(1, 1)]
-    $driveLetter,
+    [String]$driveLetter,
     
     [Parameter(Mandatory=$true)]
     [AllowEmptyString()]
