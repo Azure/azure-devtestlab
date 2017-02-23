@@ -9,5 +9,11 @@
     "targetOsType": "Linux",
     "runCommand": {
         "commandToExecute": "['sh depro.sh']"
-    }
+    },
+    "postDeployActions": [
+        {
+            "action": "deallocate",
+            "delayStart": 120
+        }
+    ]
 }
