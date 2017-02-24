@@ -10,5 +10,10 @@
     "parameters": {},
     "runCommand": {
         "commandToExecute": "['powershell.exe -executionpolicy bypass -File Sysprep.ps1']"
-    }
+    },
+    "postDeployActions": [
+        {
+            "action": "deallocate"
+        }
+    ]
 }
