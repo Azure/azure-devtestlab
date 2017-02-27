@@ -5,9 +5,6 @@ param
     
     [Parameter(Mandatory=$true, HelpMessage="The ID of the subscription containing the images")]
     [string] $SubscriptionId,
-
-    [Parameter(Mandatory=$true, HelpMessage="The name of the resource group")]
-    [string] $ResourceGroupName,
     
     [Parameter(Mandatory=$true, HelpMessage="The name of the lab")]
     [string] $DevTestLabName,
@@ -34,6 +31,7 @@ Write-Output "Found $labInfoCount total labs"
 logMessageForUnusedImagePaths $labInfo.Labs $ConfigurationLocation
 
 #get the list of images
+$ResourceGroupName = (Find-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs' | Where-Object { $_.Name -eq $DevTestLabName}).ResourceGroupName
 $sourceLabLocation = (Get-AzureRmResource -ResourceName $DevTestLabName -ResourceGroupName $ResourceGroupName -ResourceType 'Microsoft.DevTestLab/labs').Location
 $labImages = Get-AzureRmResource -ResourceName $DevTestLabName -ResourceGroupName $ResourceGroupName -ResourceType 'Microsoft.DevTestLab/labs/customImages' -ApiVersion '2016-05-15' | Where-Object {$_.Properties.ProvisioningState -eq 'Succeeded'}
 $labImageCount = $labImages.Count
@@ -95,10 +93,10 @@ foreach ($targetLab in $labInfo.Labs){
             $targetImageName = $imageName
  
             SelectSubscription $targetLab.SubscriptionId
-
-            $lab = Get-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs' -ResourceName $targetLabName -ResourceGroupName $targetLab.ResourceGroup
+            $targetLabRG = (Find-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs' | Where-Object { $_.Name -eq $targetLabName}).ResourceGroupName
+            $lab = Get-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs' -ResourceName $targetLabName -ResourceGroupName $targetLabRG
             
-            $existingTargetImage = Get-AzureRmResource -ResourceName $targetLabName -ResourceGroupName $targetLab.ResourceGroup -ResourceType 'Microsoft.DevTestLab/labs/customImages' -ApiVersion '2016-05-15' | Where-Object {$_.Name -eq $targetImageName}
+            $existingTargetImage = Get-AzureRmResource -ResourceName $targetLabName -ResourceGroupName $targetLabRG -ResourceType 'Microsoft.DevTestLab/labs/customImages' -ApiVersion '2016-05-15' | Where-Object {$_.Name -eq $targetImageName}
             if($existingTargetImage){
                 Write-Output "Not copying $imageName to $targetLabName because it already exists there as $targetImageName"
                 continue;
@@ -141,7 +139,7 @@ foreach ($targetLab in $labInfo.Labs){
                 targetLabName = $targetLabName
                 targetStorageKey = $targetStorageKey
                 targetStorageAccountName = $targetStorageAcctName
-                targetResourceGroup = $targetLab.ResourceGroup
+                targetResourceGroup = $targetLabRG
                 fileName = $sourceObject.fileName
                 targetSubscriptionId = $targetLab.SubscriptionId
                 osType = $sourceObject.osType
@@ -200,6 +198,9 @@ $copyVHDBlock = {
         $deployName = "Deploy-$imageName".Replace(" ", "").Replace(",", "")
         $deployResult = New-AzureRmResourceGroupDeployment -Name $deployName -ResourceGroupName $copyObject.targetResourceGroup -TemplateFile $templatePath -existingLabName $copyObject.targetLabName -existingVhdUri $vhdUri -imageOsType $copyObject.osType -isVhdSysPrepped $copyObject.isVhdSysPrepped -imageName $copyObject.imageName -imageDescription $copyObject.imageDescription -imagePath $imagePath
 
+        #delete the deployment information so that we dont use up the total deployments for this resource group
+        Remove-AzureRmResourceGroupDeployment -ResourceGroupName $copyObject.targetResourceGroup -Name $deployName  -ErrorAction SilentlyContinue | Out-Null
+
         if($deployResult.ProvisioningState -eq "Succeeded"){
             Write-Output "Successfully deployed image. Deleting copied VHD"
             Remove-AzureStorageBlob -Context $destContext -Container 'generatedvhds' -Blob $copyObject.fileName
@@ -233,15 +234,11 @@ foreach ($copyObject in $thingsToCopy){
 
 if($jobs.Count -ne 0)
 {
-    try{
-        Write-Output "Waiting for Image replication jobs to complete"
-        foreach ($job in $jobs){
-            Receive-Job $job -Wait | Write-Output
-        }
+    Write-Output "Waiting for Image replication jobs to complete"
+    foreach ($job in $jobs){
+        Receive-Job $job -Wait | Write-Output
     }
-    finally{
-        Remove-Job -Job $jobs
-    }
+    Remove-Job -Job $jobs
 }
 else 
 {

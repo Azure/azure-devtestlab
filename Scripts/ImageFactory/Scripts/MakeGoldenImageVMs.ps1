@@ -3,9 +3,6 @@
     [Parameter(Mandatory=$true, HelpMessage="The location of the factory configuration files")]
     [string] $ConfigurationLocation,
     
-    [Parameter(Mandatory=$true, HelpMessage="The name of the resource group")]
-    [string] $ResourceGroupName,
-    
     [Parameter(Mandatory=$true, HelpMessage="The name of the lab")]
     [string] $DevTestLabName,
     
@@ -92,24 +89,20 @@ foreach ($file in $files)
     $usedVmNames += $vmName
 
     Write-Output "Starting job to create a VM named $vmName for $imagePath"
-    $jobs += Start-Job -Name $file.Name -FilePath $makeVmScriptLocation -ArgumentList $modulePath, $file.FullName, $ResourceGroupName, $DevTestLabName, $vmName, $imagePath, $machineUserName, $machinePassword, $vmSize
+    $jobs += Start-Job -Name $file.Name -FilePath $makeVmScriptLocation -ArgumentList $modulePath, $file.FullName, $DevTestLabName, $vmName, $imagePath, $machineUserName, $machinePassword, $vmSize
 }
 
-try{
-    $jobCount = $jobs.Count
-    Write-Output "Waiting for $jobCount VM creation jobs to complete"
-    foreach ($job in $jobs){
-        $jobOutput = Receive-Job $job -Wait
-        Write-Output $jobOutput
-        $createdVMName = $jobOutput[$jobOutput.Length - 1]
-        if($createdVMName){
-            $createdVms.Add($createdVMName)
-        }
+$jobCount = $jobs.Count
+Write-Output "Waiting for $jobCount VM creation jobs to complete"
+foreach ($job in $jobs){
+    $jobOutput = Receive-Job $job -Wait
+    Write-Output $jobOutput
+    $createdVMName = $jobOutput[$jobOutput.Length - 1]
+    if($createdVMName){
+        $createdVms.Add($createdVMName)
     }
 }
-finally{
-    Remove-Job -Job $jobs
-}
+Remove-Job -Job $jobs
 
 #get machines that show up in the VM blade so we can apply the GoldenImage Tag
 $allVms = Find-AzureRmResource -ResourceType "Microsoft.Compute/virtualMachines"
