@@ -253,7 +253,7 @@ try
     InstallChocolatey -chocolateyInstallLog $ChocolateyInstallLog
 
     # install the specified packages
-    InstallPackages -packagesList $RawPackagesList 
+    InstallPackages -packagesList $RawPackagesList
 }
 catch
 {
