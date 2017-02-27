@@ -223,7 +223,8 @@ function InstallPackages
         WriteLog "Installing package: $package ..."
 
         # Install git via chocolatey.
-        choco install $package --force --yes --acceptlicense --verbose --allow-empty-checksums | Out-Null  
+        #ignoring the checksum for chrome package since the msi is not versioned in this package and the installer comes from a well known location        
+        choco install $package --force --yes --acceptlicense --verbose --ignorechecksum | Out-Null  
         if (-not $?)
         {
             $errMsg = 'Installation failed. Please see the chocolatey logs in %ALLUSERSPROFILE%\chocolatey\logs folder for details.'
