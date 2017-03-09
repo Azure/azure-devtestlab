@@ -13,6 +13,9 @@
     },
     "postDeployActions": [
         {
+            "action": "waitForShutdown"
+        },
+        {
             "action": "deallocate"
         }
     ]

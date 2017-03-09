@@ -163,6 +163,7 @@
         "postDeployActionTypes": {
             "enum": [
                 "restart",
+                "waitForShutdown",
                 "deallocate"
             ]
         }
