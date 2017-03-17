@@ -1,0 +1,15 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "Selenium Server",
+    "description": "Installs Selenium Server and installs as a Windows service",
+    "tags": [
+        "Windows",
+        "Selenium",
+        "Server"
+    ],
+    "iconUri": "https://github.com/Azure/azure-devtestlab/raw/master/Artifacts/windows-selenium-server/selenium-logo.png",
+    "targetOsType": "Windows",
+    "runCommand": {
+        "commandToExecute": "powershell.exe -ExecutionPolicy bypass -File installSeleniumServer.ps1"
+    }
+}
