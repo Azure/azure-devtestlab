@@ -1,0 +1,21 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "Docker",
+    "description": "Installs Docker on Windows Server. Requires Windows Server 2016.",
+    "publisher": "Marcus Robinson",
+    "tags": [
+        "Windows",
+        "Docker"
+    ],
+    "iconUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/Artifacts/windows-docker/docker-logo.png",
+    "targetOsType": "Windows",
+    "parameters": {},
+    "runCommand": {
+        "commandToExecute": "['powershell.exe -executionpolicy bypass -File InstallDocker.ps1']"
+    },
+    "postDeployActions": [
+        {
+            "action": "restart"
+        }
+    ]
+}
