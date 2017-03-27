@@ -1,5 +1,6 @@
-#System Center Configuration Manager CurrentBranch (EVAL)
-This Artifact will install System Center Configuration Manager CurrentBranch Evaluation Edition (usable for 180 Days).
+#System Center Configuration Manager Technical-Preview
+This Artifact will install System Center Configuration Manager Technical-Preview.
+More Details on: https://docs.microsoft.com/en-us/sccm/core/get-started/technical-preview 
 
 ### Requirements:
 Tested with the base Image: "SQL Server 2016 SP1 Standard on Windows Server 2016". If you choose another Image, make sure that the following componets are installed:
@@ -27,7 +28,7 @@ Sub-Tasks of the Artifact:
 - Tweak SQL to grant LocalSystem SysAdmin rights
 - Change SQL to run as LocalSystem
 - Install ADK10
-- Install CMCB
+- Install CMTP
 - Grant "Domain Admins" full Admin rights in SCCM
 - Install ConfigMgr Toolkit
 - Install Collection Commander
