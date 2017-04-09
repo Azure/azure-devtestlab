@@ -9,5 +9,13 @@
     "targetOsType": "Linux",
     "runCommand": {
         "commandToExecute": "['sh depro.sh']"
-    }
+    },
+    "postDeployActions": [
+        {
+            "action": "waitForShutdown"
+        },
+        {
+            "action": "deallocate"
+        }
+    ]
 }

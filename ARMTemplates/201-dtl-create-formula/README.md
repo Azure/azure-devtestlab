@@ -19,5 +19,6 @@ As noted earlier, this template works with a Windows image in Azure MarketPlace.
 1. Using the Azure Portal, create a formula in the lab and save.
 2. Click the '+  Virtual Machine' on the Overview blade of the lab and choose the formula created in the previous step.
 3. Click the 'View ARM template' section at the bottom of the VM creation blade.
-4. Adjust the artifactId and labVirtualNetworkId properties to be relative to the lab, rather than the full path.  
-5. Add json for creating the formula to your ARM template and deploy to labs as necessary.
+4. Adjust the artifactId and labVirtualNetworkId properties to be relative to the lab, rather than the full path. i.e. in the format of `"[concat('/artifactsources/', variables('repositoryName'), '/', variables('artifactsFolder'), '/', variables('artifactName'))]"`.
+5. For custom images, use the property `"customImageId": "[concat('/customimages/', variable('imageName'))"`, instead of the full path of custom image ID.
+6. Add json for creating the formula to your ARM template and deploy to labs as necessary.

@@ -1,4 +1,4 @@
-﻿<##################################################################################################
+<##################################################################################################
 
     Description
     ===========
@@ -223,8 +223,7 @@ function InstallPackages
         WriteLog "Installing package: $package ..."
 
         # Install git via chocolatey.
-        #ignoring the checksum for chrome package since the msi is not versioned in this package and the installer comes from a well known location        
-        choco install $package --force --yes --acceptlicense --verbose --ignorechecksum | Out-Null  
+        choco install $package --force --yes --acceptlicense --verbose --allow-empty-checksums | Out-Null  
         if (-not $?)
         {
             $errMsg = 'Installation failed. Please see the chocolatey logs in %ALLUSERSPROFILE%\chocolatey\logs folder for details.'

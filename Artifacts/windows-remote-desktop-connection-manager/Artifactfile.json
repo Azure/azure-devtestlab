@@ -1,0 +1,16 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "Remote Desktop Connection Manager",
+    "publisher": "Vince Adams",
+    "description": "Installs Remote Desktop Connection Manager using the Chocolatey package manager",
+    "tags": [
+        "Windows",
+        "rdcman",
+        "Remote Desktop Connection Manager"
+    ],
+    "iconUri": "https://chocolatey.org/content/packageimages/rdcman.2.7.1406.20160916.png",
+    "targetOsType": "Windows",
+    "runCommand": {
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', 'rdcman', '\"')]"
+    }
+}
