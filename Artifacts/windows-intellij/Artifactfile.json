@@ -2,6 +2,7 @@
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
     "title": "IntelliJ IDEA (Community Edition)",
     "description": "Installs IntelliJ IDEA (Community Edition) using the Chocolatey package manager",
+    "publisher": "Hosam Kamel",
     "tags": [
         "Windows",
         "IntelliJ"
