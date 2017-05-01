@@ -1,5 +1,5 @@
 <#
-Creates a self signed certificate and imports it into you Persoanl and Root stores. 
+Creates a self signed certificate and imports it into you Personal and Root stores. 
 I used this when setting up a new development site on dev machine.
 #>
 Param(
