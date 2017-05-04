@@ -1,0 +1,29 @@
+{
+  "name": "simple-dtl-portal",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "react-scripts-ts start",
+    "build": "react-scripts-ts build",
+    "test": "react-scripts-ts test --env=jsdom",
+    "eject": "react-scripts-ts eject"
+  },
+  "dependencies": {
+    "bootstrap": "^3.3.7",
+    "react": "^15.4.2",
+    "react-dom": "^15.4.2",
+    "react-notification-system": "^0.2.13",
+    "react-router": "^2.8.1",
+    "superagent": "^3.3.1"
+  },
+  "devDependencies": {
+    "@types/jest": "^16.0.4",
+    "@types/node": "^7.0.0",
+    "@types/react": "^15.0.0",
+    "@types/react-dom": "^0.14.20",
+    "@types/react-router": "^2.0.38",
+    "@types/react-notification-system": "^0.2.13",
+    "@types/superagent": "^2.0.36",
+    "react-scripts-ts": "1.0.4"
+  }
+}
