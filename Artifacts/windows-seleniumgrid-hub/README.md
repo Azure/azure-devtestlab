@@ -5,7 +5,7 @@ A simple artifact to setup a selenium-grid hub on your azure DevTestLab virtual 
 ## Inputs
 
 - Download link for the selenium standalone server .jar file.
-- Optional .json configuration file for the hub.
+- Optional <a href="https://github.com/SeleniumHQ/selenium/wiki/Grid2#configuring-the-hub-by-json">.json configuration file</a> for the hub.
 
 ## Features
 
