@@ -1,39 +1,25 @@
 ﻿<##################################################################################################
-
     Description
     ===========
-
 	- This script does the following - 
 		- installs chocolatey
 		- installs specified chocolatey packages
-
 	- This script generates logs in the following folder - 
 		- %ALLUSERSPROFILE%\ChocolateyPackageInstaller-{TimeStamp}\Logs folder.
-
-
     Usage examples
     ==============
     
     Powershell -executionpolicy bypass -file ChocolateyPackageInstaller.ps1
-
-
     Pre-Requisites
     ==============
-
     - Ensure that the powershell execution policy is set to unrestricted (@TODO).
-
-
     Known issues / Caveats
     ======================
     
     - No known issues.
-
-
     Coming soon / planned work
     ==========================
-
     - N/A.    
-
 ##################################################################################################>
 
 #
@@ -223,13 +209,18 @@ function InstallPackages
         WriteLog "Installing package: $package ..."
 
         # Install git via chocolatey.
-        choco install $package --force --yes --acceptlicense --verbose --allow-empty-checksums | Out-Null  
-        if (-not $?)
+        choco install $package --force --yes --acceptlicense --verbose --allow-empty-checksums | Out-Null
+        $succeeded = $? 
+        if ($LASTEXITCODE -eq 3010)
+        {
+            WriteLog 'The recent package changes indicate a reboot is necessary. Please reboot at your earliest convenience.'
+        }
+        elseif (-not $succeeded)
         {
             $errMsg = 'Installation failed. Please see the chocolatey logs in %ALLUSERSPROFILE%\chocolatey\logs folder for details.'
             throw $errMsg 
         }
-    
+
         WriteLog 'Success.'
     }
 }
