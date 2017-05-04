@@ -6,7 +6,7 @@ A simple artifact to setup a selenium-grid node on your azure DevTestLab virtual
 
 - Download link for the selenium standalone server .jar file.
 - IP address or FQDN of the machine on which the selenium-grid hub is running on.
-- Optional .json configuration file for the node.
+- Optional <a href="https://github.com/SeleniumHQ/selenium/wiki/Grid2#configuring-the-nodes-by-json">.json configuration file</a> for the node.
 
 ## Features
 

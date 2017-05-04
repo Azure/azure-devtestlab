@@ -1,7 +1,7 @@
 {
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
     "title": "Selenium-grid node",
-    "description": "Use this artifact to setup your selenium-grid node",
+    "description": "Use this artifact to setup your selenium-grid node. For the prerequisites please check the readme on https://aka.ms/se-node-prereqs",
     "publisher": "Microsoft",
     "tags": [
         "PowerShell",
