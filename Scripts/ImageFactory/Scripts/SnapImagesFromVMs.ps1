@@ -1,10 +1,7 @@
 ﻿param
 (
     [Parameter(Mandatory=$true, HelpMessage="The name of the DevTest Lab")]
-    [string] $DevTestLabName,
-
-    [Parameter(Mandatory=$true, HelpMessage="The name of the Resource Group that holds the DevTest Lab")]
-    [string] $ResourceGroupName
+    [string] $DevTestLabName
 )
 
 $modulePath = Join-Path (Split-Path ($Script:MyInvocation.MyCommand.Path)) "DistributionHelpers.psm1"
@@ -33,6 +30,9 @@ $createImageBlock = {
         }
     }
 
+    #delete the deployment information so that we dont use up the total deployments for this resource group
+    Remove-AzureRmResourceGroupDeployment -ResourceGroupName $imageToCreate.ResourceGroupName -Name $deployName  -ErrorAction SilentlyContinue | Out-Null
+
     if($deploySuccess -eq $false){
         Write-Error "Creation of Image $imageName failed"
     }
@@ -40,6 +40,7 @@ $createImageBlock = {
 
 
 # Get a pointer to all the VMs in the subscription
+$ResourceGroupName = (Find-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs' | Where-Object { $_.Name -eq $DevTestLabName}).ResourceGroupName
 $allVms = Get-AzureRmResource -ResourceGroupName $ResourceGroupName -ResourceType Microsoft.DevTestLab/labs/virtualmachines -ResourceName $DevTestLabName -ApiVersion 2016-05-15
 
 foreach ($currentVm in $allVms){
@@ -98,17 +99,12 @@ foreach ($currentVm in $allVms){
 
 if($jobs.Count -ne 0)
 {
-    try{
-        $jobCount = $jobs.Count
-        Write-Output "Waiting for $jobCount Image creation jobs to complete"
-        foreach ($job in $jobs){
-            Receive-Job $job -Wait | Write-Output
-        }
+    $jobCount = $jobs.Count
+    Write-Output "Waiting for $jobCount Image creation jobs to complete"
+    foreach ($job in $jobs){
+        Receive-Job $job -Wait | Write-Output
     }
-    finally{
-        Remove-Job -Job $jobs
-    }
-
+    Remove-Job -Job $jobs
     Write-Output "Completed snapping images!"
 }
 else 

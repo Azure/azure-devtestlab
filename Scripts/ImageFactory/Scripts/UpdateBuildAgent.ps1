@@ -2,9 +2,6 @@
 (
     [Parameter(Mandatory=$true, HelpMessage="The ID of the subscription containing the Image Factory")]
     [string] $SubscriptionId,
-
-    [Parameter(Mandatory=$true, HelpMessage="The name of the Image Factory resource group")]
-    [string] $ResourceGroupName,
     
     [Parameter(Mandatory=$true, HelpMessage="The name of the Image Factory DevTest Lab")]
     [string] $DevTestLabName,
@@ -18,6 +15,7 @@
 )
 
 # find the build agent in the subscription
+$ResourceGroupName = (Find-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs' | Where-Object { $_.Name -eq $DevTestLabName}).ResourceGroupName
 $agentVM = Get-AzureRmResource -ResourceGroupName $ResourceGroupName -ResourceType Microsoft.DevTestLab/labs/virtualmachines -ResourceName $DevTestLabName -ApiVersion 2016-05-15 | Where-Object {$_.Name -eq $BuildAgent}
 
 if ($agentVM -ne $null) {
