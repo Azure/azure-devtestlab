@@ -1,0 +1,36 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+  "title": "Eris-Linux",
+  "description": "Add an Linux based Eris node to network in the Lab",
+  "tags": [
+    "Bash",
+    "Linux"
+  ],
+  "iconUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/Artifacts/linux-eris-blockchain/erisicon.png",
+  "targetOsType": "Linux",
+  "parameters": {
+    "adminUserName": {
+      "type": "string",
+      "displayName": "Admin User Account",
+      "description": "Needs to be the same account name for the host",
+      "allowEmpty": false
+    },
+    "servicesToStart": {
+      "type": "string",
+      "displayName": "Services to Start",
+      "description": "Needs to be the same account name for the host",
+      "allowEmpty": false
+    },
+    "chainsToStart": {
+      "type": "string",
+      "displayName": "Chains to Start",
+      "description": "Needs to be the same account name for the host",
+      "allowEmpty": false
+    }
+  },
+  "runCommand": {
+    "commandToExecute": "[concat('bash setup.sh ', parameters('adminUsername'), ' ', parameters('servicesToStart'), ' ', parameters('chainsToStart'))]"
+  }
+}
+  
+
