@@ -1,0 +1,1 @@
+﻿ping.exe -n 1 * 60 localhost

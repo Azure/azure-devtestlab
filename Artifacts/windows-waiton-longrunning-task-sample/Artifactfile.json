@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+  "title": "Wait for a Long Duration Task - Sample",
+  "description": "Use this artifact as a reference if your scripts run for a long time (more than 90 minutes), or if you want to run your script as a scheduled task.",
+  "tags": [
+    "Windows"
+  ],
+  "iconUri": "",
+  "targetOsType": "Windows",
+  "parameters": {
+  },
+  "runCommand": {
+    "commandToExecute": "powershell.exe -executionpolicy bypass -File WaitForTask.ps1"
+  }
+}
