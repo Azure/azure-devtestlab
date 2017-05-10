@@ -1,0 +1,14 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+    "title": "Tomcat 7",
+    "description": "Install TRomcat 7 and OpenJDK on Linux",
+    "tags": [
+        "Tomcat",
+		"Linux"
+    ],
+    "iconUri": "https://raw.githubusercontent.com/hsachinraj/devtestlabrepo/master/tomcat.png",
+    "targetOsType": "Linux",
+    "runCommand": {
+            "commandToExecute": "['sh linux_install_tomcat7.sh']"
+    }
+}
