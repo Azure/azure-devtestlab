@@ -1,0 +1,29 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+    "title": "WinRM Https Configuration",
+    "description": "Configures WinRM host to enable communication with the PowerShell plug-in through the HTTPS protocol",
+    "tags": [
+        "Windows",
+        "WinRM"
+    ],
+    "iconUri": "",
+    "targetOsType": "Windows",
+    "parameters": {     
+        "HostName": {
+            "type": "string",
+            "displayName": "Host DNS Name",
+            "description": "The FQDN of machine or Domain, use the format *.azureregion.cloudapp.azure.com. For example *.northeurope.cloudapp.azure.com",
+            "allowEmpty": false
+        },
+        "Port": {
+            "type": "string",
+            "displayName": "Port",
+            "description": "Specify the port to be used for default Https traffic.",
+            "defaultValue": "5986",
+            "allowEmpty": false
+        }
+    },
+    "runCommand": {
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File winrm-configuration-install.ps1 ', parameters('HostName'), ' ', parameters('Port'))]"
+    }
+}
