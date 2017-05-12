@@ -1,0 +1,35 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "Selenium-grid node",
+    "description": "Use this artifact to setup your selenium-grid node. For the prerequisites please check the readme on https://aka.ms/se-node-prereqs",
+    "publisher": "Microsoft",
+    "tags": [
+        "PowerShell",
+        "Selenium"
+    ],
+    "iconUri": "https://chocolatey.org/content/packageimages/selenium-all-drivers.4.0.png",
+    "targetOsType": "Windows",
+    "parameters": {
+        "seleniumServerStandaloneJarFile": {
+            "type": "string",
+            "displayName": "Selenium standalone server .jar file",
+            "description": "Download link for selenium standalone server .jar file.",
+            "defaultValue": "https://goo.gl/s4o9Vx"
+        },
+        "hubMachineAddress": {
+            "type": "string",
+            "displayName": "Hub Machine Address",
+            "description": "IP address or FQDN of the hub Machine."
+        },
+        "configFile": {
+            "type": "string",
+            "displayName": "Config file",
+            "description": "JSON configuration file for the node.",
+            "defaultValue": "",
+            "allowEmpty": true
+        }
+    },
+    "runCommand": {
+        "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted \"& ./GridDeployer.ps1 -seleniumGridJarFile ', parameters('seleniumServerStandaloneJarFile'), ' -hubMachineIP ', parameters('hubMachineAddress'), ' -role ', 'node', ' -configFile config:', parameters('configFile'), '\"')]"
+    }
+}
