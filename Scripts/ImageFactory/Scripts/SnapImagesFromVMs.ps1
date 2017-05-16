@@ -27,7 +27,7 @@ $createImageBlock = {
 
     if($deployResult.ProvisioningState -eq "Succeeded"){
         Write-Output "Successfully deployed image"
-        $foundimage = (Get-AzureRmResource -ResourceName $imageToCreate.DevTestLabName -ResourceGroupName $imageToCreate.ResourceGroupName -ResourceType 'Microsoft.DevTestLab/labs/customImages' -ApiVersion '2016-05-15') | Where-Object {$_.name -eq $imagename}
+        $foundimage = (Get-AzureRmResource -ResourceName $imageToCreate.DevTestLabName -ResourceGroupName $imageToCreate.ResourceGroupName -ResourceType 'Microsoft.DevTestLab/labs/customImages' -ApiVersion '2017-04-26-preview') | Where-Object {$_.name -eq $imagename}
         if($foundimage.Count -eq 0){
             Write-Warning "$imagename was not created successfully"
         }
@@ -40,7 +40,7 @@ $createImageBlock = {
 
 
 # Get a pointer to all the VMs in the subscription
-$allVms = Get-AzureRmResource -ResourceGroupName $ResourceGroupName -ResourceType Microsoft.DevTestLab/labs/virtualmachines -ResourceName $DevTestLabName -ApiVersion 2016-05-15
+$allVms = Get-AzureRmResource -ResourceGroupName $ResourceGroupName -ResourceType Microsoft.DevTestLab/labs/virtualmachines -ResourceName $DevTestLabName -ApiVersion 2017-04-26-preview
 
 foreach ($currentVm in $allVms){
     #vms with the ImagePath tag are the ones we care about
@@ -85,7 +85,7 @@ foreach ($currentVm in $allVms){
             osType = $osType
         }
 
-        $existingImage = Get-AzureRmResource -ResourceName $DevTestLabName -ResourceGroupName $ResourceGroupName -ResourceType 'Microsoft.DevTestLab/labs/customImages' -ApiVersion '2016-05-15' | Where-Object -FilterScript {$_.Name -eq $newImageName}
+        $existingImage = Get-AzureRmResource -ResourceName $DevTestLabName -ResourceGroupName $ResourceGroupName -ResourceType 'Microsoft.DevTestLab/labs/customImages' -ApiVersion '2017-04-26-preview' | Where-Object -FilterScript {$_.Name -eq $newImageName}
         if($existingImage){
             Write-Output "Skipping the creation of $newImageName becuse it already exists"
         }

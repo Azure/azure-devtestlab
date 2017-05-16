@@ -89,6 +89,6 @@ function LoadProfile {
 function deleteImage ($resourceGroupName, $resourceName)
 {
     Write-Output "##[section]Deleting Image: $resourceName"
-    Remove-AzureRmResource -ResourceName $resourceName -ResourceGroupName $resourceGroupName -ResourceType 'Microsoft.DevTestLab/labs/customImages' -ApiVersion '2016-05-15' -Force
+    Remove-AzureRmResource -ResourceName $resourceName -ResourceGroupName $resourceGroupName -ResourceType 'Microsoft.DevTestLab/labs/customImages' -ApiVersion '2017-04-26-preview' -Force
     Write-Output "##[section]Completed deleting $resourceName"
 }
