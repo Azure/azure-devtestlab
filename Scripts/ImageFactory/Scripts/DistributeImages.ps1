@@ -35,7 +35,7 @@ logMessageForUnusedImagePaths $labInfo.Labs $ConfigurationLocation
 
 #get the list of images
 $sourceLabLocation = (Get-AzureRmResource -ResourceName $DevTestLabName -ResourceGroupName $ResourceGroupName -ResourceType 'Microsoft.DevTestLab/labs').Location
-$labImages = Get-AzureRmResource -ResourceName $DevTestLabName -ResourceGroupName $ResourceGroupName -ResourceType 'Microsoft.DevTestLab/labs/customImages' -ApiVersion '2016-05-15' | Where-Object {$_.Properties.ProvisioningState -eq 'Succeeded'}
+$labImages = Get-AzureRmResource -ResourceName $DevTestLabName -ResourceGroupName $ResourceGroupName -ResourceType 'Microsoft.DevTestLab/labs/customImages' -ApiVersion '2017-04-26-preview' | Where-Object {$_.Properties.ProvisioningState -eq 'Succeeded'}
 $labImageCount = $labImages.Count
 Write-Output "Found $labImageCount images in lab $DevTestLabName"
 
@@ -98,7 +98,7 @@ foreach ($targetLab in $labInfo.Labs){
 
             $lab = Get-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs' -ResourceName $targetLabName -ResourceGroupName $targetLab.ResourceGroup
             
-            $existingTargetImage = Get-AzureRmResource -ResourceName $targetLabName -ResourceGroupName $targetLab.ResourceGroup -ResourceType 'Microsoft.DevTestLab/labs/customImages' -ApiVersion '2016-05-15' | Where-Object {$_.Name -eq $targetImageName}
+            $existingTargetImage = Get-AzureRmResource -ResourceName $targetLabName -ResourceGroupName $targetLab.ResourceGroup -ResourceType 'Microsoft.DevTestLab/labs/customImages' -ApiVersion '2017-04-26-preview' | Where-Object {$_.Name -eq $targetImageName}
             if($existingTargetImage){
                 Write-Output "Not copying $imageName to $targetLabName because it already exists there as $targetImageName"
                 continue;

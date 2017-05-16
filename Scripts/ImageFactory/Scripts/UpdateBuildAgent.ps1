@@ -18,12 +18,12 @@
 )
 
 # find the build agent in the subscription
-$agentVM = Get-AzureRmResource -ResourceGroupName $ResourceGroupName -ResourceType Microsoft.DevTestLab/labs/virtualmachines -ResourceName $DevTestLabName -ApiVersion 2016-05-15 | Where-Object {$_.Name -eq $BuildAgent}
+$agentVM = Get-AzureRmResource -ResourceGroupName $ResourceGroupName -ResourceType Microsoft.DevTestLab/labs/virtualmachines -ResourceName $DevTestLabName -ApiVersion 2017-04-26-preview | Where-Object {$_.Name -eq $BuildAgent}
 
 if ($agentVM -ne $null) {
 
     # Update the agent via DevTest Labs with the specified action (start or stop)
-    $status = Invoke-AzureRmResourceAction -ResourceGroupName $ResourceGroupName -ResourceType Microsoft.DevTestLab/labs/virtualmachines -ResourceName ($DevTestLabName + "/" + $BuildAgent) -Action $Action -ApiVersion 2016-05-15 -Force
+    $status = Invoke-AzureRmResourceAction -ResourceGroupName $ResourceGroupName -ResourceType Microsoft.DevTestLab/labs/virtualmachines -ResourceName ($DevTestLabName + "/" + $BuildAgent) -Action $Action -ApiVersion 2017-04-26-preview -Force
 
     if ($status.Status -eq 'Succeeded') {
         Write-Output "##[section] Successfully updated VSTS Build Agent: $BuildAgent , Action: $Action"

@@ -38,7 +38,7 @@
         "type": "microsoft.devtestlab/labs/formulas",
         "name": "[concat(parameters('existingLabName'), '/', parameters('formulaName'))]",
         "location": "[resourceGroup().location]",
-        "apiversion": "2016-05-15",
+        "apiversion": "2017-04-26-preview",
         "properties": {
           "description": "Formula for Windows VM.",
           "ostype": "[variables('ostype')]",
