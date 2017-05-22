@@ -21,7 +21,49 @@ namespace DtlClient
                 Console.WriteLine($"{lab.UniqueIdentifier}\t{lab.Name}");
             }
         }
-        
+
+        private static void AddAllowedPortsToSubnet(
+            string subscriptionId,
+            string labResourceGroupName,
+            string labName,
+            string labVirtualNetworkName,
+            string location)
+
+        {
+            var virtualNetworkSubnetName = labVirtualNetworkName + "Subnet";
+
+            var client = new DevTestLabsClient(new CustomLoginCredentials())
+            {
+                SubscriptionId = ConfigurationManager.AppSettings["SubscriptionId"]
+            };
+            Console.WriteLine("Fetching the lab...");
+            var lab = client.Lab.GetResource(labResourceGroupName, labName);
+            Console.WriteLine($"Lab ID: {lab.Id}");
+            Console.WriteLine("Getting the lab's virtual network");
+            var virtualNetwork = client.VirtualNetwork.GetResource(labResourceGroupName, labName, virtualNetworkSubnetName);
+            Console.WriteLine("Virtual network ID: " + virtualNetwork.Id);
+            Console.WriteLine("Enter Transport Protocol: TCP or UDP");
+            string transportProtocol = Console.ReadLine();
+
+            if (transportProtocol != null 
+                && transportProtocol.ToLowerInvariant() != "tcp" 
+                || transportProtocol.ToLowerInvariant() != "udp")
+                
+            {
+                Console.WriteLine("Only TCP and UDP allowed exiting ... ");
+                return;
+            }
+            string portRequest = Console.ReadLine();
+            int backendPort;
+            int.TryParse(portRequest, out backendPort);
+            if (transportProtocol != null && backendPort != null)
+            {
+                var port = new Port(transportProtocol, backendPort);
+                virtualNetwork.SubnetOverrides[0].SharedPublicIpAddressConfiguration.AllowedPorts.Add(port);
+                return;
+            }
+        }
+
         private static void BulkCreateVirtualMachinesForLab(
             string subscriptionId,
             string labResourceGroupName,
@@ -131,6 +173,17 @@ namespace DtlClient
                         Console.ResetColor();
                         break;
                     }
+                    case "addAllowedPort":
+                        {
+                            AddAllowedPortsToSubnet(
+                                 ConfigurationManager.AppSettings["SubscriptionId"],
+                            labResourceGroupName,
+                            labName,
+                            virtualNetworkName,
+                            location);
+                            Console.WriteLine($"The operation completed successfully.");
+                            break;
+                        }
 
                 }
             }
