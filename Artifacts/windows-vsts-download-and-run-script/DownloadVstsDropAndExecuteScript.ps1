@@ -17,6 +17,7 @@ param(
     [string] $pathToScript,
 
     [Parameter (Mandatory=$False)]
+    [AllowEmptyString()]
     [string] $scriptArguments
 )
 
