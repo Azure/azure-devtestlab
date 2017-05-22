@@ -14,7 +14,10 @@ param(
     [string] $vstsProjectUri,
 
     [Parameter (Mandatory=$True)]
-    [string] $pathToScript
+    [string] $pathToScript,
+
+    [Parameter (Mandatory=$False)]
+    [string] $scriptArguments
 )
 
 Set-PSDebug -Strict
@@ -126,7 +129,7 @@ function RunScript
 
     if (Test-Path $scriptPath -PathType Leaf)
     {
-        & $scriptPath 
+        Invoke-Expression  "& `"$scriptPath`" $scriptArguments"
     }
 }
 
