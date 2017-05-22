@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+  "title": "SharePoint Server 2013 (4) SP1 Configure Shell VM",
+  "description": "Configure SharePoint Server 2013 SP1.",
+  "tags": [
+    "Windows"
+  ],
+  "iconUri": "https://i-msdn.sec.s-msft.com/dynimg/IC792065.jpg",
+  "targetOsType": "Windows",
+    "parameters": {
+    "USER": {
+      "type": "string",
+      "displayName": "User Name",
+      "description": "Domain and User"
+    }
+  },
+  "runCommand": {
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File SharePoint2013SP1ConfigureBase.ps1', ' -USER ', parameters('USER'))]"
+  }
+}

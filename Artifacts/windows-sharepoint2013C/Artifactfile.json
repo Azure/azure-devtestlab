@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+  "title": "SharePoint Server 2013 (3) SP1 Setup",
+  "description": "Setup SharePoint Server 2013 SP1.",
+  "tags": [
+    "Windows"
+  ],
+  "iconUri": "https://i-msdn.sec.s-msft.com/dynimg/IC792065.jpg",
+  "targetOsType": "Windows",
+    "parameters": {
+      "PIDKEY": {
+        "type": "string",
+        "displayName": "Product Key",
+        "description": "*Not required* Leave the Product key as zero to install the trial version.",
+        "defaultValue" :  "0"
+      }
+  },
+  "runCommand": {
+	"commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File SharePoint2013SP1Setup.ps1', ' -pidKey ', parameters('PIDKEY'))]"
+  }
+}

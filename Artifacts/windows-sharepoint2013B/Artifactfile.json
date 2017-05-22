@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+  "title": "SharePoint Server 2013 (2) Prerequisites installer",
+  "description": "Installs SharePoint Server 2013 SP1 Prerequisites part 2.",
+  "tags": [
+    "Windows"
+  ],
+  "iconUri": "https://i-msdn.sec.s-msft.com/dynimg/IC792065.jpg",
+  "targetOsType": "Windows",
+  "runCommand": {
+    "commandToExecute": "powershell.exe -ExecutionPolicy bypass -File SharePoint2013SP1P2.ps1"
+  }
+}
