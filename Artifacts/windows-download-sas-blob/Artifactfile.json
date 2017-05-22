@@ -1,0 +1,25 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "Download file from URI",
+    "publisher": "Microsoft",
+    "description": "Downloads a file from a URI and saves it to a specified location on the virtual machine",
+    "tags": [
+    ],
+    "iconUri": "",
+    "targetOsType": "Windows",
+    "parameters": {
+        "URI": {
+            "type": "string",
+            "displayName": "File URI",
+            "description": "The URI of the file to download. It must be publicly accessible, or a SAS URI granting read-access."
+        },
+        "FileDestination": {
+            "type": "string",
+            "displayName": "Destination file path",
+            "description": "The destination on the target virtual machine, including filename, to which the file should be downloaded"
+        }
+    },
+    "runCommand": {
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./artifact.ps1', ' -Uri ', parameters('URI'), ' -Path ''', parameters('FileDestination'), '''\"')]"
+    }
+}

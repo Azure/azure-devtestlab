@@ -1,0 +1,15 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "Microsoft .NET Framework 4.5",
+    "description": "Installs Microsoft .NET Framework 4.5 using the Chocolatey package manager",
+    "publisher": "Microsoft",
+    "tags": [
+        "Windows",
+        ".NET"
+    ],
+    "iconUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/Artifacts/windows-dotnet45/dotnet.png",
+    "targetOsType": "Windows",
+    "runCommand": {
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', 'dotnet4.5', '\"')]"
+    }
+}

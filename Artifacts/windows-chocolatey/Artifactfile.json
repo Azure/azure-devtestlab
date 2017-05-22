@@ -1,0 +1,22 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "Install Chocolatey Packages",
+    "publisher": "Microsoft",
+    "description": "Installs the Chocolatey package manager along with a user selected set of packages",
+    "tags": [
+        "Windows",
+        "Chocolatey"
+    ],
+    "iconUri": "https://github.com/chocolatey/chocolatey/raw/master/docs/logo/chocolateyicon.gif",
+    "targetOsType": "Windows",
+    "parameters": {
+        "packages": {
+            "type": "string",
+            "displayName": "Packages",
+            "description": "Comma delimited list of package names to be installed, for example: 7Zip,Fiddler4. A complete list of public packages can be found at https://chocolatey.org/packages."
+        }
+    },
+    "runCommand": {
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ''', parameters('packages'), '''\"')]"
+    }
+}

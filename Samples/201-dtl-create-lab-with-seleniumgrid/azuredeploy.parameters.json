@@ -1,0 +1,33 @@
+{  
+    "$schema":"http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion":"1.0.0.0",
+    "parameters":{  
+        "labName":{  
+            "value":""
+        },
+        "VMSize":{  
+            "value":""
+        },
+        "VMStorageType":{  
+            "value":""
+        },
+        "username":{  
+            "value":""
+        },
+        "password":{  
+            "value":""
+        },
+        "nodeCount": {
+            "value": 1
+        },
+        "seleniumServerStandaloneJarFile": {
+            "value": ""
+        },
+        "hubConfigJsonFile": {
+            "value": ""
+        },
+        "nodeConfigJsonFile": {
+            "value": ""
+        }
+    }
+}

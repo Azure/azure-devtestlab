@@ -1,0 +1,40 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "YUM Package",
+    "description": "Install YUM packages on Linux",
+    "tags": [
+        "Packages",
+        "YUM",
+        "Linux"
+    ],
+    "iconUri": "https://fedoraproject.org/w/uploads/7/77/Echo-package-48px.png",
+    "targetOsType": "Linux",
+    "parameters": {
+        "packages": {
+            "type": "string",
+            "displayName": "Packages",
+            "allowEmpty": false,
+            "description": "The packages to install on the VM, separated by spaces. All of the package declarations supported by YUM are supported here as well. See http://man7.org/linux/man-pages/man8/yum.8.html for an in-depth look at the package specifications available."
+        },
+        "update": {
+            "type": "string",
+            "displayName": "Run Update First",
+            "defaultValue": "true",
+            "allowEmpty": false,
+            "allowedValues": [
+                "true",
+                "false"
+            ],
+            "description": "Run YUM update prior to running the full install command. Allowed values are 'true' and 'false'. Note that no additional options are passed to the update command."
+        },
+        "options": {
+            "type": "string",
+            "displayName": "Additional Options",
+            "allowEmpty": true,
+            "description": "Any additional options to pass to the YUM command-line. These options will precede the install command when executed. Please see http://man7.org/linux/man-pages/man8/yum.8.html for an in-depth look at the options available. Note that --assumeyes and --quiet are always passed automatically."
+        }
+    },
+    "runCommand": {
+        "commandToExecute": "[concat('bash linux-yum-package.sh', ' --update ', parameters('update'), ' --packages ', parameters('packages'), ' --options ', parameters('options'))]"
+    }
+}

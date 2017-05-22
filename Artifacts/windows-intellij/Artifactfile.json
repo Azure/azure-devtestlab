@@ -1,0 +1,15 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "IntelliJ IDEA (Community Edition)",
+    "description": "Installs IntelliJ IDEA (Community Edition) using the Chocolatey package manager",
+    "publisher": "Hosam Kamel",
+    "tags": [
+        "Windows",
+        "IntelliJ"
+    ],
+    "iconUri": "https://cdn.rawgit.com/AnthonyMastrean/chocolateypackages/17c712c0bf345eb3dcb8326049a8198230228008/public/icons/intellijidea.png",
+    "targetOsType": "Windows",
+    "runCommand": {
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', 'intellijidea-community', '\"')]"
+    }
+}

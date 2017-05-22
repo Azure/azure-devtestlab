@@ -1,0 +1,135 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "http://schema.management.azure.com/schemas/2015-01-01/dtlArtifacts.json",
+    "type": "object",
+    "required": [ "title", "description", "targetOsType" ],
+    "oneOf": [
+        {
+            "required": [ "runAzureVMExtension" ]
+        },
+        {
+            "required": [ "runCommand" ]
+        }
+    ],
+    "properties": {
+        "title": {
+            "type": "string",
+            "description": "The title of your artifact."
+        },
+        "description": {
+            "type": "string",
+            "description": "The description of your artifact."
+        },
+        "iconUri": {
+            "type": "string"
+        },
+        "tags": {
+            "type": "array",
+            "items": [
+                {
+                    "type": "string"
+                }
+            ]
+        },
+        "targetOsType": {
+            "type": "string",
+            "enum": [ "Windows", "Linux" ]
+        },
+        "runAzureVMExtension": {
+            "type": "object",
+            "properties": {
+            }
+        },
+        "runCommand": {
+            "type": "object",
+            "required": [ "commandToExecute" ],
+            "properties": {
+                "commandToExecute": {
+                    "type": "string",
+                    "description": "Command to run"
+                }
+            },
+            "additionalProperties": false
+        },
+        "parameters": {
+            "type": "object",
+            "description": "Input parameter definitions",
+            "additionalProperties": {
+                "$ref": "#/definitions/parameter"
+            }
+        }
+    },
+    "definitions": {
+        "parameter": {
+            "type": "object",
+            "required": [ "type" ],
+            "properties": {
+                "type": {
+                    "$ref": "#/definitions/parameterTypes",
+                    "description": "Type of input parameter"
+                },
+                "controlType": {
+                    "$ref": "#/definitions/controlTypes",
+                    "description": "Type of UI control"
+                },
+                "defaultValue": {
+                    "$ref": "#/definitions/parameterValueTypes",
+                    "description": "Default value to be used if one is not provided"
+                },
+                "allowedValues": {
+                    "type": "array",
+                    "description": "Value can only be one of these values"
+                },
+                "minLength": {
+                    "type": "integer",
+                    "description": "Minimum number of characters that must be used"
+                },
+                "maxLength": {
+                    "type": "integer",
+                    "description": "Maximum number of characters that can be used"
+                },
+                "allowEmpty": {
+                    "type": "boolean",
+                    "description": "If an empty value is allowed, by default false"
+                },
+                "description": {
+                    "type": "string",
+                    "description": "The description of the parameter"
+                },
+                "displayName": {
+                    "type": "string",
+                    "description": "The display name of the parameter"
+                }
+            },
+            "description": "Input parameter definitions"
+        },
+        "parameterTypes": {
+            "enum": [
+                "string",
+                "securestring",
+                "int",
+                "bool",
+                "object",
+                "array"
+            ]
+        },
+        "controlTypes": {
+            "enum": [
+                "textBox",
+                "passwordBox",
+                "fileContents"
+            ]
+        },
+        "parameterValueTypes": {
+            "type": [
+                "string",
+                "boolean",
+                "integer",
+                "number",
+                "object",
+                "array",
+                "null"
+            ]
+        }
+    }
+}

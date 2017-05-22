@@ -1,0 +1,73 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "newLabName": {
+            "type": "string"
+        },
+        "labVmShutDownTime": {
+            "type": "string"
+        },
+        "labVmShutDownURL": {
+            "type": "string"
+        }
+    },
+    "resources": [
+        {
+            "apiVersion": "2017-04-26-preview",
+            "name": "[parameters('newLabName')]",
+            "type": "Microsoft.DevTestLab/labs",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "labStorageType": "Premium"
+            },
+            "resources": [
+                {
+                    "apiVersion": "2017-04-26-preview",
+                    "name": "LabVmsShutdown",
+                    "type": "schedules",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.DevTestLab/labs', parameters('newLabName'))]"
+                    ],
+                    "properties": {
+                        "status": "Enabled",
+                        "timeZoneId": "Central Standard Time",
+                        "dailyRecurrence": {
+                            "time": "[replace(parameters('labVmShutDownTime'),':','')]"
+                        },
+                        "taskType": "LabVmsShutdownTask",
+                        "notificationSettings": {
+                            "status": "Enabled",
+                            "timeInMinutes": 15
+                        }
+                    }
+                },
+                {
+                    "apiVersion": "2017-04-26-preview",
+                    "name": "[concat('Dtl', parameters('newLabName'))]",
+                    "type": "virtualNetworks",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.DevTestLab/labs', parameters('newLabName'))]"
+                    ]
+                },
+                {
+                    "apiVersion": "2017-04-26-preview",
+                    "name": "AutoShutdown",
+                    "type": "notificationChannels",
+                    "properties": {
+                        "description": "This option will send notifications to the specified webhook URL before auto-shutdown of virtual machines occurs.",
+                        "events": [
+                            {
+                                "eventName": "Autoshutdown"
+                            }
+                        ],
+                        "webHookUrl": "[parameters('labVmShutDownURL')]"
+                    },
+                    "dependsOn": [
+                        "[resourceId('Microsoft.DevTestLab/labs', parameters('newLabName'))]"
+                    ]
+                }
+            ]
+        }
+    ]
+}

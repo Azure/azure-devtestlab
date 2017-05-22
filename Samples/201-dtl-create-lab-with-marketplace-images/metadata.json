@@ -1,0 +1,7 @@
+{
+  "itemDisplayName": "Create a new lab with a set of allowed marketplace images",
+  "description": "This template creates a lab in Azure DevTest Labs and specifies a set of marketplace images",
+  "summary": "This template creates a new DevTest Lab instance and specifies a set of marketplace images",
+  "githubUsername": "workleodig",
+  "dateUpdated": "2016-2-14"
+}

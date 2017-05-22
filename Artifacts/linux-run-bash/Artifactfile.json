@@ -1,0 +1,38 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "Run Bash",
+    "publisher": "Microsoft",
+    "description": "Download and run a bash script",
+    "tags": [
+        "Bash",
+        "Linux"
+    ],
+    "targetOsType": "Linux",
+    "parameters": {
+        "scriptFileUris": {
+            "type": "array",
+            "displayName": "File URI",
+            "description": "File(s) to download to VM for execution"
+        },
+        "scriptToRun": {
+            "type": "string",
+            "displayName": "Script to Run",
+            "description": "Script file to run"
+        },
+        "scriptArguments": {
+            "type": "string",
+            "displayName": "Script Arguments",
+            "description": "Script arguments to pass",
+            "allowEmpty": true
+        }
+    },
+    "runAzureVMExtension": {
+        "publisher": "Microsoft.Azure.Extensions",
+        "type": "CustomScript",
+        "typeHandlerVersion": "2.0",
+        "settings": {
+            "fileUris": "[parameters('scriptFileUris')]",
+            "commandToExecute": "[concat('sh', ' ', parameters('scriptToRun'), ' ', parameters('scriptArguments'))]"
+        }
+    }
+}

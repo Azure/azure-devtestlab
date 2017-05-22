@@ -1,0 +1,40 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "Deploy App from Azure Storage",
+    "publisher": "Microsoft",
+    "description": "Deploy an app stored in an Azure container to Linux",
+    "tags": [
+        "Blob",
+        "Linux",
+        "Deploy"
+    ],
+    "targetOsType": "Linux",
+    "parameters": {
+        "container": {
+            "type": "string",
+            "displayName": "Blob Container Name",
+            "description": "The name of the Azure container to deploy."
+        },
+        "storageConnectionString": {
+            "type": "securestring",
+            "displayName": "Storage Connection String",
+            "description": "The connection string to the Azure storage account container containing the app."
+        },
+        "destination": {
+            "type": "string",
+            "displayName": "Destination",
+            "description": "The destination folder on the VM to deploy the app.",
+            "defaultValue": "/opt/<myapp>"
+        },
+        "deployScript": {
+            "type": "string",
+            "displayName": "Post-Deploy Script to Run",
+            "description": "The file name of a script included in the container that will run after all files are downloaded from the container. The file path is a relative path to the script file as stored in the storage container.  E.g. myscript.sh or mysubfolder/myscript.sh",
+            "allowEmpty": true,
+            "defaultValue": ""
+        }
+    },
+    "runCommand": {
+        "commandToExecute": "[concat('sh deploy_from_azure_container_v1.sh ', parameters('container'), ' ', parameters('destination'), ' ', parameters('storageConnectionString'), ' ', parameters('deployScript'))]"
+    }
+}

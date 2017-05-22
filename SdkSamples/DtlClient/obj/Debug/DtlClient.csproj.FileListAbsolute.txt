@@ -1,0 +1,1 @@
+E:\azure-devtestlab\SdkSamples\DtlClient\obj\Debug\DtlClient.csprojResolveAssemblyReference.cache

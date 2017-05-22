@@ -1,0 +1,39 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "Clone a git repository",
+    "publisher": "Microsoft",
+    "description": "Installs git and clones specified repository",
+    "tags": [
+        "Windows",
+        "Git"
+    ],
+    "iconUri": "https://cdn.rawgit.com/ferventcoder/chocolatey-packages/02c21bebe5abb495a56747cbb9b4b5415c933fc0/icons/git.svg",
+    "targetOsType": "Windows",
+    "parameters": {
+        "GitRepoURI": {
+            "type": "string",
+            "displayName": "Git Repo URI",
+            "description": "The URI of the Git repository to clone (Only HTTPS urls are supported)."
+        },
+        "Destination": {
+            "type": "string",
+            "displayName": "Destination",
+            "description": "A parent directory into which your repository will be cloned. E.g. - If you specify your destination as c:\\Repos, then a new sub-directory (c:\\Repos\\{your local repo}) will be created and your repo will be cloned into it.",
+            "defaultValue": "C:\\Repos"
+        },
+        "Branch": {
+            "type": "string",
+            "displayName": "Branch / Tag",
+            "description": "The branch or tag that will be checked out. Specify 'master' if you're not sure.",
+            "defaultValue": "master"
+        },
+        "PersonalAccessToken": {
+            "type": "securestring",
+            "displayName": "Personal Access Token",
+            "description": "Personal Access Token for accessing the Git repository."
+        }
+    },
+    "runCommand": {
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./StartChocolatey.ps1 -GitRepoLocation ''', parameters('GitRepoURI'), ''' -GitLocalRepoLocation ''', parameters('Destination'), ''' -GitBranch ''', parameters('Branch'), ''' -PersonalAccessToken ''', parameters('PersonalAccessToken'), '''\"')]"
+    }
+}

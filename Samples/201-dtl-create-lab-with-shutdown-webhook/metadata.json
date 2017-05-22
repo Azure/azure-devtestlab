@@ -1,0 +1,7 @@
+{
+  "itemDisplayName": "Create a new lab with custom policy rules",
+  "description": "This template creates a lab in Azure DevTest Labs and specifies custom shutdown time and shutdown notification URL",
+  "summary": "This template creates a new DevTest Lab instance and sets custom policy rules on it",
+  "githubUsername": "workleodig",
+  "dateUpdated": "2016-2-13"
+}

@@ -1,0 +1,21 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "de-provision",
+    "description": "Uses The Microsoft Azure Linux Agent (waagent) to de-provision a Linux VM for saving as an image.",
+    "publisher": "Microsoft",
+    "tags": [
+        "Linux"
+    ],
+    "targetOsType": "Linux",
+    "runCommand": {
+        "commandToExecute": "['sh depro.sh']"
+    },
+    "postDeployActions": [
+        {
+            "action": "waitForShutdown"
+        },
+        {
+            "action": "deallocate"
+        }
+    ]
+}

@@ -1,0 +1,14 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "PuTTY",
+    "publisher": "Microsoft",
+    "description": "Installs PuTTY using the Chocolatey package manager",
+    "tags": [
+        "Windows",
+        "PuTTY"
+    ],
+    "targetOsType": "Windows",
+    "runCommand": {
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', 'putty', '\"')]"
+    }
+}

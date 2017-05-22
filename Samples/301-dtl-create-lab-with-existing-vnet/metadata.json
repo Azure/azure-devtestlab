@@ -1,0 +1,7 @@
+{
+  "itemDisplayName": "Create a new lab in Azure DevTest Labs that leverages an existing virtualk network",
+  "description": "This template creates a new DevTest Lab / DTL instance that leverages an existing virtualk network",
+  "summary": "This template creates a new DevTest Lab instance that leverages an existing virtualk network",
+  "githubUsername": "mithunshanbhag",
+  "dateUpdated": "2016-03-22"
+}

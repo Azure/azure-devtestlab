@@ -1,0 +1,14 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "Enable local administrators",
+    "publisher": "Microsoft",
+    "description": "Enables local administrator accounts (if disabled).",
+    "tags": [
+        "Windows"
+    ],
+    "targetOsType": "Windows",
+    "parameters": {},
+    "runCommand": {
+        "commandToExecute": "powershell.exe -ExecutionPolicy bypass -File EnableLocalAdmins.ps1"
+    }
+}

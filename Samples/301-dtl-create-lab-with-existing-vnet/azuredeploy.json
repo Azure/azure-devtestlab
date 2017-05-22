@@ -1,0 +1,70 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "newLabName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the new lab instance to be created."
+      }
+    },
+    "newLabVirtualNetworkName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the new lab virtual network instance to be created with the new lab instance being created."
+      }
+    },
+    "existingVirtualNetworkId": {
+      "type": "string",
+      "metadata": {
+        "description": "The resource ID pointing to an existing (compute) virtual network to be referenced by the new lab virtual network instance being created."
+      }
+    },
+    "existingSubnetName": {
+      "type": "string",
+      "defaultValue": "default",
+      "metadata": {
+        "description": "The name of an existing (compute) subnet instance to be configured for Lab VM creation."
+      }
+    }
+  },
+  "variables": {
+    "existingSubnetId": "[concat(parameters('existingVirtualNetworkId'), '/subnets/', parameters('existingSubnetName'))]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2017-04-26-preview",
+      "type": "Microsoft.DevTestLab/labs",
+      "name": "[parameters('newLabName')]",
+      "location": "[resourceGroup().location]",
+      "resources": [
+        {
+          "apiVersion": "2017-04-26-preview",
+          "name": "[parameters('newLabVirtualNetworkName')]",
+          "type": "virtualNetworks",
+          "dependsOn": [
+            "[resourceId('Microsoft.DevTestLab/labs', parameters('newLabName'))]"
+          ],
+          "properties": {
+            "description": "Existing Compute virtual network associated as part of the lab creation process.",
+            "externalProviderResourceId": "[parameters('existingVirtualNetworkId')]",
+            "subnetOverrides": [
+              {
+                "name": "[parameters('existingSubnetName')]",
+                "resourceId": "[variables('existingSubnetId')]",
+                "useInVmCreationPermission": "Allow",
+                "usePublicIpAddressPermission": "Allow"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "outputs": {
+    "labId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.DevTestLab/labs', parameters('newLabName'))]"
+    }
+  }
+}

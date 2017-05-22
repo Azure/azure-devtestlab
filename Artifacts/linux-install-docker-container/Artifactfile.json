@@ -1,0 +1,42 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+  "title": "Docker Container",
+  "publisher": "Microsoft",
+  "description": "Install a Docker container on Linux",
+  "tags": [
+    "Docker",
+    "Linux",
+    "Container"
+  ],
+  "iconUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/Artifacts/linux-install-docker-container/dockerArtifact.png",
+  "targetOsType": "Linux",
+  "parameters": {
+    "name": {
+      "type": "string",
+      "displayName": "Name",
+      "description": "The name of the container, for example: MyMongo"
+    },
+    "dockerOptions": {
+      "type": "string",
+      "displayName": "Docker Options",
+      "description": "Additional options that affect the way in which Docker starts the container, for example: -p 27017:27017.",
+      "allowEmpty": true,
+      "defaultValue": ""
+    },
+    "image": {
+      "type": "string",
+      "displayName": "Image",
+      "description": "The name of the Docker image to be installed, for example: Jenkins, from Docker Hub."
+    },
+    "imageArguments": {
+      "type": "string",
+      "displayName": "Image Command/Arguments",
+      "description": "Any additional command-line arguments that apply to the container during bootstrap, for example: --smallfiles or --storageEngine wiredTiger.",
+      "allowEmpty": true,
+      "defaultValue": ""
+    }
+  },
+  "runCommand": {
+    "commandToExecute": "[concat('sh linux_install_docker_container.sh', ' ', parameters('name'), ' \"', parameters('dockerOptions'), '\" ', parameters('image'), ' \"', parameters('imageArguments'), '\" ')]"
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "existingLabName": {
+      "type": "string"
+    },
+    "formulaName":{
+      "type": "string"    
+    },
+    "vmOffer":{
+      "type": "string"
+    },
+    "vmPublisher":{
+      "type": "string"
+    },
+    "vmSku":{
+      "type": "string"
+    },
+    "vmSize":{
+      "type": "string"
+    }
+  },
+  "variables": {
+    "labVirtualNetworkName": "[concat('Dtl', parameters('existingLabName'))]",
+    "labSubnetName": "[concat(variables('labVirtualNetworkName'), 'Subnet')]",
+    "labVirtualNetworkId": "[concat('/virtualnetworks/', variables('labVirtualNetworkName'))]",
+
+    "ostype": "windows", 
+
+    "repositoryName": "public repo",
+    "artifactsFolder": "artifacts",
+    "vsCodeArtifactName": "[concat(variables('ostype'), '-vscode')]",
+    "enableAdminsArtifactName": "[concat(variables('ostype'), '-enable-local-admins')]"
+  },
+  "resources": [
+    {
+        "type": "microsoft.devtestlab/labs/formulas",
+        "name": "[concat(parameters('existingLabName'), '/', parameters('formulaName'))]",
+        "location": "[resourceGroup().location]",
+        "apiversion": "2017-04-26-preview",
+        "properties": {
+          "description": "Formula for Windows VM.",
+          "ostype": "[variables('ostype')]",
+          "formulacontent": {
+            "properties": {
+              "size": "[parameters('vmSize')]",
+              "username": "",
+              "password": "",
+              "labsubnetname": "[variables('labSubnetName')]",
+              "labvirtualnetworkid": "[variables('labVirtualNetworkId')]",
+              "artifacts": [
+                {
+                  "artifactid": "[concat('/artifactsources/', variables('repositoryName'), '/', variables('artifactsFolder'), '/', variables('vsCodeArtifactName'))]",
+                  "parameters": []
+                },
+                {
+                  "artifactid": "[concat('/artifactsources/', variables('repositoryName'), '/', variables('artifactsFolder'), '/', variables('enableAdminsArtifactName'))]",
+                  "parameters": []
+                }
+              ],
+              "galleryimagereference": {
+                "offer": "[parameters('vmOffer')]",
+                "publisher": "[parameters('vmPublisher')]",
+                "sku": "[parameters('vmSku')]",
+                "ostype": "[variables('ostype')]",
+                "version": "latest"
+              }
+            }
+          }
+        }
+      }
+    ],   
+  "outputs": {
+    "formulaId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.DevTestLab/labs/formulas', parameters('existingLabName'), parameters('formulaName'))]"
+    }
+  }
+}

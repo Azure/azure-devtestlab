@@ -1,0 +1,102 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "Chef Client",
+    "publisher": "Microsoft",
+    "description": "Downloads and installs the client, registers with the specified Chef server, does an initial checkin, and applies any recipes in the run list.",
+    "tags": [
+        "Chef",
+        "Linux"
+    ],
+    "iconUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/Artifacts/linux-bootstrap-chef/chefArtifact.png",
+    "targetOsType": "Linux",
+    "parameters": {
+        "chefNodeName": {
+            "type": "string",
+            "displayName": "Chef Node Name",
+            "description": "The name to assign to this VM as used by the Chef server. A node is any computer that is managed by a Chef server."
+        },
+        "chefServerUrl": {
+            "type": "string",
+            "displayName": "Chef Server URL",
+            "description": "The URL for the Chef server. For example: https://api.chef.io/organizations/myorgname"
+        },
+        "validationClientName": {
+            "type": "string",
+            "displayName": "Validation Client Name",
+            "description": "The name of the validator key that is used by the client to access the Chef server during the initial client run. For example: myorgname-validator"
+        },
+        "validationKey": {
+            "type": "securestring",
+            "controlType": "fileContents",
+            "displayName": "Validation Key",
+            "description": "The file containing the validation private key for the organization.  For example: myorgname-validator.pem"
+        },
+        "runlist": {
+            "type": "string",
+            "displayName": "Run List",
+            "description": "Recipe(s) to run (e.g. recipe[getting-started],recipe[other-recipe],...)",
+            "defaultValue": "",
+            "allowEmpty": true
+        },
+        "clientRb": {
+            "type": "string",
+            "controlType": "fileContents",
+            "displayName":"Client Configuration File",
+            "description":"Configuration file for chef-client, should not contain values that replicate other parameters seen here",
+            "defaultValue": "",
+            "allowEmpty": true
+        },
+        "sslVerifyMode": {
+            "type": "string",
+            "displayName":"SSL Verification Mode",
+            "description":"SSL peer verification during the chef-client run to the Chef server.  Permitted values are 'none' and 'peer'.  Default is 'peer'.",
+            "allowedValues":["none","peer"],
+            "defaultValue": "peer"
+        },
+        "chefEnvironment": {
+            "type": "string",
+            "displayName":"Chef environment tag",
+            "description":"For example, dev, test, production.",
+            "defaultValue":"_default",
+            "allowEmpty": true
+        },
+        "databagSecret": {
+            "type": "securestring",
+            "displayName":"Encrypted databag secret",
+            "description":"User-defined bag of key-value pairs",
+            "controlType": "fileContents",
+            "defaultValue": "",
+            "allowEmpty": true
+        },
+        "chefServerCrt": {
+            "type": "securestring",
+            "displayName":"Chef Server SSL Certificate",
+            "description":"Chef Server SSL Certificate",
+            "controlType": "fileContents",
+            "defaultValue": "",
+            "allowEmpty": true
+        }
+    },
+    "runAzureVMExtension": {
+        "publisher": "Chef.Bootstrap.WindowsAzure",
+        "type": "LinuxChefClient",
+        "typeHandlerVersion": "1210.12",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+            "bootstrap_options": {
+                "chef_node_name": "[parameters('chefNodeName')]",
+                "chef_server_url": "[parameters('chefServerUrl')]",
+                "validation_client_name": "[parameters('validationClientName')]",
+                "node_ssl_verify_mode": "[parameters('sslVerifyMode')]",
+                "environment": "[parameters('chefEnvironment')]",
+                "secret": "[parameters('databagSecret')]"
+            },
+            "runlist": "[parameters('runlist')]",
+            "client_rb": "[parameters('clientRb')]"
+        },
+        "protectedSettings": {
+            "validation_key": "[parameters('validationKey')]",
+            "chef_server_crt": "[parameters('chefServerCrt')]"
+        }
+    }
+}

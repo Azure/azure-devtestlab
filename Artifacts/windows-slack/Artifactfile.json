@@ -1,0 +1,26 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "Slack",
+    "description": "Installs Slack using the Chocolatey package manager",
+    "tags": [
+        "Windows",
+        "Slack"
+    ],
+    "iconUri": "https://chocolatey.org/content/packageimages/slack.1.1.0.png",
+    "targetOsType": "Windows",
+    "parameters": {
+        "installUsername": {
+            "type": "string",
+            "displayName": "Install User Name",
+            "description": "The local user name for which the artifact will be installed"
+        },
+        "installPassword": {
+            "type": "securestring",
+            "displayName": "Install Password",
+            "description": "User password"
+        }
+    },
+    "runCommand": {
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', 'slack', ' -UserName ', parameters('installUsername'), ' -Password ', parameters('installPassword'), '\"')]"
+    }
+}

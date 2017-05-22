@@ -1,0 +1,70 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "VSTS Build Agent",
+    "publisher": "Microsoft",
+    "description": "Downloads and installs the VSTS build agent, registers with the specified Visual Studio Team Services account, and adds the VM to the specified agent pool.",
+    "tags": [
+        "VSTS",
+        "Build",
+        "CI",
+        "Windows"
+    ],
+    "iconUri": "https://www.visualstudio.com/favicon.ico",
+    "targetOsType": "Windows",
+    "parameters": {
+        "vstsAccount": {
+            "type": "string",
+            "displayName": "VSTS Account Name",
+            "description": "The name of the VSTS account to add the build agent to. This is the value in your VSTS URL: e.g. 'myaccount' in https://myaccount.visualstudio.com."
+        },
+        "vstsPassword": {
+            "type": "securestring",
+            "displayName": "VSTS Personal Access Token",
+            "description": "A personal access token with permissions to add build agents. It will only be used to register the agent."
+        },
+        "agentName": {
+            "type": "string",
+            "displayName": "Agent Name",
+            "description": "The name to give to the agent, as seen by VSTS."
+        },
+        "poolName": {
+            "type": "string",
+            "displayName": "Agent Pool",
+            "description": "The agent pool this build agent should be added to."
+        },
+        "windowsLogonAccount": {
+            "type": "string",
+            "displayName": "Service Account Name",
+            "description": "The Windows logon account name which will run the agent service.",
+            "defaultValue": "NT AUTHORITY\\NetworkService"
+        },
+        "windowsLogonPassword": {
+            "type": "securestring",
+            "displayName": "Service Account Password",
+            "description": "The Windows logon account password which will run the agent service.  This is not required for the default NT AUTHORITY\\NetworkService account.",
+            "defaultValue": "",
+            "allowEmpty": true
+        },
+        "driveLetter": {
+            "type": "string",
+            "displayName": "Install Drive Letter",
+            "description": "The drive letter to install the build agent to. The specified drive must already exist.",
+            "defaultValue": "C",
+            "maxLength": 1,
+            "minLength": 1, 
+            "allowedValues": [
+                "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"
+            ]
+        },
+        "workDirectory": {
+            "type": "string",
+            "displayName": "Work Directory",
+            "description": "Work directory where job data is stored. Defaults to _work under the root of the agent directory. Work directory is owned by a given agent and should not be shared between multiple agents.",
+            "defaultValue": "",
+            "allowEmpty": true
+        }
+    },
+    "runCommand": {
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File vsts-agent-install.ps1 ', parameters('vstsAccount'), ' ', parameters('vstsPassword'), ' ', parameters('agentName'), ' \"', parameters('poolName'), '\" \"', parameters('windowsLogonAccount'), '\" \"', parameters('windowsLogonPassword'), '\" ', parameters('driveLetter'), ' \"', parameters('workDirectory'), '\"')]"
+    }
+}

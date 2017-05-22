@@ -1,0 +1,9 @@
+# Create a new Custom Image from a VHD.
+
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Fazure-devtestlab%2Fmaster%2FARMTemplates%2F201-dtl-create-customimage-from-vhd%2Fazuredeploy.json" target="_blank">
+    <img src="http://azuredeploy.net/deploybutton.png"/>
+</a>
+
+
+This deployment template is used to create a Custom Image from an existing VHD in the lab.
+- The Custom Image will be created in the same lab in which the VHD exists.

@@ -1,0 +1,18 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "newLabName": {
+      "value": "MyLab1"
+    },
+    "newLabVirtualNetworkName": {
+      "value": "MyLabVNet1"
+    },
+    "existingVirtualNetworkId": {
+      "value": "/subscriptions/1234a3bc-ee4e-4c7a-9709-1868a28b1d4d/resourceGroups/myRG234/providers/Microsoft.Network/virtualNetworks/MyVNet1"
+    },
+    "existingSubnetName": {
+      "value": "default"
+    }
+  }
+}

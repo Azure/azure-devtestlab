@@ -1,0 +1,8 @@
+﻿{
+  "itemDisplayName": "Add user or group as a 'DevTest Labs User' to a Azure DevTest Labs instance.",
+  "description": "This template creates a new role assignment which adds the specified user or group as a 'DevTest Lab User' to the specified DevTest Lab instance.",
+  "summary": "This template creates a new 'DevTest Labs User' role assignment to a lab.",
+  "githubUsername": "emaher",
+  "dateUpdated": "2016-11-21"
+}
+

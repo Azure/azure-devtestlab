@@ -1,0 +1,15 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "MongoDB",
+    "publisher": "Microsoft",
+    "description": "Installs MongoDB using the Chocolatey package manager",
+    "tags": [
+        "Windows",
+        "MongoDB"
+    ],
+    "iconUri": "https://cdn.rawgit.com/dtgm/chocolatey-packages/8f7101024b11677be45a74b45114000b428a9c9b/icons/mongodb.png",
+    "targetOsType": "Windows",
+    "runCommand": {
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', 'mongodb', '\"')]"
+    }
+}

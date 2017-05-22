@@ -1,0 +1,21 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "existingLabName": {
+      "value": "MyLab1"
+    },
+    "existingVMResourceId": {
+      "value": "/subscriptions/1234a3bc-ee4e-4c7a-9709-1868a28b1d4d/resourceGroups/myRG234/providers/Microsoft.DevTestLab/labs/MyLab1/virtualMachines/MyVM1pwdgal"
+    },
+    "windowsOsState": {
+      "value": "SysprepApplied"
+    },
+    "imageName": {
+      "value": "MyCustomImage1FromWindowsVM"
+    },
+    "imageDescription": {
+      "value": "Some description for the custom image"
+    }
+  }
+}

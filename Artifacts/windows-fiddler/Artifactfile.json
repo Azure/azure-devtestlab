@@ -1,0 +1,15 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "Fiddler4",
+    "publisher": "Microsoft",
+    "description": "Installs Fiddler4 using the Chocolatey package manager",
+    "tags": [
+        "Windows",
+        "Fiddler"
+    ],
+    "iconUri": "https://cdn.rawgit.com/chocolatey/chocolatey-coreteampackages/e4a49519947c3cff55c17a0b08266c56b0613e64/icons/fiddler.svg",
+    "targetOsType": "Windows",
+    "runCommand": {
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', 'fiddler4', '\"')]"
+    }
+}

@@ -1,0 +1,22 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "Sysprep",
+    "description": "Runs sysprep on Windows machines. Running this artifact will render your machine unusable. Apply this artifact last if used in conjunction with other artifacts.",
+    "publisher": "Microsoft",
+    "tags": [
+        "Windows"
+    ],
+    "targetOsType": "Windows",
+    "parameters": {},
+    "runCommand": {
+        "commandToExecute": "['powershell.exe -executionpolicy bypass -File Sysprep.ps1']"
+    },
+    "postDeployActions": [
+        {
+            "action": "waitForShutdown"
+        },
+        {
+            "action": "deallocate"
+        }
+    ]
+}

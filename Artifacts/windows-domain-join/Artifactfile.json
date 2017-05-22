@@ -1,0 +1,55 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+  "title": "Active Directory Domain Join",
+  "description": "Joins a Windows VM to an Active Directory Domain. Requires that the Windows operating system can resolve the domain name and domain controller via DNS.",
+  "tags": [
+    "Windows",
+    "Active Directory"
+  ],
+  "iconUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/Artifacts/windows-domain-join/domainJoinArtifact.png",
+  "targetOsType": "Windows",
+  "parameters": { 
+      "domainName": {
+          "type": "string",
+          "displayName": "Active Directory Domain Name",
+          "description": "The name of the Active Directory Domain to join (e.g. \"corp.contoso.com\")."
+      },
+      "domainOU": {
+          "type": "string",
+          "displayName": "Active Directory Domain OU",
+          "description": "The distinguished name of the Organizational Unit to join (e.g. \"OU=DevTest,DC=corp,DC=contoso,DC=com\")"
+      },
+      "domainJoinUser": {
+          "type": "string",
+          "displayName": "Domain Join User Account",
+          "description": "The user account with rights to join the system to the domain (e.g. \"CORP\\user\" or \"user@corp.contoso.com\")"
+      },
+      "domainJoinUserPassword": {
+          "type": "securestring",
+          "displayName": "Domain Join User Account Password",
+          "description": "Password of the Domain Join User Account."
+      },
+      "domainJoinOptions": {
+          "type": "string",
+          "displayName": "Domain Join Options",
+          "defaultValue": "3",
+          "description": "Set of bit flags that define the join options. Default value of 3 is a combination of NETSETUP_JOIN_DOMAIN (0x00000001) & NETSETUP_ACCT_CREATE (0x00000002) i.e. will join the domain and create the account on the domain. For more information see https://msdn.microsoft.com/en-us/library/aa392154(v=vs.85).aspx"
+      }
+   },
+  "runAzureVMExtension": {
+    "publisher": "Microsoft.Compute",
+    "type": "JsonADDomainExtension",
+    "typeHandlerVersion": "1.3",
+    "autoUpgradeMinorVersion": true,
+    "settings": {
+          "Name": "[parameters('domainName')]",
+          "OUPath": "[parameters('domainOU')]",
+          "User": "[parameters('domainJoinUser')]",
+          "Restart": "true",
+          "Options": "[parameters('domainJoinOptions')]"
+        },
+    "protectedSettings": {
+          "Password": "[parameters('domainJoinUserPassword')]"
+    }
+  }
+}

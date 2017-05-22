@@ -1,0 +1,15 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "Docker",
+    "publisher": "Microsoft",
+    "description": "Install Docker on Linux",
+    "tags": [
+        "Docker",
+        "Linux"
+    ],
+    "iconUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/Artifacts/linux-install-docker/dockerArtifact.png",
+    "targetOsType": "Linux",
+    "runCommand": {
+        "commandToExecute": "['sh linux_install_docker_v1.sh']"
+    }
+}
