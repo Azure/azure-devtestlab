@@ -30,7 +30,8 @@
             "type": "string",
             "displayName": "Script Arguments",
             "description": "Optional arguments for the script, eg '-username John -server localhost'",
-            "allowEmpty": true
+            "allowEmpty": true,
+            "defaultValue": ""            
         }
     },
     "runCommand": {
