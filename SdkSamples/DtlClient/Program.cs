@@ -28,7 +28,6 @@ namespace DtlClient
             string labName,
             string labVirtualNetworkName,
             string location)
-
         {
             var virtualNetworkSubnetName = labVirtualNetworkName + "Subnet";
 
