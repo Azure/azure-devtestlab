@@ -176,10 +176,10 @@ namespace DtlClient
                         {
                             AddAllowedPortsToSubnet(
                                  ConfigurationManager.AppSettings["SubscriptionId"],
-                            labResourceGroupName,
-                            labName,
-                            virtualNetworkName,
-                            location);
+                                 labResourceGroupName,
+                                 labName,
+                                 virtualNetworkName,
+                                 location);
                             Console.WriteLine($"The operation completed successfully.");
                             break;
                         }
