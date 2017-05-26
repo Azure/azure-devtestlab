@@ -51,14 +51,14 @@
     },
     "artifactRepoUri": {
       "type": "string",
-      "defaultValue": "https://xiaoying.visualstudio.com/DefaultCollection/_git/azure-devtestlabsdemo",
+      "defaultValue": "https://github.com/gxy001/azure-devtestlabsdemo",
       "metadata": {
         "description": "Set 'artifact repository': the Git clone URI."
       }
     },
     "artifactRepoFolder": {
       "type": "string",
-      "defaultValue": "AzureConDemo",
+      "defaultValue": "Artifacts",
       "metadata": {
         "description": "Set 'artifact repository': the target folder in the repo."
       }
@@ -86,9 +86,9 @@
     },
     "artifactRepoType": {
       "type": "string",
-      "defaultValue": "VsoGit",
+      "defaultValue": "GitHub",
       "metadata": {
-        "description": "Set 'artifact repository': the Git repo type."
+        "description": "Set 'artifact repository': the Git repo type, GitHub or VsoGit."
       }
     },
     "pilotVMName": {
