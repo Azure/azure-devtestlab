@@ -21,20 +21,15 @@
             "displayName": "Deployment group name",
             "description": "Name of the deployment group against which the agent has to be configured"
         },
-        "userName": {
-            "type": "string",
-            "displayName": "User name",
-            "description": "User name with permissions to configure deployment agent"
-        },
         "PersonalAccessToken": {
             "type": "securestring",
             "displayName": "Personal Access Token",
-            "description": "Personal Access Token for accessing VSTS build"
+            "description": "Personal Access Token for downloading and configuring VSTS deployment agent"
         },
         "deploymentAgentTags": {
             "type": "string",
             "displayName": "Deployment agent tags",
-            "description": "Optinally provide comma separated list of tags for deployment agent. Example Web, DB",
+            "description": "Optionally provide comma separated list of tags for deployment agent. Example Web, DB",
             "allowEmpty": true,
             "defaultValue": ""
         },
@@ -54,6 +49,6 @@
         }
     },
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File InstallAndConfigureDeploymentGroupAgent.ps1', ' -accountUrl ', parameters('accountUrl'), ' -projectName \"', parameters('projectName'), '\"', ' -deploymentGroupName \"', parameters('deploymentGroupName'), '\"', ' -userName ', parameters('userName'), ' -patToken ', parameters('PersonalAccessToken'), ' -deploymentAgentTags \"', parameters('deploymentAgentTags'), '\"', ' -agentInstallPath \"', parameters('agentInstallPath'), '\"', ' -agentName \"', parameters('agentName'), '\"')]"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./InstallAndConfigureDeploymentGroupAgent.ps1', ' -accountUrl ', parameters('accountUrl'), ' -projectName ''', parameters('projectName'), ''' -deploymentGroupName ''', parameters('deploymentGroupName'), ''' -personalAccessToken ', parameters('PersonalAccessToken'), ' -deploymentAgentTags ''', parameters('deploymentAgentTags'), ''' -agentInstallPath ''', parameters('agentInstallPath'), ''' -agentName ''', parameters('agentName'), '''\"')]"
     }
 }

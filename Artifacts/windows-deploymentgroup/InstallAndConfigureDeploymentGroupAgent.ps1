@@ -2,8 +2,7 @@
     [Parameter(Mandatory=$true)]$accountUrl,
     [Parameter(Mandatory=$true)]$projectName,
     [Parameter(Mandatory=$true)]$deploymentGroupName,
-    [Parameter(Mandatory=$true)]$userName,
-    [Parameter(Mandatory=$true)]$patToken,
+    [Parameter(Mandatory=$true)]$personalAccessToken,
     [Parameter(Mandatory=$false)][String] [AllowEmptyString()]$deploymentAgentTags,
     [Parameter(Mandatory=$false)][String] [AllowEmptyString()]$agentInstallPath,
     [Parameter(Mandatory=$false)][String] [AllowEmptyString()]$agentName
@@ -14,7 +13,7 @@ function Test-InstallPrerequisites
 {
     If(-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] “Administrator”))
     { 
-        Write-Host "In sufficient previliges. Run command in Administrator PowerShell Prompt"
+        Write-Host "Insufficient privileges. Run command in Administrator PowerShell Prompt"
         Exit -1
     }
 }
@@ -37,27 +36,26 @@ function New-AgentPath
         #Wait Until directory reflects in file system
         $Stoploop = $false
         [int]$Retrycount = 0
- 
+
         do {
-	        try {
-		        pushd $agentInstallPath
+            try {
+                pushd $agentInstallPath
                 popd
-		        $Stoploop = $true
-		        }
-	        catch {
-		        if ($Retrycount -gt 3){
+                $Stoploop = $true
+            } catch {
+                if ($Retrycount -gt 3) 
+                {
                     $Stoploop = $true
-			        Write-Host "Cannot find directory: $agentInstallPath"
+                    Write-Host "Cannot find directory: $agentInstallPath"
                     Exit -1
-		        }
-		        else {
-			        Write-Verbose "Wait for directory creation. Retrying in 30 seconds..."
-			        Start-Sleep -Seconds 30
-			        $Retrycount = $Retrycount + 1
-		        }
-	        }
-        }
-        While ($Stoploop -eq $false)
+                } else {
+                    Write-Verbose "Wait for directory creation. Retrying in 30 seconds..."
+                    Start-Sleep -Seconds 30
+                    $Retrycount = $Retrycount + 1
+                }
+            }
+
+        } While ($Stoploop -eq $false)
     }
 
     Write-Host "Created deployment agent install directory: $agentInstallPath"
@@ -69,17 +67,18 @@ function Get-DeploymentAgentDownloadUrl
     [CmdletBinding()]
     param(
         [Parameter(Mandatory=$true)]$accountUrl,
-        [Parameter(Mandatory=$true)]$userName,
-        [Parameter(Mandatory=$true)]$patToken
+        [Parameter(Mandatory=$true)]$personalAccessToken
         )
 
     $platform = "win7-x64"
     $downloadAPIVersion = "3.0-preview.2"
+    $userName = "AzureDevTestLabs"
+
     [string] $restCallUrl = $accountUrl + ("/_apis/distributedtask/packages/agent/{0}?top=1&api-version={1}" -f $platform,$downloadAPIVersion)
     Write-Host "Agent Download REST url: $restCallUrl"
 
     
-    $basicAuth = ("{0}:{1}" -f $userName, $patToken)
+    $basicAuth = ("{0}:{1}" -f $userName, $personalAccessToken)
     $basicAuth = [System.Text.Encoding]::UTF8.GetBytes($basicAuth)
     $basicAuth = [System.Convert]::ToBase64String($basicAuth)
     $headers = @{Authorization=("Basic {0}" -f $basicAuth)}
@@ -98,14 +97,13 @@ function Download-DeploymentGroupAgent
     [CmdletBinding()]
     param(
         [Parameter(Mandatory=$true)]$accountUrl,
-        [Parameter(Mandatory=$true)]$userName,
-        [Parameter(Mandatory=$true)]$patToken,
+        [Parameter(Mandatory=$true)]$personalAccessToken,
         [Parameter(Mandatory=$true)]$agentInstallPath,
         [Parameter(Mandatory=$true)]$agentZipFile
         )
    
     $agentZip="$agentInstallPath\$agentZipFile";
-    $downloadUrl = Get-DeploymentAgentDownloadUrl $accountUrl $userName $patToken
+    $downloadUrl = Get-DeploymentAgentDownloadUrl $accountUrl $personalAccessToken
     pushd $agentInstallPath
 
     #download
@@ -127,7 +125,7 @@ function Configure-DeploymentGroupAgent
         [Parameter(Mandatory=$true)]$accountUrl,
         [Parameter(Mandatory=$true)]$projectName,
         [Parameter(Mandatory=$true)]$deploymentGroupName,
-        [Parameter(Mandatory=$true)]$patToken,
+        [Parameter(Mandatory=$true)]$personalAccessToken,
         [Parameter(Mandatory=$false)][String] [AllowEmptyString()]$agentName,
         [Parameter(Mandatory=$true)]$agentInstallPath,
         [Parameter(Mandatory=$false)][String] [AllowEmptyString()]$deploymentAgentTags
@@ -142,9 +140,14 @@ function Configure-DeploymentGroupAgent
     pushd $agentInstallPath
     if ([string]::IsNullOrEmpty($deploymentAgentTags)) 
     {
-        .\config.cmd --deploymentgroup --agent $agentName --runasservice --work '_work' --url $accountUrl --projectname $projectName --deploymentgroupname $deploymentGroupName --auth PAT --token $patToken --unattended 
+        .\config.cmd --deploymentgroup --agent $agentName --runasservice --work '_work' --url $accountUrl --projectname $projectName --deploymentgroupname $deploymentGroupName --auth PAT --token $personalAccessToken --unattended 
     } else {
-        .\config.cmd --deploymentgroup --agent $agentName --runasservice --work '_work' --url $accountUrl --projectname $projectName --deploymentgroupname $deploymentGroupName --auth PAT --token $patToken --adddeploymentgrouptags --deploymentgrouptags $deploymentAgentTags --unattended 
+        .\config.cmd --deploymentgroup --agent $agentName --runasservice --work '_work' --url $accountUrl --projectname $projectName --deploymentgroupname $deploymentGroupName --auth PAT --token $personalAccessToken --adddeploymentgrouptags --deploymentgrouptags $deploymentAgentTags --unattended 
+    }
+    if (! $?) 
+    {
+        Write-Host "Deployment agent configuration failed."
+        Exit 1
     }
     popd
 }
@@ -171,8 +174,7 @@ function Install-DeploymentGroupAgent
         [Parameter(Mandatory=$true)]$accountUrl,
         [Parameter(Mandatory=$true)]$projectName,
         [Parameter(Mandatory=$true)]$deploymentGroupName,
-        [Parameter(Mandatory=$true)]$userName,
-        [Parameter(Mandatory=$true)]$patToken,
+        [Parameter(Mandatory=$true)]$personalAccessToken,
         [Parameter(Mandatory=$false)] [String] [AllowEmptyString()] $deploymentAgentTags,
         [Parameter(Mandatory=$false)] [String] [AllowEmptyString()] $agentInstallPath,
         [Parameter(Mandatory=$false)] [String] [AllowEmptyString()] $agentName
@@ -192,10 +194,10 @@ function Install-DeploymentGroupAgent
         $agentInstallPath = New-AgentPath $agentInstallPath
     
         #Download Agent
-        Download-DeploymentGroupAgent $accountUrl $userName $patToken $agentInstallPath $agentZipFile
+        Download-DeploymentGroupAgent $accountUrl $personalAccessToken $agentInstallPath $agentZipFile
 
         #Configure Agent
-        Configure-DeploymentGroupAgent $accountUrl $projectName $deploymentGroupName $patToken $agentName $agentInstallPath $deploymentAgentTags  
+        Configure-DeploymentGroupAgent $accountUrl $projectName $deploymentGroupName $personalAccessToken $agentName $agentInstallPath $deploymentAgentTags  
 
         #Cleanup
         Remove-InstallFiles $agentInstallPath $agentZipFile
@@ -216,7 +218,7 @@ function Install-DeploymentGroupAgent
     }
 }
 
-Install-DeploymentGroupAgent $accountUrl $projectName $deploymentGroupName $userName $patToken $deploymentAgentTags $agentInstallPath $agentName 
+Install-DeploymentGroupAgent $accountUrl $projectName $deploymentGroupName $personalAccessToken $deploymentAgentTags $agentInstallPath $agentName 
 
 
 
