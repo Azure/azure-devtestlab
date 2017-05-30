@@ -1,0 +1,15 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "Adobe Flex SDK",
+    "description": "Installs Adobe Flex SDK, EULA: http://www.adobe.com/products/eulas/#flex_sdk",
+    "tags": [
+        "Windows",
+        "Adobe",
+        "Flex"
+    ],
+    "iconUri": "https://github.com/Azure/azure-devtestlab/raw/master/Artifacts/windows-vscode/flex%20icon.png",
+    "targetOsType": "Windows",
+    "runCommand": {
+        "commandToExecute": "powershell.exe -ExecutionPolicy bypass -File installAdobeFlex.ps1"
+    }
+}
