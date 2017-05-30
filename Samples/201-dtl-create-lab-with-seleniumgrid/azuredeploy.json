@@ -1,0 +1,205 @@
+﻿{  
+    "$schema":"http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion":"1.0.0.0",
+    "parameters":{  
+        "labName":{  
+            "type":"string",
+            "defaultValue":"SeleniumGridLab",
+            "metadata":{  
+                "description":"The name of the new lab instance to be created."
+            }
+        },
+        "nodeCount": {
+            "type": "int",
+            "metadata": {
+                "description": "The number of Selenium Grid nodes you need. Each node is setup on a separate VM. This is in addition to the VM on which the hub is setup."
+            },
+            "defaultValue": 1
+        },
+        "username":{  
+            "type":"string",
+            "defaultValue":"seleniumgriduser",
+            "metadata":{  
+                "description":"The username for the local account that will be created on all the new VMs."
+            }
+        },
+        "password":{  
+            "type":"securestring",
+            "defaultValue":"<3DevTestLabs!",
+            "metadata":{
+                "description":"The password for the local account that will be created on all the new VMs."
+            }
+        },
+        "seleniumServerStandaloneJarFile": {
+            "type": "string",
+            "metadata": {
+                "description": "Download link for the selenium standalone server .jar file that you want to use."
+            },
+            "defaultValue": "https://goo.gl/s4o9Vx"
+        },
+        "hubConfigJsonFile": {
+            "type": "string",
+            "metadata": {
+                "description": "Download link for the hub config json file you wish to use to configure the hub. For example you may upload the required config file to an Azure storage account and provide the link here."
+            },
+            "defaultValue": ""
+        },
+        "nodeConfigJsonFile": {
+            "type": "string",
+            "metadata": {
+                "description": "Download link for the node config json file you wish to use to configure the nodes. For example you may upload the required config file to an Azure storage account and provide the link here."
+            },
+            "defaultValue": ""
+        }
+    },
+    "variables":{  
+        "vmStorageType":"Standard",
+        "vmsize":"Standard_F1s",
+        "vmNamePrefix": "Selenium",
+        "newLabId":"[resourceId('Microsoft.DevTestLab/labs', parameters('labName'))]",
+        "labSubnetName":"[concat(variables('labVirtualNetworkName'), 'Subnet')]",
+        "labVirtualNetworkName":"[concat('Dtl', parameters('labName'))]",
+        "labVirtualNetworkId":"[resourceId('Microsoft.DevTestLab/labs/virtualNetworks', parameters('labName'), variables('labVirtualNetworkName'))]",
+        "seleniumServerStandaloneJarFile": "[parameters('seleniumServerStandaloneJarFile')]",
+        "configFilesArray": [
+            "[parameters('hubConfigJsonFile')]",
+            "[parameters('nodeConfigJsonFile')]"
+        ]
+    },
+    "resources":[  
+        {  
+            "apiVersion":"2017-04-26-preview",
+            "type":"Microsoft.DevTestLab/labs",
+            "name":"[trim(parameters('labName'))]",
+            "location":"[resourceGroup().location]",
+            "resources":[  
+                {  
+                    "apiVersion":"2017-04-26-preview",
+                    "name":"[variables('labVirtualNetworkName')]",
+                    "type":"virtualnetworks",
+                    "dependsOn":[  
+                        "[variables('newLabId')]"
+                    ]
+                }
+            ]
+        },
+        {  
+            "apiVersion":"2017-04-26-preview",
+            "type":"Microsoft.DevTestLab/labs/virtualmachines",
+            "name":"[concat(parameters('labName'), '/', variables('vmNamePrefix'), 'Hub')]",
+            "location":"[resourceGroup().location]",
+            "dependsOn":[  
+                "[variables('labVirtualNetworkId')]"
+            ],
+            "properties":{  
+                "galleryImageReference":{  
+                    "offer":"WindowsServer",
+                    "publisher":"MicrosoftWindowsServer",
+                    "sku":"2012-R2-Datacenter",
+                    "osType":"Windows",
+                    "version":"latest"
+                },
+                "size":"[variables('VMSize')]",
+                "storageType":"[variables('vmStorageType')]",
+                "isAuthenticationWithSshKey":false,
+                "userName":"[parameters('username')]",
+                "sshKey":"",
+                "password":"[parameters('password')]",
+                "labVirtualNetworkId":"[variables('labVirtualNetworkId')]",
+                "labSubnetName":"[variables('labSubnetName')]",
+                "disallowPublicIpAddress":false,
+                "artifacts":[  
+                    {  
+                        "artifactId":"[resourceId('Microsoft.DevTestLab/labs/artifactSources/artifacts', parameters('labName'), 'public repo', 'windows-chocolatey')]",
+                        "parameters":[  
+                            {  
+                                "name":"packages",
+                                "value":"javaruntime"
+                            }
+                        ]
+                    },
+                    {  
+                        "artifactId":"[resourceId('Microsoft.DevTestLab/labs/artifactSources/artifacts', parameters('labName'), 'public repo', 'windows-seleniumgrid-hub')]",
+                        "parameters":[  
+                            {  
+                                "name":"seleniumServerStandaloneJarFile",
+                                "value":"[variables('seleniumServerStandaloneJarFile')]"
+                            },
+                            {  
+                                "name":"configFile",
+                                "value":"[variables('configFilesArray')[0]]"
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "apiVersion":"2017-04-26-preview",
+            "copy": {
+                "name": "nodeCopy",
+                "count": "[parameters('nodeCount')]"
+            },
+            "type":"Microsoft.DevTestLab/labs/virtualmachines",
+            "name":"[concat(parameters('labName'), '/', variables('vmNamePrefix'), 'Node', copyIndex(1))]",
+            "location":"[resourceGroup().location]",
+            "dependsOn":[  
+                "[variables('labVirtualNetworkId')]"
+            ],
+            "properties":{  
+                "galleryImageReference":{  
+                    "offer":"WindowsServer",
+                    "publisher":"MicrosoftWindowsServer",
+                    "sku":"2012-R2-Datacenter",
+                    "osType":"Windows",
+                    "version":"latest"
+                },
+                "size":"[variables('VMSize')]",
+                "storageType":"[variables('vmStorageType')]",
+                "isAuthenticationWithSshKey":false,
+                "userName":"[parameters('username')]",
+                "sshKey":"",
+                "password":"[parameters('password')]",
+                "labVirtualNetworkId":"[variables('labVirtualNetworkId')]",
+                "labSubnetName":"[variables('labSubnetName')]",
+                "artifacts":[  
+                    {  
+                        "artifactId":"[resourceId('Microsoft.DevTestLab/labs/artifactSources/artifacts', parameters('labName'), 'public repo', 'windows-selenium')]"
+                    },
+                    {  
+                        "artifactId":"[resourceId('Microsoft.DevTestLab/labs/artifactSources/artifacts', parameters('labName'), 'public repo', 'windows-chocolatey')]",
+                        "parameters":[  
+                            {  
+                                "name":"packages",
+                                "value":"javaruntime"
+                            }
+                        ]
+                    },
+                    {  
+                        "artifactId":"[resourceId('Microsoft.DevTestLab/labs/artifactSources/artifacts', parameters('labName'), 'public repo', 'windows-seleniumgrid-node')]",
+                        "parameters":[  
+                            {  
+                                "name":"seleniumServerStandaloneJarFile",
+                                "value":"[variables('seleniumServerStandaloneJarFile')]"
+                            },
+                            {  
+                                "name":"configFile",
+                                "value":"[variables('configFilesArray')[1]]"
+                            },
+                            {  
+                                "name":"hubMachineAddress",
+                                "value":"[reference(concat(variables('vmNamePrefix'), 'Hub')).fqdn]"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "outputs": {
+        "HubURL": {
+            "type": "string",
+            "value": "[concat('http://',reference(concat(variables('vmNamePrefix'), 'Hub')).fqdn,':4444','/wd/hub')]"
+        }
+    }
+}

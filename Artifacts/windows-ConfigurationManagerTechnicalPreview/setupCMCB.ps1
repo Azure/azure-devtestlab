@@ -87,6 +87,6 @@ if((gwmi win32_computersystem).partofdomain -eq $true)
     new-psdrive -Name $SiteCode -PSProvider "AdminUI.PS.Provider\CMSite" -Root "localhost"
     cd ((Get-PSDrive -PSProvider CMSite).Name + ':')
     
-    New-CMAdministrativeUser -Name "$($env:userdomain)\domain admins" -RoleName "Full Administrator"
+    New-CMAdministrativeUser -Name "$($env:userdomain)\domain admins" -RoleName "Full Administrator" -SecurityScopeName "All"
  }
 

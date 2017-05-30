@@ -1,0 +1,39 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "labName": {
+      "type": "string"
+    },
+    "regionId": {
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "apiVersion": "2017-04-26-preview",
+      "name": "[concat(parameters('labName'), '/', 'LabVmAutoStart')]",
+      "location": "[parameters('regionId')]",
+      "type": "microsoft.devtestlab/labs/schedules",
+      "properties": {
+        "status": "Enabled",
+        "timeZoneId": "Pacific Standard Time",
+        "weeklyRecurrence": {
+          "time": "0800",
+          "weekdays": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday"
+          ]
+        },
+        "taskType": "LabVmsStartupTask",
+        "notificationSettings": {
+          "status": "Disabled",
+          "timeInMinutes": 15
+        }
+      }
+    }
+  ]
+}

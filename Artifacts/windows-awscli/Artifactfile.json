@@ -1,0 +1,15 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "AWS Command Line Interface",
+    "description": "Installs AWS Command Line Interface using the Chocolatey package manager",
+    "publisher": "Hosam Kamel",
+    "tags": [
+        "Windows",
+        "AWS"
+    ],
+    "iconUri": "https://chocolatey.org/content/packageimages/awscli.1.11.76.png",
+    "targetOsType": "Windows",
+    "runCommand": {
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', 'awscli', '\"')]"
+    }
+}
