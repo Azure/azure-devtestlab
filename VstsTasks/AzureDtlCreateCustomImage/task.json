@@ -12,7 +12,7 @@
     "version": {
         "Major": 1,
         "Minor": 0,
-        "Patch": 16
+        "Patch": 17
     },
     "demands": [
         "azureps"
@@ -95,7 +95,7 @@
             "defaultValue": "NonDeprovisioned",
             "required": true,
             "groupName": "sourceLabVM",
-            "helpMarkDown": "Value indicating how to prepare the source lab VM for custom image creation. This is a pick list whose allowed values are _NonDeprovisioned_, _DeprovisionRequested_ or _DeprovisionRequested_. See [Deprovisioning](http://aka.ms/Deprovisioning) for more information.",
+            "helpMarkDown": "Value indicating how to prepare the source lab VM for custom image creation. This is a pick list whose allowed values are _NonDeprovisioned_, _DeprovisionRequested_ or _DeprovisionApplied_. See [Deprovisioning](http://aka.ms/Deprovisioning) for more information.",
             "visibleRule": "OsType = Linux",
             "options": {
                 "NonDeprovisioned" : "NonDeprovisioned",
@@ -110,7 +110,7 @@
             "defaultValue": "SysprepRequested",
             "required": true,
             "groupName": "sourceLabVM",
-            "helpMarkDown": "Value indicating how to prepare the the source lab VM for custom image creation. This is a pick list whose allowed values are _NonSysprepped_, _SysprepRequested_ or _SysprepRequested_. See [Sysprep](http://aka.ms/Sysprep) for more information.",
+            "helpMarkDown": "Value indicating how to prepare the the source lab VM for custom image creation. This is a pick list whose allowed values are _NonSysprepped_, _SysprepRequested_ or _SysprepApplied_. See [Sysprep](http://aka.ms/Sysprep) for more information.",
             "visibleRule": "OsType = Windows",
             "options": {
                 "NonSysprepped" : "NonSysprepped",
