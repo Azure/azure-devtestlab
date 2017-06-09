@@ -35,6 +35,6 @@
         }
     },
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./DownloadVstsDropAndExecuteScript.ps1', ' -accessToken ', parameters('PersonalAccessToken'), ' -buildDefinitionName ', parameters('buildDefinitionName'), ' -vstsProjectUri ', parameters('vstsProjectUri'), ' -pathToScript ''', parameters('pathToScript'), ''' -scriptArguments ''', parameters('scriptArguments'), '''\"')]"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./DownloadVstsDropAndExecuteScript.ps1', ' -accessToken ', parameters('PersonalAccessToken'), ' -buildDefinitionName ''', parameters('buildDefinitionName'), ''' -vstsProjectUri ''', parameters('vstsProjectUri'), ''' -pathToScript ''', parameters('pathToScript'), ''' -scriptArguments ''', parameters('scriptArguments'), '''\"')]"
     }
 }
