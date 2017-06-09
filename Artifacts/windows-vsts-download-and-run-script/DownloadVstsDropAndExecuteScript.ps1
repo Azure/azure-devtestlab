@@ -174,7 +174,7 @@ try
     Write-Host "  `$pathToScript = $pathToScript"
     Write-Host "  `$scriptArguments = $scriptArguments"
 
-    # Output provided and constructed parameters.
+    # Output constructed variables.
     Write-Host 'Variables used in this script:'
     Write-Host "  `$vstsApiVersion = $vstsApiVersion"
     Write-Host "  `$outfile = $outfile"
