@@ -125,11 +125,11 @@ function Run-Script
 
     $scriptPath = Join-Path -Path $Path -ChildPath $Script
 
-    Write-Host "Running $scriptPath"
+    Write-Host "Running $scriptPath $Arguments"
 
     if (Test-Path $scriptPath -PathType Leaf)
     {
-        Invoke-Expression "& `"$scriptPath`" $scriptArguments"
+        Invoke-Expression "& `"$scriptPath`" $Arguments"
     }
     else
     {
