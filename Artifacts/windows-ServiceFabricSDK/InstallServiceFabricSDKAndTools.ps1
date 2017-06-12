@@ -131,6 +131,6 @@ if ($VSVersion -ge 15){
    #Find VS Install Path(s) and add Service Fabric component.
    foreach ($VSInstallPathInfo in $vsInstallInfoArray){
         Write-Output "Enabling component for Service Fabric Tools for installation $($VSInstallPathInfo.InstallationPath)"
-        StartAndWaitForProcess $vsInstallExe "modify --installPath `"$($VSInstallPathInfo.InstallationPath)`" --add Microsoft.VisualStudio.Component.Azure.ServiceFabric.Tools --quiet --norestart" @(0)
+        StartAndWaitForProcess $vsInstallExe "modify --installPath `"$($VSInstallPathInfo.InstallationPath)`" --add Microsoft.VisualStudio.Component.Azure.ServiceFabric.Tools --add Microsoft.VisualStudio.Workload.Azure --quiet --norestart" @(0)
     }
 }
