@@ -1,0 +1,81 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "newCustomImageName": {
+            "type": "string"
+        },
+        "labName": {
+            "type": "string"
+        },
+        "sourceLabVmId": {
+            "type": "string"
+        },
+        "osType": {
+            "type": "string",
+            "allowedValues": [
+                "Linux",
+                "Windows"
+            ],
+            "defaultValue": "Windows"
+        },
+        "linuxOsState": {
+            "type": "string",
+            "allowedValues": [
+                "NonDeprovisioned",
+                "DeprovisionRequested",
+                "DeprovisionApplied"
+            ],
+            "defaultValue": "NonDeprovisioned"
+        },
+        "windowsOsState": {
+            "type": "string",
+            "allowedValues": [
+                "NonSysprepped",
+                "SysprepRequested",
+                "SysprepApplied"
+            ],
+            "defaultValue": "NonSysprepped"
+        },
+        "description": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "author": {
+            "type": "string",
+            "defaultValue": ""
+        }
+    },
+    "variables": {
+        "customImageId": "[resourceId('Microsoft.DevTestLab/labs/customImages', parameters('labName'), parameters('newCustomImageName'))]",
+        "customImageName": "[concat(parameters('labName'), '/', parameters('newCustomImageName'))]"
+    },
+    "resources": [
+        {
+            "apiVersion": "2017-04-26-preview",
+            "type": "Microsoft.DevTestLab/labs/customImages",
+            "name": "[variables('customImageName')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "author": "[parameters('author')]",
+                "description": "[parameters('description')]",
+                "osType": "[parameters('osType')]",
+                "vm": {
+                    "sourceVmId": "[parameters('sourceLabVmId')]",
+                    "linuxOsInfo":  {
+                        "linuxOsState": "[parameters('linuxOsState')]"
+                    },
+                    "windowsOsInfo": {
+                        "windowsOsState": "[parameters('windowsOsState')]"
+                    }
+                }
+            }
+        }
+    ],
+    "outputs": {
+        "customImageId": {
+            "type": "string",
+            "value": "[variables('customImageId')]"
+        }
+    }
+}
