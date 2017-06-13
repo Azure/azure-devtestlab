@@ -65,6 +65,6 @@
     }
   },
   "runCommand": {
-    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./vsts-agent-install.ps1', ' -vstsAccount ''', parameters('vstsAccount'), ''' -vstsUserPassword ', parameters('vstsPassword'), ' -agentName ''', parameters('agentName'), ''' -poolname ''', parameters('poolName'), ''' -windowsLogonAccount ''', parameters('windowsLogonAccount'), ''' -windowsLogonPassword ''', parameters('windowsLogonPassword'), ''' -driveLetter ', parameters('driveLetter'), ' -workDirectory ''', parameters('workDirectory'), '''\"')]"
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./vsts-agent-install.ps1', ' -vstsAccount ''', parameters('vstsAccount'), ''' -vstsUserPassword ', parameters('vstsPassword'), ' -agentName ''', parameters('agentName'), ''' -poolName ''', parameters('poolName'), ''' -windowsLogonAccount ''', parameters('windowsLogonAccount'), ''' -windowsLogonPassword ''', parameters('windowsLogonPassword'), ''' -driveLetter ', parameters('driveLetter'), ' -workDirectory ''', parameters('workDirectory'), '''\"')]"
   }
 }
