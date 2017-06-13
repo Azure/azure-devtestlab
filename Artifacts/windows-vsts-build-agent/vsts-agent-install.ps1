@@ -5,7 +5,7 @@ param(
     [string] $vstsAccount,
     [string] $vstsUserPassword,
     [string] $agentName,
-    [string] $poolname,
+    [string] $poolName,
     [string] $windowsLogonAccount,
     [string] $windowsLogonPassword,
     [ValidatePattern("[c-zC-Z]")]
@@ -84,7 +84,7 @@ function Test-ValidPath
     
     try
     {
-        [IO.Path]::GetFullPath($workDirectory) | Out-Null
+        [IO.Path]::GetFullPath($Path) | Out-Null
     }
     catch
     {
@@ -102,17 +102,17 @@ function Download-AgentPackage
         [string] $VstsUserPassword
     )
     
-    # Create a temporary directory to download from VSTS the agent package (agent.zip) to, and then launch the configuration.
+    # Create a temporary directory where to download from VSTS the agent package (agent.zip).
     $agentTempFolderName = Join-Path $env:temp ([System.IO.Path]::GetRandomFileName())
     New-Item -ItemType Directory -Force -Path $agentTempFolderName | Out-Null
 
     $agentPackagePath = "$agentTempFolderName\agent.zip"
     $serverUrl = "https://$VstsAccount.visualstudio.com"
-    $vstsAgentUrl = $serverUrl + '/_apis/distributedtask/packages/agent/win7-x64?$top=1&api-version=3.0'
+    $vstsAgentUrl = "$serverUrl/_apis/distributedtask/packages/agent/win7-x64?`$top=1&api-version=3.0"
     $vstsUser = "AzureDevTestLabs"
 
-    $retryCount = 3
-    $retries = 1
+    $maxRetries = 3
+    $retries = 0
     do
     {
         try
@@ -130,17 +130,16 @@ function Download-AgentPackage
         catch
         {
             $exceptionText = ($_ | Out-String).Trim()
-            $retries++
                 
-            if ($retries -ge $retryCount)
+            if (++$retries -gt $maxRetries)
             {
                 Write-Error "Failed to download agent due to $exceptionText"
             }
-                
-            Start-Sleep -Seconds 30 
+            
+            Start-Sleep -Seconds 1 
         }
-    } 
-    while ($retries -le $retryCount)
+    }
+    while ($retries -le $maxRetries)
 
     return $agentPackagePath
 }
@@ -276,7 +275,7 @@ try
         AgentExePath = $agentExePath
         AgentInstallPath = $agentInstallPath
         AgentName = $agentName
-        PoolName = $poolname
+        PoolName = $poolName
         ServerUrl = "https://$VstsAccount.visualstudio.com"
         VstsUserPassword = $vstsUserPassword
         WindowsLogonAccount = $windowsLogonAccount
