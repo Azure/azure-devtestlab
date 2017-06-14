@@ -40,54 +40,61 @@ function Handle-LastError
 }
 
 
-$securePassword = ConvertTo-SecureString $azurePassword -AsPlainText -Force
-$creds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $azureUsername, $securePassword
+try{
+    $securePassword = ConvertTo-SecureString $azurePassword -AsPlainText -Force
+    $creds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $azureUsername, $securePassword
 
-if (-not (Get-Module -Name "AzureRm")){
-    if (Get-Module -ListAvailable | Where-Object { $_.Name -eq "AzureRm"}){
-        
-    }else{
-        Write-Host "AzureRM not detected, installing..."
-        Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
-        Install-Module AzureRm -Force -AllowClobber
+    if (-not (Get-Module -Name "AzureRm")){
+        if (Get-Module -ListAvailable | Where-Object { $_.Name -eq "AzureRm"}){
+            
+        }else{
+            Write-Host "AzureRM not detected, installing..."
+            Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
+            Install-Module AzureRm -Force -AllowClobber
+        }
     }
+
+    Import-Module AzureRm
+
+    Write-Host "Logging into Azure"
+    Add-AzureRmAccount -Credential $creds
+    Write-Host "Done"
+
+    $secret = Get-AzureKeyVaultSecret -VaultName $vaultName -Name $secretName
+
+    if (!$secret){
+        throw "Failed to locate secret"
+    }
+
+    Write-Host "Converting secret into useable object"
+    $jsonObjectBytes = [System.Convert]::FromBase64String($secret.SecretValueText)
+    $jsonObject = [System.Text.Encoding]::UTF8.GetString($jsonObjectBytes)
+    $customObject = ConvertFrom-Json $jsonObject
+    Write-Host "Done"
+
+    Write-Host "Saving pfx to [$env:temp\cert.pfx]"
+    # Deserialize and save the PFX file.
+    $pfxBytes = [System.Convert]::FromBase64String($customObject.data)
+    [io.file]::WriteAllBytes("$env:temp\cert.pfx", $pfxBytes)
+    Write-Host "Done"
+
+    # Convert password to secure string.
+    $password = ConvertTo-SecureString -String $customObject.password -Force -AsPlainText
+
+    Write-Host "Importing the PFX"
+    # Install the PFX certificate into the Cert:\LocalMachine\My certificate store.
+    Import-PfxCertificate `
+    -FilePath "$env:temp\cert.pfx" `
+    -CertStoreLocation cert:\localMachine\my `
+    -Password $password
+    Write-Host "Done"
 }
-
-Import-Module AzureRm
-
-Write-Host "Logging into Azure"
-Add-AzureRmAccount -Credential $creds
-Write-Host "Done"
-
-$secret = Get-AzureKeyVaultSecret -VaultName $vaultName -Name $secretName
-
-if (!$secret){
-    throw "Failed to locate secret"
+finally
+{    
+    if (Test-Path "$env:temp\cert.pfx")
+    {
+        Write-Host "Deleting the PFX"
+        Remove-Item "$env:temp\cert.pfx" -Force
+        Write-Host "Done"
+    }    
 }
-
-Write-Host "Converting secret into useable object"
-$jsonObjectBytes = [System.Convert]::FromBase64String($secret.SecretValueText)
-$jsonObject = [System.Text.Encoding]::UTF8.GetString($jsonObjectBytes)
-$customObject = ConvertFrom-Json $jsonObject
-Write-Host "Done"
-
-Write-Host "Saving pfx to [$env:temp\cert.pfx]"
-# Deserialize and save the PFX file.
-$pfxBytes = [System.Convert]::FromBase64String($customObject.data)
-[io.file]::WriteAllBytes("$env:temp\cert.pfx", $pfxBytes)
-Write-Host "Done"
-
-# Convert password to secure string.
-$password = ConvertTo-SecureString -String $customObject.password -Force -AsPlainText
-
-Write-Host "Importing the PFX"
-# Install the PFX certificate into the Cert:\LocalMachine\My certificate store.
-Import-PfxCertificate `
--FilePath "$env:temp\cert.pfx" `
--CertStoreLocation cert:\localMachine\my `
--Password $password
-Write-Host "Done"
-
-Write-Host "Deleting the PFX"
-Remove-Item "$env:temp\cert.pfx" -Force
-Write-Host "Done"
