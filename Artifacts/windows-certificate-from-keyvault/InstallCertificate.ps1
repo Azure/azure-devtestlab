@@ -4,9 +4,11 @@ Param(
     [ValidateNotNullOrEmpty()]
     [string]$secretName,
     [ValidateNotNullOrEmpty()]
-    [string]$azureUsername,
+    [string]$azureServicePrincipalClientId,
     [ValidateNotNullOrEmpty()]
-    [string]$azurePassword
+    [string]$azureServicePrincipalKey,
+    [ValidateNotNullOrEmpty()]
+    [string]$azureServicePrincipalTenantId
 )
 
 # Handle all errors in this script.
@@ -40,8 +42,12 @@ function Handle-LastError
 
 
 try{
-    $securePassword = ConvertTo-SecureString $azurePassword -AsPlainText -Force
-    $creds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $azureUsername, $securePassword
+
+
+
+
+    #$securePassword = ConvertTo-SecureString $azurePassword -AsPlainText -Force
+    #$creds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $azureUsername, $securePassword
 
     if (-not (Get-Module -Name "AzureRm")){
         if (Get-Module -ListAvailable | Where-Object { $_.Name -eq "AzureRm"}){
@@ -55,8 +61,13 @@ try{
 
     Import-Module AzureRm
 
+    $azureAccountName = $azureServicePrincipalClientId
+    $azurePassword = ConvertTo-SecureString $azureServicePrincipalKey -AsPlainText -Force
+    $psCred = New-Object System.Management.Automation.PSCredential($azureAccountName, $azurePassword)
+
     Write-Host "Logging into Azure"
-    Add-AzureRmAccount -Credential $creds
+    Add-AzureRmAccount -Credential $psCred -TenantId $azureServicePrincipalTenantId -ServicePrincipal
+    #Add-AzureRmAccount -Credential $creds
     Write-Host "Done"
 
     $secret = Get-AzureKeyVaultSecret -VaultName $vaultName -Name $secretName

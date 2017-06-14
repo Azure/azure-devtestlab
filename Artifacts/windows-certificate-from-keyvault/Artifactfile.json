@@ -19,17 +19,21 @@
         "displayName": "Secret Name",
         "description": "Name of the secret within the Azure Key Vault"
         },
-        "azureUsername": {
+        "azureServicePrincipalClientId": {
         "type": "string",
-        "displayName": "Azure Username",
-        "description": "Username to access the Key Vault"
+        "displayName": "Azure Service Principal Client Id",
+        "description": "The client Id of the Service Principal used to access Azure"
         },
-        "azurePassword": {
+        "azureServicePrincipalKey": {
         "type": "securestring",
-        "displayName": "Azure Password",
-        "description": "Password to access the Key Vault"
+        "displayName": "Azure Service Principal Key",
+        "description": "The key of the Azure Service Principal"
+        },
+        "azureServicePrincipaltenantId": {
+        "type": "string",
+        "displayName": "Azure Service Tenant Id",
+        "description": "The tenant id of the Azure Service Principal"
         }
-
     },
     "targetOsType": "Windows",
     "runCommand": {
