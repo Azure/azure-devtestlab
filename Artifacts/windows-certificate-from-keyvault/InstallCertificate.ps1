@@ -43,6 +43,9 @@ function Handle-LastError
 $securePassword = ConvertTo-SecureString $azurePassword -AsPlainText -Force
 $creds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $azureUsername, $securePassword
 
+Install-Module AzureRm -AllowClobber
+Import-Module AzureRm
+
 Write-Host "Logging into Azure"
 Add-AzureRmAccount -Credential $creds
 Write-Host "Done"
