@@ -43,8 +43,13 @@ function Handle-LastError
 $securePassword = ConvertTo-SecureString $azurePassword -AsPlainText -Force
 $creds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $azureUsername, $securePassword
 
-Install-Module AzureRm -AllowClobber
-Import-Module AzureRm
+if (-not (Get-Module -Name "AzureRm")){
+    if (Get-Module -ListAvailable | Where-Object { $_.Name -eq "AzureRm"}){
+        Import-Module AzureRm
+    }else{
+        throw "AzureRm powershell module is not installed.  You must apply the Azure Powershell artifact before using this one."
+    }
+}
 
 Write-Host "Logging into Azure"
 Add-AzureRmAccount -Credential $creds
