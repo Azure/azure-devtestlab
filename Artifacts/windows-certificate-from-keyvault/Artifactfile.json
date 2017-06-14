@@ -25,7 +25,7 @@
         "description": "Username to access the Key Vault"
         },
         "azurePassword": {
-        "type": "string",
+        "type": "securestring",
         "displayName": "Azure Password",
         "description": "Password to access the Key Vault"
         }
