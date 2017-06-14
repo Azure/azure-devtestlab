@@ -33,6 +33,6 @@
     },
     "targetOsType": "Windows",
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./InstallCertificate.ps1 -vaultName ', parameters('vaultName'), ' -secretName ', parameters('secretName'), ' -azureUsername ', parameters('azureUsername'), ' -azurePassword ', parameters('azurePassword'), '\"')]"
+        "commandToExecute": "[concat('powershell.exe -NonInteractive -ExecutionPolicy bypass \"& ./InstallCertificate.ps1 -vaultName ', parameters('vaultName'), ' -secretName ', parameters('secretName'), ' -azureUsername ', parameters('azureUsername'), ' -azurePassword ', parameters('azurePassword'), '\"')]"
     }
 }

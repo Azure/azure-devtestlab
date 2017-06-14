@@ -12,8 +12,7 @@ Param(
 # Handle all errors in this script.
 trap
 {
-    # NOTE: This trap will handle all errors. There should be no need to use a catch below in this
-    #       script, unless you want to ignore a specific error.
+    # NOTE: This trap will handle all errors. There should be no need to use a catch below in this script, unless you want to ignore a specific error.
     Handle-LastError
 }
 
