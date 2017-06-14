@@ -29,7 +29,7 @@
         "displayName": "Azure Service Principal Key",
         "description": "The key of the Azure Service Principal"
         },
-        "azureServicePrincipaltenantId": {
+        "azureServicePrincipalTenantId": {
         "type": "string",
         "displayName": "Azure Service Tenant Id",
         "description": "The tenant id of the Azure Service Principal"
@@ -37,6 +37,6 @@
     },
     "targetOsType": "Windows",
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -NonInteractive -ExecutionPolicy bypass \"& ./InstallCertificate.ps1 -vaultName ', parameters('vaultName'), ' -secretName ', parameters('secretName'), ' -azureUsername ', parameters('azureUsername'), ' -azurePassword ', parameters('azurePassword'), '\"')]"
+        "commandToExecute": "[concat('powershell.exe -NonInteractive -ExecutionPolicy bypass \"& ./InstallCertificate.ps1 -vaultName ', parameters('vaultName'), ' -secretName ', parameters('secretName'), ' -azureServicePrincipalClientId ', parameters('azureServicePrincipalClientId'), ' -azureServicePrincipalKey ', parameters('azureServicePrincipalKey'), ' -azureServicePrincipalTenantId ', parameters('azureServicePrincipalTenantId'), '\"')]"
     }
 }
