@@ -45,11 +45,14 @@ $creds = New-Object -TypeName System.Management.Automation.PSCredential -Argumen
 
 if (-not (Get-Module -Name "AzureRm")){
     if (Get-Module -ListAvailable | Where-Object { $_.Name -eq "AzureRm"}){
-        Import-Module AzureRm
+        
     }else{
-        throw "AzureRm powershell module is not installed.  You must apply the Azure Powershell artifact before using this one."
+        Write-Host "AzureRM not detected, installing..."
+        Install-Module AzureRm -Force -AllowClobber
     }
 }
+
+Import-Module AzureRm
 
 Write-Host "Logging into Azure"
 Add-AzureRmAccount -Credential $creds
