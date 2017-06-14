@@ -123,8 +123,12 @@ function Download-AgentPackage
             $headers = @{ Authorization = ("Basic {0}" -f $basicAuth) }
 
             $agentList = Invoke-RestMethod -Uri $vstsAgentUrl -Headers $headers -Method Get -ContentType application/json
-            $downloadUrl = $agentList.value[0].downloadUrl
-            Invoke-WebRequest -Uri $downloadUrl -Headers $headers -Method Get -OutFile "$agentPackagePath" | Out-Null
+            $agent = $agentList.value
+            if ($agent -is [Array])
+            {
+                $agent = $agentList.value[0]
+            }
+            Invoke-WebRequest -Uri $agent.downloadUrl -Headers $headers -Method Get -OutFile "$agentPackagePath" | Out-Null
             break
         }
         catch
