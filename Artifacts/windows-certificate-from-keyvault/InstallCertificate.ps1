@@ -48,6 +48,7 @@ if (-not (Get-Module -Name "AzureRm")){
         
     }else{
         Write-Host "AzureRM not detected, installing..."
+        Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
         Install-Module AzureRm -Force -AllowClobber
     }
 }
@@ -58,7 +59,7 @@ Write-Host "Logging into Azure"
 Add-AzureRmAccount -Credential $creds
 Write-Host "Done"
 
-$secret = Get-AzureKeyVaultSecret -VaultName "iSAMS-KeyVault" -Name "isams-cloud"
+$secret = Get-AzureKeyVaultSecret -VaultName $vaultName -Name $secretName
 
 if (!$secret){
     throw "Failed to locate secret"
