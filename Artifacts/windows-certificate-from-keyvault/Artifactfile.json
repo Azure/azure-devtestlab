@@ -1,0 +1,38 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title":  "Certificate from Azure Key Vault",
+    "publisher": "Greg Pakes",
+    "description": "Installs a certificate stored in Azure Key Vault",
+    "tags": [
+        "Windows",
+        "Certificate",
+        "Key Vault"
+    ],
+    "parameters": {
+        "vaultName": {
+        "type": "string",
+        "displayName": "Vault Name",
+        "description": "Name of the Azure Key Vault"
+        },
+        "secretName": {
+        "type": "string",
+        "displayName": "Secret Name",
+        "description": "Name of the secret within the Azure Key Vault"
+        },
+        "azureUsername": {
+        "type": "string",
+        "displayName": "Azure Username",
+        "description": "Username to access the Key Vault"
+        },
+        "azurePassword": {
+        "type": "string",
+        "displayName": "Azure Password",
+        "description": "Password to access the Key Vault"
+        }
+
+    },
+    "targetOsType": "Windows",
+    "runCommand": {
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./InstallCertificate.ps1 -vaultName ', parameters('vaultName'), ' -secretName ', parameters('secretName'), ' -azureUsername ', parameters('azureUsername'), ' -azurePassword ', parameters('azurePassword'), '\"')]"
+    }
+}
