@@ -43,12 +43,6 @@ function Handle-LastError
 
 try{
 
-
-
-
-    #$securePassword = ConvertTo-SecureString $azurePassword -AsPlainText -Force
-    #$creds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $azureUsername, $securePassword
-
     if (-not (Get-Module -Name "AzureRm")){
         if (Get-Module -ListAvailable | Where-Object { $_.Name -eq "AzureRm"}){
             
@@ -67,7 +61,6 @@ try{
 
     Write-Host "Logging into Azure"
     Add-AzureRmAccount -Credential $psCred -TenantId $azureServicePrincipalTenantId -ServicePrincipal
-    #Add-AzureRmAccount -Credential $creds
     Write-Host "Done"
 
     $secret = Get-AzureKeyVaultSecret -VaultName $vaultName -Name $secretName
