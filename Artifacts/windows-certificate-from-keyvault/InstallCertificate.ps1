@@ -6,7 +6,7 @@ Param(
     [ValidateNotNullOrEmpty()]
     [string]$azureServicePrincipalClientId,
     [ValidateNotNullOrEmpty()]
-    [securestring]$azureServicePrincipalKey,
+    [string]$azureServicePrincipalKey,
     [ValidateNotNullOrEmpty()]
     [string]$azureServicePrincipalTenantId
 )
@@ -62,8 +62,8 @@ try{
     Import-Module AzureRm
 
     $azureAccountName = $azureServicePrincipalClientId
-    #$azurePassword = ConvertTo-SecureString $azureServicePrincipalKey -AsPlainText -Force
-    $psCred = New-Object System.Management.Automation.PSCredential($azureAccountName, $azureServicePrincipalKey)
+    $azurePassword = ConvertTo-SecureString $azureServicePrincipalKey -AsPlainText -Force
+    $psCred = New-Object System.Management.Automation.PSCredential($azureAccountName, $azurePassword)
 
     Write-Host "Logging into Azure"
     Add-AzureRmAccount -Credential $psCred -TenantId $azureServicePrincipalTenantId -ServicePrincipal
