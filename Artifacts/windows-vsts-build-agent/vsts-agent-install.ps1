@@ -94,6 +94,22 @@ function Test-ValidPath
     return $isValid
 }
 
+function Test-AgentExists
+{
+    [CmdletBinding()]
+    param(
+        [string] $InstallPath,
+        [string] $AgentName
+    )
+
+    $agentConfigFile = Join-Path $InstallPath '.agent'
+
+    if (Test-Path $agentConfigFile)
+    {
+        Write-Error "Agent $AgentName is already configured in this machine"
+    }
+}
+
 function Download-AgentPackage
 {
     [CmdletBinding()]
@@ -260,11 +276,14 @@ try
     Write-Host 'Validating parameters'
     Test-Parameters -VstsAccount $vstsAccount -WorkDirectory $workDirectory
 
+    Write-Host 'Preparing agent installation location'
+    $agentInstallPath = New-AgentInstallPath -DriveLetter $driveLetter -AgentName $agentName
+
+    Write-Host 'Checking for previously configured agent'
+    Test-AgentExists -InstallPath $agentInstallPath -AgentName $agentName
+
     Write-Host 'Downloading agent package'
     $agentPackagePath = Download-AgentPackage -VstsAccount $vstsAccount -VstsUserPassword $vstsUserPassword
-
-    Write-Host 'Creating agent installation path'
-    $agentInstallPath = New-AgentInstallPath -DriveLetter $driveLetter -AgentName $agentName
 
     Write-Host 'Extracting agent package contents'
     Extract-AgentPackage -PackagePath $agentPackagePath -Destination $agentInstallPath
