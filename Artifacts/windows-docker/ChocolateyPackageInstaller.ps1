@@ -223,7 +223,9 @@ function InstallPackages
         WriteLog "Installing package: $package ..."
 
         # Install git via chocolatey.
-        choco install $package --force --yes --acceptlicense --verbose --allow-empty-checksums | Out-Null  
+        # choco install $package --force --yes --acceptlicense --verbose --allow-empty-checksums | Out-Null  
+        Start-Process "choco" -ArgumentList ("install", $(package.Split(" ",[System.StringSplitOptions]::RemoveEmptyEntries)), "--force", "--yes", "--acceptlicense", "--verbose", "--allow-empty-checksums") -NoNewWindow -Wait
+
         if (-not $?)
         {
             $errMsg = 'Installation failed. Please see the chocolatey logs in %ALLUSERSPROFILE%\chocolatey\logs folder for details.'
