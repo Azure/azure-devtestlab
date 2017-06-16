@@ -180,7 +180,7 @@ function Invoke-ChocolateyPackageInstaller
 
     $secPassword = ConvertTo-SecureString -String $Password -AsPlainText -Force
     $credential = New-Object System.Management.Automation.PSCredential("$env:COMPUTERNAME\$($UserName)", $secPassword)
-    $command = "$PSScriptRoot\ChocolateyPackageInstallerEx.ps1"
+    $command = "$PSScriptRoot\ChocolateyPackageInstaller.ps1"
 
     $oldPolicyValue = Set-LocalAccountTokenFilterPolicy
     try
@@ -213,7 +213,7 @@ try
 {
     Validate-Params
     Validate-Environment
-    
+
     Ensure-PowerShell -Version $PSVersionRequired
 
     Install-PackageProvider -Name NuGet -Force -ErrorAction SilentlyContinue | Out-Null
