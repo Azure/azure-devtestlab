@@ -11,7 +11,7 @@
     "targetOsType": "Windows",
     "parameters": {},
     "runCommand": {
-        "commandToExecute": "['powershell.exe -executionpolicy bypass -File InstallDocker.ps1']"
+        "commandToExecute": "['powershell.exe -executionpolicy bypass -File Artifactfile.ps1']"
     },
     "postDeployActions": [
         {
