@@ -223,8 +223,13 @@ function InstallPackages
         WriteLog "Installing package: $package ..."
 
         # Install git via chocolatey.
-        # choco install $package --force --yes --acceptlicense --verbose --allow-empty-checksums | Out-Null  
-        Start-Process "choco" -ArgumentList ("install", $(package.Split(" ",[System.StringSplitOptions]::RemoveEmptyEntries)), "--force", "--yes", "--acceptlicense", "--verbose", "--allow-empty-checksums") -NoNewWindow -Wait
+        # choco install $package --force --yes --acceptlicense --verbose --allow-empty-checksums | Out-Null
+
+        $arguments = ("install", $($package.Split(" ",[System.StringSplitOptions]::RemoveEmptyEntries)), "--force", "--yes", "--acceptlicense", "--verbose", "--allow-empty-checksums")
+        
+        WriteLog "choco $($arguments -join ' ')"
+        
+        Start-Process "choco" -ArgumentList $arguments -NoNewWindow -Wait
 
         if (-not $?)
         {
