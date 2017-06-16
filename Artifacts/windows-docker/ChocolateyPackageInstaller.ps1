@@ -225,7 +225,7 @@ function InstallPackages
         # Install git via chocolatey.
         # choco install $package --force --yes --acceptlicense --verbose --allow-empty-checksums | Out-Null
 
-        $arguments = ("install", $($package.Split(" ",[System.StringSplitOptions]::RemoveEmptyEntries)), "--force", "--yes", "--acceptlicense", "--verbose", "--allow-empty-checksums")
+        $arguments = @("install") + $package.Split(" ",[System.StringSplitOptions]::RemoveEmptyEntries) + @("--force", "--yes", "--acceptlicense", "--verbose", "--allow-empty-checksums")
         
         WriteLog "choco $($arguments -join ' ')"
         
