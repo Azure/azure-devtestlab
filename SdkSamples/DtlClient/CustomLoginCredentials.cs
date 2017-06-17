@@ -26,7 +26,10 @@ namespace DtlClient
             var clientId = ConfigurationManager.AppSettings["ida:ClientId"];
             var redirectUri = ConfigurationManager.AppSettings["RedirectUri"];
 
-            var token = authContext.AcquireToken(resourceUri, clientId, new Uri(redirectUri), PromptBehavior.Auto);
+            Task<AuthenticationResult> task = authContext.AcquireTokenAsync(resourceUri, clientId, new Uri(redirectUri), new PlatformParameters(PromptBehavior.Auto));
+            task.Wait();
+
+            AuthenticationResult token = task.Result;
 
             if (token == null)
             {
