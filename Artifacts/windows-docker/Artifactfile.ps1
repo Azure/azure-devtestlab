@@ -229,6 +229,15 @@ try
     }
 
     Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList "docker-for-windows --pre --ignore-checksums; docker-kitematic"
+
+    $dockerGroup = ([ADSI]"WinNT://$env:ComputerName/docker-users,group")
+
+    if ($dockerGroup)
+    {
+        # grant local users to docker-for-windows
+        ([ADSI]"WinNT://$env:ComputerName").Children | ? { $_.SchemaClassName -eq 'user' } | % { try { $dockerGroup.add($_.Path) } catch {} }
+    }
+    
 }
 catch
 {
