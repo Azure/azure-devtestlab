@@ -80,6 +80,41 @@ function Ensure-PowerShell
     }
 }
 
+function Get-VMSize
+{
+    [CmdletBinding()]
+    param (
+    )
+
+    $vmSize = Invoke-RestMethod -Headers @{"Metadata"="true"} -URI "http://169.254.169.254/metadata/instance/compute/vmSize?api-version=2017-04-02&format=text" -Method Get
+
+    return $vmSize
+}
+
+function Test-IsWorkstation
+{
+    [CmdletBinding()]
+    param (
+    )
+
+    return ((Get-WmiObject Win32_OperatingSystem | select -ExpandProperty ProductType) -eq 1)
+}
+
+function Test-NestedVirtualizationSupport
+{
+    [CmdletBinding()]
+    param (
+    )
+
+    $vmSize = Get-VMSize
+    $vmSizeWhitelist = ("Standard_DS\d+_v2")
+
+    $vmSizeSupported = $false
+    $vmSizeWhitelist | ? { $vmSize -match $_ } | % { $vmSizeSupported = $true }
+
+    return $vmSizeSupported
+}
+
 function Get-TempPassword
 {
     [CmdletBinding()]
@@ -228,16 +263,37 @@ try
         Add-LocalAdminUser -UserName $UserName -Password $password | Out-Null
     }
 
-    Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList "docker-for-windows --pre --ignore-checksums; docker-kitematic"
-
-    $dockerGroup = ([ADSI]"WinNT://$env:ComputerName/docker-users,group")
-
-    if ($dockerGroup)
+    if (Test-NestedVirtualizationSupport)
     {
-        # grant local users to docker-for-windows
-        ([ADSI]"WinNT://$env:ComputerName").Children | ? { $_.SchemaClassName -eq 'user' } | % { try { $dockerGroup.add($_.Path) } catch {} }
-    }
-    
+        if (Test-IsWorkstation)
+        {
+            # Windows 10
+            if ((Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V | select -ExpandProperty State) -eq "Disabled")
+            {
+                Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All -NoRestart
+            }
+
+            Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList "docker-for-windows; docker-kitematic"
+        }
+        else 
+        {
+            # Windows Server 2016
+            if ((Get-WindowsFeature -Name Hyper-V | select -ExpandProperty InstallState) -eq "Available")
+            {
+                Install-WindowsFeature –Name Hyper-V -IncludeManagementTools
+            }            
+
+            Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList "docker-for-windows --pre --ignore-checksums; docker-kitematic"
+        }
+
+        $dockerGroup = ([ADSI]"WinNT://$env:ComputerName/docker-users,group")
+
+        if ($dockerGroup)
+        {
+            # grant local users to docker-for-windows
+            ([ADSI]"WinNT://$env:ComputerName").Children | ? { $_.SchemaClassName -eq 'user' } | % { try { $dockerGroup.add($_.Path) } catch {} }
+        }
+    }    
 }
 catch
 {
