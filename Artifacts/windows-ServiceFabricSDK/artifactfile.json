@@ -25,7 +25,7 @@
     }
   },
   "runCommand": {
-    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./artifact.ps1 -VSVersion ''', parameters('VSVersion'), '''\"')]"
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./InstallServiceFabricSDKAndTools.ps1 -VSVersion ''', parameters('VSVersion'), '''\"')]"
   },
   "postDeployActions": [
     {
