@@ -278,6 +278,7 @@ function Enable-ServiceFabricTools
 {
     [CmdletBinding()]
     param(
+        [int] $VSVersionNumber
     )
 
     $vsBootstrapperExe = Join-Path $env:Temp "vsbootstrap.exe"
@@ -308,7 +309,7 @@ function Enable-ServiceFabricTools
 
     # Add Service Fabric component to all Visual Studio instances.
     $vsInstances | % {
-        if ($_.InstallationVersion.Major -eq 15)
+        if ($_.InstallationVersion.Major -eq $VSVersionNumber)
         {
             # We must do an update to restore the channel used for modifying the Visual Studio Instance.
             Write-Host 'Updating Visual Studio instance'
@@ -317,7 +318,6 @@ function Enable-ServiceFabricTools
             # Modify the Visual Studio instance with Service Fabric SDK components.
             Write-Host "Enabling Service Fabric Tools component for installation $($_.InstallationPath)"
             Invoke-Process -FileName $vsInstallExe -Arguments "modify --installPath `"$($_.InstallationPath)`" --add Microsoft.VisualStudio.Workload.Azure --add Microsoft.VisualStudio.Component.Azure.ServiceFabric.Tools --quiet --norestart --wait" -ValidExitCodes 1
-            break;
         }
     }
 }
@@ -362,7 +362,7 @@ try
     if ($vsVersionNumber -ge 15)
     {
         Write-Host 'Enabling Service Fabric Tools'
-        Enable-ServiceFabricTools
+        Enable-ServiceFabricTools -VSVersionNumber $vsVersionNumber
     }
 }
 finally
