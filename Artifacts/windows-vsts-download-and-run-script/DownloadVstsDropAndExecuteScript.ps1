@@ -101,7 +101,7 @@ function Download-BuildArtifacts
     $downloadUrl = $artifacts.value.resource.downloadUrl
     
     Write-Host "Downloading build artifacts package from $downloadUrl"
-    Invoke-RestMethod -Uri $downloadUrl -Headers $Headers -Method Get -Outfile $Outfile | Out-Null
+    Invoke-RestMethod -Uri "$downloadUrl" -Headers $Headers -Method Get -Outfile $Outfile | Out-Null
 
     if (Test-Path $Destination -PathType Container)
     {
