@@ -282,7 +282,7 @@ function Enable-ServiceFabricTools
     )
 
     $vsBootstrapperExe = Join-Path $env:Temp "vsbootstrap.exe"
-    $vsBootstrapperUrl = 'https://aka.ms/vs/15/release/vs_enterprise.exe'
+    $vsBootstrapperUrl = "https://aka.ms/vs/$VSVersionNumber/release/vs_enterprise.exe"
 
     Write-Host "Downloading Visual Studio bootstrapper from $vsBootstrapperUrl"
     try 
