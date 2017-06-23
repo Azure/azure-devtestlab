@@ -125,7 +125,7 @@ function Run-Script
 
     $scriptPath = Join-Path -Path $Path -ChildPath $Script
 
-    Write-Host "Running $scriptPath $Arguments"
+    Write-Host "Running $scriptPath"
 
     if (Test-Path $scriptPath -PathType Leaf)
     {
