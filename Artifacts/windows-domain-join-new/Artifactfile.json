@@ -1,0 +1,46 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+  "title": "Join domain and add user to local administrators group",
+  "description": "This artifact joins the virtual machine to a domain, adds the given domain account to the local administrators group on the virtual machine, and reboots the machine.",
+  "publisher": "Microsoft",
+  "tags": [
+    "Windows"
+  ],
+  "iconUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/Artifacts/windows-domain-join/domainJoinArtifact.png",
+  "targetOsType": "Windows",
+  "parameters": {
+    "domainJoinUsername": {
+      "type": "string",
+      "displayName": "Domain user account",
+      "description": "The user account (e.g. CORP\\user or user@corp.contoso.com) that will be added to the administrators group on the computer."
+    },
+    "domainAdminUsername": {
+      "type": "string",
+      "displayName": "Domain join user account",
+      "description": "The user account with rights to join the system to the domain (e.g. CORP\\user or user@corp.contoso.com)"
+    },
+    "domainAdminPassword": {
+      "type": "securestring",
+      "displayName": "Domain join password",
+      "description": "The password for the domain join user."
+    },
+    "domainToJoin": {
+      "type": "string",
+      "displayName": "Active Directory domain name",
+      "description": "The name of the Active Directory domain to join (e.g. corp.contoso.com)."
+    },
+    "ouPath": {
+      "type": "string",
+      "displayName": "Active Directory domain OU",
+      "description": "The OU path e.g. OU=Workstations,OU=Machines,DC=corp,DC=contoso,DC=com"
+    }
+  },
+  "runCommand": {
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./artifact-main.ps1', ' -domainJoinUsername ', parameters('domainJoinUsername'), ' -domainAdminUsername ', parameters('domainAdminUsername'), ' -domainAdminPassword ', parameters('domainAdminPassword'), ' -domainToJoin ', parameters('domainToJoin'), ' -ouPath ', '\\\"', parameters('ouPath'), '\\\"', '\"')]"
+  },
+  "postDeployActions": [
+    {
+      "action": "restart"
+    }
+  ]
+}
