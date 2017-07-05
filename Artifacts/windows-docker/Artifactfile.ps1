@@ -287,8 +287,6 @@ try
             {
                 Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All -NoRestart
             }
-
-            Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList "docker-for-windows; docker-kitematic"
         }
         else 
         {
@@ -297,9 +295,9 @@ try
             {
                 Install-WindowsFeature –Name Hyper-V -IncludeManagementTools | Out-Null
             }            
-
-            Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList "docker-for-windows --pre --ignore-checksums; docker-kitematic"
         }
+
+        Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList "docker-for-windows; docker-kitematic"
 
         $dockerGroup = ([ADSI]"WinNT://$env:ComputerName/docker-users,group")
 
