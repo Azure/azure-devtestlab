@@ -101,7 +101,7 @@ function Download-BuildArtifacts
     $downloadUrl = $artifacts.value.resource.downloadUrl
     
     Write-Host "Downloading build artifacts package from $downloadUrl"
-    Invoke-RestMethod -Uri $downloadUrl -Headers $Headers -Method Get -Outfile $Outfile | Out-Null
+    Invoke-RestMethod -Uri "$downloadUrl" -Headers $Headers -Method Get -Outfile $Outfile | Out-Null
 
     if (Test-Path $Destination -PathType Container)
     {
@@ -125,7 +125,7 @@ function Run-Script
 
     $scriptPath = Join-Path -Path $Path -ChildPath $Script
 
-    Write-Host "Running $scriptPath $Arguments"
+    Write-Host "Running $scriptPath"
 
     if (Test-Path $scriptPath -PathType Leaf)
     {

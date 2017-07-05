@@ -16,7 +16,7 @@ namespace DtlClient
                 SubscriptionId = ConfigurationManager.AppSettings["SubscriptionId"]
             };
 
-            foreach (var lab in await client.Lab.ListBySubscriptionAsync())
+            foreach (var lab in await client.Labs.ListBySubscriptionAsync())
             {
                 Console.WriteLine($"{lab.UniqueIdentifier}\t{lab.Name}");
             }
@@ -36,26 +36,27 @@ namespace DtlClient
                 SubscriptionId = ConfigurationManager.AppSettings["SubscriptionId"]
             };
             Console.WriteLine("Fetching the lab...");
-            var lab = client.Lab.GetResource(labResourceGroupName, labName);
+            var lab = client.Labs.Get(labResourceGroupName, labName);
             Console.WriteLine($"Lab ID: {lab.Id}");
             Console.WriteLine("Getting the lab's virtual network");
-            var virtualNetwork = client.VirtualNetwork.GetResource(labResourceGroupName, labName, virtualNetworkSubnetName);
+            var virtualNetwork = client.VirtualNetworks.Get(labResourceGroupName, labName, virtualNetworkSubnetName);
             Console.WriteLine("Virtual network ID: " + virtualNetwork.Id);
             Console.WriteLine("Enter Transport Protocol: TCP or UDP");
             string transportProtocol = Console.ReadLine();
 
-            if (transportProtocol != null 
-                && transportProtocol.ToLowerInvariant() != "tcp" 
+            if (transportProtocol != null
+                && transportProtocol.ToLowerInvariant() != "tcp"
                 || transportProtocol.ToLowerInvariant() != "udp")
-                
+
             {
                 Console.WriteLine("Only TCP and UDP allowed exiting ... ");
                 return;
             }
+
             string portRequest = Console.ReadLine();
-            int backendPort;
-            int.TryParse(portRequest, out backendPort);
-            if (transportProtocol != null && backendPort != null)
+            int.TryParse(portRequest, out int backendPort);
+
+            if (transportProtocol != null && backendPort > 0)
             {
                 var port = new Port(transportProtocol, backendPort);
                 virtualNetwork.SubnetOverrides[0].SharedPublicIpAddressConfiguration.AllowedPorts.Add(port);
@@ -79,15 +80,15 @@ namespace DtlClient
             };
 
             Console.WriteLine("Fetching the lab...");
-            var lab = client.Lab.GetResource(labResourceGroupName, labName);
+            var lab = client.Labs.Get(labResourceGroupName, labName);
             Console.WriteLine($"Lab ID: {lab.Id}");
 
             Console.WriteLine("Getting the lab's virtual network");
-            var virtualNetwork = client.VirtualNetwork.GetResource(labResourceGroupName, labName, labVirtualNetworkName);
+            var virtualNetwork = client.VirtualNetworks.Get(labResourceGroupName, labName, labVirtualNetworkName);
             Console.WriteLine("Virtual network ID: " + virtualNetwork.Id);
 
             Console.WriteLine($"Bulk-creating {vmCount} virtual machines...");
-            client.Lab.CreateEnvironment(labResourceGroupName, labName, new LabVirtualMachineCreationParameter
+            client.Labs.CreateEnvironment(labName, new LabVirtualMachineCreationParameter
             {
                 BulkCreationParameters = new BulkCreationParameters
                 {
@@ -133,10 +134,11 @@ namespace DtlClient
             try
             {
                 // TODO: Enter your lab information.
-                string labResourceGroupName = "YOUR_RESOURCE_GROUP_NAME";
-                string labName = "YOUR_LAB_NAME";
-                string virtualNetworkName = "YOUR_LAB_VIRTUAL_NETWORK_NAME";
-                string location = "YOUR_LAB_LOCATION";
+                string labResourceGroupName = ConfigurationManager.AppSettings["LabResourceGroupName"];
+                string labName = ConfigurationManager.AppSettings["LabName"];
+                string virtualNetworkName = ConfigurationManager.AppSettings["VirtualMachineName"];
+                string location = ConfigurationManager.AppSettings["LabLocation"];
+
                 int vmCount = 10;
 
                 if (args.Length == 0)
@@ -148,30 +150,30 @@ namespace DtlClient
                 switch (args[0])
                 {
                     case "bulkcreate":
-                    {
-                        BulkCreateVirtualMachinesForLab(
-                            ConfigurationManager.AppSettings["SubscriptionId"],
-                            labResourceGroupName,
-                            labName,
-                            virtualNetworkName,
-                            location,
-                            vmCount);
+                        {
+                            BulkCreateVirtualMachinesForLab(
+                                ConfigurationManager.AppSettings["SubscriptionId"],
+                                labResourceGroupName,
+                                labName,
+                                virtualNetworkName,
+                                location,
+                                vmCount);
 
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine($"{vmCount} virtual machine(s) provisioned successfully.");
-                        Console.ResetColor();
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine($"{vmCount} virtual machine(s) provisioned successfully.");
+                            Console.ResetColor();
 
-                        break;
-                    }
+                            break;
+                        }
                     case "labs":
-                    {
-                        ListLabsAsync().Wait();
+                        {
+                            ListLabsAsync().Wait();
 
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine($"The operation completed successfully.");
-                        Console.ResetColor();
-                        break;
-                    }
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine($"The operation completed successfully.");
+                            Console.ResetColor();
+                            break;
+                        }
                     case "addAllowedPort":
                         {
                             AddAllowedPortsToSubnet(
