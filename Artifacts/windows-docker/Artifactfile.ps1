@@ -113,6 +113,21 @@ function Test-NestedVirtualizationSupport
     $vmSizeWhitelist | ? { $vmSize -match $_ } | % { $vmSizeSupported = $true }
 
     return $vmSizeSupported
+
+#    $computerInfo = Get-CimInstance Win32_Computersystem
+#    $procInfo = Get-CimInstance Win32_Processor
+#    $osInfo = Get-CimInstance Win32_Operatingsystem
+
+#    $virtualizationInfo = [ordered]@{
+#        OSArchitecture = $osInfo.OSArchitecture
+#        TotalPhysicalMemory=[math]::Round($computerInfo.TotalPhysicalMemory/1gb)
+#        SLAT = $procInfo.SecondLevelAddressTranslationExtensions;
+#        VirtualizationFirmwareEnabled = $procInfo.VirtualizationFirmwareEnabled;
+#        VMMonitorModeExtensions = $procInfo.VMMonitorModeExtensions;
+#        DEP= $osInfo.DataExecutionPrevention_available
+#    }
+
+#    return (($virtualizationInfo.OSArchitecture -eq '64-bit') -and ($virtualizationInfo.TotalPhysicalMemory -ge 4) -and ($virtualizationInfo.SLAT) -and ($virtualizationInfo.VirtualizationFirmwareEnabled) -and ($virtualizationInfo.VMMonitorModeExtensions) -and ($virtualizationInfo.DEP))
 }
 
 function Get-TempPassword
@@ -280,7 +295,7 @@ try
             # Windows Server 2016
             if ((Get-WindowsFeature -Name Hyper-V | select -ExpandProperty InstallState) -eq "Available")
             {
-                Install-WindowsFeature –Name Hyper-V -IncludeManagementTools
+                Install-WindowsFeature –Name Hyper-V -IncludeManagementTools | Out-Null
             }            
 
             Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList "docker-for-windows --pre --ignore-checksums; docker-kitematic"
