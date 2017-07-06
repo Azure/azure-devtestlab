@@ -204,15 +204,13 @@ function InstallYarn
 
     Invoke-Expression ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1')) | Out-Null
 
-    RefreshEnv
-
     WriteLog 'Installing Yarn ...'
 
     choco install yarn --force --yes --acceptlicense --verbose --allow-empty-checksums | Out-Null
 
-    RefreshEnv
-
     WriteLog 'Success.'
+
+    $env:Path = [System.Environment]::GetEnvironmentVariable("Path","User") + ";" + [System.Environment]::GetEnvironmentVariable("Path","Machine")
 
     DisplayPathValues
 }
