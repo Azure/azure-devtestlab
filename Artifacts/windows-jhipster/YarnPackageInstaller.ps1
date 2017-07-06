@@ -253,7 +253,7 @@ function InstallPackages
 
         WriteLog "Installing package: $package ..."
 
-        yarn global add $package | Out-Null  
+        yarn global add $package 2>$null  
 
         if (-not $?)
         {
