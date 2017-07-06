@@ -8,7 +8,7 @@
     Usage examples
     ==============
     
-    PowerShell -ExecutionPolicy bypass "& ./startChocolatey.ps1 -PackageList <ChocoPackage>.install"
+    PowerShell -ExecutionPolicy bypass "& ./Artifactfile.ps1"
     
     Where,
       <ChocoPackage> is something like 7zip (i.e. 7zip).
@@ -24,7 +24,7 @@
 
     To correctly report exit codes, make sure to structure the "commandToExecute" as follow:
     
-    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', '7zip', '\"')]"
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./Artifactfile.ps1\"')]"
     
     Make sure to only replace the package (i.e. '7zip').
 
@@ -47,8 +47,6 @@
 
 [CmdletBinding()]
 param(
-    # comma- or semicolon-separated list of Chocolatey packages.
-    [string] $PackageList,
     [Parameter(ParameterSetName='CustomUser')]
     [string] $UserName = 'artifactInstaller',
     [Parameter(ParameterSetName='CustomUser')]
@@ -86,11 +84,6 @@ function Validate-Params
     [CmdletBinding()]
     param(
     )
-
-    if ([string]::IsNullOrEmpty($PackageList))
-    {
-        throw 'PackageList parameter is required.'
-    }
 
     if ($PsCmdlet.ParameterSetName -eq 'CustomUser')
     {
@@ -231,6 +224,30 @@ function Invoke-ChocolateyPackageInstaller
     }
 }
 
+function Invoke-YarnPackageInstaller
+{
+    [CmdletBinding()]
+    param(
+        [string] $UserName,
+        [string] $Password,
+        [string] $PackageList
+    )
+
+    $secPassword = ConvertTo-SecureString -String $Password -AsPlainText -Force
+    $credential = New-Object System.Management.Automation.PSCredential("$env:COMPUTERNAME\$($UserName)", $secPassword)
+    $command = "$PSScriptRoot\YarnPackageInstaller.ps1"
+
+    $oldPolicyValue = Set-LocalAccountTokenFilterPolicy
+    try
+    {
+        Invoke-Command -ComputerName $env:COMPUTERNAME -Credential $credential -FilePath $command -ArgumentList $PackageList
+    }
+    finally
+    {
+        Set-LocalAccountTokenFilterPolicy -Value $oldPolicyValue | Out-Null
+    }
+}
+
 ###################################################################################################
 
 #
@@ -260,14 +277,9 @@ try
         Add-LocalAdminUser -UserName $UserName -Password $password | Out-Null
     }
 
-    Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList $PackageList
+    Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList "jdk8;maven;gradle;git;gitextensions;nodejs-lts"
 
-    RefreshEnv
-
-    yarn global add yo
-    yarn global add bower
-    yarn global add gulp-cli
-    yarn global add generator-jhipster
+    Invoke-YarnPackageInstaller -UserName $UserName -Password $Password -PackageList "yo;bower;gulp-cli;generator-jhipster"
 }
 catch
 {
