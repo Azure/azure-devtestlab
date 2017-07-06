@@ -10,7 +10,7 @@
     "iconUri": "https://jhipster.github.io/images/logo/logo-jhipster2x.png",
     "targetOsType": "Windows",
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', 'jdk8;maven;gradle;git;gitextensions;nodejs-lts;yarn', '\"')]"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -file ./startChocolatey.ps1 -PackageList ', '\"', 'jdk8;maven;gradle;git;gitextensions;nodejs-lts;yarn', '\"')]"
     },
     "postDeployActions": [
         {
