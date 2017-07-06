@@ -262,6 +262,8 @@ try
 
     Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList $PackageList
 
+    RefreshEnv
+
     yarn global add yo
     yarn global add bower
     yarn global add gulp-cli
