@@ -277,7 +277,7 @@ try
         Add-LocalAdminUser -UserName $UserName -Password $password | Out-Null
     }
 
-    Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList "jdk8;maven;gradle;git;gitextensions;nodejs-lts"
+    Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList "jdk8;nodejs-lts;maven;gradle;git;gitextensions"
 
     Invoke-YarnPackageInstaller -UserName $UserName -Password $Password -PackageList "yo;bower;gulp-cli;generator-jhipster"
 }
