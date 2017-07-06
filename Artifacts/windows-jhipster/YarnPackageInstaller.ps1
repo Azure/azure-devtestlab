@@ -177,13 +177,17 @@ function InstallYarn
         [ValidateNotNullOrEmpty()] $YarnInstallLog
     )
 
-    WriteLog 'Installing Yarn ...'
+    WriteLog 'Installing Chocolatey ...'
 
     Invoke-Expression ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1')) | Out-Null
 
-    RefreshEnv
+    RefreshEnv.cmd
+
+    WriteLog 'Installing Yarn ...'
 
     choco install yarn --force --yes --acceptlicense --verbose --allow-empty-checksums | Out-Null
+
+    RefreshEnv.cmd
 
     WriteLog 'Success.'
 }
