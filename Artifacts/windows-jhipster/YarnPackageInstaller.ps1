@@ -251,13 +251,23 @@ function InstallPackages
 
         WriteLog "Installing package: $package ..."
 
-        CMD /C "yarn global add $package --force --no-emoji --silent --no-progress --non-interactive" | Out-Null 
+        try {
 
-        if (-not $?)
-        {
-            $errMsg = 'Installation failed. Please see the Yarn logs in %ALLUSERSPROFILE%\Yarn\logs folder for details.'
-            throw $errMsg 
+            yarn global add $package --force --no-emoji --silent --no-progress --non-interactive
         }
+        catch {
+            
+            #handle warnings like console output
+            $errMsg = $Error[0].Exception.Message
+
+            if ($errMsg -like "warning*") {
+                WriteLog $errMsg
+            } else {
+                throw $errMsg
+            }
+        }
+        
+
     
         WriteLog 'Success.'
     }
@@ -291,7 +301,7 @@ catch
         WriteLog -Message "ERROR: $errMsg" -LogFileOnly
     }
 
-    # IMPORTANT NOTE: We rely on startYarn.ps1 to manage the workflow. It is there where we need to
+    # IMPORTANT NOTE: We rely on Artifactsfile.ps1 to manage the workflow. It is there where we need to
     # ensure an exit code is correctly sent back to the calling process. From here, all we need to do is
     # throw so that startYarn.ps1 can handle the state correctly.
     throw

@@ -224,6 +224,7 @@ function InstallPackages
 
         # Install git via chocolatey.
         choco install $package --force --yes --acceptlicense --verbose --allow-empty-checksums | Out-Null  
+        
         if (-not $?)
         {
             $errMsg = 'Installation failed. Please see the chocolatey logs in %ALLUSERSPROFILE%\chocolatey\logs folder for details.'
