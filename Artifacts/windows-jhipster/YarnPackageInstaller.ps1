@@ -201,13 +201,11 @@ function InstallYarn
     )
 
     WriteLog 'Installing Chocolatey ...'
-
     Invoke-Expression ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1')) | Out-Null
+    WriteLog 'Success.'
 
     WriteLog 'Installing Yarn ...'
-
     choco install yarn --force --yes --acceptlicense --verbose --allow-empty-checksums | Out-Null
-
     WriteLog 'Success.'
 
     $env:Path = [System.Environment]::GetEnvironmentVariable("Path","User") + ";" + [System.Environment]::GetEnvironmentVariable("Path","Machine")
@@ -253,7 +251,7 @@ function InstallPackages
 
         WriteLog "Installing package: $package ..."
 
-        yarn global add $package 2>$null  
+        yarn global add $package --force --no-emoji --silent --no-progress --non-interactive | Out-Null 
 
         if (-not $?)
         {
