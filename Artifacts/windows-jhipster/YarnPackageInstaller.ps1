@@ -253,7 +253,7 @@ function InstallPackages
 
         try {
 
-            yarn global add $package --force --no-emoji --silent --no-progress --non-interactive
+            yarn global add $package --force --no-emoji --silent --no-progress --non-interactive | Out-Null
         }
         catch {
             
