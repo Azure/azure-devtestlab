@@ -251,7 +251,7 @@ function InstallPackages
 
         WriteLog "Installing package: $package ..."
 
-        yarn global add $package --force --no-emoji --silent --no-progress --non-interactive | Out-Null 
+        CMD /C "yarn global add $package --force --no-emoji --silent --no-progress --non-interactive" | Out-Null 
 
         if (-not $?)
         {
