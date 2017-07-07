@@ -1,1 +1,0 @@
-This artifact joins the virtual machine to the corporate domain.  You must provide your user account which will be added to the administrator group on the virtual machine.  After execution of the artifact it will be rebooted automatically and then you will be able to login with your user account directly on the virtual machine.

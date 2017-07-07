@@ -1,1 +1,0 @@
-This artifact will add the given Active Directory (i.e. domain) user to the local administrators group on the target virtual machine.
