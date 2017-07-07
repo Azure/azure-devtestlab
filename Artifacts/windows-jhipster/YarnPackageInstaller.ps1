@@ -245,32 +245,45 @@ function InstallPackages
         return        
     }
 
+    $postBootKey = [System.IO.Path]::GetFileName($YarnPackageInstallerFolder)
+    $postBootScript = [System.IO.Path]::ChangeExtension($ScriptLog, ".ps1")
+
+    Out-File -InputObject "`"===========================================================================================`"" -FilePath $postBootScript -Append
+    Out-File -InputObject "`"     _                          ____             _____         _     _          _          `"" -FilePath $postBootScript -Append
+    Out-File -InputObject "`"    / \    _____   _ _ __ ___  |  _ \  _____   _|_   _|__  ___| |_  | |    __ _| |__  ___  `"" -FilePath $postBootScript -Append
+    Out-File -InputObject "`"   / _ \  |_  / | | | '__/ _ \ | | | |/ _ \ \ / / | |/ _ \/ __| __| | |   / _' | '_ \/ __| `"" -FilePath $postBootScript -Append
+    Out-File -InputObject "`"  / ___ \  / /| |_| | | |  __/ | |_| |  __/\ V /  | |  __/\__ \ |_  | |__| (_| | |_) \__ \ `"" -FilePath $postBootScript -Append
+    Out-File -InputObject "`" /_/   \_\/___|\__,_|_|  \___| |____/ \___| \_/   |_|\___||___/\__| |_____\__._|_.__/|___/ `"" -FilePath $postBootScript -Append
+    Out-File -InputObject "`"===========================================================================================`"" -FilePath $postBootScript -Append
+    Out-File -InputObject "function ToArray { begin { `$output = @(); } process { `$output += `$_; } end { return ,`$output; } }" -FilePath $postBootScript -Append
+    Out-File -InputObject "try {" -FilePath $postBootScript -Append
+    Out-File -InputObject "if (`$PSCommandPath) { Start-Transcript -Path ([System.IO.Path]::ChangeExtension(`$PSCommandPath, `".log`")) -Append -ErrorAction SilentlyContinue | Out-Null }" -FilePath $postBootScript -Append
+    Out-File -InputObject "`"Installing Yarn & package/s as '`$(whoami)' ...`"" -FilePath $postBootScript -Append
+
     foreach ($package in $packages)
     {
         $package = $package.Trim()
+        $command = "yarn global add $package --force --non-interactive *>`$null"
 
-        WriteLog "Installing package: $package ..."
-
-        try {
-
-            yarn global add $package --force --no-emoji --silent --no-progress --non-interactive | Out-Null
-        }
-        catch {
-            
-            #handle warnings like console output
-            $errMsg = $Error[0].Exception.Message
-
-            if ($errMsg -like "warning*") {
-                WriteLog $errMsg
-            } else {
-                throw $errMsg
-            }
-        }
-        
-
-    
-        WriteLog 'Success.'
+        Out-File -InputObject "`"``n>>> Installing Yarn package '$package' ...`"" -FilePath $postBootScript -Append
+        Out-File -InputObject $command -FilePath $postBootScript -Append
+        Out-File -InputObject "`"Success`"" -FilePath $postBootScript -Append
     }
+
+    Out-File -InputObject "`"``n>>> Adding Yarn bin folder to path ...``n`$(yarn global bin)`"" -FilePath $postBootScript -Append
+    Out-File -InputObject "`$path = (([System.Environment]::GetEnvironmentVariable(`"path`", `"user`") | Out-String) -split `";`") | ? { -not [string]::IsNullOrWhiteSpace(`$_) } | ToArray" -FilePath $postBootScript -Append
+    Out-File -InputObject "`$path += `"`$((yarn global bin | Out-String) -replace `"``n|``r`")\`"" -FilePath $postBootScript -Append
+    Out-File -InputObject "[System.Environment]::SetEnvironmentVariable(`"path`", `"`$(`$path -join `";`");`", `"user`")" -FilePath $postBootScript -Append
+
+    Out-File -InputObject "`"``n>>> Dump user environment path (`$(whoami)) ...`"" -FilePath $postBootScript -Append
+    Out-File -InputObject "([System.Environment]::GetEnvironmentVariable(`"path`", `"user`") | Out-String).Split(`";`", [System.StringSplitOptions]::RemoveEmptyEntries)" -FilePath $postBootScript -Append
+
+    Out-File -InputObject "} catch {" -FilePath $postBootScript -Append
+    Out-File -InputObject "`"ERROR: `$(`$_.Exception.Message)`"" -FilePath $postBootScript -Append
+    Out-File -InputObject "} finally {" -FilePath $postBootScript -Append
+    Out-File -InputObject "Stop-Transcript -ErrorAction SilentlyContinue `n }" -FilePath $postBootScript -Append
+
+    Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" -Name "!$postBootKey" -Value "powershell.exe -ExecutionPolicy bypass `"& $postBootScript`""
 }
 
 ##################################################################################################
