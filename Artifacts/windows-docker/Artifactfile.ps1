@@ -91,15 +91,6 @@ function Get-VMSize
     return $vmSize
 }
 
-function Test-IsWorkstation
-{
-    [CmdletBinding()]
-    param (
-    )
-
-    return ((Get-WmiObject Win32_OperatingSystem | select -ExpandProperty ProductType) -eq 1)
-}
-
 function Test-NestedVirtualizationSupport
 {
     [CmdletBinding()]
@@ -280,7 +271,7 @@ try
 
     if (Test-NestedVirtualizationSupport)
     {
-        if (Test-IsWorkstation)
+        if (Get-Command "Enable-WindowsOptionalFeature" -ErrorAction SilentlyContinue)
         {
             # Windows 10
             if ((Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V | select -ExpandProperty State) -eq "Disabled")
@@ -297,8 +288,17 @@ try
             }            
         }
 
-        Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList "docker-for-windows; docker-kitematic"
+        Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList "win2003-mklink; docker-for-windows; docker-kitematic"
 
+        if (Test-Path -Path "%PROGRAMDATA%\chocolatey\lib\docker-kitematic\tools" -PathType Container) {
+
+            # ensure environment refresh before using a tool installed using chocolatey
+            RefreshEnv
+
+            # link the docker kitematic folder to the kitematic folder installed by chocolatey
+            mklink /d "C:\Program Files\Docker\Kitematic" "%PROGRAMDATA%\chocolatey\lib\docker-kitematic\tools"
+        }
+        
         $dockerGroup = ([ADSI]"WinNT://$env:ComputerName/docker-users,group")
 
         if ($dockerGroup)
