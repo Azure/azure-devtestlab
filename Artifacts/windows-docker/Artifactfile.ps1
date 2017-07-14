@@ -262,6 +262,8 @@ try
             {
                 Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All -NoRestart
             }
+
+            Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList "docker-for-windows"
         }
         else 
         {
@@ -270,9 +272,11 @@ try
             {
                 Install-WindowsFeature –Name Hyper-V -IncludeManagementTools | Out-Null
             }            
+
+            Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList "docker-for-windows --ignore-checksums --pre"
         }
 
-        Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList "win2003-mklink; docker-for-windows; docker-kitematic"
+        Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList "win2003-mklink; docker-kitematic"
 
         if (Test-Path -Path "%PROGRAMDATA%\chocolatey\lib\docker-kitematic\tools" -PathType Container) {
 
