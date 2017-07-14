@@ -255,7 +255,14 @@ try
 
     if (Test-NestedVirtualizationSupport)
     {
-        if (Get-Command "Enable-WindowsOptionalFeature" -ErrorAction SilentlyContinue)
+        $productType = Get-CimInstance Win32_OperatingSystem | select -ExpandProperty ProductType
+
+        # Product Type Values
+        # 1 - Work Station
+        # 2 - Domain Controller
+        # 3 - Server
+
+        if ($productType -eq 1)
         {
             # Windows 10
             if ((Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V | select -ExpandProperty State) -eq "Disabled")
