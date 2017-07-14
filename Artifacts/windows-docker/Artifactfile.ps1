@@ -263,7 +263,7 @@ try
                 Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All -NoRestart
             }
 
-            Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList "docker-for-windows"
+            Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList "docker-for-windows --ignore-checksums"
         }
         else 
         {
