@@ -2,7 +2,7 @@
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
     "title": "Docker",
     "description": "Installs Docker on Windows Server. Requires Windows 10 or Windows Server 2016.",
-    "publisher": "Markus Heiliger / Marcus Robinson",
+    "publisher": "Microsoft",
     "tags": [
         "Windows",
         "Docker"

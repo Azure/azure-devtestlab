@@ -98,27 +98,11 @@ function Test-NestedVirtualizationSupport
     )
 
     $vmSize = Get-VMSize
-    $vmSizeWhitelist = ("Standard_DS\d+_v2")
 
-    $vmSizeSupported = $false
-    $vmSizeWhitelist | ? { $vmSize -match $_ } | % { $vmSizeSupported = $true }
-
-    return $vmSizeSupported
-
-#    $computerInfo = Get-CimInstance Win32_Computersystem
-#    $procInfo = Get-CimInstance Win32_Processor
-#    $osInfo = Get-CimInstance Win32_Operatingsystem
-
-#    $virtualizationInfo = [ordered]@{
-#        OSArchitecture = $osInfo.OSArchitecture
-#        TotalPhysicalMemory=[math]::Round($computerInfo.TotalPhysicalMemory/1gb)
-#        SLAT = $procInfo.SecondLevelAddressTranslationExtensions;
-#        VirtualizationFirmwareEnabled = $procInfo.VirtualizationFirmwareEnabled;
-#        VMMonitorModeExtensions = $procInfo.VMMonitorModeExtensions;
-#        DEP= $osInfo.DataExecutionPrevention_available
-#    }
-
-#    return (($virtualizationInfo.OSArchitecture -eq '64-bit') -and ($virtualizationInfo.TotalPhysicalMemory -ge 4) -and ($virtualizationInfo.SLAT) -and ($virtualizationInfo.VirtualizationFirmwareEnabled) -and ($virtualizationInfo.VMMonitorModeExtensions) -and ($virtualizationInfo.DEP))
+    # CAUTION !!!
+    # There's no reliable way other than using the VMSize to identify support for nested virtualization yet!
+    
+    return [bool] ($vmSize -match "Standard_[D|E]{1}\d{1,2}[s]?_v3")
 }
 
 function Get-TempPassword
