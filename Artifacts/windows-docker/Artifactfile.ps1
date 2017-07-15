@@ -270,6 +270,7 @@ try
                 Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All -NoRestart
             }
 
+            # use the GA version of docker for windows and disable checksum checks (checksum is always outdated in the nuget package)
             Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList "docker-for-windows --ignore-checksums"
         }
         else 
@@ -280,18 +281,19 @@ try
                 Install-WindowsFeature –Name Hyper-V -IncludeManagementTools | Out-Null
             }            
 
+            # use the pre version of docker for windows to ensure windows server 2016 support and disable checksum checks (checksum is always outdated in the nuget package)
             Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList "docker-for-windows --ignore-checksums --pre"
         }
 
-        Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList "win2003-mklink; docker-kitematic"
+        Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList "docker-kitematic"
 
-        if (Test-Path -Path "%PROGRAMDATA%\chocolatey\lib\docker-kitematic\tools" -PathType Container) {
+        $dockerPath = Join-Path $env:programfiles "docker"
+        $kitematicPath = Join-Path $env:programdata "chocolatey\lib\docker-kitematic\tools"
 
-            # ensure environment refresh before using a tool installed using chocolatey
-            RefreshEnv
+        if ((Test-Path -Path $dockerPath -PathType Container) -and (Test-Path -Path $kitematicPath -PathType Container)) {
 
-            # link the docker kitematic folder to the kitematic folder installed by chocolatey
-            mklink /d "C:\Program Files\Docker\Kitematic" "%PROGRAMDATA%\chocolatey\lib\docker-kitematic\tools"
+            # redirect default kitematic folder under docker to the chocolatey package folder 
+            New-Item -Path (Join-Path $dockerPath "Kitematic") -ItemType SymbolicLink -Target $kitematicPath | Out-Null
         }
         
         $dockerGroup = ([ADSI]"WinNT://$env:ComputerName/docker-users,group")
