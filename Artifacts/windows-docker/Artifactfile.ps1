@@ -285,23 +285,30 @@ try
             Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList "docker-for-windows --ignore-checksums --pre"
         }
 
-        Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList "docker-kitematic"
-
         $dockerPath = Join-Path $env:programfiles "docker"
-        $kitematicPath = Join-Path $env:programdata "chocolatey\lib\docker-kitematic\tools"
 
-        if ((Test-Path -Path $dockerPath -PathType Container) -and (Test-Path -Path $kitematicPath -PathType Container)) {
+        if (Test-Path -Path $dockerPath -PathType Container) {
 
-            # redirect default kitematic folder under docker to the chocolatey package folder 
-            New-Item -Path (Join-Path $dockerPath "Kitematic") -ItemType SymbolicLink -Target $kitematicPath | Out-Null
-        }
-        
-        $dockerGroup = ([ADSI]"WinNT://$env:ComputerName/docker-users,group")
+            Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList "docker-kitematic"
 
-        if ($dockerGroup)
-        {
-            # grant local users to docker-for-windows
-            ([ADSI]"WinNT://$env:ComputerName").Children | ? { $_.SchemaClassName -eq 'user' } | % { try { $dockerGroup.add($_.Path) } catch {} }
+            $kitematicPath = Join-Path $env:programdata "chocolatey\lib\docker-kitematic\tools"
+
+            if ((Test-Path -Path $dockerPath -PathType Container) -and (Test-Path -Path $kitematicPath -PathType Container)) {
+
+                # redirect default kitematic folder under docker to the chocolatey package folder 
+                New-Item -Path (Join-Path $dockerPath "Kitematic") -ItemType SymbolicLink -Target $kitematicPath | Out-Null
+            }
+            
+            $dockerGroup = ([ADSI]"WinNT://$env:ComputerName/docker-users,group")
+
+            if ($dockerGroup)
+            {
+                # grant local users to docker-for-windows
+                ([ADSI]"WinNT://$env:ComputerName").Children | ? { $_.SchemaClassName -eq 'user' } | % { try { $dockerGroup.add($_.Path) } catch {} }
+            }
+
+            # ensure docker 4 windows autostart for the very first login
+            Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" -Name "Docker for Windows" -Value (Join-Path $dockerPath "Docker\Docker for Windows.exe")
         }
     }    
 }
