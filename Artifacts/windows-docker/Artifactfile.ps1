@@ -42,9 +42,28 @@ function Validate-Environment
     param(
     )
 
-    if ([System.Environment]::OSVersion.Version.Major -lt  10)
-    {
-        throw "OS version must at least Windows 10 or Windows Server 2016."
+    $minVersionServer = [System.Version]::Parse("10.0.14393.0")
+    $minVersionClient = [System.Version]::Parse("10.0.14393.222")
+
+    $productType = Get-CimInstance Win32_OperatingSystem | select -ExpandProperty ProductType
+
+    # Product Type Values
+    # 1 - Work Station
+    # 2 - Domain Controller
+    # 3 - Server
+
+    $curVersion = [System.Environment]::OSVersion.Version
+    $minVersion = [System.Version]::Parse("0.0.0.0")
+
+    if ($productType -eq 1) {
+        $minVersion = $minVersionClient
+    } else {
+        $minVersion = $minVersionServer
+    }
+    
+    if ($curVersion -lt $minVersion) {
+
+        throw "OS version must at least Windows 10 ($minVersionClient) or Windows Server 2016 ($minVersionServer)."
     }
 }
 
@@ -87,7 +106,7 @@ function Get-VMSize
     )
 
     $vmSize = Invoke-RestMethod -Headers @{"Metadata"="true"} -URI "http://169.254.169.254/metadata/instance/compute/vmSize?api-version=2017-04-02&format=text" -Method Get
-
+    
     return $vmSize
 }
 
@@ -253,8 +272,8 @@ try
         Add-LocalAdminUser -UserName $UserName -Password $password | Out-Null
     }
 
-    if (Test-NestedVirtualizationSupport)
-    {
+    if (Test-NestedVirtualizationSupport) {
+
         $productType = Get-CimInstance Win32_OperatingSystem | select -ExpandProperty ProductType
 
         # Product Type Values
@@ -309,6 +328,11 @@ try
 
             # ensure docker 4 windows autostart for the very first login
             Set-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce" -Name "Docker for Windows" -Value (Join-Path $dockerPath "Docker\Docker for Windows.exe")
+
+        } else {
+
+            $message = "Could not find Docker installation path '$dockerPath'."
+            throw $message
         }
     }    
 }
