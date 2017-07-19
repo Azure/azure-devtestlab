@@ -98,7 +98,7 @@ if ($Reset -and (Get-AzureRmResourceGroup -Name $ResourceGroupName -Location $Re
                                        -ResourceGroupName $ResourceGroupName `
                                        -TemplateUri "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/100-blank-template/azuredeploy.json" `
                                        -TemplateParameterUri "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/100-blank-template/azuredeploy.parameters.json" `
-                                       -Force -Verbose
+                                       -Force -Verbose -Mode Complete
 }
 
 # Create or update the resource group using the specified template file and template parameters file
