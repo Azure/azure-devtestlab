@@ -2,10 +2,294 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    "UsageInfrastructurePrefix": {
+      "type": "string",
+      "maxLength": 5,
+      "minLength": 2,
+      "metadata": {
+        "description": "Prefix for all resources it should be alphanumeric."
+      }
+    },
+    "AzureStorageAccountType": {
+      "type": "string",
+      "defaultValue": "Standard_LRS",
+      "allowedValues": [
+        "Standard_LRS",
+        "Standard_ZRS",
+        "Standard_GRS",
+        "Standard_RAGRS",
+        "Premium_LRS"
+      ]
+    },
+    "SqlServerAdminLogin": {
+      "type": "string",
+      "minLength": 1
+    },
+    "SqlServerAdminLoginPassword": {
+      "type": "securestring"
+    },
+    "SqlDatabaseName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "SqlDatabaseCollation": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "SQL_Latin1_General_CP1_CI_AS"
+    },
+    "SqlDatabaseEdition": {
+      "type": "string",
+      "defaultValue": "Basic",
+      "allowedValues": [
+        "Basic",
+        "Standard",
+        "Premium"
+      ]
+    },
+    "SqlDatabaseRequestedServiceObjectiveName": {
+      "type": "string",
+      "defaultValue": "Basic",
+      "allowedValues": [
+        "Basic",
+        "S0",
+        "S1",
+        "S2",
+        "P1",
+        "P2",
+        "P3"
+      ],
+      "metadata": {
+        "description": "Describes the performance level for Edition"
+      }
+    },
+    "AutomationAccountType": {
+      "type": "string",
+      "metadata": {
+        "description": "The Automation Account Type"
+      },
+      "defaultValue": "Free"
+    },
+    "_artifactsLocation": {
+      "type": "string",
+      "metadata": {
+        "description": "The base URI where artifacts required by this template are located. When the template is deployed using the accompanying scripts, a private location in the subscription will be used and this value will be automatically generated."
+      },
+      "defaultValue": ""
+    },
+    "_artifactsLocationSasToken": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The sasToken required to access _artifactsLocation.  When the template is deployed using the accompanying scripts, a sasToken will be automatically generated."
+      },
+      "defaultValue": ""
+    }
   },
   "variables": {
+    "AzureStorageAccountName": "[concat(toLower(parameters('UsageInfrastructurePrefix')),'azstoracct')]",
+    "AzureSqlServerName": "[concat(toLower(parameters('UsageInfrastructurePrefix')),'azsqlsrv')]",
+    "AutomationAccountName": "[concat(parameters('UsageInfrastructurePrefix'),'AzAutoAcct')]"
+
   },
   "resources": [
+    {
+      "name": "[variables('AzureStorageAccountName')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-01-01",
+      "sku": {
+        "name": "[parameters('AzureStorageAccountType')]"
+      },
+      "dependsOn": [],
+      "tags": {
+        "displayName": "Azure Storage Account"
+      },
+      "kind": "Storage"
+    },
+    {
+      "name": "[variables('AzureSqlServerName')]",
+      "type": "Microsoft.Sql/servers",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2014-04-01-preview",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "Azure SQL Server"
+      },
+      "properties": {
+        "administratorLogin": "[parameters('SqlServerAdminLogin')]",
+        "administratorLoginPassword": "[parameters('SqlServerAdminLoginPassword')]"
+      },
+      "resources": [
+        {
+          "name": "AllowAllWindowsAzureIps",
+          "type": "firewallrules",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2014-04-01-preview",
+          "dependsOn": [
+            "[resourceId('Microsoft.Sql/servers', variables('AzureSqlServerName'))]"
+          ],
+          "properties": {
+            "startIpAddress": "0.0.0.0",
+            "endIpAddress": "0.0.0.0"
+          }
+        },
+        {
+          "name": "[parameters('SqlDatabaseName')]",
+          "type": "databases",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2014-04-01-preview",
+          "dependsOn": [
+            "[resourceId('Microsoft.Sql/servers', variables('AzureSqlServerName'))]"
+          ],
+          "tags": {
+            "displayName": "Azure SQL DB"
+          },
+          "properties": {
+            "collation": "[parameters('SqlDatabaseCollation')]",
+            "edition": "[parameters('SqlDatabaseEdition')]",
+            "maxSizeBytes": "1073741824",
+            "requestedServiceObjectiveName": "[parameters('SqlDatabaseRequestedServiceObjectiveName')]"
+          }
+        }
+      ]
+    },
+    {
+      "name": "[variables('AutomationAccountName')]",
+      "type": "Microsoft.Automation/automationAccounts",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-10-31",
+      "tags": {
+        "displayName": "AutomationAccount"
+      },
+      "dependsOn": [
+        "[concat('Microsoft.Storage/storageAccounts/', variables('AzureStorageAccountName'))]"
+      ],
+      "properties": {
+        "sku": {
+          "name": "[parameters('AutomationAccountType')]"
+        }
+      },
+      "resources": [
+        {
+          "name": "[concat(variables('AutomationAccountName'), '-RequestandStoreData')]",
+          "type": "runbooks",
+          "apiVersion": "2015-10-31",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[concat('Microsoft.Automation/automationAccounts/', variables('AutomationAccountName'))]"
+          ],
+          "tags": {
+            "displayName": "RequestandStoreData Automation Runbook "
+          },
+          "properties": {
+            "runbookType": "PowerShell",
+            "description": "Request usage data from DevTest Labs.",
+            "publishContentLink": {
+              "uri": "[concat(parameters('_artifactsLocation'), '/Runbooks/RequestandStoreData.ps1', parameters('_artifactsLocationSasToken'))]",
+              "version": "1.0.0.0"
+            }
+          }
+        },
+        {
+          "name": "[concat(variables('AutomationAccountName'), '-TransferDataToSql')]",
+          "type": "runbooks",
+          "apiVersion": "2015-10-31",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[concat('Microsoft.Automation/automationAccounts/', variables('AutomationAccountName'))]"
+          ],
+          "tags": {
+            "displayName": "TransferDataToSql Automation Runbook "
+          },
+          "properties": {
+            "runbookType": "PowerShell",
+            "description": "Transfer DevTest Lab usage data from storage to sql server.",
+            "publishContentLink": {
+              "uri": "[concat(parameters('_artifactsLocation'), '/Runbooks/TransferDataToSQL.ps1', parameters('_artifactsLocationSasToken'))]",
+              "version": "1.0.0.0"
+            }
+          }
+        },
+        {
+          "name": "StorageAccountName",
+          "type": "variables",
+          "apiVersion": "2015-10-31",
+          "dependsOn": [
+            "[concat('Microsoft.Automation/automationAccounts/', variables('AutomationAccountName'))]"
+          ],
+          "properties": {
+            "value": "[concat('\"',variables('AzureStorageAccountName'),'\"')]",
+            "description": "Automation Variable Storage Name",
+            "isEncrypted": false
+          }
+        },
+        {
+          "name": "AutomationAccountName",
+          "type": "variables",
+          "apiVersion": "2015-10-31",
+          "dependsOn": [
+            "[concat('Microsoft.Automation/automationAccounts/', variables('AutomationAccountName'))]"
+          ],
+          "properties": {
+            "value": "[concat('\"',variables('AutomationAccountName'),'\"')]",
+            "description": "Automation Variable Automation Account Name",
+            "isEncrypted": false
+          }
+        },
+        {
+          "name": "ContainerName",
+          "type": "variables",
+          "apiVersion": "2015-10-31",
+          "dependsOn": [
+            "[concat('Microsoft.Automation/automationAccounts/', variables('AutomationAccountName'))]"
+          ],
+          "properties": {
+            "isEncrypted": false,
+            "value": "\"labresourceusage\"",
+            "description": "Automation Variable Storage Container"
+          }
+        },
+        {
+          "name": "SQLConnection",
+          "type": "variables",
+          "apiVersion": "2015-10-31",
+          "dependsOn": [
+            "[concat('Microsoft.Automation/automationAccounts/', variables('AutomationAccountName'))]"
+          ],
+          "properties": {
+            "isEncrypted": true,
+            "Value": "[concat('\"','Server=tcp:', variables('AzureSqlServerName'), '.database.windows.net,1433;Initial Catalog=', parameters('SqlDatabaseName'), ';Persist Security Info=False;User ID=', parameters('SqlServerAdminLogin'), ';Password=', parameters('SqlServerAdminLoginPassword'), ';MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;','\"')]",
+            "description": "Automation Variable SQL Connection"
+          }
+        },
+        {
+          "name": "StorageKey",
+          "type": "variables",
+          "apiVersion": "2015-10-31",
+          "dependsOn": [
+            "[concat('Microsoft.Automation/automationAccounts/', variables('AutomationAccountName'))]",
+            "[concat('Microsoft.Storage/storageAccounts/', variables('AzureStorageAccountName'))]"
+          ],
+          "properties": {
+            "isEncrypted": true,
+            "value": "[concat('\"',listKeys(variables('AzureStorageAccountName'), '2016-01-01').keys[1].value,'\"')]",
+            "description": "Automation Variable Storage Key"
+          }
+        },
+        {
+          "name": "maxConcurrentJobs",
+          "type": "variables",
+          "apiVersion": "2015-10-31",
+          "dependsOn": [
+            "[concat('Microsoft.Automation/automationAccounts/', variables('AutomationAccountName'))]"
+          ],
+          "properties": {
+            "isEncrypted": false,
+            "value": "\"5\"",
+            "description": "Automation Variable Max Job running concurrently"
+          }
+        }
+      ]
+    }
   ],
   "outputs": {
   }
