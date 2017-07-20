@@ -269,7 +269,7 @@ try
         Add-LocalAdminUser -UserName $UserName -Password $password | Out-Null
     }
 
-    Invoke-ChocolateyFeedInstaller -UserName $UserName -Password $Password -Arguments ($FeedName, $FeedUrl, $FeedUsername, $FeedPassword)
+    Invoke-ChocolateyFeedInstaller -UserName $UserName -Password $Password -Arguments ($FeedName, $FeedUrl, $FeedUsername, $FeedPassword, $DisableDefault)
 }
 catch
 {
