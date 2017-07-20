@@ -41,6 +41,6 @@
         }
     },
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./Artifactfile.ps1 -FeedName ''', parameters('feedName'), ''' -FeedUrl ''', parameters('feedUrl'), ''' -FeedUsername ''', parameters('feedUsername'), ''' -FeedPassword ''', parameters('feedPassword'), ''' -DisableDefault:$''', parameters('disableDefault'), '''\"')]"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./Artifactfile.ps1 -FeedName ''', parameters('feedName'), ''' -FeedUrl ''', parameters('feedUrl'), ''' -FeedUsername ''', parameters('feedUsername'), ''' -FeedPassword ''', parameters('feedPassword'), ''' -DisableDefault:$', parameters('disableDefault'), '\"')]"
     }
 }
