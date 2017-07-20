@@ -20,13 +20,13 @@
             "displayName": "URL",
             "description": "The URL of the new feed. Caution - chocolatey requires a v2 service endpoint."
         },
-        "username": {
+        "feedUsername": {
             "type": "string",
             "displayName": "Username",
             "description": "Username to use for authenticated feeds.",
             "allowEmpty": true
         },
-        "password": {
+        "feedPassword": {
             "type": "securestring",
             "displayName": "Password",
             "description": "Password to use for authenticated feeds.",
@@ -41,6 +41,6 @@
         }
     },
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./Artifactfile.ps1 -FeedName ''', parameters('feedName'), ''' -FeedUrl ''', parameters('feedUrl'), ''' -Username ''', parameters('username'), ''' -Password ''', parameters('password'), ''' -DisableDefault ''', parameters('disableDefault'), '''\"')]"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./Artifactfile.ps1 -FeedName ''', parameters('feedName'), ''' -FeedUrl ''', parameters('feedUrl'), ''' -FeedUsername ''', parameters('feedUsername'), ''' -FeedPassword ''', parameters('feedPassword'), ''' -DisableDefault ''', parameters('disableDefault'), '''\"')]"
     }
 }
