@@ -209,12 +209,14 @@ try
     InstallChocolatey -chocolateyInstallLog $ChocolateyInstallLog
 
     try {
+        WriteLog -Message "Removing feed '$FeedName' ..."
         choco source remove --name "$FeedName"
     } catch {
         throw "Failed to remove chocolatey feed '$FeedName' - $($Error[0].Exception.Message)"
     }
 
     try {
+        WriteLog -Message "Registering feed '$FeedName' ($FeedUrl) ..."
         if ($FeedUsername) {
             choco source add --name "$FeedName" --source "$FeedUrl" --user "$FeedUsername" --password "$FeedPassword"
         } else {
@@ -226,11 +228,14 @@ try
 
     if ($DisableDefault) {        
         try {
+            WriteLog -Message "Disabling default feed 'chocolatey' ..."
             choco source disable --name "chocolatey"
         } catch {
             throw "Failed to disable default chocolatey feed - $($Error[0].Exception.Message)"
         }
     }
+
+    WriteLog -Message "done"
 }
 catch
 {
