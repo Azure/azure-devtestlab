@@ -245,8 +245,9 @@ catch
         WriteLog -Message "ERROR: $errMsg" -LogFileOnly
     }
 
-    # IMPORTANT NOTE: We rely on startChocolatey.ps1 to manage the workflow. It is there where we need to
+    # IMPORTANT NOTE: We rely on Artifacts.ps1 to manage the workflow. It is there where we need to
     # ensure an exit code is correctly sent back to the calling process. From here, all we need to do is
-    # throw so that startChocolatey.ps1 can handle the state correctly.
+    # throw so that Artifacts.ps1 can handle the state correctly.
+    
     throw
 }
