@@ -1,4 +1,5 @@
 Javascript to simplify the Claim Any process of a VM
+
 The js directory contains scripts to connect and claim any VM. The app.html is an example of code to use the Javascript functions inside a page of your own website. Also, they require the registration of an app in the Azure AD.
 
 
