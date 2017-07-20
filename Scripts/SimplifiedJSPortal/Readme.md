@@ -4,16 +4,16 @@ The js directory contains scripts to connect and claim any VM. The app.html is a
 
 
 App registration
-1. To register a new application we need to first create the App registrations in Azure Active directory. To know more about this please    follow this link. We need to:
-2. Sign in to the Azure portal
-3. Choose your Azure AD tenant by selecting your account in the top right corner of the page
-4. In the left-hand navigation pane, choose More Services, click App Registrations, and click Add
-5. Follow the prompts and create a new application
-6. Once the app is created, grant delegated permissions to Windows Azure Active Directory (Microsoft.Azure.ActiveDirectory) and Windows 
-7. Azure Service Management API in the Required permissions Settings blade
-8. Generate a valid key and copy it.
-9. Register your App URL as the Reply URL's section
-10.Edit manifest and set "oauth2AllowImplicitFlow": true
+To register a new application we need to first create the App registrations in Azure Active directory. To know more about this please    follow this link. We need to:
+- Sign in to the Azure portal
+- Choose your Azure AD tenant by selecting your account in the top right corner of the page
+- In the left-hand navigation pane, choose More Services, click App Registrations, and click Add
+- Follow the prompts and create a new application
+- Once the app is created, grant delegated permissions to Windows Azure Active Directory (Microsoft.Azure.ActiveDirectory) and Windows 
+- Azure Service Management API in the Required permissions Settings blade
+- Generate a valid key and copy it.
+- Register your App URL as the Reply URL's section
+- Edit manifest and set "oauth2AllowImplicitFlow": true
 
 
 Placeholder replacement
