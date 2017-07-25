@@ -1,7 +1,7 @@
 {
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
     "title": "JHipster",
-    "publisher": "Markus Heiliger",
+    "publisher": "Microsoft",
     "description": "Installs JHipster; a development platform to generate, develop and deploy Spring Boot + Angular Web applications and Spring microservices. For more information: https://jhipster.github.io/",
     "tags": [
         "Windows",
