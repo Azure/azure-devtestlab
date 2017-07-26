@@ -1,0 +1,20 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "JHipster",
+    "publisher": "Microsoft",
+    "description": "Installs JHipster; a development platform to generate, develop and deploy Spring Boot + Angular Web applications and Spring microservices. For more information: https://jhipster.github.io/",
+    "tags": [
+        "Windows",
+        "JHipster"
+    ],
+    "iconUri": "https://jhipster.github.io/images/logo/logo-jhipster2x.png",
+    "targetOsType": "Windows",
+    "runCommand": {
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./Artifactfile.ps1\"')]"
+    },
+    "postDeployActions": [
+        {
+            "action": "restart"
+        }
+    ]
+}
