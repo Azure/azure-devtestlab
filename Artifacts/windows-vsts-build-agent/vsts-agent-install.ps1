@@ -16,6 +16,12 @@ param(
 
 ###################################################################################################
 
+# if the agentName is empty, use %COMPUTERNAME% as the value
+if ([String]::IsNullOrWhiteSpace($agentName))
+{
+    $agentName = $env:COMPUTERNAME
+}
+
 #
 # PowerShell configurations
 #
