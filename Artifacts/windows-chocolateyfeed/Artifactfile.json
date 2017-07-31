@@ -1,0 +1,46 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "Register Chocolatey Feed",
+    "publisher": "Microsoft",
+    "description": "Registers a new Chocolatey package feed.",
+    "tags": [
+        "Windows",
+        "Chocolatey"
+    ],
+    "iconUri": "https://github.com/chocolatey/chocolatey/raw/master/docs/logo/chocolateyicon.gif",
+    "targetOsType": "Windows",
+    "parameters": {
+        "feedName": {
+            "type": "string",
+            "displayName": "Name",
+            "description": "The name of the new feed."
+        },
+        "feedUrl": {
+            "type": "string",
+            "displayName": "URL",
+            "description": "The URL of the new feed. Caution - chocolatey requires a v2 service endpoint."
+        },
+        "feedUsername": {
+            "type": "string",
+            "displayName": "Username",
+            "description": "Username to use for authenticated feeds.",
+            "allowEmpty": true
+        },
+        "feedPassword": {
+            "type": "securestring",
+            "displayName": "Password",
+            "description": "Password to use for authenticated feeds.",
+            "allowEmpty": true
+        },
+        "disableDefault": {
+            "type": "bool",
+            "displayName": "Disable Default Feed",
+            "description": "Disable the default Chocolatey feed (https://chocolatey.org/api/v2/).",      
+            "defaultValue": false,
+            "allowEmpty": true
+        }
+    },
+    "runCommand": {
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./Artifactfile.ps1 -FeedName ''', parameters('feedName'), ''' -FeedUrl ''', parameters('feedUrl'), ''' -FeedUsername ''', parameters('feedUsername'), ''' -FeedPassword ''', parameters('feedPassword'), ''' -DisableDefault:$', parameters('disableDefault'), '\"')]"
+    }
+}
