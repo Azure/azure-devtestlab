@@ -27,6 +27,9 @@ catch {
     }
 }
 
+#Write-Output $(Get-Module -ListAvailable -Name Azure -Refresh)
+#$AzVer = Get-Module -ListAvailable -Name Azure -Refresh
+
 #Dynamically get labs
 Write-Output "Information: Get subscriptions"
 $allsubs = Get-AzureRmSubscription
@@ -70,7 +73,9 @@ $ContainerName = "labresourceusage"
 $jobs = @()
 
 $profilePath = Join-Path $env:ProgramData "profile.json"
- 
+
+Write-Output "aaa:$profilePath"
+
    If (Test-Path $profilePath){
 	    Remove-Item $profilePath
     }
@@ -84,7 +89,7 @@ $profilePath = Join-Path $env:ProgramData "profile.json"
 
 #script to be run on each lab
 $requestUsageData = {
-    Param($labName, $labSubscriptionId, $startdate, $blobUri, $profilePath)
+    Param($labName, $labSubscriptionId, $ModulePath, $startdate, $blobUri, $profilePath)
     
                
 #    If ($AzVer.Version.Major -eq 4) {
@@ -208,7 +213,7 @@ foreach ($fullLab in $labsWithStartDate) {
 
     Write-Output "Information: Post Throttle job for lab: $($fullLab.labName) in $($fullLab.labSubscriptionId)"
     
-    $jobs += Start-Job -ScriptBlock $requestUsageData -ArgumentList $fullLab.labName, $fullLab.labSubscriptionId, $fullLab.labstartdate, $blobUri, $profilePath
+    $jobs += Start-Job -ScriptBlock $requestUsageData -ArgumentList $fullLab.labName, $fullLab.labSubscriptionId, $ModulePath, $fullLab.labstartdate, $blobUri, $profilePath
     $jobIndex++
 
     Write-Output "Information: Job #$($jobIndex.ToString()) started: $($fullLab.labName) in $($fullLab.labSubscriptionId)."

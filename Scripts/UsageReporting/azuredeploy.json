@@ -210,6 +210,17 @@
           }
         },
         {
+          "name": "[concat(variables('AutomationAccountName'), '-GenerateMasterSQLTable')]",
+          "type": "modules",
+          "apiVersion": "2015-10-31",
+          "scale": null,
+          "properties": {
+            "isGlobal": false,
+            "version": null,
+            "sizeInBytes": 0
+          }
+        },
+        {
           "name": "StorageAccountName",
           "type": "variables",
           "apiVersion": "2015-10-31",
