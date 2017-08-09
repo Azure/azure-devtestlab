@@ -120,6 +120,7 @@ try
             else
             {
                 Write-Host "A deployment failure occured. Retrying deployment (attempt $retrying of $($count - 1))"
+                Remove-AzureRmResource -ResourceId $resourceId -Force | Out-Null
             }
         }
     }
