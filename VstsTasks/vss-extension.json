@@ -1,12 +1,13 @@
 {
     "manifestVersion": 1,
     "id": "tasks",
-    "version": "1.0.9",
+    "version": "1.0.10",
     "name": "Azure DevTest Labs Tasks",
     "publisher": "ms-azuredevtestlabs",
     "description": "Collection of build/release tasks to interact with Azure DevTest Labs.",
     "galleryFlags": [
-        "Public"
+        "Public",
+        "Preview"
     ],
     "targets": [
         {
