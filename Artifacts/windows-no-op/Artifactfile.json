@@ -1,0 +1,11 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "no-op",
+    "publisher": "Microsoft",
+    "description": "This is a no operation artifact.",
+    "tags": [
+        "Windows",
+        "no-op"
+    ],
+    "targetOsType": "Windows"
+}
