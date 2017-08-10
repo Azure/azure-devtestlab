@@ -9,6 +9,6 @@
     ],
     "targetOsType": "Windows",
 	 "runCommand": {
-        "commandToExecute": "['powershell.exe -ExecutionPolicy bypass']"
+        "commandToExecute": "['echo no-op']"
     }
 }
