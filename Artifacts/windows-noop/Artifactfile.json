@@ -8,6 +8,6 @@
     ],
     "targetOsType": "Windows",
 	 "runCommand": {
-        "commandToExecute": "['echo No operation has been applied to this virtual machine.']"
+        "commandToExecute": "cmd /c echo No operation has been applied to this virtual machine."
     }
 }
