@@ -8,6 +8,6 @@
   ],
   "targetOsType": "Windows",
   "runCommand": {
-    "commandToExecute": "cmd /c echo No operation has been applied to this virtual machine."
+    "commandToExecute": "cmd /c echo No operation has been applied to this virtual machine. This artifact is used to work around Custom Script extension upgrade limitations on sysprepped images."
   }
 }
