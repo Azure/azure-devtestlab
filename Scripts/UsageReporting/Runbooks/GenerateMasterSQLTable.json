@@ -1,0 +1,24 @@
+{
+	"ConnectionFields": [
+		{
+			"IsEncrypted": false,
+			"IsOptional": false,
+			"Name": "dataFile",
+			"TypeName": "System.Object"
+		},
+		{
+			"IsEncrypted": false,
+			"IsOptional": false,
+			"Name": "sqlConn",
+			"TypeName": "System.Object"
+		},
+		{
+			"IsEncrypted": false,
+			"IsOptional": false,
+			"Name": "tableName",
+			"TypeName": "System.String"
+		}
+	],
+	"ConnectionTypeName": "GenerateMasterSQLTable",
+	"IntergrationModuleName" : "GenerateMasterSQLTable"
+}
