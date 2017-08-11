@@ -213,6 +213,9 @@
           "name": "[concat(variables('AutomationAccountName'), '-GenerateMasterSQLTable')]",
           "type": "modules",
           "apiVersion": "2015-10-31",
+          "dependsOn": [
+            "[concat('Microsoft.Automation/automationAccounts/', variables('AutomationAccountName'))]"
+          ],
           "scale": null,
           "properties": {
             "publishContentLink": {
