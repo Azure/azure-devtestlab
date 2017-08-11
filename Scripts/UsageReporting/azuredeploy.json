@@ -215,9 +215,12 @@
           "apiVersion": "2015-10-31",
           "scale": null,
           "properties": {
+            "publishContentLink": {
+              "uri": "[concat(parameters('_artifactsLocation'), '/Runbooks/GenerateMasterSQLTable.zip', parameters('_artifactsLocationSasToken'))]",
+              "version": "1.0.0.0"
+            },
             "isGlobal": false,
-            "version": null,
-            "sizeInBytes": 0
+            "version": "1.0.0.0"
           }
         },
         {

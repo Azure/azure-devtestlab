@@ -1,9 +1,10 @@
-Import-Module "C:\Repos\azure-devtestlab-usage\Scripts\UsageReporting\Runbooks\GenerateMasterSQLTable.psm1"
+Import-Module GenerateMasterSQLTable
 
-$StorageAccountName = "rbcazstoracct" #Get-AutomationVariable -Name 'StorageAccountName'
-$StorageKey = "WybiL3yQqVS3/BuP1At4erCurC5a+P2pFOSylZBzQNscr8U+k2IST4Nk3HWIwrDUs0mp6HlYjLPfowH8LvjF9w==" #Get-AutomationVariable -Name 'StorageKey'
-$ContainerName = "labresourceusage" #Get-AutomationVariable -Name 'ContainerName'
-$sqlConnection = "Server=tcp:rbcazsqlsrv.database.windows.net,1433;Initial Catalog=rbbusagedb;Persist Security Info=False;User ID=roger;Password=ode#1ode;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;" #Get-AutomationVariable -Name 'SQLConnection'
+
+$StorageAccountName = Get-AutomationVariable -Name 'StorageAccountName'
+$StorageKey = Get-AutomationVariable -Name 'StorageKey'
+$ContainerName = Get-AutomationVariable -Name 'ContainerName'
+$sqlConnection = Get-AutomationVariable -Name 'SQLConnection'
 
 Trap {
         $err = $_.Exception
@@ -54,8 +55,10 @@ Write-Output "Starting MasterVMData, file count: $($datafiles.Count.ToString())"
 
 foreach ($indFile in $datafiles)
 {
-    Write-Output "Generating table using file $(Join-Path -Path $localStore -ChildPath $indFile)"
+    Write-Output "Generating table using file $($indFile.FullName)"
+    Write-Output $(Test-Path -Path $indFile.FullName)
     GenerateMasterSQLTable -datafile $indFile -sqlConn $sqlConn -tableName "MasterVMData"
+    
 
     #Remove temp files
     $indfile.Delete()
