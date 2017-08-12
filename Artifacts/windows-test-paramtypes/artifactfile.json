@@ -40,7 +40,7 @@
       "type": "string",
       "displayName": "Select Parameter",
       "description": "Only a selection from the list is allowed.",
-      "defaultValue": "",
+      "defaultValue": "test1",
       "allowEmpty": false,
       "allowedValues": [
         "test1",
