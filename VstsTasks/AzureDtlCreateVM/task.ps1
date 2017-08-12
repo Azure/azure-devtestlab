@@ -82,6 +82,9 @@ trap
 # Main execution block.
 #
 
+# Preparing variable that will hold the resource identifier of the lab virtual machine.
+[string] $resourceId = ''
+
 try
 {
     Write-Host 'Starting Azure DevTest Labs Create VM Task'
@@ -91,8 +94,6 @@ try
     Validate-InputParameters -TemplateParameters "$TemplateParameters"
 
     $lab = Get-AzureDtlLab -LabId "$LabId"
-
-    [string] $resourceId = ''
 
     $retry = ConvertTo-Bool -Value $RetryOnFailure
     if (-not $retry)
@@ -124,8 +125,10 @@ try
             }
         }
     }
-
-    if ($OutputResourceId)
+}
+finally
+{
+    if ($OutputResourceId -and -not [string]::IsNullOrWhiteSpace($resourceId))
     {
         # Capture the resource ID in the output variable.
         Write-Host "Creating variable '$OutputResourceId' with value '$resourceId'"
@@ -133,8 +136,5 @@ try
     }
 
     Write-Host 'Completing Azure DevTest Labs Create VM Task'
-}
-finally
-{
     popd
 }
