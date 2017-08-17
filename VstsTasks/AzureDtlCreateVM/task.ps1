@@ -102,8 +102,8 @@ try
     }
     
     [int] $count = 1 + (ConvertTo-Int -Value $RetryCount)
-    1..$count | % {
-        [int] $retrying = $_
+    for ($i = 1; $i -le $count; $i++)
+    {
         try
         {
             $result = Invoke-AzureDtlTask -Lab $lab -TemplateName "$TemplateName" -TemplateParameters "$TemplateParameters"
@@ -111,16 +111,18 @@ try
             $resourceId = Get-AzureDtlDeploymentTargetResourceId -DeploymentName $result.DeploymentName -ResourceGroupName $result.ResourceGroupName
 
             Validate-ArtifactStatus -ResourceId $resourceId -Fail $FailOnArtifactError
+            
+            break
         }
         catch
         {
-            if ($retrying -eq $count)
+            if ($i -eq $count)
             {
                 throw $Error[0]
             }
             else
             {
-                Write-Host "A deployment failure occured. Retrying deployment (attempt $retrying of $($count - 1))"
+                Write-Host "A deployment failure occured. Retrying deployment (attempt $i of $($count - 1))"
                 Remove-AzureRmResource -ResourceId $resourceId -Force | Out-Null
             }
         }
