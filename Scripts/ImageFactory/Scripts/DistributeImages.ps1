@@ -5,18 +5,15 @@ param
     
     [Parameter(Mandatory=$true, HelpMessage="The ID of the subscription containing the images")]
     [string] $SubscriptionId,
-
-    [Parameter(Mandatory=$true, HelpMessage="The name of the resource group")]
-    [string] $ResourceGroupName,
     
     [Parameter(Mandatory=$true, HelpMessage="The name of the lab")]
     [string] $DevTestLabName,
 
     [Parameter(Mandatory=$true, HelpMessage="The number of script blocks we can run in parallel")]
     [int] $maxConcurrentJobs
-
 )
 
+$ErrorActionPreference = 'Continue'
 #resolve any relative paths in ConfigurationLocation 
 $ConfigurationLocation = (Resolve-Path $ConfigurationLocation).Path
 
@@ -25,129 +22,65 @@ $modulePath = Join-Path $scriptFolder "DistributionHelpers.psm1"
 Import-Module $modulePath
 SelectSubscription $SubscriptionId
 
-#get the list of labs from the json file
-$labsList = Join-Path $ConfigurationLocation "Labs.json"
-$labInfo = ConvertFrom-Json -InputObject (gc $labsList -Raw)
-$labInfoCount = $labInfo.Labs.Length
-Write-Output "Found $labInfoCount total labs"
+SaveProfile
 
-logMessageForUnusedImagePaths $labInfo.Labs $ConfigurationLocation
-
-#get the list of images
-$sourceLabLocation = (Get-AzureRmResource -ResourceName $DevTestLabName -ResourceGroupName $ResourceGroupName -ResourceType 'Microsoft.DevTestLab/labs').Location
-$labImages = Get-AzureRmResource -ResourceName $DevTestLabName -ResourceGroupName $ResourceGroupName -ResourceType 'Microsoft.DevTestLab/labs/customImages' -ApiVersion '2017-04-26-preview' | Where-Object {$_.Properties.ProvisioningState -eq 'Succeeded'}
-$labImageCount = $labImages.Count
-Write-Output "Found $labImageCount images in lab $DevTestLabName"
-
-$sourceImageInfos = @{}
+$sourceLab = Find-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs' | Where-Object { $_.Name -eq $DevTestLabName}
+$labStorageInfo = GetLabStorageInfo $sourceLab
+$sourceImageInfos = GetImageInfosForLab $DevTestLabName
 $thingsToCopy = New-Object System.Collections.ArrayList
 
-#iterate through the images in our lab and gather their storage keys once so we don't need to repeatedly grab them for the source lab later
-foreach ($image in $labImages) {
-    $foundTag = getTagValue $image 'ImagePath'
-    if(!$foundTag) {
-        continue;
-    }
-    
-    $sourceVHDLocation = $image.Properties.Vhd.ImageName
-    $uri = New-Object System.Uri($sourceVHDLocation)
-    $vhdFileName = [System.IO.Path]::GetFileName($sourceVHDLocation)
-    $osType = $image.Properties.Vhd.OsType
-    $sysPrep = $image.Properties.Vhd.SysPrep
-    $sourceStorageAccountName = $uri.Host.Split('.')[0]
-    $sourceStorageAcct = (Get-AzureRMStorageAccountKey  -StorageAccountName $sourceStorageAccountName -ResourceGroupName $ResourceGroupName)
-    
-    # Azure Powershell version 1.3.2 or below - https://msdn.microsoft.com/en-us/library/mt607145.aspx
-    $sourceStorageAccountKey = $sourceStorageAcct.Key1
-    if ($sourceStorageAccountKey -eq $null) {
-        # Azure Powershell version 1.4 or greater:
-        $sourceStorageAccountKey = $sourceStorageAcct.Value[0]
-    }
+$labsList = Join-Path $ConfigurationLocation "Labs.json"
+$labInfo = ConvertFrom-Json -InputObject (gc $labsList -Raw)
+logMessageForUnusedImagePaths $labInfo.Labs $ConfigurationLocation
 
-    $imageInfo = @{
-        vhdLocation = $sourceVHDLocation
-        storageAccountName = $sourceStorageAccountName
-        storageAccountKey = $sourceStorageAccountKey
-        fileName = $vhdFileName
-        osType = $osType
-        isVhdSysPrepped = $sysPrep
-        imageDescription = $image.Properties.Description.Replace("Golden Image: ", "")
-    }
-    $sourceImageInfos[$image.Name] = $imageInfo
-}
+Write-Output "Found $($labInfo.Labs.Length) target labs"
+$sortedLabList = $labInfo.Labs | Sort-Object {$_.SubscriptionId}
 
-foreach ($targetLab in $labInfo.Labs){
+foreach ($targetLabInfo in $sortedLabList){
 
-    foreach ($image in $labImages) {
-        $imageName = $image.Name
-        $targetLabName = $targetLab.LabName
-        $copyToLab = ShouldCopyImageToLab $targetLab $image
+    foreach ($sourceImage in $sourceImageInfos) {
+        $targetLabName = $targetLabInfo.LabName
+        $copyToLab = ShouldCopyImageToLab $targetLabInfo $sourceImage.imagePath
 
         if($copyToLab -eq $true) {
-            Write-Output "Gathering data to copy $imageName to $targetLabName"
-
-            $imagePathValue = getTagValue $image 'ImagePath'
-            if(!$imagePathValue) {
-                Write-Output "Ignoring $imageName because it has no ImagePath tag specified"
-                continue;
+            SelectSubscription $targetLabInfo.SubscriptionId
+            $targetLabRG = (Find-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs' | Where-Object { $_.Name -eq $targetLabName}).ResourceGroupName
+            if(!$targetLabRG)
+            {            
+                Write-Error ("Unable to find a lab named $targetLabName in subscription with id " + $targetLabInfo.SubscriptionId)
             }
-            
-            $targetImageName = $imageName
- 
-            SelectSubscription $targetLab.SubscriptionId
 
-            $lab = Get-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs' -ResourceName $targetLabName -ResourceGroupName $targetLab.ResourceGroup
-            
-            $existingTargetImage = Get-AzureRmResource -ResourceName $targetLabName -ResourceGroupName $targetLab.ResourceGroup -ResourceType 'Microsoft.DevTestLab/labs/customImages' -ApiVersion '2017-04-26-preview' | Where-Object {$_.Name -eq $targetImageName}
+            $targetLab = Get-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs' -ResourceName $targetLabName -ResourceGroupName $targetLabRG
+            $targetLabStorageInfo = GetLabStorageInfo $targetLab
+
+            $existingTargetImage = Get-AzureRmResource -ResourceName $targetLabName -ResourceGroupName $targetLabRG -ResourceType 'Microsoft.DevTestLab/labs/customImages' -ApiVersion '2016-05-15' | Where-Object {$_.Name -eq $sourceImage.imageName}
             if($existingTargetImage){
-                Write-Output "Not copying $imageName to $targetLabName because it already exists there as $targetImageName"
+                Write-Output "$($sourceImage.imageName) already exists in $targetLabName and will not be overwritten"
                 continue;
             }
 
-            $targetLabLocation = $lab.Location
-            if($targetLabLocation -ne $sourceLabLocation){
-                Write-Error "Lab location does not match. Source lab $DevTestLabName is in $sourceLabLocation and target lab $targetLabName is in $targetLabLocation"
+            if($targetLab.Location -ne $sourceLab.Location){
+                Write-Error "Lab location does not match. Source lab $DevTestLabName is in $($sourceLab.Location) and target lab $targetLabName is in $($targetLab.Location)"
                 continue;
             }
 
-            $targetStorageAccount = $lab.Properties.DefaultStorageAccount
-            $splitStorageAcct = $targetStorageAccount.Split('/')
-            $targetStorageAcctName = $splitStorageAcct[$splitStorageAcct.Length - 1]
-
-            # Azure Powershell version 1.3.2 or below - https://msdn.microsoft.com/en-us/library/mt607145.aspx
-            $targetStorageKey = (Get-AzureRMStorageAccountKey  -StorageAccountName $targetStorageAcctName -ResourceGroupName $lab.ResourceGroupName).Key1
-
-            if ($targetStorageKey -eq $null) {
-                # Azure Powershell version 1.4 or greater:
-                $targetStorageKey = (Get-AzureRMStorageAccountKey  -StorageAccountName $targetStorageAcctName -ResourceGroupName $lab.ResourceGroupName).Value[0]
-            }
-            
-            $sourceObject = $sourceImageInfos[$imageName]
-
-            #make sure the destination has a generatedvhds container
-            $destContext = New-AzureStorageContext -StorageAccountName $targetStorageAcctName -StorageAccountKey $targetStorageKey
-            $existingContainer = Get-AzureStorageContainer -Context $destContext -Name 'generatedvhds' -ErrorAction Ignore
-            if($existingContainer -eq $null) 
-            {
-                Write-Output 'Creating the generatedvhds container in the target storage account'
-                New-AzureStorageContainer -Context $destContext -Name generatedvhds
-            }
-
+            Write-Output "Gathering data to copy $($sourceImage.imagePath) to $targetLabName"
             $copyObject = @{
-                imageName = $targetImageName
-                sourceVHDLocation = $sourceObject.vhdLocation
-                sourceStorageAccountName = $sourceObject.storageAccountName
-                sourceStorageAccountKey = $sourceObject.storageAccountKey
+                imageName = $sourceImage.imageName
+                imageDescription = $sourceImage.description
+                imagePath = $sourceImage.imagePath
+                osType = $sourceImage.osType
+                isVhdSysPrepped = $true
+                vhdFileName = $sourceImage.vhdFileName
+                sourceStorageAccountName = $labStorageInfo.storageAcctName
+                sourceStorageKey = $labStorageInfo.storageAcctKey
+                sourceResourceGroup = $labStorageInfo.resourceGroupName
+                sourceSubscriptionId = $SubscriptionId
                 targetLabName = $targetLabName
-                targetStorageKey = $targetStorageKey
-                targetStorageAccountName = $targetStorageAcctName
-                targetResourceGroup = $targetLab.ResourceGroup
-                fileName = $sourceObject.fileName
+                targetStorageAccountName = $targetLabStorageInfo.storageAcctName
+                targetStorageKey = $targetLabStorageInfo.storageAcctKey
+                targetResourceGroup = $targetLabStorageInfo.resourceGroupName
                 targetSubscriptionId = $targetLab.SubscriptionId
-                osType = $sourceObject.osType
-                isVhdSysPrepped = $sourceObject.isVhdSysPrepped
-                imageDescription = $sourceObject.imageDescription
-                imagePath = $imagePathValue
             }
             $thingsToCopy.Add($copyObject) | Out-Null
         }
@@ -162,12 +95,14 @@ $copyVHDBlock = {
     Param($modulePath, $copyObject, $scriptFolder, $SubscriptionId)
     Import-Module $modulePath
     LoadProfile
-
-    $srcContext = New-AzureStorageContext -StorageAccountName $copyObject.sourceStorageAccountName -StorageAccountKey $copyObject.sourceStorageAccountKey 
+    
+    $srcContext = New-AzureStorageContext -StorageAccountName $copyObject.sourceStorageAccountName -StorageAccountKey $copyObject.sourceStorageKey 
+    $srcURI = $srcContext.BlobEndPoint + "imagefactoryvhds/" + $copyObject.vhdFileName
     $destContext = New-AzureStorageContext -StorageAccountName $copyObject.targetStorageAccountName -StorageAccountKey $copyObject.targetStorageKey
-    $copyHandle = Start-AzureStorageBlobCopy -srcUri $copyObject.sourceVHDLocation -SrcContext $srcContext -DestContainer 'generatedvhds' -DestBlob $copyObject.fileName -DestContext $destContext -Force
+    New-AzureStorageContainer -Context $destContext -Name 'imagefactoryvhds' -ErrorAction Ignore
+    $copyHandle = Start-AzureStorageBlobCopy -srcUri $srcURI -SrcContext $srcContext -DestContainer 'imagefactoryvhds' -DestBlob $copyObject.vhdFileName -DestContext $destContext -Force
 
-    Write-Output ("Started copying " + $copyObject.fileName + " to " + $copyObject.targetStorageAccountName + " at " + (Get-Date -format "h:mm:ss tt"))
+    Write-Output ("Started copying " + $copyObject.vhdFileName + " to " + $copyObject.targetStorageAccountName + " at " + (Get-Date -format "h:mm:ss tt"))
     $copyStatus = $copyHandle | Get-AzureStorageBlobCopyState 
     $statusCount = 0
 
@@ -186,23 +121,25 @@ $copyVHDBlock = {
 
     if($copyStatus.Status -eq "Success")
     {
-        Write-Output ($copyObject.fileName + " successfully copied to Lab " + $copyObject.targetLabName + " Deploying image template")
         $imageName = $copyObject.imageName
+        Write-Output ($copyObject.vhdFileName + " successfully copied to Lab " + $copyObject.targetLabName + ". Deploying image $imageName")
 
         #now that we have a VHD in the right storage account we need to create the actual image by deploying an ARM template
         $templatePath = Join-Path $scriptFolder "CreateImageFromVHD.json"
-        $vhdUri = $destContext.BlobEndPoint + "generatedvhds/" + $copyObject.fileName
+        $vhdUri = $destContext.BlobEndPoint + "imagefactoryvhds/" + $copyObject.vhdFileName
 
         SelectSubscription $copyObject.targetSubscriptionId
 
-        Write-Output "Creating Image $imageName from template"
         $imagePath = $copyObject.imagePath
-        $deployName = "Deploy-$imageName".Replace(" ", "").Replace(",", "")
+        $deployName = "Deploy-$imageName"
         $deployResult = New-AzureRmResourceGroupDeployment -Name $deployName -ResourceGroupName $copyObject.targetResourceGroup -TemplateFile $templatePath -existingLabName $copyObject.targetLabName -existingVhdUri $vhdUri -imageOsType $copyObject.osType -isVhdSysPrepped $copyObject.isVhdSysPrepped -imageName $copyObject.imageName -imageDescription $copyObject.imageDescription -imagePath $imagePath
+
+        #delete the deployment information so that we dont use up the total deployments for this resource group
+        Remove-AzureRmResourceGroupDeployment -ResourceGroupName $copyObject.targetResourceGroup -Name $deployName  -ErrorAction SilentlyContinue | Out-Null
 
         if($deployResult.ProvisioningState -eq "Succeeded"){
             Write-Output "Successfully deployed image. Deleting copied VHD"
-            Remove-AzureStorageBlob -Context $destContext -Container 'generatedvhds' -Blob $copyObject.fileName
+            Remove-AzureStorageBlob -Context $destContext -Container 'imagefactoryvhds' -Blob $copyObject.vhdFileName
             Write-Output "Copied VHD deleted"
         }
         else {
@@ -211,7 +148,15 @@ $copyVHDBlock = {
     }
     else
     {
-        Write-Error "finished without success"
+        if($copyStatus)
+        {
+            Write-Output $copyStatus
+            Write-Error ("Copy Status should be Success but is reported as " + $copyStatus.Status)
+        }
+        else
+        {
+            Write-Error "There is no copy status"
+        }
     }
 }
 
@@ -229,21 +174,36 @@ foreach ($copyObject in $thingsToCopy){
     $jobIndex++
     Write-Output "Creating background task to distribute image $jobIndex of $copyCount"
     $jobs += Start-Job -ScriptBlock $copyVHDBlock -ArgumentList $modulePath, $copyObject, $scriptFolder, $SubscriptionId
-}
+} 
 
 if($jobs.Count -ne 0)
 {
-    try{
-        Write-Output "Waiting for Image replication jobs to complete"
-        foreach ($job in $jobs){
-            Receive-Job $job -Wait | Write-Output
-        }
+    Write-Output "Waiting for $($jobs.Count) Image replication jobs to complete"
+    foreach ($job in $jobs){
+        Receive-Job $job -Wait | Write-Output
     }
-    finally{
-        Remove-Job -Job $jobs
-    }
+    Remove-Job -Job $jobs
 }
 else 
 {
     Write-Output "No images to distribute"
 }
+
+foreach ($copyInfo in $thingsToCopy)
+{
+    SelectSubscription $copyInfo.targetSubscriptionId
+    #remove the root container from the target labs since we dont need it any more
+    $targetLab = Find-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs' | Where-Object { $_.Name -eq $copyInfo.targetLabName}
+    $targetStorageInfo = GetLabStorageInfo $targetLab
+    $storageContext = New-AzureStorageContext -StorageAccountName $targetStorageInfo.storageAcctName -StorageAccountKey $targetStorageInfo.storageAcctKey
+    $rootContainerName = 'imagefactoryvhds'
+    $rootContainer = Get-AzureStorageContainer -Context $storageContext -Name $rootContainerName -ErrorAction Ignore
+    if($rootContainer -ne $null) 
+    {
+        Write-Output "Deleting the $rootContainerName container in the target storage account"
+        Remove-AzureStorageContainer -Context $storageContext -Name $rootContainerName
+    }
+
+}
+
+Write-Output "Distribution of $($jobs.Count) images is complete"

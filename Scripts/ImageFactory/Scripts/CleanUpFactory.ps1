@@ -1,8 +1,5 @@
 ﻿param
 (
-    [Parameter(Mandatory=$true, HelpMessage="The name of the DevTest Lab resource group")]
-    [string] $ResourceGroupName,
-
     [Parameter(Mandatory=$true, HelpMessage="The name of the DevTest Lab to clean up")]
     [string] $DevTestLabName
 )
@@ -18,7 +15,7 @@ $deleteVmBlock = {
     Import-Module $modulePath
     LoadProfile
     Write-Output "##[section]Deleting VM: $vmName"
-    Remove-AzureRmResource -ResourceId $resourceId -ApiVersion 2017-04-26-preview -Force
+    Remove-AzureRmResource -ResourceId $resourceId -ApiVersion 2016-05-15 -Force
     Write-Output "##[section]Completed deleting $vmName"
 }
 
@@ -57,7 +54,8 @@ foreach ($currentVm in $allVms){
 }
 
 # Find any custom images that failed to provision and delete those
-$bustedLabCustomImages = Get-AzureRmResource -ResourceName $DevTestLabName -ResourceGroupName $ResourceGroupName -ResourceType 'Microsoft.DevTestLab/labs/customImages' -ApiVersion '2017-04-26-preview' | Where-Object {($_.Properties.ProvisioningState -ne "Succeeded") -and ($_.Properties.ProvisioningState -ne "Creating")}
+$ResourceGroupName = (Find-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs' | Where-Object { $_.Name -eq $DevTestLabName}).ResourceGroupName
+$bustedLabCustomImages = Get-AzureRmResource -ResourceName $DevTestLabName -ResourceGroupName $ResourceGroupName -ResourceType 'Microsoft.DevTestLab/labs/customImages' -ApiVersion '2016-05-15' | Where-Object {($_.Properties.ProvisioningState -ne "Succeeded") -and ($_.Properties.ProvisioningState -ne "Creating")}
 
 # Delete the custom images we found in the search above
 foreach ($imageToDelete in $bustedLabCustomImages) {
@@ -66,15 +64,11 @@ foreach ($imageToDelete in $bustedLabCustomImages) {
 
 if($jobs.Count -ne 0)
 {
-    try{
-        Write-Output "Waiting for VM Delete jobs to complete"
-        foreach ($job in $jobs){
-            Receive-Job $job -Wait | Write-Output
-        }
+    Write-Output "Waiting for VM Delete jobs to complete"
+    foreach ($job in $jobs){
+        Receive-Job $job -Wait | Write-Output
     }
-    finally{
-        Remove-Job -Job $jobs
-    }
+    Remove-Job -Job $jobs
 }
 else 
 {

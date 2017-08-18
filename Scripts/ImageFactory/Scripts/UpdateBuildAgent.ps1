@@ -2,9 +2,6 @@
 (
     [Parameter(Mandatory=$true, HelpMessage="The ID of the subscription containing the Image Factory")]
     [string] $SubscriptionId,
-
-    [Parameter(Mandatory=$true, HelpMessage="The name of the Image Factory resource group")]
-    [string] $ResourceGroupName,
     
     [Parameter(Mandatory=$true, HelpMessage="The name of the Image Factory DevTest Lab")]
     [string] $DevTestLabName,
@@ -18,12 +15,13 @@
 )
 
 # find the build agent in the subscription
-$agentVM = Get-AzureRmResource -ResourceGroupName $ResourceGroupName -ResourceType Microsoft.DevTestLab/labs/virtualmachines -ResourceName $DevTestLabName -ApiVersion 2017-04-26-preview | Where-Object {$_.Name -eq $BuildAgent}
+$ResourceGroupName = (Find-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs' | Where-Object { $_.Name -eq $DevTestLabName}).ResourceGroupName
+$agentVM = Get-AzureRmResource -ResourceGroupName $ResourceGroupName -ResourceType Microsoft.DevTestLab/labs/virtualmachines -ResourceName $DevTestLabName -ApiVersion 2016-05-15 | Where-Object {$_.Name -eq $BuildAgent}
 
 if ($agentVM -ne $null) {
 
     # Update the agent via DevTest Labs with the specified action (start or stop)
-    $status = Invoke-AzureRmResourceAction -ResourceGroupName $ResourceGroupName -ResourceType Microsoft.DevTestLab/labs/virtualmachines -ResourceName ($DevTestLabName + "/" + $BuildAgent) -Action $Action -ApiVersion 2017-04-26-preview -Force
+    $status = Invoke-AzureRmResourceAction -ResourceGroupName $ResourceGroupName -ResourceType Microsoft.DevTestLab/labs/virtualmachines -ResourceName ($DevTestLabName + "/" + $BuildAgent) -Action $Action -ApiVersion 2016-05-15 -Force
 
     if ($status.Status -eq 'Succeeded') {
         Write-Output "##[section] Successfully updated VSTS Build Agent: $BuildAgent , Action: $Action"
