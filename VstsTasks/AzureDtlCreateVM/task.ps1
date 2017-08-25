@@ -3,7 +3,7 @@
     Description
     ===========
 
-	Create a Lab VM using the provided ARM template.
+    Create a Lab VM using the provided ARM template.
 
     Pre-Requisites
     ==============
@@ -23,11 +23,14 @@
 
 [CmdletBinding()]
 param(
-    [string]$ConnectedServiceName,
-    [string]$LabId,
-    [string]$TemplateName,
-    [string]$TemplateParameters,
-    [string]$OutputResourceId
+    [string] $ConnectedServiceName,
+    [string] $LabId,
+    [string] $TemplateName,
+    [string] $TemplateParameters,
+    [string] $OutputResourceId,
+    [string] $FailOnArtifactError,
+    [string] $RetryOnFailure,
+    [string] $RetryCount
 )
 
 ###################################################################################################
@@ -79,6 +82,9 @@ trap
 # Main execution block.
 #
 
+# Preparing variable that will hold the resource identifier of the lab virtual machine.
+[string] $resourceId = ''
+
 try
 {
     Write-Host 'Starting Azure DevTest Labs Create VM Task'
@@ -89,18 +95,48 @@ try
 
     $lab = Get-AzureDtlLab -LabId "$LabId"
 
-    $resource = Invoke-AzureDtlTask -Lab $lab -TemplateName "$TemplateName" -TemplateParameters "$TemplateParameters"
-
-    if ($OutputResourceId)
+    $retry = ConvertTo-Bool -Value $RetryOnFailure
+    if (-not $retry)
     {
-        # Capture the resource ID in the output variable.
-        Write-Host "Creating variable '$OutputResourceId' with value '$($resource.Outputs.`"$OutputResourceId`".Value)'"
-        Set-TaskVariable -Variable $OutputResourceId -Value "$($resource.Outputs.`"$OutputResourceId`".Value)"
+        $RetryCount = '0'
     }
+    
+    [int] $count = 1 + (ConvertTo-Int -Value $RetryCount)
+    for ($i = 1; $i -le $count; $i++)
+    {
+        try
+        {
+            $result = Invoke-AzureDtlTask -Lab $lab -TemplateName "$TemplateName" -TemplateParameters "$TemplateParameters"
 
-    Write-Host 'Completing Azure DevTest Labs Create VM Task'
+            $resourceId = Get-AzureDtlDeploymentTargetResourceId -DeploymentName $result.DeploymentName -ResourceGroupName $result.ResourceGroupName
+
+            Validate-ArtifactStatus -ResourceId $resourceId -Fail $FailOnArtifactError
+            
+            break
+        }
+        catch
+        {
+            if ($i -eq $count)
+            {
+                throw $Error[0]
+            }
+            else
+            {
+                Write-Host "A deployment failure occured. Retrying deployment (attempt $i of $($count - 1))"
+                Remove-AzureRmResource -ResourceId $resourceId -Force | Out-Null
+            }
+        }
+    }
 }
 finally
 {
+    if ($OutputResourceId -and -not [string]::IsNullOrWhiteSpace($resourceId))
+    {
+        # Capture the resource ID in the output variable.
+        Write-Host "Creating variable '$OutputResourceId' with value '$resourceId'"
+        Set-TaskVariable -Variable $OutputResourceId -Value "$resourceId"
+    }
+
+    Write-Host 'Completing Azure DevTest Labs Create VM Task'
     popd
 }

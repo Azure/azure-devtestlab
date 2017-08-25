@@ -11,20 +11,6 @@ function Handle-LastError
     }
 }
 
-function Show-InputParameters
-{
-    [CmdletBinding()]
-    param(
-    )
-
-    Write-Host "Task called with the following parameters:"
-    Write-Host "  ConnectedServiceName = $ConnectedServiceName"
-    Write-Host "  LabId = $LabId"
-    Write-Host "  TemplateName = $TemplateName"
-    Write-Host "  TemplateParameters = $TemplateParameters"
-    Write-Host "  OutputResourceId = $OutputResourceId"
-}
-
 function Invoke-AzureDtlTask
 {
     [CmdletBinding()]
@@ -67,6 +53,34 @@ function Invoke-AzureDtlTask
     Test-AzureRmResourceGroupDeployment -ResourceGroupName "$resourceGroupName" -TemplateFile "$templateFile" -TemplateParameterObject $templateParameterObject
 
     return New-AzureRmResourceGroupDeployment -Name "$deploymentName" -ResourceGroupName "$resourceGroupName" -TemplateFile "$templateFile" -TemplateParameterObject $templateParameterObject
+}
+
+function ConvertTo-Bool
+{
+    [CmdletBinding()]
+    param(
+        [string] $Value
+    )
+    
+    [bool] $boolValue = $false
+
+    $null = [bool]::TryParse($Value, [ref]$boolValue)
+
+    return $boolValue
+}
+
+function ConvertTo-Int
+{
+    [CmdletBinding()]
+    param(
+        [string] $Value
+    )
+    
+    [int] $intValue = 0
+
+    $null = [int]::TryParse($Value, [ref]$intValue)
+
+    return $intValue
 }
 
 function ConvertTo-TemplateParameterObject
@@ -117,6 +131,75 @@ function Get-AzureDtlLab
     )
 
     return Get-AzureRmResource -ResourceId "$LabId"
+}
+
+function Get-AzureDtlDeploymentTargetResourceId
+{
+    [CmdletBinding()]
+    param(
+        [string] $DeploymentName,
+        [string] $ResourceGroupName
+    )
+    
+    $operation = Get-AzureRmResourceGroupDeploymentOperation -DeploymentName $DeploymentName -ResourceGroupName $ResourceGroupName
+
+    return $operation.properties.targetResource.id
+}
+
+function Show-InputParameters
+{
+    [CmdletBinding()]
+    param(
+    )
+
+    Write-Host "Task called with the following parameters:"
+    Write-Host "  ConnectedServiceName = $ConnectedServiceName"
+    Write-Host "  LabId = $LabId"
+    Write-Host "  TemplateName = $TemplateName"
+    Write-Host "  TemplateParameters = $TemplateParameters"
+    Write-Host "  OutputResourceId = $OutputResourceId"
+    Write-Host "  FailOnArtifactError = $FailOnArtifactError"
+    Write-Host "  RetryOnFailure = $RetryOnFailure"
+    Write-Host "  RetryCount = $RetryCount"
+}
+
+function Validate-InputParameters
+{
+    [CmdletBinding()]
+    Param(
+        [string] $TemplateParameters
+    )
+
+    Write-Host 'Validating input parameters'
+
+    $templateParameterObject = ConvertTo-TemplateParameterObject -TemplateParameters "$TemplateParameters"
+
+    # Only required for backward compatibility with earlier versions of the task.
+    Validate-TemplateParameters -TemplateParameterObject $templateParameterObject
+
+    $vmName = $templateParameterObject.Item('newVMName')
+    Validate-VMName -Name "$vmName"
+}
+
+function Validate-ArtifactStatus
+{
+    [CmdletBinding()]
+    param(
+        [string] $ResourceId,
+        [string] $Fail
+    )
+
+    $fail = ConvertTo-Bool -Value $Fail
+    if ($fail)
+    {
+        $artifactDeploymentStatus = (Get-AzureRmResource -ResourceId $ResourceId -ODataQuery '$expand=Properties($expand=Artifacts)').Properties.artifactDeploymentStatus
+
+        [array]$failedArtifacts = $artifactDeploymentStatus | ? { $_.deploymentStatus -eq 'Failed' }
+        if ($failedArtifacts.Count -gt 0)
+        {
+            throw 'At least one artifact failed to apply. Review the lab virtual machine artifact results blade for full details.'
+        }
+    }
 }
 
 function Validate-TemplateParameters
@@ -182,22 +265,4 @@ function Validate-VMName
     {
         throw "Invalid VM name '$Name'. Name cannot be entirely numeric and cannot contain most special characters."
     }
-}
-
-function Validate-InputParameters
-{
-    [CmdletBinding()]
-    Param(
-        [string] $TemplateParameters
-    )
-
-    Write-Host 'Validating input parameters'
-
-    $templateParameterObject = ConvertTo-TemplateParameterObject -TemplateParameters "$TemplateParameters"
-
-    # Only required for backward compatibility with earlier versions of the task.
-    Validate-TemplateParameters -TemplateParameterObject $templateParameterObject
-
-    $vmName = $templateParameterObject.Item('newVMName')
-    Validate-VMName -Name "$vmName"
 }

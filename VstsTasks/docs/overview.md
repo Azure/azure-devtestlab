@@ -49,6 +49,15 @@ The task requires the following inputs:
 
 **Template Parameters** (optional) - ARM template parameters to use. You can use any variable such as `$(Build.BuildNumber)` or `$(Release.ReleaseName)` when in a build or a release, respectively, for the `newVMName`. Similarly, you can create variables such as `User.Name` and `User.Password`, where the latter is marked as a _secret_.
 
+### Advanced Options
+The following advanced options can be specified on the task to help control the behavior of deployment:
+
+**Fail on artifact error** (optional) - Fail the task if any artifact fails to apply successfully.
+
+**Retry the deployment following any failure** (optional) - Retry the deployment when failing to create the lab VM or if any artifact fails to apply successfully.
+
+**Number of times to retry the deployment** (optional) - Number of times to retry the deployment when an error occurs, either while creating the lab VM or if any artifact fails to apply successfully.
+
 ### Output Variables
 The task can produce the following outputs into corresponding variables:
 
