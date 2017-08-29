@@ -1032,6 +1032,9 @@ function Create-VirtualMachines {
 
         $parameters = $json | ConvertTo-Hashtable
 
+        $str = $parameters | Out-String
+
+        LogOutput $str
 
 
         Invoke-AzureRmResourceAction -ResourceId "$LabId" -Action CreateEnvironment -Parameters $parameters -Force  | Out-Null

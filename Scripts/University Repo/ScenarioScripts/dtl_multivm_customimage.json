@@ -52,6 +52,14 @@
 
         }
 
+	},
+
+    "tags": 
+
+    {
+
+        "AutoStartOn": "__EnableStartupTime__"
+
     }
 
 }

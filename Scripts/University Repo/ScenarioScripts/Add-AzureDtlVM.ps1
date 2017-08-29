@@ -110,7 +110,7 @@
 
 .PARAMETER profilePath
 
-    Optional. Path to file with Azure Profile.
+    Optional. Path to file with Azure Profile. How to generate this file is explained at the end of the Readme for the repo (https://github.com/lucabol/University).
 
     Default "$env:APPDATA\AzProfile.txt".
 
@@ -137,6 +137,18 @@
     Optional. Shutdown time for the VMs in the lab. In form of 'HH:mm' in TimeZoneID timezone.
 
     Default $ExpirationTime.
+
+    
+
+.PARAMETER StartupTime
+
+    Optional. Starting time for the VMS in the lab. In form of 'HH:mm' in TimeZoneID timezone. You need to set EnableStartupTime to $true as well.
+
+
+
+.PARAMETER EnableStartupTime
+
+    Optional. Set to $true to enable starting up of machine at startup time.
 
 
 
@@ -269,6 +281,18 @@ param
     [Parameter(Mandatory = $false, HelpMessage = "What time to expire the VMs at. Defaults to 3am. In form of 'HH:mm' in TimeZoneID timezone")]
 
     [string] $ExpirationTime = "03:00",
+
+
+
+    [Parameter(Mandatory = $false, HelpMessage = "What time to start the VMs at. In form of 'HH:mm' in TimeZoneID timezone")]
+
+    [string] $StartupTime = "02:30",
+
+
+
+    [Parameter(Mandatory = $false, HelpMessage = "Set to true to enable starting up of machine at startup time.")]
+
+    [boolean] $EnableStartupTime,
 
 
 
@@ -426,6 +450,12 @@ try {
 
 
 
+    $StartupTimeHours = ([DateTime]$StartupTime).ToString("HHmm")
+    
+    LogOutput "Startup Time hours: $StartupTimeHours"
+
+
+
     LogOutput "Start deployment of Shutdown time ..."
 
     $shutParams = @{
@@ -433,6 +463,8 @@ try {
         newLabName   = $LabName
 
         shutDownTime = $ShutDownTimeHours
+
+        startupTime  = $StartupTimeHours
 
         timeZoneId   = $TimeZoneId
 
@@ -521,6 +553,8 @@ try {
             TimeZoneId         = $TimeZoneId
 
             VirtualNetworkName = $VNetName
+
+            EnableStartupTime  = If ($EnableStartupTime) {"true"} Else {"false"}
 
         }
 
