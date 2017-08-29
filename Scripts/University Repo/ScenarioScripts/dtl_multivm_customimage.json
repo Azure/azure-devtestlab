@@ -20,7 +20,7 @@
 
         "disallowPublicIpAddress": true,
 
-        "storageType": "Standard",
+        "storageType": "__StorageType__",
 
         "allowClaim": true,
 

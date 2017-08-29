@@ -68,6 +68,14 @@
 
 
 
+.PARAMETER StorageType
+
+	Optional. Type of storage
+
+	Default "Standard".
+
+
+
 .PARAMETER VMNameBase
 
     Optional. Prefix for new VMs.
@@ -233,6 +241,12 @@ param
     [Parameter(Mandatory = $false, HelpMessage = "Size of VM image")]
 
     [string] $Size = "Standard_A2_v2",    
+
+
+
+	[Parameter(Mandatory = $false, HelpMessage = "Type of storage")]
+
+	[string] $StorageType = "Standard",
 
 
 
@@ -556,6 +570,7 @@ try {
 
             EnableStartupTime  = If ($EnableStartupTime) {"true"} Else {"false"}
 
+			StorageType        = $StorageType
         }
 
 
