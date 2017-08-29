@@ -5,17 +5,17 @@ This repository has been created to collect the required material to set up DevT
 
 ## Src folder
 This folder contains:
-- [Powershell scripts file which needs to be run either via Console or via Automation account on Azure to set up the environments for the imagined scenarios.](Src)
-    - [Add-AzureDtlVM](Src/Add-AzureDtlVM.ps1): This script adds the specified number of Azure virtual machines to a DevTest Lab.
-    - [Add-AzureDtlVMAutoVar](Src/Add-AzureDtlVMAutoVar.ps1): This script adds the number of Azure virtual machines in the DevTest Lab by reading some parameters from AutomationVariable.
-    - [Add-GroupPermissionsDevTestLab](Src/Add-GroupPermissionsDevTestLab.ps1): This script adds the specified role to the AD Group in the DevTest Lab.
-    - [Common](Src/Common.ps1): This script contains many useful functions for the other scripts.
-    - [DeallocateStoppedVM](Src/DeallocateStoppedVM.ps1): This script deallocates every stopped Azure virtual machines.
-    - [Manage-AzureDtlFixedPool](Src/Manage-AzureDtlFixedPool.ps1): This script guarantees that the Virtual Machine pool of the Lab equals to the PoolSize specified as Azure Tag of Lab.
-    - [Remove-AzureDtlLabVMs](Src/Remove-AzureDtlLabVMs.ps1): This script guarantees that the Virtual Machine pool of the Lab equals to the PoolSize specified as Azure Tag of Lab.
-    - [Remove-AzureDtlVM](Src/Remove-AzureDtlVM.ps1): This script deletes every Azure virtual machines in the DevTest Lab.
-    - [Remove-GroupPermissionsDevTestLab](Src/Remove-GroupPermissionsDevTestLab.ps1): This script removes the specified role from the AD Group in the DevTest Lab.
-    - [Test-AzureDtlVMs](Src/Test-AzureDtlVMs.ps1): Given LabName and LabSize, this script verifies how many Azure virtual machines are inside the DevTest Lab and throws an error inside the logs when the number is greater or lower than size +/- VMDelta. 
+- [Powershell scripts file which needs to be run either via Console or via Automation account on Azure to set up the environments for the imagined scenarios.](Scripts/University Repo)
+    - [Add-AzureDtlVM](Scripts/University Repo/ScenarioScripts/Add-AzureDtlVM.ps1): This script adds the specified number of Azure virtual machines to a DevTest Lab.
+    - [Add-AzureDtlVMAutoVar](Scripts/University Repo/ScenarioScripts/Add-AzureDtlVMAutoVar.ps1): This script adds the number of Azure virtual machines in the DevTest Lab by reading some parameters from AutomationVariable.
+    - [Add-GroupPermissionsDevTestLab](Scripts/University Repo/ScenarioScripts/Add-GroupPermissionsDevTestLab.ps1): This script adds the specified role to the AD Group in the DevTest Lab.
+    - [Common](Scripts/University Repo/ScenarioScripts/Common.ps1): This script contains many useful functions for the other scripts.
+    - [DeallocateStoppedVM](Scripts/University Repo/ScenarioScripts/DeallocateStoppedVM.ps1): This script deallocates every stopped Azure virtual machines.
+    - [Manage-AzureDtlFixedPool](Scripts/University Repo/ScenarioScripts/Manage-AzureDtlFixedPool.ps1): This script guarantees that the Virtual Machine pool of the Lab equals to the PoolSize specified as Azure Tag of Lab.
+    - [Remove-AzureDtlLabVMs](Scripts/University Repo/ScenarioScripts/Remove-AzureDtlLabVMs.ps1): This script guarantees that the Virtual Machine pool of the Lab equals to the PoolSize specified as Azure Tag of Lab.
+    - [Remove-AzureDtlVM](Scripts/University Repo/ScenarioScripts/Remove-AzureDtlVM.ps1): This script deletes every Azure virtual machines in the DevTest Lab.
+    - [Remove-GroupPermissionsDevTestLab](Scripts/University Repo/ScenarioScripts/Remove-GroupPermissionsDevTestLab.ps1): This script removes the specified role from the AD Group in the DevTest Lab.
+    - [Test-AzureDtlVMs](Scripts/University Repo/ScenarioScripts/Test-AzureDtlVMs.ps1): Given LabName and LabSize, this script verifies how many Azure virtual machines are inside the DevTest Lab and throws an error inside the logs when the number is greater or lower than size +/- VMDelta. 
 
 - [Roles folder which contains the json file which specifies the actions that a University user can take on a VM](Src/Roles)
 
