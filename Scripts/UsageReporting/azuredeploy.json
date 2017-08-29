@@ -216,9 +216,12 @@
           "dependsOn": [
             "[concat('Microsoft.Automation/automationAccounts/', variables('AutomationAccountName'))]"
           ],
+          "tags":{
+            "displayName": "SQL Powershell Module"
+          },
           "scale": null,
           "properties": {
-            "publishContentLink": {
+            "contentLink": {
               "uri": "[concat(parameters('_artifactsLocation'), '/Runbooks/GenerateMasterSQLTable.zip', parameters('_artifactsLocationSasToken'))]",
               "version": "1.0.0.0"
             },
