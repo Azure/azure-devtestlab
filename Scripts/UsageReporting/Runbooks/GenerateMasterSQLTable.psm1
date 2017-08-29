@@ -21,10 +21,9 @@ param(
         continue
     }
 
-    
     $csvdelimiter = "," 
     $datatable = New-Object System.Data.DataTable
-    $currFile = $dataFile.FullName
+    $currFile = $indFile.FullName
     
     Write-Output "Helper: using $currFile"
 
@@ -37,43 +36,47 @@ param(
     }
          
     # SQL Connection with table work  ===============================================================================================================
-   
+    Write-Output "SQL Table functionality."
     $primaryConn = New-Object System.Data.SqlClient.SqlConnection($sqlConn.ConnectionString)
-    $primaryConn.Open()
-    
-    Write-Output "pConn: $($primaryConn.ConnectionString)"
-
-    $checkTable = "Select * from $tableName"
-    $sqlCmd = New-Object System.Data.SqlClient.SqlCommand($checkTable,$primaryConn)
-    $existingTable = $sqlCmd.ExecuteReader()
-
-    if ($existingTable -eq $null) {
-        Write-Output "Creating new table: $tableName"
-        $tableCmd = "CREATE TABLE $tableName ("
-    
-        # Get the columns from the first row of the file
-        $reader = New-Object System.IO.StreamReader($currFile) 
-        $columns = (Get-Content $currFile -First 1).Split($csvdelimiter) 
-        $null = $reader.ReadLine()
         
-        foreach ($column in $columns) {  
-            $tableCmd += "[$column] [nvarchar] (250) NULL"
-            $datatable.Columns.Add().ColumnName = $column
+    Write-Output "Creating new table and datatable: $tableName"
+    $tableCmd = "CREATE TABLE $tableName ("
+    
+    # Get the columns from the first row of the file
+    $reader = New-Object System.IO.StreamReader($currFile) 
+    $columns = (Get-Content $currFile -First 1).Split($csvdelimiter) 
+    $null = $reader.ReadLine()
 
-            if ($columns.IndexOf($column) -lt ($columns.Count -1)) {
-                $tableCmd += ","
-            }
-            else {
-                $tableCmd += ")"
-            }
+    foreach ($column in $columns) {  
+        $tableCmd += "[$column] [nvarchar] (250) NULL"
+        $datatable.Columns.Add().ColumnName = $column
 
+        if ($columns.IndexOf($column) -lt ($columns.Count -1)) {
+            $tableCmd += ","
         }
+        else {
+            $tableCmd += ")"
+        }
+        
+    }
 
-        $sqlCmd = New-Object System.Data.SqlClient.SqlCommand($tableCmd,$primaryConn)    
-        $null = $sqlCmd.BeginExecuteNonQuery()
+    $checkTable = "SELECT * FROM sysobjects Where Name= '$tableName' AND xType= 'U'"
+    $sqlCmd = New-Object System.Data.SqlClient.SqlCommand($checkTable,$primaryConn)
+    $primaryConn.Open()
+    $existingTable = $sqlCmd.ExecuteReader()
+    
+    if (!$existingTable.HasRows) {
+        $primaryConn.Close()
+        Write-Output "Create table"
+        $sqlTableCmd = New-Object System.Data.SqlClient.SqlCommand($tableCmd,$primaryConn) 
+        $primaryConn.Open()
+        $sqlTableCmd.ExecuteNonQuery()
     }
     
- 
+    $primaryConn.Close()
+    
+    
+ Write-Output "Load DataTable"
                       
     # # Insert CSV into tables ===============================================================================================================
     $batchsize = 50000
@@ -82,12 +85,11 @@ param(
     $bulkcopy.bulkcopyTimeout = 0 
     $bulkcopy.BatchSize = $batchsize
     $datacsvdelimiter = '","'
-    
+
     $i = 0;
 
     while (($line = $reader.ReadLine()) -ne $null)  { 
     
-        Write-Output "Line: $line"
         $row = $datatable.NewRow()
         #Custom delimiter as a comma may be used in the names.
         $row = $line -split $datacsvdelimiter
@@ -95,12 +97,13 @@ param(
         #Trim off beginning and ending quotes
         $row[0] = $row[0].Trim('"')
         $row[($row.Length) - 1] = $row[($row.Length) - 1].Trim('"')
-        Write-Output "Row add"
-        $xx = $datatable.Rows.Add($row) 
+        
+        Write-Output "Row added"
+        # Add row to datatable
+        $null = $datatable.Rows.Add($row) 
        
         $i++;
         if (($i % $batchsize) -eq 0) {  
-            Write-Output "Before WriteToServer a"
             $bulkcopy.WriteToServer($datatable)  
             Write-Output "Helper: $($i.ToString()) rows have been inserted." 
             $datatable.Clear()  
@@ -109,7 +112,6 @@ param(
     }  
   
     if($datatable.Rows.Count -gt 0) { 
-        Write-Output "Before WriteToServer b"
         $bulkcopy.WriteToServer($datatable)
         Write-Output "Helper: Last $($datatable.Rows.Count.ToString()) rows inserted." 
         $datatable.Clear() 
@@ -124,9 +126,7 @@ param(
     $datatable.Dispose()
 
     Write-Output "End of SQLHelper."
-      
-    
-
+  
 }
 
 Export-ModuleMember -Function GenerateMasterSQLTable
