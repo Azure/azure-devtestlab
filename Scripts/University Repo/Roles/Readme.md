@@ -1,13 +1,9 @@
-Create role with JSON template
+# Create role with JSON template
 
-A JSON template can be used as the source definition for the custom role. 
-The following example creates a custom role that allows to connect, start, restart, and shutdown your virtual machines in your Azure DevTest Labs. 
-You cannot create new VMs. Create a new file "University_DevTest Labs User.json" with the following content. The Id should be set to null on 
-initial role creation as a new ID is generated automatically.
+A JSON template can be used as the source definition for the custom role. The following example creates a custom role that allows to connect, start, restart, and shutdown your virtual machines in your Azure DevTest Labs. You cannot create new VMs. Create a new file "University_DevTest Labs User.json" with the following content. The Id should be set to null on initial role creation as a new ID is generated automatically.
 
-
-Creating the json template
-
+## Creating the json template
+```
     {
         "Name": "University DevTest Labs User",
         "Id": null,
@@ -50,11 +46,11 @@ Creating the json template
             "/subscriptions/__SubscriptionID__"
         ]
     }
-    
-    
-      
-Add the role to the subscriptions
+```
 
+## Add the role to the subscriptions
 To add the role to the subscriptions, run the following PowerShell command:
 
- New-AzureRmRoleDefinition -InputFile ".\University_DevTest Labs User.json"
+```
+    New-AzureRmRoleDefinition -InputFile ".\University_DevTest Labs User.json"
+```
