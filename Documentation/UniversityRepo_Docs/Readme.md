@@ -1,7 +1,7 @@
 ## Documentation folder
 This folder contains two useful files:
-- [A complete manual which describes the solution implemented and how to deploy the Azure DevTest Lab for both class and self-service scenario](Documentation/UniversityRepo_Docs/VirtualLabManual.docx)
-- [An excel which helps in calculate an estimate of the price to run the solution](Documentation/UniversityRepo_Docs/DevTestLab-VMPriceEstimator.xlsx)
+- [A complete manual which describes the solution implemented and how to deploy the Azure DevTest Lab for both class and self-service scenario](VirtualLabManual.docx)
+- [An excel which helps in calculate an estimate of the price to run the solution](DevTestLab-VMPriceEstimator.xlsx)
 
 
 ## Videos
