@@ -5,7 +5,7 @@ This repository has been created to collect the required material to set up DevT
 ## Scenario Scripts Folder
 This folder contains:
 - [Powershell scripts file which needs to be run either via Console or via Automation account on Azure to set up the environments for the imagined scenarios.](Scripts/UniversityRepo/ScenarioScripts)
-    - [Add-AzureDtlVM](Scripts/UniversityRepo/ScenarioScripts/Add-AzureDtlVM.ps1): This script adds the specified number of Azure virtual machines to a DevTest Lab.
+    - [Add-AzureDtlVM](../../Scripts/UniversityRepo/ScenarioScripts/Add-AzureDtlVM.ps1): This script adds the specified number of Azure virtual machines to a DevTest Lab.
     - [Add-AzureDtlVMAutoVar](Scripts/UniversityRepo/ScenarioScripts/Add-AzureDtlVMAutoVar.ps1): This script adds the number of Azure virtual machines in the DevTest Lab by reading some parameters from AutomationVariable.
     - [Add-GroupPermissionsDevTestLab](Scripts/UniversityRepo/ScenarioScripts/Add-GroupPermissionsDevTestLab.ps1): This script adds the specified role to the AD Group in the DevTest Lab.
     - [Common](Scripts/UniversityRepo/ScenarioScripts/Common.ps1): This script contains many useful functions for the other scripts.
