@@ -20,7 +20,7 @@ This folder contains:
 - [Roles folder which contains the json file which specifies the actions that a University user can take on a VM](Roles)
 
 ## Shutdown Scripts folder
-- [Shutdown scripts folder which contains the scripts to automatically shutdown a VM if it's not used for a certain period of time](ShutdownScripts)
+- [Shutdown scripts folder which contains the scripts to automatically shutdown a VM if it's not used for a certain period of time](Shutdown%20Scripts)
     - [LoadIdleScript](ShutdownScripts/LoadIdleScript.ps1): This script creates a task inside Windows Task Scheduler getting a file script from a blob storage.
     - [ShutdownOnIdleV2](ShutdownScripts/ShutdownOnIdleV2.ps1): This script shutdowns the machine if the user hasn't been active.
   
