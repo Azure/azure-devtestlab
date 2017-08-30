@@ -21,8 +21,8 @@ This folder contains:
 
 ## Shutdown Scripts folder
 - [Shutdown scripts folder which contains the scripts to automatically shutdown a VM if it's not used for a certain period of time](Shutdown%20Scripts)
-    - [LoadIdleScript](ShutdownScripts/LoadIdleScript.ps1): This script creates a task inside Windows Task Scheduler getting a file script from a blob storage.
-    - [ShutdownOnIdleV2](ShutdownScripts/ShutdownOnIdleV2.ps1): This script shutdowns the machine if the user hasn't been active.
+    - [LoadIdleScript](Shutdown%20Scripts/LoadIdleScript.ps1): This script creates a task inside Windows Task Scheduler getting a file script from a blob storage.
+    - [ShutdownOnIdleV2](Shutdown%20Scripts/ShutdownOnIdleV2.ps1): This script shutdowns the machine if the user hasn't been active.
   
 ## Simplified JS portal folder:   
 - [Simplifies JS portal contains the files needed to set a simplified portal for the students to claim a VM in an easier way](SimplifiedJSPortal)
