@@ -1,4 +1,3 @@
-/Scenario
 # University repository
 This repository has been created to collect the required material to set up DevTest Labs in Univerisities. This is useful both for IT admin and students because the former won't have to maintain physical machines, the latter will always have fresh machines available both for classes and self-service usage.
 
