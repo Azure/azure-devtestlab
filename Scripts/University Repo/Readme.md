@@ -3,7 +3,7 @@
 This repository has been created to collect the required material to set up DevTest Labs in Univerisities. This is useful both for IT admin and students because the former won't have to maintain physical machines, the latter will always have fresh machines available both for classes and self-service usage.
 
 
-## Src folder
+## Scenario Scripts Folder
 This folder contains:
 - [Powershell scripts file which needs to be run either via Console or via Automation account on Azure to set up the environments for the imagined scenarios.](Scripts/UniversityRepo)
     - [Add-AzureDtlVM](Scripts/UniversityRepo/ScenarioScripts/Add-AzureDtlVM.ps1): This script adds the specified number of Azure virtual machines to a DevTest Lab.
@@ -17,12 +17,15 @@ This folder contains:
     - [Remove-GroupPermissionsDevTestLab](Scripts/UniversityRepo/ScenarioScripts/Remove-GroupPermissionsDevTestLab.ps1): This script removes the specified role from the AD Group in the DevTest Lab.
     - [Test-AzureDtlVMs](Scripts/UniversityRepo/ScenarioScripts/Test-AzureDtlVMs.ps1): Given LabName and LabSize, this script verifies how many Azure virtual machines are inside the DevTest Lab and throws an error inside the logs when the number is greater or lower than size +/- VMDelta. 
 
+## Roles Foler
 - [Roles folder which contains the json file which specifies the actions that a University user can take on a VM](Scripts/UniversityRepo/Roles)
 
+## Shutdown Scripts folder
 - [Shutdown scripts folder which contains the scripts to automatically shutdown a VM if it's not used for a certain period of time](Scripts/UniversityRepo/ShutdownScripts)
     - [LoadIdleScript](Scripts/UniversityRepo/ShutdownScripts/LoadIdleScript.ps1): This script creates a task inside Windows Task Scheduler getting a file script from a blob storage.
     - [ShutdownOnIdleV2](Scripts/UniversityRepo/ShutdownScripts/ShutdownOnIdleV2.ps1): This script shutdowns the machine if the user hasn't been active.
-    
+  
+## Simplified JS portal folder:   
 - [Simplifies JS portal contains the files needed to set a simplified portal for the students to claim a VM in an easier way](Scripts/UniversityRepo/SimplifiedJSPortal)
 
 ## Creating the appropriate Azure credential file to run the scripts from command line
