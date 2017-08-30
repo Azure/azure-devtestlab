@@ -13,7 +13,7 @@ This folder contains:
     - [Manage-AzureDtlFixedPool](ScenarioScripts/Manage-AzureDtlFixedPool.ps1): This script guarantees that the Virtual Machine pool of the Lab equals to the PoolSize specified as Azure Tag of Lab.
     - [Remove-AzureDtlLabVMs](ScenarioScripts/Remove-AzureDtlLabVMs.ps1): This script guarantees that the Virtual Machine pool of the Lab equals to the PoolSize specified as Azure Tag of Lab.
     - [Remove-AzureDtlVM](ScenarioScripts/Remove-AzureDtlVM.ps1): This script deletes every Azure virtual machines in the DevTest Lab.
-    - [Remove-GroupPermissionsDevTestLab](Scripts/UniversityRepo/ScenarioScripts/Remove-GroupPermissionsDevTestLab.ps1): This script removes the specified role from the AD Group in the DevTest Lab.
+    - [Remove-GroupPermissionsDevTestLab](ScenarioScripts/Remove-GroupPermissionsDevTestLab.ps1): This script removes the specified role from the AD Group in the DevTest Lab.
     - [Test-AzureDtlVMs](ScenarioScripts/Test-AzureDtlVMs.ps1): Given LabName and LabSize, this script verifies how many Azure virtual machines are inside the DevTest Lab and throws an error inside the logs when the number is greater or lower than size +/- VMDelta. 
 
 ## Roles Foler
