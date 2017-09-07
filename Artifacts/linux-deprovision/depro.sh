@@ -8,8 +8,8 @@ main () {
             apt-get --assume-yes update > /dev/null
             apt-get --assume-yes install at > /dev/null
         elif [ -f /usr/bin/yum ] ; then 
-            yum -y update
-            yum install -y at
+            yum -y update > /dev/null
+            yum install -y at > /dev/null
         else
             echo "OS type not supported"
             exit 1
@@ -18,7 +18,7 @@ main () {
         # chdir to waagent's directory before running it
         waagentPath=$(command -v waagent)
         # trim the last 8 characters
-        waagentDir=${waagentPath%????????}       
+        waagentDir=${waagentPath%????????}
         echo "cd $waagentDir && waagent -force -deprovision+user > /tmp/depro.out 2> /tmp/depro.err && poweroff" | at now + 1 minute > /dev/null 2>&1        
         exit 0
     } || { # catch
