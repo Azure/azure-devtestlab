@@ -4,10 +4,12 @@ main () {
     { # try
 
         # The script runs as root, try to install at command and return 1 if system not supported
-        if [ -f /usr/bin/apt ] ; then
-            apt-get --assume-yes update > /dev/null
-            apt-get --assume-yes install at > /dev/null
-        elif [ -f /usr/bin/yum ] ; then 
+        apt='command -v apt-get'
+        yum='command -v yum'
+        if [ -n "$apt" ] ; then
+            apt-get --assume-yes update
+            apt-get --assume-yes install at
+        elif [ -n "$yum" ] ; then
             yum -y update > /dev/null
             yum install -y at > /dev/null
         else
