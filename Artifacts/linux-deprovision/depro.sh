@@ -13,7 +13,7 @@ main () {
             yum -y update > /dev/null
             yum install -y at > /dev/null
         else
-            echo "OS type not supported"
+            echo 'OS type not supported' #> /dev/null 2>&1
             exit 1
         fi
 
