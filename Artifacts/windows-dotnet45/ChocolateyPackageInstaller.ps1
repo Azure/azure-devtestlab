@@ -54,7 +54,10 @@ Param(
 #
 
 # Note: Because the $ErrorActionPreference is "Stop", this script will stop on first failure.  
-$ErrorActionPreference = "stop"
+$ErrorActionPreference = "Stop"
+
+# Ensure that current process can run scripts. 
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force 
 
 ###################################################################################################
 
@@ -87,9 +90,9 @@ $ChocolateyInstallLog = Join-Path -Path $ChocolateyPackageInstallerFolder -Child
 
 function DisplayArgValues
 {
-    WriteLog "========== Configuration =========="
-    WriteLog $("RawPackagesList : " + $RawPackagesList)
-    WriteLog "========== Configuration =========="
+    WriteLog '========== Configuration =========='
+    WriteLog "RawPackagesList : $RawPackagesList"
+    WriteLog '========== Configuration =========='
 }
 
 ##################################################################################################
@@ -136,11 +139,16 @@ function InitializeFolders
 function WriteLog
 {
     Param(
-        <# Can be null or empty #> $message
+        <# Can be null or empty #>
+        [string]$Message,
+        [switch]$LogFileOnly
     )
 
-    $timestampedMessage = $("[" + [System.DateTime]::Now + "] " + $message) | % {  
-        Write-Host -Object $_
+    $timestampedMessage = "[$([System.DateTime]::Now)] $Message" | % {
+        if (-not $LogFileOnly)
+        {
+            Write-Host -Object $_
+        }
         Out-File -InputObject $_ -FilePath $ScriptLog -Append
     }
 }
@@ -169,18 +177,18 @@ function InstallChocolatey
         [ValidateNotNullOrEmpty()] $chocolateyInstallLog
     )
 
-    WriteLog "Installing Chocolatey..."
+    WriteLog 'Installing Chocolatey ...'
 
     Invoke-Expression ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1')) | Out-Null
 
-    WriteLog "Success."
+    WriteLog 'Success.'
 }
 
 ##################################################################################################
 
 #
 # Description:
-#  - Installs the specified chocolatet packages on the machine.
+#  - Installs the specified chocolatey packages on the machine.
 #
 # Parameters:
 #  - N/A.
@@ -198,31 +206,31 @@ function InstallPackages
         [ValidateNotNullOrEmpty()][string] $packagesList
     )
 
-    $Separator = @(";",",")
-    $SplitOption = [System.StringSplitOptions]::RemoveEmptyEntries
-    $packages = $packagesList.Trim().Split($Separator, $SplitOption)
+    $separator = @(";",",")
+    $splitOption = [System.StringSplitOptions]::RemoveEmptyEntries
+    $packages = $packagesList.Trim().Split($separator, $splitOption)
 
     if (0 -eq $packages.Count)
     {
-        WriteLog $("No packages were specified. Exiting...")
+        WriteLog 'No packages were specified. Exiting.'
         return        
     }
 
     foreach ($package in $packages)
     {
-        WriteLog $("Installing package: " + $package)
+        $package = $package.Trim()
 
-        # install git via chocolatey
-        choco install $package --force --yes --acceptlicense --verbose | Out-Null 
+        WriteLog "Installing package: $package ..."
 
-        if ($? -eq $false)
+        # Install git via chocolatey.
+        choco install $package --force --yes --acceptlicense --verbose --allow-empty-checksums | Out-Null  
+        if (-not $?)
         {
-            $errMsg = $("Error! Installation failed. Please see the chocolatey logs in %ALLUSERSPROFILE%\chocolatey\logs folder for details.")
-            WriteLog $errMsg
-            Write-Error $errMsg 
+            $errMsg = 'Installation failed. Please see the chocolatey logs in %ALLUSERSPROFILE%\chocolatey\logs folder for details.'
+            throw $errMsg 
         }
     
-        WriteLog "Success."        
+        WriteLog 'Success.'
     }
 }
 
@@ -248,15 +256,14 @@ try
 }
 catch
 {
-    if (($null -ne $Error[0]) -and ($null -ne $Error[0].Exception) -and ($null -ne $Error[0].Exception.Message))
+    $errMsg = $Error[0].Exception.Message
+    if ($errMsg)
     {
-        $errMsg = $Error[0].Exception.Message
-        WriteLog $errMsg
-        Write-Host $errMsg
+        WriteLog -Message "ERROR: $errMsg" -LogFileOnly
     }
 
-    # Important note: Throwing a terminating error (using $ErrorActionPreference = "stop") still returns exit 
-    # code zero from the powershell script. The workaround is to use try/catch blocks and return a non-zero 
-    # exit code from the catch block. 
-    exit -1
+    # IMPORTANT NOTE: We rely on startChocolatey.ps1 to manage the workflow. It is there where we need to
+    # ensure an exit code is correctly sent back to the calling process. From here, all we need to do is
+    # throw so that startChocolatey.ps1 can handle the state correctly.
+    throw
 }

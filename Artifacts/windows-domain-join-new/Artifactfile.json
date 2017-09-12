@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+  "title": "Join Active Directory (AD) domain",
+  "description": "Joins the virtual machine to the given Active Directory domain and reboots the machine.",
+  "publisher": "Microsoft",
+  "tags": [
+    "Windows"
+  ],
+  "iconUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/Artifacts/windows-domain-join/domainJoinArtifact.png",
+  "targetOsType": "Windows",
+  "parameters": {
+    "domainAdminUsername": {
+      "type": "string",
+      "displayName": "Domain join user account",
+      "description": "The Active Directory (AD) account (e.g. CORP\\user or user@corp.contoso.com) that has permissions to join the domain"
+    },
+    "domainAdminPassword": {
+      "type": "securestring",
+      "displayName": "Domain join password",
+      "description": "The password for the domain join user account."
+    },
+    "domainToJoin": {
+      "type": "string",
+      "displayName": "Active Directory domain name",
+      "description": "The name of the Active Directory (AD) domain to join (e.g. corp.contoso.com)."
+    },
+    "ouPath": {
+      "type": "string",
+      "displayName": "Active Directory (AD) domain OU",
+      "description": "The OU path e.g. OU=Workstations,OU=Machines,DC=corp,DC=contoso,DC=com"
+    }
+  },
+  "runCommand": {
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./artifact-main.ps1', ' -domainAdminUsername ', parameters('domainAdminUsername'), ' -domainAdminPassword ''', parameters('domainAdminPassword'), ''' -domainToJoin ', parameters('domainToJoin'), ' -ouPath ''', parameters('ouPath'), '''\"')]"
+  },
+  "postDeployActions": [
+    {
+      "action": "restart"
+    }
+  ]
+}

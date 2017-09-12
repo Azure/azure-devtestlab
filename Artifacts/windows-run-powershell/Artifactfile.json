@@ -1,5 +1,5 @@
 {
-    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
     "title": "Run PowerShell",
     "description": "Use this to run a script using PowerShell",
     "publisher": "Microsoft",
@@ -33,6 +33,9 @@
         "autoUpgradeMinorVersion": "true",
         "settings": {
             "fileUris": "[parameters('scriptFileUris')]",
+            "commandToExecute": ""
+        },
+        "protectedSettings": {
             "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File', ' ', parameters('scriptToRun'), ' ', parameters('scriptArguments'))]"
         }
     }

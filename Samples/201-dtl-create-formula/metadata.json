@@ -1,0 +1,7 @@
+{
+  "itemDisplayName": "Create a new formula for an existing DTL instance in Azure DevTest Labs",
+  "description": "This templates creates a new formula for an existing DTL instance in Azure DevTest Labs.",
+  "summary": "This template creates a new formula for an existing DTL instance in Azure DevTest Labs.",
+  "githubUsername": "emaher",
+  "dateUpdated": "2016-10-06"
+}

@@ -1,0 +1,46 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "newLabName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the new lab instance to be created."
+      }
+    }
+  },
+  "variables": {
+    "allowedImages": "\"{\\\"offer\\\":\\\"CentOS\\\",\\\"publisher\\\":\\\"OpenLogic\\\",\\\"sku\\\":\\\"7.2\\\",\\\"osType\\\":\\\"Linux\\\",\\\"version\\\":\\\"latest\\\"}\",\"{\\\"offer\\\":\\\"Oracle-Linux\\\",\\\"publisher\\\":\\\"Oracle\\\",\\\"sku\\\":\\\"7.2\\\",\\\"osType\\\":\\\"Linux\\\",\\\"version\\\":\\\"latest\\\"}\",\"{\\\"offer\\\":\\\"SQL2016-WS2012R2\\\",\\\"publisher\\\":\\\"MicrosoftSQLServer\\\",\\\"sku\\\":\\\"Enterprise\\\",\\\"osType\\\":\\\"Windows\\\",\\\"version\\\":\\\"latest\\\"}\""
+  },
+  "resources": [
+    {
+      "apiVersion": "2017-04-26-preview",
+      "name": "[trim(parameters('newLabName'))]",
+      "type": "Microsoft.DevTestLab/labs",
+      "location": "[resourceGroup().location]",
+      "resources": [
+        {
+          "apiVersion": "2015-05-21-preview",
+          "name": "default/GalleryImage",
+          "type": "policySets/policies",
+          "dependsOn": [
+            "[resourceId('Microsoft.DevTestLab/labs', parameters('newLabName'))]"
+          ],
+          "properties": {
+            "description": "",
+            "factName": "GalleryImage",
+            "evaluatorType": "AllowedValuesPolicy",
+            "status": "Enabled",
+            "threshold": "[concat('[', trim(variables('allowedImages')), ']')]"
+          }
+        }
+      ]
+    }
+  ],
+  "outputs": {
+    "labId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.DevTestLab/labs', parameters('newLabName'))]"
+    }
+  }
+}

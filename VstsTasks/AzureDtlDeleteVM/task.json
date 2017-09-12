@@ -1,0 +1,47 @@
+{
+    "id": "AE5DFA8C-0C57-41E8-BFDF-5B83AC08D896",
+    "name": "AzureDevTestLabsDeleteVM",
+    "friendlyName": "Azure DevTest Labs Delete VM",
+    "description": "Delete the given Azure DevTest Labs VM",
+    "category": "Deploy",
+    "visibility": [
+        "Build",
+        "Release"
+    ],
+    "author": "Microsoft Corporation",
+    "version": {
+        "Major": 1,
+        "Minor": 0,
+        "Patch": 7
+    },
+    "demands": [
+        "azureps"
+    ],
+    "minimumAgentVersion": "1.95.1",
+    "inputs": [
+        {
+            "name": "ConnectedServiceName",
+            "type": "connectedService:AzureRM",
+            "label": "Azure RM Subscription",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Azure Resource Manager subscription to configure before running."
+        },
+        {
+            "name": "LabVMId",
+            "type": "string",
+            "label": "Lab VM ID",
+            "defaultValue": "$(labVMId)",
+            "required": true,
+            "helpMarkDown": "Resource ID of the lab VM to delete. Default is `$(labVMId)`. You can use any variable such as `$(labVMId)`, which is the output of calling **Create Azure DevTest Labs VM**, that contains a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}/virtualMachines/{vmName}`."
+        }
+    ],
+    "instanceNameFormat": "Delete Azure DevTest Labs VM",
+    "execution": {
+        "AzurePowerShell": {
+            "target": "$(currentDirectory)\\task.ps1",
+            "argumentFormat": "",
+            "workingDirectory": "$(currentDirectory)"
+        }
+    }
+}

@@ -43,7 +43,7 @@
     },
     "allowedVmSizes": {
       "type": "string",
-      "defaultValue": "\"Standard_A5\", \"Standard_A3\", \"Standard_A2\"",
+      "defaultValue": "\"Standard_DS1_v2\", \"Standard_DS3_v2\", \"Standard_DS11_v2\"",
       "minLength": 3,
       "metadata": {
         "description": "Set 'allowed VM sizes' policy: A comma-separated list of VM sizes that are allowed in the lab."
@@ -51,14 +51,14 @@
     },
     "artifactRepoUri": {
       "type": "string",
-      "defaultValue": "https://xiaoying.visualstudio.com/DefaultCollection/_git/azure-devtestlabsdemo",
+      "defaultValue": "https://github.com/gxy001/azure-devtestlabsdemo",
       "metadata": {
         "description": "Set 'artifact repository': the Git clone URI."
       }
     },
     "artifactRepoFolder": {
       "type": "string",
-      "defaultValue": "AzureConDemo",
+      "defaultValue": "Artifacts",
       "metadata": {
         "description": "Set 'artifact repository': the target folder in the repo."
       }
@@ -86,23 +86,30 @@
     },
     "artifactRepoType": {
       "type": "string",
-      "defaultValue": "VsoGit",
+      "defaultValue": "GitHub",
       "metadata": {
-        "description": "Set 'artifact repository': the Git repo type."
+        "description": "Set 'artifact repository': the Git repo type, GitHub or VsoGit."
       }
     },
     "pilotVMName": {
       "type": "string",
       "defaultValue": "TestBox001",
       "metadata": {
-        "description": "For the 1st new VM created in the lab: The name of the VM."
+        "description": "VM #1: Its name."
       }
     },
     "VMSize": {
       "type": "string",
-      "defaultValue": "Standard_A2",
+      "defaultValue": "Standard_DS1_v2",
       "metadata": {
-        "description": "The size of all the new VMs to be created in the lab."
+        "description": "The size of all the VMs to be created in the lab."
+      }
+    },
+    "VMStorageType": {
+      "type": "string",
+      "defaultValue": "Premium",
+      "metadata": {
+        "description": "The storage type ('Premium' or 'Standard') of all the VMs to be created in the lab."
       }
     },
     "username": {
@@ -123,63 +130,63 @@
       "type": "string",
       "defaultValue": "Fabrikam Dev Box",
       "metadata": {
-        "description": "For the 1 out of 3 custom VM images: Name of the VM template being created or updated."
+        "description": "Name of custom image #1."
       }
     },
     "devBoxTemplateDescription": {
       "type": "string",
       "defaultValue": "Fabrikam Dev box environment",
       "metadata": {
-        "description": "For the 1 out of 3 custom VM image: Details about the VM template being created or updated."
+        "description": "Description of custom image #1."
       }
     },
     "testBoxTemplateName": {
       "type": "string",
       "defaultValue": "Fabrikam Test Box",
       "metadata": {
-        "description": "For the 2 out of 3 custom VM image: Name of the VM template being created or updated."
+        "description": "Name of custom image #2."
       }
     },
     "testBoxTemplateDescription": {
       "type": "string",
       "defaultValue": "Fabrikam Test box environment",
       "metadata": {
-        "description": "For the 2 out of 3 custom VM image: Details about the VM template being created or updated."
+        "description": "Description of custom image #2."
       }
     },
     "goldenImageTemplateName": {
       "type": "string",
       "defaultValue": "Fabrikam Latest Testing Build 0219",
       "metadata": {
-        "description": "For the 3 out of 3 custom VM image: Name of the VM template being created or updated."
+        "description": "Name of custom image #3."
       }
     },
     "goldenImageTemplateDescription": {
       "type": "string",
       "defaultValue": "Latest testing build 100219 from VSO",
       "metadata": {
-        "description": "For the 3 out of 3 custom VM image: Details about the VM template being created or updated."
+        "description": "Description of custom image #3."
       }
     },
     "devBoxVMName": {
       "type": "string",
       "defaultValue": "DevBox001",
       "metadata": {
-        "description": "For the 2nd VM created in the lab that uses the 1st custom VM image: The name of the new VM to be created."
+        "description": "Name of VM #2 (using custom image #1)."
       }
     },
     "testBoxVMName": {
       "type": "string",
       "defaultValue": "TestBox002",
       "metadata": {
-        "description": "For the 3rd VM created in the lab that uses the 2nd custom VM image: The name of the new vm to be created."
+        "description": "Name of VM #3 (using custom image #2)."
       }
     },
     "goldenImageVMName": {
       "type": "string",
       "defaultValue": "TestLatest0219",
       "metadata": {
-        "description": "For the 4th VM created in the lab that uses the 3rd custom VM image: The name of the new vm to be created."
+        "description": "Name of VM #4 (using custom image #3)."
       }
     }
   },
@@ -197,28 +204,28 @@
   },
   "resources": [
     {
-      "apiVersion": "2016-05-15",
+      "apiVersion": "2017-04-26-preview",
       "type": "Microsoft.DevTestLab/labs",
       "name": "[trim(parameters('newLabName'))]",
       "location": "[resourceGroup().location]",
       "resources": [
         {
-          "apiVersion": "2016-05-15",
+          "apiVersion": "2017-04-26-preview",
           "name": "[variables('labVirtualNetworkName')]",
-          "type": "virtualNetworks",
+          "type": "virtualnetworks",
           "dependsOn": [
             "[variables('newLabId')]"
           ]
         },
         {
-          "apiVersion": "2016-05-15",
+          "apiVersion": "2017-04-26-preview",
           "name": "LabVmsShutdown",
           "type": "schedules",
           "dependsOn": [
             "[variables('newLabId')]"
           ],
           "properties": {
-            "status": "enabled",
+            "status": "Enabled",
             "timeZoneId": "[parameters('timeZoneId')]",
             "taskType": "LabVmsShutdownTask",
             "dailyRecurrence": {
@@ -227,9 +234,9 @@
           }
         },
         {
-          "apiVersion": "2016-05-15",
+          "apiVersion": "2017-04-26-preview",
           "name": "default/MaxVmsAllowedPerUser",
-          "type": "policySets/policies",
+          "type": "policysets/policies",
           "dependsOn": [
             "[variables('newLabId')]"
           ],
@@ -242,9 +249,9 @@
           }
         },
         {
-          "apiVersion": "2016-05-15",
+          "apiVersion": "2017-04-26-preview",
           "name": "default/MaxVmsAllowedPerLab",
-          "type": "policySets/policies",
+          "type": "policysets/policies",
           "dependsOn": [
             "[variables('newLabId')]"
           ],
@@ -257,9 +264,9 @@
           }
         },
         {
-          "apiVersion": "2016-05-15",
+          "apiVersion": "2017-04-26-preview",
           "name": "default/AllowedVmSizesInLab",
-          "type": "policySets/policies",
+          "type": "policysets/policies",
           "dependsOn": [
             "[variables('newLabId')]"
           ],
@@ -272,9 +279,9 @@
           }
         },
         {
-          "apiVersion": "2016-05-15",
+          "apiVersion": "2017-04-26-preview",
           "name": "privaterepo885",
-          "type": "artifactSources",
+          "type": "artifactsources",
           "dependsOn": [
             "[variables('newLabId')]"
           ],
@@ -291,8 +298,8 @@
       ]
     },
     {
-      "apiVersion": "2016-05-15",
-      "type": "Microsoft.DevTestLab/labs/virtualMachines",
+      "apiVersion": "2017-04-26-preview",
+      "type": "Microsoft.DevTestLab/labs/virtualmachines",
       "name": "[concat(parameters('newLabName'), '/', parameters('pilotVMName'))]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
@@ -307,6 +314,7 @@
           "version": "latest"
         },
         "size": "[parameters('VMSize')]",
+        "storageType": "[parameters('VMStorageType')]",
         "isAuthenticationWithSshKey": false,
         "userName": "[parameters('username')]",
         "sshKey": "",
@@ -316,9 +324,9 @@
       }
     },
     {
-      "apiVersion": "2016-05-15",
+      "apiVersion": "2017-04-26-preview",
       "name": "[variables('devTemplateResourceName')]",
-      "type": "Microsoft.DevTestLab/labs/customImages",
+      "type": "Microsoft.DevTestLab/labs/customimages",
       "dependsOn": [
         "[resourceId('Microsoft.DevTestLab/labs/virtualMachines', parameters('newLabName'), parameters('pilotVMName'))]"
       ],
@@ -333,11 +341,11 @@
       }
     },
     {
-      "apiVersion": "2016-05-15",
+      "apiVersion": "2017-04-26-preview",
       "name": "[variables('testTemplateResourceName')]",
-      "type": "Microsoft.DevTestLab/labs/customImages",
+      "type": "Microsoft.DevTestLab/labs/customimages",
       "dependsOn": [
-        "[resourceId('Microsoft.DevTestLab/labs/virtualMachines', parameters('newLabName'), parameters('pilotVMName'))]"
+        "[resourceId('Microsoft.DevTestLab/labs/customimages', parameters('newLabName'), parameters('devBoxTemplateName'))]"
       ],
       "properties": {
         "vm": {
@@ -350,11 +358,11 @@
       }
     },
     {
-      "apiVersion": "2016-05-15",
+      "apiVersion": "2017-04-26-preview",
       "name": "[variables('goldenImageTemplateResourceName')]",
-      "type": "Microsoft.DevTestLab/labs/customImages",
+      "type": "Microsoft.DevTestLab/labs/customimages",
       "dependsOn": [
-        "[resourceId('Microsoft.DevTestLab/labs/virtualMachines', parameters('newLabName'), parameters('pilotVMName'))]"
+        "[resourceId('Microsoft.DevTestLab/labs/customimages', parameters('newLabName'), parameters('testBoxTemplateName'))]"
       ],
       "properties": {
         "vm": {
@@ -367,8 +375,8 @@
       }
     },
     {
-      "apiVersion": "2016-05-15",
-      "type": "Microsoft.DevTestLab/labs/virtualMachines",
+      "apiVersion": "2017-04-26-preview",
+      "type": "Microsoft.DevTestLab/labs/virtualmachines",
       "name": "[concat(parameters('newLabName'), '/', parameters('devBoxVMName'))]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
@@ -377,6 +385,7 @@
       ],
       "properties": {
         "customImageId": "[variables('devVmTemplateId')]",
+        "storageType": "[parameters('VMStorageType')]",
         "size": "[parameters('VMSize')]",
         "isAuthenticationWithSshKey": false,
         "userName": "[parameters('userName')]",
@@ -387,8 +396,8 @@
       }
     },
     {
-      "apiVersion": "2016-05-15",
-      "type": "Microsoft.DevTestLab/labs/virtualMachines",
+      "apiVersion": "2017-04-26-preview",
+      "type": "Microsoft.DevTestLab/labs/virtualmachines",
       "name": "[concat(parameters('newLabName'), '/', parameters('testBoxVMName'))]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
@@ -398,6 +407,7 @@
       "properties": {
         "customImageId": "[variables('testVmTemplateId')]",
         "size": "[parameters('VMSize')]",
+        "storageType": "[parameters('VMStorageType')]",
         "isAuthenticationWithSshKey": false,
         "userName": "[parameters('userName')]",
         "sshKey": "",
@@ -407,8 +417,8 @@
       }
     },
     {
-      "apiVersion": "2016-05-15",
-      "type": "Microsoft.DevTestLab/labs/virtualMachines",
+      "apiVersion": "2017-04-26-preview",
+      "type": "Microsoft.DevTestLab/labs/virtualmachines",
       "name": "[concat(parameters('newLabName'), '/', parameters('goldenImageVMName'))]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
@@ -418,6 +428,7 @@
       "properties": {
         "customImageId": "[variables('goldenImageTemplateId')]",
         "size": "[parameters('VMSize')]",
+        "storageType": "[parameters('VMStorageType')]",
         "isAuthenticationWithSshKey": false,
         "userName": "[parameters('userName')]",
         "sshKey": "",

@@ -1,0 +1,61 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "newLabName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the new lab instance to be created"
+      }
+    }
+  },
+  "variables": {
+    "labVirtualNetworkName": "[concat('Dtl', parameters('newLabName'))]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2017-04-26-preview",
+      "type": "Microsoft.DevTestLab/labs",
+      "name": "[parameters('newLabName')]",
+      "location": "[resourceGroup().location]",
+      "resources": [
+        {
+          "apiVersion": "2017-04-26-preview",
+          "name": "[variables('labVirtualNetworkName')]",
+          "type": "virtualNetworks",
+          "dependsOn": [
+            "[resourceId('Microsoft.DevTestLab/labs', parameters('newLabName'))]"
+          ]
+        },
+        {
+          "apiVersion": "2017-04-26-preview",
+          "name": "Public Repo",
+          "type": "artifactSources",
+          "dependsOn": [
+            "[resourceId('Microsoft.DevTestLab/labs', parameters('newLabName'))]"
+          ],
+          "properties":{
+              "status": "disabled"
+          }
+        },
+        {
+          "apiVersion": "2017-04-26-preview",
+          "name": "BlockChainRepo",
+          "type": "artifactSources",
+          "dependsOn": [
+            "[resourceId('Microsoft.DevTestLab/labs', parameters('newLabName'))]"
+          ],
+          "properties":{
+              "status": "enabled"
+          }
+        }
+      ]
+    }
+  ],
+  "outputs": {
+    "labId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.DevTestLab/labs', parameters('newLabName'))]"
+    }
+  }
+}

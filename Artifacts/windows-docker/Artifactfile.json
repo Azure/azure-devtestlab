@@ -1,0 +1,21 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "Docker",
+    "description": "Activate Windows Container support on Windows 10 / Windows Server 2016 VMs. In addition Docker for Windows is installed if the VM supports nested virtualization (Dv3 and Ev3 size).",
+    "publisher": "Microsoft",
+    "tags": [
+        "Windows",
+        "Docker"
+    ],
+    "iconUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/Artifacts/windows-docker/docker-logo.png",
+    "targetOsType": "Windows",
+    "parameters": {},
+    "runCommand": {
+        "commandToExecute": "['powershell.exe -executionpolicy bypass -File Artifactfile.ps1']"
+    },
+    "postDeployActions": [
+        {
+            "action": "restart"
+        }
+    ]
+}

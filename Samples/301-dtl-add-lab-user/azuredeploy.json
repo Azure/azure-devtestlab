@@ -1,0 +1,51 @@
+﻿{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "principalId": {
+      "type": "string",
+      "metadata": {
+        "description": "The objectId of the user, group, or service principal for the role."
+      }
+    },
+    "labName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the new lab instance to be created."
+      }
+    },
+    "roleAssignmentGuid": {
+      "type": "string",
+      "metadata": {
+        "description": "Guid to use as the name for the role assignment."
+      }
+    }
+  },
+  "variables": {
+    "devTestLabUserRoleId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/76283e04-6283-4c54-8f91-bcf1374a3c64')]",
+    "fullDevTestLabUserRoleName": "[concat(parameters('labName'), '/Microsoft.Authorization/', parameters('roleAssignmentGuid'))]",
+    "roleScope": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.DevTestLab/labs/', parameters('labName'))]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2017-04-26-preview",
+      "type": "Microsoft.DevTestLab/labs",
+      "name": "[parameters('labName')]",
+      "location": "[resourceGroup().location]"
+    },
+    {
+      "apiVersion": "2016-07-01",
+      "type": "Microsoft.DevTestLab/labs/providers/roleAssignments",
+      "name": "[variables('fullDevTestLabUserRoleName')]",
+      "properties": {
+        "roleDefinitionId": "[variables('devTestLabUserRoleId')]",
+        "principalId": "[parameters('principalId')]",
+        "scope": "[variables('roleScope')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DevTestLab/labs', parameters('labName'))]"
+      ]
+    }
+  ]
+}
+

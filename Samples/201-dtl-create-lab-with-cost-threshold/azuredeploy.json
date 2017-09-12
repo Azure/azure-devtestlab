@@ -1,0 +1,91 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "newLabName": {
+      "type": "string"
+    },
+    "costThreshold": {
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "apiVersion": "2017-04-26-preview",
+      "name": "[parameters('newLabName')]",
+      "type": "Microsoft.DevTestLab/labs",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "labStorageType": "Premium"
+      },
+      "resources": [
+        {
+          "apiVersion": "2017-04-26-preview",
+          "name": "LabVmsShutdown",
+          "type": "schedules",
+          "dependsOn": [
+            "[resourceId('Microsoft.DevTestLab/labs', parameters('newLabName'))]"
+          ],
+          "properties": {
+            "status": "Enabled",
+            "timeZoneId": "Central Standard Time",
+            "dailyRecurrence": {
+              "time": "1900"
+            },
+            "taskType": "LabVmsShutdownTask",
+            "notificationSettings": {
+              "status": "Enabled",
+              "timeInMinutes": 15
+            }
+          }
+        },
+        {
+          "apiVersion": "2017-04-26-preview",
+          "name": "[concat('Dtl', parameters('newLabName'))]",
+          "type": "virtualNetworks",
+          "dependsOn": [
+            "[resourceId('Microsoft.DevTestLab/labs', parameters('newLabName'))]"
+          ]
+        },
+        {
+          "apiVersion": "2017-04-26-preview",
+          "name": "targetCost",
+          "type": "costs",
+          "properties": {
+            "targetCost": {
+              "cycleType": "CalendarMonth",
+              "status": "Enabled",
+              "target": "[parameters('costThreshold')]",
+              "costThresholds": [
+                {
+                  "thresholdId": "96c08eae-885f-4a46-a15d-9dc991a32cbf",
+                  "thresholdStatus": "Disabled",
+                  "displayOnChart": "Enabled",
+                  "sendNotificationWhenExceeded": "Disabled",
+                  "percentageThreshold": { "thresholdValue": 75 }
+                },
+                {
+                  "thresholdId": "5ef03748-2e10-4b3c-afc2-cc766abf2d5d",
+                  "thresholdStatus": "Disabled",
+                  "displayOnChart": "Enabled",
+                  "sendNotificationWhenExceeded": "Enabled",
+                  "percentageThreshold": { "thresholdValue": 100 }
+                },
+                {
+                  "thresholdId": "b0bf180e-2e09-4073-8040-56e8a23dcd84",
+                  "thresholdStatus": "Disabled",
+                  "displayOnChart": "Disabled",
+                  "sendNotificationWhenExceeded": "Disabled",
+                  "percentageThreshold": { "thresholdValue": 125 }
+                }
+              ]
+            }
+          },
+          "dependsOn": [
+            "[resourceId('Microsoft.DevTestLab/labs', parameters('newLabName'))]"
+          ]
+        }
+      ]
+    }
+  ]
+}
