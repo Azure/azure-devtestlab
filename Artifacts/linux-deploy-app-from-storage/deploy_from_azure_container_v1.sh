@@ -10,7 +10,10 @@
 #
 ###
 
-if [ -f /usr/bin/apt ] ; then
+isApt=`command -v apt-get`
+isYum=`command -v yum`
+
+if [ -n "$isApt" ] ; then
     echo "Using APT package manager"
 
     apt-get -y update
@@ -21,7 +24,7 @@ if [ -f /usr/bin/apt ] ; then
     
     nde="nodejs"
     
-elif [ -f /usr/bin/yum ] ; then 
+elif [ -n "$isYum" ] ; then
     echo "Using YUM package manager"
 
     yum -y update

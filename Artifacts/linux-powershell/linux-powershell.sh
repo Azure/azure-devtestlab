@@ -9,6 +9,9 @@
 
 #!/bin/bash
 
+isApt=`command -v apt-get`
+isYum=`command -v yum`
+
 set -e
 cd /tmp
 URL=$1
@@ -16,10 +19,10 @@ FILE_NAME="${URL##*/}"
 echo "Downloading $FILE_NAME"
 wget $URL
 
-if [ -f /usr/bin/yum ] ; then
+if [ -n "$isYum" ] ; then
     echo "Using yum package manager"
     yum install -y $FILE_NAME
-elif [ -f /usr/bin/apt ] ; then
+elif [ -n "$isApt" ] ; then
     echo "Using apt package manager"
     if [ $(lsb_release -r -s) = "16.04" ]; then
         apt-get -q -y install libunwind8 libicu55
