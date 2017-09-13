@@ -14,7 +14,6 @@ main () {
             yum -y update > /dev/null
             yum install -y at > /dev/null
         elif [ -n "$isZypper" ] ; then
-            zypper update -y > /dev/null
             zypper install -y at > /dev/null
         else
             echo 'OS type not supported' #> /dev/null 2>&1
