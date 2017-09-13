@@ -15,6 +15,7 @@ main () {
             yum install -y at > /dev/null
         elif [ -n "$isZypper" ] ; then
             zypper install -y at > /dev/null
+            systemctl enable atd.service && systemctl start atd.service
         else
             echo 'OS type not supported' #> /dev/null 2>&1
             exit 1
