@@ -87,8 +87,8 @@
   "variables": {
     "AzureStorageAccountName": "[concat(toLower(parameters('UsageInfrastructurePrefix')),'azstoracct')]",
     "AzureSqlServerName": "[concat(toLower(parameters('UsageInfrastructurePrefix')),'azsqlsrv')]",
-    "AutomationAccountName": "[concat(parameters('UsageInfrastructurePrefix'),'AzAutoAcct')]"
-
+    "AutomationAccountName": "[concat(parameters('UsageInfrastructurePrefix'),'AzAutoAcct')]",
+    "storageKeyType": "SharedAccessKey"
   },
   "resources": [
     {
@@ -148,10 +148,31 @@
             "edition": "[parameters('SqlDatabaseEdition')]",
             "maxSizeBytes": "1073741824",
             "requestedServiceObjectiveName": "[parameters('SqlDatabaseRequestedServiceObjectiveName')]"
+          },
+          "resources":
+            [
+              {
+              "name": "Import",
+              "type": "extensions",
+              "apiVersion": "2014-04-01-preview",
+              "dependsOn":
+                [
+                  "[concat('Microsoft.Sql/servers/', variables('AzureSqlServerName'), '/databases/', parameters('SqlDatabaseName'))]"
+                ],
+              "properties":
+                {
+                  "storageKeyType": "[variables('storageKeyType')]",
+                  "storageKey": "[parameters('_artifactsLocationSasToken')]",
+                  "storageUri": "[concat(parameters('_artifactsLocation'), '/MasterDB.bacpac')]",
+                  "administratorLogin": "[parameters('SqlServerAdminLogin')]",
+                  "administratorLoginPassword": "[parameters('SqlServerAdminLoginPassword')]",
+                  "operationMode": "Import"
+                }
+              }
+            ]
           }
-        }
-      ]
-    },
+        ]
+      },
     {
       "name": "[variables('AutomationAccountName')]",
       "type": "Microsoft.Automation/automationAccounts",
@@ -210,7 +231,7 @@
           }
         },
         {
-          "name": "[concat(variables('AutomationAccountName'), '-GenerateMasterSQLTable')]",
+          "name": "GenerateMasterSQLTable",
           "type": "modules",
           "apiVersion": "2015-10-31",
           "dependsOn": [
