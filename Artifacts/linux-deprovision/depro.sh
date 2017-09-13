@@ -6,12 +6,16 @@ main () {
         # The script runs as root, try to install at command and return 1 if system not supported
         isApt=`command -v apt-get`
         isYum=`command -v yum`
+        isZypper=`command -v zypper`
         if [ -n "$isApt" ] ; then
             apt-get -y update > /dev/null
             apt-get -y install at > /dev/null
         elif [ -n "$isYum" ] ; then
             yum -y update > /dev/null
             yum install -y at > /dev/null
+        elif [ -n "$isZypper" ] ; then
+            zypper update -y > /dev/null
+            zypper install -y at > /dev/null
         else
             echo 'OS type not supported' #> /dev/null 2>&1
             exit 1
