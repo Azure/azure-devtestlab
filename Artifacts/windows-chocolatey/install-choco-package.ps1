@@ -5,8 +5,10 @@
 
 [CmdletBinding()]
 param(
-    # space-, comma- or semicolon-separated list of Chocolatey packages.
+    # Space-, comma- or semicolon-separated list of Chocolatey packages.
     [string] $Packages,
+
+    # Minimum PowerShell version required to execute this script.
     [int] $PSVersionRequired = 3
 )
 
@@ -51,16 +53,20 @@ trap
 # Functions used in this script.
 #
 
-function Validate-Params
+function Ensure-Chocolatey
 {
     [CmdletBinding()]
     param(
-        [string] $Packages
     )
 
-    if ([string]::IsNullOrEmpty($Packages))
+    if ($Env:ChocolateyInstall)
     {
-        throw 'Packages parameter is required.'
+        Invoke-ExpressionImpl -Expression 'choco upgrade chocolatey'
+    }
+    else
+    {
+        Invoke-ExpressionImpl -Expression ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1')) | Out-Null
+        $Env:Path += '%ALLUSERSPROFILE%\chocolatey\bin'
     }
 }
 
@@ -75,6 +81,18 @@ function Ensure-PowerShell
     {
         throw "The current version of PowerShell is $($PSVersionTable.PSVersion.Major). Prior to running this artifact, ensure you have PowerShell $Version or higher installed."
     }
+}
+
+function Install-Packages
+{
+    [CmdletBinding()]
+    param(
+        $Packages
+    )
+
+    $Packages = $Packages.split(',; ', [StringSplitOptions]::RemoveEmptyEntries) -join ' '
+    $expression = "choco install -y -f --acceptlicense --allow-empty-checksums --failstderr --no-progress --stoponfirstfailure $Packages"
+    Invoke-ExpressionImpl -Expression $expression 
 }
 
 function Invoke-ExpressionImpl
@@ -94,11 +112,30 @@ function Invoke-ExpressionImpl
     # catch below.
     if ($LastExitCode -or $expError)
     {
-        if ($expError[0])
+        if ($LastExitCode -eq 3010)
+        {
+            # Expected condition. The recent changes indicate a reboot is necessary. Please reboot at your earliest convenience.
+        }
+        elseif ($expError[0])
         {
             throw $expError[0]
         }
-        throw "Command failed with exit code '$LastExitCode'."
+        else
+        {
+            throw 'Installation failed. Please see the Chocolatey logs in %ALLUSERSPROFILE%\chocolatey\logs folder for details.'
+        }
+    }
+}
+
+function Validate-Params
+{
+    [CmdletBinding()]
+    param(
+    )
+
+    if ([string]::IsNullOrEmpty($Packages))
+    {
+        throw 'Packages parameter is required.'
     }
 }
 
@@ -109,19 +146,15 @@ function Invoke-ExpressionImpl
 
 try
 {
-    # Ensure we set the working directory to that of the script.
     pushd $PSScriptRoot
 
-    Validate-Params -Packages $Packages
+    Validate-Params
 
     Ensure-PowerShell -Version $PSVersionRequired
-    Enable-PSRemoting -Force -SkipNetworkProfileCheck
+    Enable-PSRemoting -Force -SkipNetworkProfileCheck | Out-Null
+    Ensure-Chocolatey
 
-    Invoke-ExpressionImpl -Expression ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))
-
-    $Packages = $Packages.split(',; ', [StringSplitOptions]::RemoveEmptyEntries) -join ' '
-    $expression = "choco install -y -f --failstderr --no-progress --stoponfirstfailure $Packages"
-    Invoke-ExpressionImpl -Expression $expression 
+    Install-Packages -Packages $Packages
 
     "`nThe artifact was applied successfully.`n"
 }
