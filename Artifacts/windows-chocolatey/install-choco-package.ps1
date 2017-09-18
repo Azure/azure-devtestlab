@@ -39,7 +39,7 @@ trap
         Write-Host -Object "`nERROR: $message" -ForegroundColor Red
     }
 
-    "`nThe artifact failed to apply.`n"
+    Write-Host "`nThe artifact failed to apply.`n"
 
     # IMPORTANT NOTE: Throwing a terminating error (using $ErrorActionPreference = "Stop") still
     # returns exit code zero from the PowerShell script when using -File. The workaround is to
@@ -91,7 +91,7 @@ function Install-Packages
     )
 
     $Packages = $Packages.split(',; ', [StringSplitOptions]::RemoveEmptyEntries) -join ' '
-    $expression = "choco install -y -f --acceptlicense --allow-empty-checksums --failstderr --no-progress --stoponfirstfailure $Packages"
+    $expression = "choco install -y -f --acceptlicense --allow-empty-checksums --no-progress --stoponfirstfailure $Packages"
     Invoke-ExpressionImpl -Expression $expression 
 }
 
@@ -148,15 +148,20 @@ try
 {
     pushd $PSScriptRoot
 
+    Write-Host 'Validating parameters.'
     Validate-Params
 
+    Write-Host 'Configuring PowerShell session.'
     Ensure-PowerShell -Version $PSVersionRequired
     Enable-PSRemoting -Force -SkipNetworkProfileCheck | Out-Null
+
+    Write-Host 'Ensuring latest Chocolatey version is installed.'
     Ensure-Chocolatey
 
+    Write-Host "Preparing to install Chocolatey packages: $Packages."
     Install-Packages -Packages $Packages
 
-    "`nThe artifact was applied successfully.`n"
+    Write-Host "`nThe artifact was applied successfully.`n"
 }
 finally
 {
