@@ -22,13 +22,13 @@
     "labSubnetName": "[concat(variables('labVirtualNetworkName'), 'Subnet')]",
     "labVirtualNetworkId": "[resourceId('Microsoft.DevTestLab/labs/virtualnetworks', parameters('labName'), variables('labVirtualNetworkName'))]",
     "labVirtualNetworkName": "[concat('Dtl', parameters('labName'))]",
-    "vmId": "[resourceId ('Microsoft.DevTestLab/labs/virtualMachines', parameters('labName'), parameters('newVMName'))]",
+    "vmId": "[resourceId ('Microsoft.DevTestLab/labs/virtualmachines', parameters('labName'), parameters('newVMName'))]",
     "vmName": "[concat(parameters('labName'), '/', parameters('newVMName'))]"
   },
   "resources": [
     {
       "apiVersion": "2017-04-26-preview",
-      "type": "Microsoft.DevTestLab/labs/virtualMachines",
+      "type": "Microsoft.DevTestLab/labs/virtualmachines",
       "name": "[variables('vmName')]",
       "location": "[resourceGroup().location]",
       "properties": {
@@ -47,7 +47,8 @@
         "isAuthenticationWithSshKey": false,
         "labSubnetName": "[variables('labSubnetName')]",
         "disallowPublicIpAddress": false,
-        "storageType": "Standard"
+        "storageType": "Standard",
+        "allowClaim": false
       }
     }
   ],
