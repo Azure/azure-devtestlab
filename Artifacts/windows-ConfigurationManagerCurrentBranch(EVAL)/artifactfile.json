@@ -8,7 +8,7 @@
         "SysAdmin",
         "System Center"
     ],
-    "iconUri": "https://ruckzuck.azurewebsites.net/wcf/GetIcon.ashx?Id=509715",
+    "iconUri": "https://ruckzuck.azurewebsites.net/wcf/RZService.svc/rest/GetIcon?id=509715",
     "targetOsType": "Windows",
     "parameters": {
         "SiteCode": {
