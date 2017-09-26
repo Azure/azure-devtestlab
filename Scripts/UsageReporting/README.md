@@ -26,6 +26,7 @@ To have the automation execute on a regular basis.
     - Open the individual runbooks and select Schedule from the top bar and link the appropriate schedule.
 
 To setup the included PowerBI dashboard using PowerBI desktop.
+- Import the MasterDB.bacpac into the database as it contains several views to drive the PowerBI
 - Copy .pbix locally
 - Set the SQL Server firewall settings to allow access to the IP where the local dashboard is.
 - Set the DataSource
