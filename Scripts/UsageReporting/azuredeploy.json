@@ -149,9 +149,30 @@
             "edition": "[parameters('SqlDatabaseEdition')]",
             "maxSizeBytes": "1073741824",
             "requestedServiceObjectiveName": "[parameters('SqlDatabaseRequestedServiceObjectiveName')]"
+          },
+          "resources":
+            [
+              {
+              "name": "Import",
+              "type": "extensions",
+              "apiVersion": "2014-04-01-preview",
+              "dependsOn":
+                [
+                  "[concat('Microsoft.Sql/servers/', variables('AzureSqlServerName'), '/databases/', parameters('SqlDatabaseName'))]"
+                ],
+              "properties":
+                {
+                  "storageKeyType": "[variables('storageKeyType')]",
+                  "storageKey": "?raw=true",
+                  "storageUri": "https://github.com/Azure/azure-devtestlab/blob/usageReporting/Scripts/UsageReporting/MasterDB.bacpac",
+                  "administratorLogin": "[parameters('SqlServerAdminLogin')]",
+                  "administratorLoginPassword": "[parameters('SqlServerAdminLoginPassword')]",
+                  "operationMode": "Import"
+                }
+              }
+            ]
           }
-        }
-      ]
+        ]
       },
     {
       "name": "[variables('AutomationAccountName')]",
