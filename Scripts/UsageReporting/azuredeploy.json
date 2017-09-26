@@ -163,7 +163,7 @@
               "properties":
                 {
                   "storageKeyType": "[variables('storageKeyType')]",
-                  "storageKey": "?raw=true",
+                  "storageKey": "raw=true",
                   "storageUri": "https://github.com/Azure/azure-devtestlab/blob/usageReporting/Scripts/UsageReporting/MasterDB.bacpac",
                   "administratorLogin": "[parameters('SqlServerAdminLogin')]",
                   "administratorLoginPassword": "[parameters('SqlServerAdminLoginPassword')]",
