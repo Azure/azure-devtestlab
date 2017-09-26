@@ -30,6 +30,7 @@
     },
     "SqlDatabaseName": {
       "type": "string",
+      "defaultValue": "TestTelemetry",
       "minLength": 1
     },
     "SqlDatabaseCollation": {
