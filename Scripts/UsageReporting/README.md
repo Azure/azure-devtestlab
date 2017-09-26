@@ -1,8 +1,7 @@
 # Azure DevTest Labs - Usage Reporting
 This template includes:
 - Azure Storage account where the DevTest Lab usage data request will store the daily data.
-- Azure SQL Server with Telemetry database.
-    - An empty database with views for the included PowerBI dashboard is imported.
+- Azure SQL Server with database.
 - Azure Automation account with runbooks.
     - Two runbooks, a modules, and various variables are imported.
 
