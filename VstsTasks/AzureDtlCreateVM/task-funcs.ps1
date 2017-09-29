@@ -141,9 +141,28 @@ function Get-AzureDtlDeploymentTargetResourceId
         [string] $ResourceGroupName
     )
     
-    $operation = Get-AzureRmResourceGroupDeploymentOperation -DeploymentName $DeploymentName -ResourceGroupName $ResourceGroupName
+    $operations = Get-AzureRmResourceGroupDeploymentOperation -DeploymentName $DeploymentName -ResourceGroupName $ResourceGroupName
 
-    return $operation.properties.targetResource.id
+    foreach ($op in $operations)
+    {
+        if ($op.properties.targetResource -ne $null)
+        {
+            $targetResource = $op.properties.targetResource
+            break
+        }
+    }
+
+    if (-not $targetResource)
+    {
+        $null = @(
+            Write-Host "Dumping resource group deployment operation details for $ResourceGroupName/$DeploymentName`:"
+            Write-Host (ConvertTo-Json $operations)
+        )
+
+        throw "Unable to extract the target resource from operations for $ResourceGroupName/$DeploymentName"
+    }
+
+    return $targetResource.id
 }
 
 function Show-InputParameters
