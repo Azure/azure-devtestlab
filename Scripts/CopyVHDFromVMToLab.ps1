@@ -153,10 +153,10 @@ function Get-AzureDtlVirtualMachineCopyContext
         elseif ($properties.storageProfile.osDisk.vhd.uri)
         {
             $vmCopyContext.SourceUri = $properties.storageProfile.osDisk.vhd.uri
-            [System.Uri] $uri = $sourceUri
+            [System.Uri] $uri = $vmCopyContext.SourceUri
             $vmCopyContext.StorageAccountName = $uri.Host.Split('.')[0]
             $vmStorageAccount = Find-AzureRmResource -ResourceNameEquals $vmCopyContext.StorageAccountName -ResourceType 'Microsoft.Storage/storageAccounts'
-            $vmCopyContext.StorageAccountKey = (Get-AzureRMStorageAccountKey -Name $vmStorageAccountName -ResourceGroupName $vmStorageAccount.ResourceGroupName)[0].Value
+            $vmCopyContext.StorageAccountKey = (Get-AzureRMStorageAccountKey -Name $vmCopyContext.StorageAccountName -ResourceGroupName $vmStorageAccount.ResourceGroupName)[0].Value
         }
     }
         

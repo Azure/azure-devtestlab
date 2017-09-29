@@ -25,7 +25,8 @@
     "agentName": {
       "type": "string",
       "displayName": "Agent Name",
-      "description": "The name to give to the agent, as seen by VSTS."
+      "description": "The name to give to the agent, as seen by VSTS. If empty, the computer name will be used.",
+      "allowEmpty": true
     },
     "poolName": {
       "type": "string",

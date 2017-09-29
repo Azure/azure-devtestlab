@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+  "title": "No-Op",
+  "publisher": "Microsoft",
+  "description": "Artifact used to work around Custom Script extension upgrade limitations on sysprepped images.",
+  "tags": [
+    "Windows"
+  ],
+  "targetOsType": "Windows",
+  "runCommand": {
+    "commandToExecute": "cmd /c echo No operation has been applied to this virtual machine. This artifact is used to work around Custom Script extension upgrade limitations on sysprepped images."
+  }
+}

@@ -8,7 +8,7 @@
         "RuckZuck",
 		"SysAdmin"
     ],
-    "iconUri": "https://ruckzuck.azurewebsites.net/wcf/GetIcon.ashx?Id=261145",
+    "iconUri": "https://ruckzuck.azurewebsites.net/wcf/RZService.svc/rest/GetIcon?id=700000",
     "targetOsType": "Windows",
     "parameters": {
         "packages": {

@@ -3,9 +3,6 @@
     [Parameter(Mandatory=$true, HelpMessage="The location of the factory configuration files")]
     [string] $ConfigurationLocation,
     
-    [Parameter(Mandatory=$true, HelpMessage="The name of the resource group")]
-    [string] $ResourceGroupName,
-    
     [Parameter(Mandatory=$true, HelpMessage="The name of the lab")]
     [string] $DevTestLabName,
     
@@ -19,7 +16,10 @@
     [int] $StandardTimeoutMinutes,
 
     [Parameter(Mandatory=$true, HelpMessage="The name of the lab")]
-    [string] $vmSize
+    [string] $vmSize,
+
+    [Parameter(HelpMessage="Specifies whether or not to sysprep the created VMs")]
+    [boolean] $includeSysprep = $true
         
 )
 
@@ -39,10 +39,10 @@ function IsVirtualMachineReady ($vmName, $status)
     
     if ($status.Count -gt 1) {
         # We have both parameters (provisioning state + power state) - this is the default case
-        if (($status[0].Code -eq "ProvisioningState/succeeded") -and ($status[1].Code -eq "PowerState/running")) {
+        if (($status[0].Code -eq "ProvisioningState/succeeded") -and ($status[1].Code -eq "PowerState/deallocated")) {
             $retval = $true
         }
-        elseif (($status[1].Code -eq "ProvisioningState/succeeded") -and ($status[0].Code -eq "PowerState/running")) {
+        elseif (($status[1].Code -eq "ProvisioningState/succeeded") -and ($status[0].Code -eq "PowerState/deallocated")) {
             $retval = $true
         }
     }
@@ -73,7 +73,14 @@ foreach ($file in $files)
     $imagePath = $file.FullName.Substring($imageListLocation.Length + 1)
 
     #determine a VM name for each file
-    $vmName = $file.BaseName.Replace("_", "").Replace(" ", "");
+    $vmName = $file.BaseName.Replace("_", "").Replace(" ", "").Replace(".", "")
+    $intName = 0
+    if ([System.Int32]::TryParse($vmName, [ref]$intName))
+    {
+        Write-Output "Adding prefix to vm named $vmName because it cannot be fully numeric"
+        $vmName = ('vm' + $vmName)
+    }
+
     if($vmName.Length -gt 15){
         $shortenedName = $vmName.Substring(0, 13)
         Write-Output "VM name $vmName is too long. Shortening to $shortenedName"
@@ -92,31 +99,27 @@ foreach ($file in $files)
     $usedVmNames += $vmName
 
     Write-Output "Starting job to create a VM named $vmName for $imagePath"
-    $jobs += Start-Job -Name $file.Name -FilePath $makeVmScriptLocation -ArgumentList $modulePath, $file.FullName, $ResourceGroupName, $DevTestLabName, $vmName, $imagePath, $machineUserName, $machinePassword, $vmSize
+    $jobs += Start-Job -Name $file.Name -FilePath $makeVmScriptLocation -ArgumentList $modulePath, $file.FullName, $DevTestLabName, $vmName, $imagePath, $machineUserName, $machinePassword, $vmSize, $includeSysprep
 }
 
-try{
-    $jobCount = $jobs.Count
-    Write-Output "Waiting for $jobCount VM creation jobs to complete"
-    foreach ($job in $jobs){
-        $jobOutput = Receive-Job $job -Wait
-        Write-Output $jobOutput
-        $createdVMName = $jobOutput[$jobOutput.Length - 1]
-        if($createdVMName){
-            $createdVms.Add($createdVMName)
-        }
+$jobCount = $jobs.Count
+Write-Output "Waiting for $jobCount VM creation jobs to complete"
+foreach ($job in $jobs){
+    $jobOutput = Receive-Job $job -Wait
+    Write-Output $jobOutput
+    $createdVMName = $jobOutput[$jobOutput.Length - 1]
+    if($createdVMName){
+        $createdVms.Add($createdVMName)
     }
 }
-finally{
-    Remove-Job -Job $jobs
-}
+Remove-Job -Job $jobs
 
 #get machines that show up in the VM blade so we can apply the GoldenImage Tag
 $allVms = Find-AzureRmResource -ResourceType "Microsoft.Compute/virtualMachines"
 
 for ($index = 0; $index -lt $createdVms.Count; $index++){
     $currentVmName = $createdVms[$index]
-    $currentVmValue = $allVms | Where-Object {$_.Name -eq $currentVmName -and $_.ResourceGroupName.StartsWith($DevTestLabName)}
+    $currentVmValue = $allVms | Where-Object {$_.Name -eq $currentVmName -and $_.ResourceGroupName.StartsWith($DevTestLabName, "CurrentCultureIgnoreCase")}
     if(!$currentVmValue){
         Write-Error "##[error]$currentVmName was not created successfully. It does not appear in the VM blade"
         continue;
