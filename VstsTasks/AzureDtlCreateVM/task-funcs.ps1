@@ -141,7 +141,7 @@ function Get-AzureDtlDeploymentTargetResourceId
         [string] $ResourceGroupName
     )
     
-    $operations = Get-AzureRmResourceGroupDeploymentOperation -DeploymentName $DeploymentName -ResourceGroupName $ResourceGroupName
+    [Array] $operations = Get-AzureRmResourceGroupDeploymentOperation -DeploymentName $DeploymentName -ResourceGroupName $ResourceGroupName
 
     foreach ($op in $operations)
     {
