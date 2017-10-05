@@ -2,23 +2,28 @@
 Param(
     # Enter the subscription ID. It is assumed that both source VM and destination lab are both in
     # this subscription.
+    [Parameter(Mandatory)]
     [string]
     $SubscriptionId = '<SubscriptionId>',
 
     # Enter the name of the Lab where you want to copy the VHD file.
+    [Parameter(Mandatory)]
     [string]
     $LabName = '<LabName>',
     
     # Enter the resource group name of the Lab where you want to copy the VHD file.
+    [Parameter(Mandatory)]
     [string]
     $LabResourceGroupName = '<LabResourceGroupName>',
     
     # Enter the name of the VM. The VHD file associated with the VM will be copied to the Lab.
+    [Parameter(Mandatory)]
     [string]
     $VMName = '<VMName>',
 
     # Enter the name of the VHD file with extension as .vhd. You will identify the file with this
     # name while creating template.
+    [Parameter(Mandatory)]
     [string]
     $VHDFileName = '<VHDFileName>.vhd',
     
@@ -26,8 +31,14 @@ Param(
     # Stack from preview portal then enter specify the switch as -Classic; otherwise, do not specify
     # it and it will default to $false. If you have created the VM inside a Lab then please DO NOT
     # specify this switch on the command line.
+    [Parameter(Mandatory = $false)]
     [switch]
-    $Classic
+    $Classic,
+
+    # Enter the seconds after the Shared Access Signature on source will expired. Default value ist 3600.
+    [Parameter(Mandatory = $false)]
+    [int]
+    $SignatureExpire = 3600
 )
 
 ###################################################################################################
@@ -121,7 +132,8 @@ function Get-AzureDtlVirtualMachineCopyContext
     [CmdletBinding()]
     param(
         $VM,
-        [switch] $Classic
+        [switch] $Classic,
+        $SignatureExpire
     )
 
     $vmCopyContext = @{
@@ -146,7 +158,7 @@ function Get-AzureDtlVirtualMachineCopyContext
         {
             $managedDiskId = $properties.storageProfile.osDisk.managedDisk.id
             $managedDisk = Get-AzureRmResource -ResourceId $managedDiskId
-            $managedDiskUrl = Grant-AzureRmDiskAccess -ResourceGroupName $managedDisk.ResourceGroupName -DiskName $managedDisk.Name -Access Read -DurationInSecond 3600
+            $managedDiskUrl = Grant-AzureRmDiskAccess -ResourceGroupName $managedDisk.ResourceGroupName -DiskName $managedDisk.Name -Access Read -DurationInSecond $SignatureExpire
             $vmCopyContext.SourceUri = $managedDiskUrl.AccessSAS
             $vmCopyContext.IsManaged = $true
         }
@@ -189,7 +201,7 @@ function Copy-AzureDtlVirtualMachineVhd
         $CopyContext
     )
 
-    $destContext = New-AzureStorageContext –StorageAccountName $CopyContext.LabStorageAccountName -StorageAccountKey $CopyContext.LabStorageAccountKey
+    $destContext = New-AzureStorageContext -StorageAccountName $CopyContext.LabStorageAccountName -StorageAccountKey $CopyContext.LabStorageAccountKey
 
     if ($CopyContext.IsVMDiskManaged)
     {
@@ -197,7 +209,7 @@ function Copy-AzureDtlVirtualMachineVhd
     }
     else
     {
-        $srcContext = New-AzureStorageContext –StorageAccountName $CopyContext.VMStorageAccountName -StorageAccountKey $CopyContext.VMStorageAccountKey
+        $srcContext = New-AzureStorageContext -StorageAccountName $CopyContext.VMStorageAccountName -StorageAccountKey $CopyContext.VMStorageAccountKey
         $copyHandle = Start-AzureStorageBlobCopy -AbsoluteUri $CopyContext.VMSourceUri -Context $srcContext -DestContainer 'uploads' -DestBlob $CopyContext.VHDFileName -DestContext $destContext
     }
 
@@ -245,7 +257,7 @@ try
     Write-Host $done
 
     Write-Host 'Preparing copy context ... ' -NoNewline
-    $vmCopyContext = Get-AzureDtlVirtualMachineCopyContext -VM $vm -Classic:$Classic
+    $vmCopyContext = Get-AzureDtlVirtualMachineCopyContext -VM $vm -Classic:$Classic -SignatureExpire $SignatureExpire
     $copyContext = @{
         VHDFileName = $VHDFileName
         VMSourceUri = $vmCopyContext.SourceUri
@@ -254,6 +266,7 @@ try
         IsVMDiskManaged = $vmCopyContext.IsManaged
         LabStorageAccountKey = $labStorageAccountKey
         LabStorageAccountName = $labStorageAccountName
+        SignatureExpire = $SignatureExpire
     }
     Write-Host $done
 
