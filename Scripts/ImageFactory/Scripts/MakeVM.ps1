@@ -102,18 +102,27 @@ else {
     Remove-AzureRmResourceGroupDeployment -ResourceGroupName $ResourceGroupName -Name $deployName  -ErrorAction SilentlyContinue | Out-Null
 
     if($vmDeployResult.ProvisioningState -eq "Succeeded"){
-        #set the imagePath tag on the VM
-        Write-Output "Stamping the VM $vmName with originalImageFile $imagePath"
+        Write-Output "Determining artifact status."
         $existingVm = Find-AzureRmResource -ResourceType "Microsoft.DevTestLab/labs/virtualMachines" -ResourceNameContains $DevTestLabName | Where-Object { $_.Name -eq "$DevTestLabName/$vmName"}
 
         #Determine if artifacts succeeded
-        Write-Output "Determining artifact status."
         $filter = '$expand=Properties($expand=ComputeVm,NetworkInterface,Artifacts)'
         $vmResource = Get-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs/virtualmachines' -Name $existingVm.Name -ResourceGroupName $existingVm.ResourceGroupName -ODataQuery $filter
         $existingVmArtStatus = $vmResource.Properties.ArtifactDeploymentStatus
+
+        Write-Output 'Dumping status from all artifacts'
+        Write-Output ('  ArtifactDeploymentStatus: ' + $existingVmArtStatus.deploymentStatus)
+        foreach($artifact in $vmResource.Properties.artifacts)
+        {
+            $artifactShortId = $artifact.artifactId.Substring($artifact.artifactId.LastIndexOf('/', $artifact.artifactId.LastIndexOf('/', $artifact.artifactId.LastIndexOf('/')-1)-1))    
+            $artifactStatus = $artifact.status
+            Write-Output "    Artifact result: $artifactStatus  $artifactShortId "
+        }
+
         if ($existingVmArtStatus.totalArtifacts -eq 0 -or $existingVmArtStatus.deploymentStatus -eq "Succeeded")
         {
             Write-Output "##[section]Successfully deployed $vmName from $imagePath"
+            Write-Output "Stamping the VM $vmName with originalImageFile $imagePath"
 
             $tags = $existingVm.Tags
             if((get-command -Name 'New-AzureRmResourceGroup').Parameters["Tag"].ParameterType.FullName -eq 'System.Collections.Hashtable'){
