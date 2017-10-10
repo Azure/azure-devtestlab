@@ -13,6 +13,59 @@ param
     [int] $maxConcurrentJobs
 )
 
+function logMessageForUnusedImagePaths($labs, $configLocation)
+{
+    #iterate through each of the ImagePath entries in the lab and make sure that it points to at least one existing json file
+    $goldenImagesFolder = Join-Path $configLocation "GoldenImages"
+    $goldenImageFiles = Get-ChildItem $goldenImagesFolder -Recurse -Filter "*.json" | Select-Object FullName
+    foreach ($lab in $labs){
+        foreach ($labImagePath in $lab.ImagePaths){
+            $filePath = Join-Path $goldenImagesFolder $labImagePath
+            $matchingImages = $goldenImageFiles | Where-Object {$_.FullName.StartsWith($filePath,"CurrentCultureIgnoreCase")}
+            if($matchingImages.Count -eq 0){
+                $labName = $lab.LabName
+                Write-Error "The Lab named $labName contains an ImagePath entry $labImagePath which does not point to any existing files in the GoldenImages folder."
+            }
+        }
+    }
+}
+
+function logErrorForUnusedImages($labs, $configLocation)
+{
+    #iterate through each of the ImagePath entries in the lab and make sure that it points to at least one existing json file
+    $goldenImagesFolder = Join-Path $configLocation "GoldenImages"
+    $goldenImageFiles = Get-ChildItem $goldenImagesFolder -Recurse -Filter "*.json" | Select-Object FullName
+    foreach($goldenImage in $goldenImageFiles)
+    {
+        #find any lab that references this image. If we dont find one, log an error.
+        $foundLab = $false
+        $imageRelativePath = $goldenImage.FullName.Substring($goldenImagesFolder.Length)
+        if($imageRelativePath.StartsWith('\'))
+        {
+            $imageRelativePath = $imageRelativePath.Substring(1)
+        }
+        $imageRelativePath = $imageRelativePath.Replace('\', '/')
+
+        foreach ($lab in $labs){
+            if(!$foundLab)
+            {
+                foreach ($labImagePath in $lab.ImagePaths){
+                    if($imageRelativePath.StartsWith($labImagePath))
+                    {
+                        $foundLab = $true
+                        break
+                    }
+                }
+            }
+        }
+
+        if(!$foundLab)
+        {
+            Write-Warning "Labs.json does not include any labs that reference $($goldenImage.FullName)"
+        }
+    }
+}
+
 $ErrorActionPreference = 'Continue'
 #resolve any relative paths in ConfigurationLocation 
 $ConfigurationLocation = (Resolve-Path $ConfigurationLocation).Path
@@ -32,6 +85,7 @@ $thingsToCopy = New-Object System.Collections.ArrayList
 $labsList = Join-Path $ConfigurationLocation "Labs.json"
 $labInfo = ConvertFrom-Json -InputObject (gc $labsList -Raw)
 logMessageForUnusedImagePaths $labInfo.Labs $ConfigurationLocation
+logErrorForUnusedImages $labInfo.Labs $ConfigurationLocation
 
 Write-Output "Found $($labInfo.Labs.Length) target labs"
 $sortedLabList = $labInfo.Labs | Sort-Object {$_.SubscriptionId}
@@ -201,7 +255,7 @@ foreach ($copyInfo in $thingsToCopy)
     if($rootContainer -ne $null) 
     {
         Write-Output "Deleting the $rootContainerName container in the target storage account"
-        Remove-AzureStorageContainer -Context $storageContext -Name $rootContainerName
+        Remove-AzureStorageContainer -Context $storageContext -Name $rootContainerName -Force
     }
 
 }

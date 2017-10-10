@@ -13,7 +13,7 @@ param
     [int] $ImagesToSave
 )
 
-function CleanFilesInLabStorageAccount($DevTestLabName, $ImagesToSave)
+function CleanFilesInLabStorageAccount($DevTestLabName, $ImagesToSave, $goldenImagesFolder, $goldenImageFiles)
 {
     $sourceImageInfos = GetImageInfosForLab $DevTestLabName
 
@@ -22,22 +22,37 @@ function CleanFilesInLabStorageAccount($DevTestLabName, $ImagesToSave)
                                         Sort-Object timestamp -Descending | 
                                         Select-Object -Skip $ImagesToSave}
 
+    foreach($imageInfo in $sourceImageInfos)
+    {
+        $filePath = Join-Path $goldenImagesFolder $imageInfo.imagePath
+        $existingFile = $goldenImageFiles | Where-Object {$_.FullName -eq $filePath}
+        if(!$existingFile)
+        {
+            Write-Output "Deleting image $($imageInfo.imageName) because the json file has been removed"
+            $thingsToDelete = [Array](([Array]$thingsToDelete) + $imageInfo)
+        }
+    }
+
+
     if($thingsToDelete -and $thingsToDelete.Count -gt 0)
     {
         Write-Output "Found $($thingsToDelete.Count) ImageInfos to delete in the $storageAcctName storage account"
         $rootContainerName = 'imagefactoryvhds'
         $sourceLab = Find-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs' | Where-Object { $_.Name -eq $DevTestLabName}
         $labStorageInfo = GetLabStorageInfo $sourceLab
-        $storageContext = New-AzureStorageContext -StorageAccountName $labStorageInfo.storageAcctName -StorageAccountKey $labStorageInfo.storageAcctKey
+        $storageAcctName = $labStorageInfo.storageAcctName
+        $storageContext = New-AzureStorageContext -StorageAccountName $storageAcctName -StorageAccountKey $labStorageInfo.storageAcctKey
 
         foreach($thingToDelete in $thingsToDelete)
         {
+            Write-Output "Deleting image $($thingToDelete.imageName) from $DevTestLabName storage account $storageAcctName"
+
             $vhdBlobName = $thingToDelete.vhdFileName
-            Write-Output "deleting $vhdBlobName from $storageAcctName"
+            Write-Output "  Deleting $vhdBlobName"
             Remove-AzureStorageBlob -Context $storageContext -Container $rootContainerName -Blob $vhdBlobName -Force
 
             $jsonBlobName = $vhdBlobName.Replace('.vhd', '.json')
-            Write-Output "deleting $jsonBlobName from $storageAcctName"
+            Write-Output "  Deleting $jsonBlobName"
             Remove-AzureStorageBlob -Context $storageContext -Container $rootContainerName -Blob $jsonBlobName -Force
         }
     }
@@ -54,8 +69,10 @@ $ConfigurationLocation = (Resolve-Path $ConfigurationLocation).Path
 $modulePath = Join-Path (Split-Path ($Script:MyInvocation.MyCommand.Path)) "DistributionHelpers.psm1"
 Import-Module $modulePath
 SaveProfile
+$goldenImagesFolder = Join-Path $ConfigurationLocation "GoldenImages"
+$goldenImageFiles = Get-ChildItem $goldenImagesFolder -Recurse -Filter "*.json" | Select-Object FullName
 
-CleanFilesInLabStorageAccount $DevTestLabName $ImagesToSave
+CleanFilesInLabStorageAccount $DevTestLabName $ImagesToSave $goldenImagesFolder $goldenImageFiles
 
 $jobs = @()
 
@@ -108,8 +125,6 @@ foreach ($selectedLab in $sortedLabList){
         $jobs += Start-Job -Name $imageToDelete.ResourceName -ScriptBlock $deleteImageBlock -ArgumentList $modulePath, $imageToDelete
     }
 
-    $goldenImagesFolder = Join-Path $ConfigurationLocation "GoldenImages"
-    $goldenImageFiles = Get-ChildItem $goldenImagesFolder -Recurse -Filter "*.json" | Select-Object FullName
     foreach($image in $allImages){
         #If this image is for an ImagePath that no longer exists then delete it. They must have removed this image from the factory
         $imagePath = getTagValue $image 'ImagePath'
