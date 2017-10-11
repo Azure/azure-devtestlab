@@ -189,7 +189,7 @@ function Copy-AzureDtlVirtualMachineVhd
         $CopyContext
     )
 
-    $destContext = New-AzureStorageContext –StorageAccountName $CopyContext.LabStorageAccountName -StorageAccountKey $CopyContext.LabStorageAccountKey
+    $destContext = New-AzureStorageContext -StorageAccountName $CopyContext.LabStorageAccountName -StorageAccountKey $CopyContext.LabStorageAccountKey
 
     if ($CopyContext.IsVMDiskManaged)
     {
@@ -197,7 +197,7 @@ function Copy-AzureDtlVirtualMachineVhd
     }
     else
     {
-        $srcContext = New-AzureStorageContext –StorageAccountName $CopyContext.VMStorageAccountName -StorageAccountKey $CopyContext.VMStorageAccountKey
+        $srcContext = New-AzureStorageContext -StorageAccountName $CopyContext.VMStorageAccountName -StorageAccountKey $CopyContext.VMStorageAccountKey
         $copyHandle = Start-AzureStorageBlobCopy -AbsoluteUri $CopyContext.VMSourceUri -Context $srcContext -DestContainer 'uploads' -DestBlob $CopyContext.VHDFileName -DestContext $destContext
     }
 
