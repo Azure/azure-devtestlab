@@ -1,9 +1,13 @@
 #!/bin/bash
 
-set -e
+echo "Installing NodeJs"
 
 isApt=`command -v apt-get`
 isYum=`command -v yum`
+
+# The above commands may error on some flavors depending on which installation mechanism is available.
+# So move the set -e command here
+set -e
 
 if [ -n "$isApt" ] ; then
     echo "Using APT package manager"
