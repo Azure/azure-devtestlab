@@ -8,10 +8,14 @@
 # Author Darren Rich <darrich@microsoft.com>
 # Original version found on VSTS: https://almrangers.visualstudio.com/
 
-set -e
+echo "Installing Java"
 
 isApt=`command -v apt-get`
 isYum=`command -v yum`
+
+# The above commands may error on some flavors depending on which installation mechanism is available.
+# So move the set -e command here
+set -e
 
 if [ -n "$isApt" ] ; then
     echo "Using APT package manager"
