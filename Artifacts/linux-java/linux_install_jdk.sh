@@ -13,8 +13,8 @@ echo "Installing Java"
 isApt=`command -v apt-get`
 isYum=`command -v yum`
 
-# The above commands may error on some flavors depending on which installation mechanism is available.
-# So move the set -e command here
+# Some of the previous commands will fail with an exit code other than zero (intentionally), 
+# so we do not set error handling to stop (set e) until after they've run
 set -e
 
 if [ -n "$isApt" ] ; then
