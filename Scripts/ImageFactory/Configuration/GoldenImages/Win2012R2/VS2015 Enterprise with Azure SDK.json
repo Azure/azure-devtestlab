@@ -37,7 +37,7 @@
         "galleryImageReference": {
           "offer": "VisualStudio",
           "publisher": "MicrosoftVisualStudio",
-          "sku": "VS-2015-Ent-VSU3-AzureSDK-291-WS2012R2",
+          "sku": "VS-2015-Ent-VSU3-AzureSDK-29-WS2012R2",
           "osType": "Windows",
           "version": "latest"
         },
