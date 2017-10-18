@@ -53,15 +53,6 @@ foreach ($currentVm in $allVms){
     }
 }
 
-# Find any custom images that failed to provision and delete those
-$ResourceGroupName = (Find-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs' | Where-Object { $_.Name -eq $DevTestLabName}).ResourceGroupName
-$bustedLabCustomImages = Get-AzureRmResource -ResourceName $DevTestLabName -ResourceGroupName $ResourceGroupName -ResourceType 'Microsoft.DevTestLab/labs/customImages' -ApiVersion '2016-05-15' | Where-Object {($_.Properties.ProvisioningState -ne "Succeeded") -and ($_.Properties.ProvisioningState -ne "Creating")}
-
-# Delete the custom images we found in the search above
-foreach ($imageToDelete in $bustedLabCustomImages) {
-    $jobs += Start-Job -Name $imageToDelete.ResourceName -ScriptBlock $deleteImageBlock -ArgumentList $modulePath, $imageToDelete.ResourceName, $imageToDelete.ResourceGroupName
-}
-
 if($jobs.Count -ne 0)
 {
     Write-Output "Waiting for VM Delete jobs to complete"
