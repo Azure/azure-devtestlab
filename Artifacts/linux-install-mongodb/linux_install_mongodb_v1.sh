@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "Installing MongoDb"
+
 isApt=`command -v apt-get`
 isYum=`command -v yum`
 
