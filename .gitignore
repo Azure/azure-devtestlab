@@ -7,3 +7,7 @@
 packages/
 *.suo
 *.csproj.user
+/.vs
+/SdkSamples/DtlClient/obj/Release
+/Samples/201-dtl-create-lab-with-seleniumgrid/SeleniumGridSetupService/SeleniumGridSetupService/obj/Release
+/Artifacts/windows-selenium/Demo Sample Solution/vsarDTLSeleniumDemo/obj/Release

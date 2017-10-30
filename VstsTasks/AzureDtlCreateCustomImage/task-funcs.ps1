@@ -107,11 +107,22 @@ function Get-TemplateParameterObject
         author = $author
         description = $Description
         labName = $lab.Name
-        linuxOsState = $LinuxOsState
         newCustomImageName = $NewCustomImageName
         osType = $OsType
         sourceLabVmId = $SourceLabVMId
-        windowsOsState = $WindowsOsState
+    }
+
+    if ($OsType -eq 'Linux')
+    {
+        $templateParameterObject += @{
+            linuxOsState = $LinuxOsState
+        }
+    }
+    elseif ($OsType -eq 'Windows')
+    {
+        $templateParameterObject += @{
+            windowsOsState = $WindowsOsState
+        }
     }
 
     return $templateParameterObject
