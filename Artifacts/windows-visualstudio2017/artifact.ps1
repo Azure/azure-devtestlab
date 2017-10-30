@@ -57,10 +57,12 @@ function DownloadToFilePath ($downloadUrl, $targetFile)
 }
 
 if($sku -eq 'Professional') {
+    $argumentList = "--quiet --norestart --wait --add Microsoft.VisualStudio.Workload.Azure --add Microsoft.VisualStudio.Workload.Data --add Microsoft.VisualStudio.Workload.ManagedDesktop --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Workload.NetCoreTools --add Microsoft.VisualStudio.Workload.NetWeb --includeRecommended"
     $downloadUrl = 'https://download.visualstudio.microsoft.com/download/pr/100196700/14dd70405e8244481b35017b9a562edd/vs_Professional.exe'
     $downloadFile = "vs_professional.exe"
 }
 elseif($sku -eq 'Enterprise') {
+    $argumentList = "--quiet --norestart --wait --add Microsoft.VisualStudio.Workload.Azure --add Microsoft.VisualStudio.Workload.Data --add Microsoft.VisualStudio.Workload.ManagedDesktop --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Workload.NativeCrossPlat --add Microsoft.VisualStudio.Workload.NetCoreTools --add Microsoft.VisualStudio.Workload.NetWeb --add Component.GitHub.VisualStudio --add Microsoft.VisualStudio.Component.TestTools.MicrosoftTestManager --add Microsoft.VisualStudio.Component.TestTools.WebLoadTest --includeRecommended"
     $downloadUrl = 'https://download.microsoft.com/download/F/3/4/F3478590-7B38-48B1-BB6E-3141A9A155E7/vs_Enterprise.exe'
     $downloadFile = "vs_enterprise.exe"
 }
@@ -76,7 +78,6 @@ DownloadToFilePath $downloadUrl $localFile
 Write-Output "Downloaded files: $localFile"
 
 Write-Output "InstallerArgs value: $installerArgs"
-$argumentList = "--quiet --norestart --wait --add Microsoft.VisualStudio.Workload.Azure --add Microsoft.VisualStudio.Workload.Data --add Microsoft.VisualStudio.Workload.ManagedDesktop --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Workload.NativeCrossPlat --add Microsoft.VisualStudio.Workload.NetCoreTools --add Microsoft.VisualStudio.Workload.NetWeb --add Component.GitHub.VisualStudio --add Microsoft.VisualStudio.Component.TestTools.MicrosoftTestManager --add Microsoft.VisualStudio.Component.TestTools.WebLoadTest --includeRecommended"
 if(![String]::IsNullOrWhiteSpace($installerArgs))
 {
     $argumentList = "$installerArgs $argumentList"
