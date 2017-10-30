@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
-  "title": "Visual Studio 2015",
-  "description": "Installs Visual Studio 2015",
+  "title": "Visual Studio 2017",
+  "description": "Installs Visual Studio 2017",
   "publisher": "Microsoft",
   "tags": [
     "Windows"
