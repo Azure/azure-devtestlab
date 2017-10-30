@@ -1,0 +1,34 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+  "title": "Visual Studio 2015",
+  "description": "Installs Visual Studio 2015",
+  "publisher": "Microsoft",
+  "tags": [
+    "Windows"
+  ],
+  "iconUri": "https://i3-vso.sec.s-msft.com/dynimg/IC806106.png",
+  "targetOsType": "Windows",
+  "parameters": {
+    "sku": {
+      "type": "string",
+      "displayName": "SKU",
+      "description": "The Visual Studio SKU to install.",
+      "defaultValue": "http://go.microsoft.com/fwlink/?LinkId=615435",
+      "allowedValues": [
+        "Enterprise",
+        "Professional"
+      ]
+
+    },
+    "installerArgs": {
+      "type": "string",
+      "defaultValue": "",
+      "allowEmpty": true,
+      "displayName": "Optional args passed to VS installer",
+      "description": "Additional arguments to pass when installing VS."
+    }
+  },
+  "runCommand": {
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./artifact-main.ps1', ' -sku ', parameters('sku'), ' -installerArgs ', '''', parameters('installerArgs'), '''', '\"')]"
+  }
+}
