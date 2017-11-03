@@ -22,7 +22,7 @@ function DownloadToFilePath ($downloadUrl, $targetFile)
         Remove-Item $targetFile -Force | Out-Null
     }
 
-    if((Test-Path -path $targetFolder) -eq $false)
+    if(-not (Test-Path -path $targetFolder))
     {
         Write-Output "Creating folder $targetFolder"
         New-Item -ItemType Directory -Force -Path $targetFolder | Out-Null
@@ -40,16 +40,14 @@ function DownloadToFilePath ($downloadUrl, $targetFile)
             $WebClient.DownloadFile($downloadUrl,$targetFile)
             break
         }
-        catch [Exception]
+        catch
         {
             Write-Output "Caught exception during download..."
             if ($_.Exception.InnerException){
-                $exceptionMessage = $_.InnerException.Message
-                Write-Output "InnerException: $exceptionMessage"
+                Write-Output "InnerException: $($_.InnerException.Message)"
             }
             else {
-                $exceptionMessage = $_.Message
-                Write-Output "Exception: $exceptionMessage"
+                Write-Output "Exception: $($_.Exception.Message)"
             }
         }
 
@@ -114,7 +112,7 @@ if ($retCode.ExitCode -ne 0 -and $retCode.ExitCode -ne 3010)
         Copy-Item -path $env:TEMP\dd* -Destination $targetLogs
     }
 
-    Write-Error ("Product installation of $localFile failed with exit code: " + $retCode.ExitCode.ToString())    
+    Write-Error "Product installation of $localFile failed with exit code: $($retCode.ExitCode.ToString())"    
 }
 else
 {
