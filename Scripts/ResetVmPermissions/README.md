@@ -1,6 +1,6 @@
-# Reset role assignments
+# Re-establish role assignments
 
-If you need to re-establish the Owner permissions on a lab virtual machine and you do not want to use the Azure Portal, you can use the script included in this folder.  Without additional parameters, this script will enumerate the subscriptions and labs you have access to and re-establish the permissions for each lab virtual machine in each lab found.  You can provide an explicit list of subscriptions if you only want to update certain subscriptions instead of all accessible ones. Also, if, in addition to re-establishing the Owner role assignment on each lab virtual machine, you also want each lab virtual machine owner to be a "DevTest Lab User" or an "Owner" on the corresponding Lab, you can do so via the `LabRoleToAdd` parameter.
+If you need to re-establish the Owner permissions on a lab virtual machine and you do not want to use the Azure Portal, you can use the script included in this folder.  Without additional parameters, this script will enumerate the subscriptions and labs you have access to and re-establish the permissions for each lab virtual machine in each lab.  You can provide an explicit list of subscriptions if you only want to update certain subscriptions instead of all accessible ones. Also, if, in addition to re-establishing the Owner role assignment on each lab virtual machine, you also want each lab virtual machine owner to be a "DevTest Lab User" or an "Owner" on the corresponding Lab, you can do so via the `LabRoleToAdd` parameter.
 
 Examples:
 
