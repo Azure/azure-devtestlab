@@ -17,7 +17,7 @@ if ($winVerString -like 'Microsoft Windows Server 2008 R2*' -or $winVerString -l
         Write-Output 'Successfully installed IIS'
     }
     elseif($pkgMgrProcess.ExitCode -eq 3010){
-        Write-Output 'IIS install is finished. A reboot is required'
+        Write-Output 'IIS install is finished. A reboot is required.'
     }
     else{
         Write-Error ('Failed to import IIS. Exit code is ' + $pkgMgrProcess.ExitCode.ToString())
