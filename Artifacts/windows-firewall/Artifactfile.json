@@ -17,6 +17,9 @@
           "-- none --",
           "Firewall Status",
           "Enable ICMP (ping)",
+          "Enable RDP Port (tcp/3389)",
+          "Enable SSH Port (tcp/22)",
+          "Enable HTTP/HTTPS Port (tcp/80,443)",
           "Enable Firewall",
           "Disable Firewall"
       ] 
