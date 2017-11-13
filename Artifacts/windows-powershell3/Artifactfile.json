@@ -11,5 +11,11 @@
     "targetOsType": "Windows",
     "runCommand": {
         "commandToExecute": "install.cmd"
-    }
+    },
+    "postDeployActions": [
+        {
+            "action": "restart",
+            "delayStart": 60
+        }
+    ]
 }
