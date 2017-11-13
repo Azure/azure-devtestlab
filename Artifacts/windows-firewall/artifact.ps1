@@ -4,7 +4,7 @@ param
     [Parameter(Mandatory=$true)]
     [string] $firewallOperation
 )
-
+Write-Output ("Powershell "+$PSVersionTable.PSVersion.Major.ToString()+"."+$PSVersionTable.PSVersion.Minor.ToString()+"."+$PSVersionTable.PSVersion.Build.ToString()+"."+$PSVersionTable.PSVersion.Revision.ToString())
 Write-Output "Selected operation: $firewallOperation"
 switch ($firewallOperation) {
     "Firewall Status" {
