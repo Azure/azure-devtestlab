@@ -1,4 +1,4 @@
-@echo OFF
+@echo off
 
 rem This is required to ensure we don't get error 0x8024800C -2145091572 WU_E_DS_LOCKTIMEOUTEXPIRED The data store section could not be locked within the allotted time.
 echo Cleaning software distribution folder.
@@ -6,14 +6,12 @@ net stop "Windows Update" >nul 2>&1
 echo "Y" | del /f /s C:\Windows\SoftwareDistribution\ >nul 2>&1
 net start "Windows Update" >nul 2>&1
 
-reg Query "HKLM\Hardware\Description\System\CentralProcessor\0" | find /i "x86" >nul 2>&1 && set OSVERSION=32BIT || set OSVERSION=64BIT
-
-if %OSVERSION% equ 32BIT (
-    echo Applying Windows6.1-KB2506143-x86.msu
-    call Windows6.1-KB2506143-x86.msu /quiet /norestart
-) else (
+if defined ProgramFiles(X86) (
     echo Applying Windows6.1-KB2506143-x64.msu
     call Windows6.1-KB2506143-x64.msu /quiet /norestart
+) else (
+    echo Applying Windows6.1-KB2506143-x86.msu
+    call Windows6.1-KB2506143-x86.msu /quiet /norestart
 )
 
 if %ERRORLEVEL% equ 0 (
