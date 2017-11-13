@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+  "title": "Execute basic Windows Firewall operations",
+  "description": "Artifact to execute basic Windows firewall commands. This could be useful if you mistakenly enable rules which would deny access to your VM",
+  "publisher": "Milan Musec",
+  "tags": [
+      "Windows"
+  ],
+  "targetOsType": "Windows",
+  "parameters": {
+    "firewallOperation": {
+      "type": "string",
+      "displayName": "Firewall Operation:",
+      "description": "Select firewall operation",
+      "defaultValue": "-- none --",
+      "allowedValues": [
+          "-- none --",
+          "Firewall Status",
+          "Enable ICMP (ping)",
+          "Enable Firewall",
+          "Disable Firewall"
+      ] 
+    }
+  },
+  "runCommand": {
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./artifact-main.ps1', ' -firewallOperation ''', parameters('firewallOperation'), '''\"')]"
+  }
+}
