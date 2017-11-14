@@ -9,7 +9,7 @@
     "targetOsType": "Windows",
     "parameters": {},
     "runCommand": {
-        "commandToExecute": "['powershell.exe -executionpolicy bypass -File Sysprep.ps1']"
+        "commandToExecute": "powershell.exe -ExecutionPolicy bypass \"& ./Sysprep.ps1\""
     },
     "postDeployActions": [
         {
