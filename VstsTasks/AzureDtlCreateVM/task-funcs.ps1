@@ -152,7 +152,7 @@ function Get-AzureDtlDeploymentTargetResourceId
         }
     }
 
-    if (-not $targetResource)
+    if ([string]::IsNullOrEmpty($targetResource.id))
     {
         $null = @(
             Write-Host "Dumping resource group deployment operation details for $ResourceGroupName/$DeploymentName`:"

@@ -33,23 +33,6 @@ function ShouldCopyImageToLab ($lab, $imagePathValue)
     $retval
 }
 
-function logMessageForUnusedImagePaths($labs, $configLocation)
-{
-    #iterate through each of the ImagePath entries in the lab and make sure that it points to at least one existing json file
-    $goldenImagesFolder = Join-Path $configLocation "GoldenImages"
-    $goldenImageFiles = Get-ChildItem $goldenImagesFolder -Recurse -Filter "*.json" | Select-Object FullName
-    foreach ($lab in $labs){
-        foreach ($labImagePath in $lab.ImagePaths){
-            $filePath = Join-Path $goldenImagesFolder $labImagePath
-            $matchingImages = $goldenImageFiles | Where-Object {$_.FullName.StartsWith($filePath,"CurrentCultureIgnoreCase")}
-            if($matchingImages.Count -eq 0){
-                $labName = $lab.LabName
-                Write-Error "The Lab named $labName contains an ImagePath entry $labImagePath which does not point to any existing files in the GoldenImages folder."
-            }
-        }
-    }
-}
-
 function ConvertTo-Object {
 
 	begin { $object = New-Object Object }
@@ -176,6 +159,7 @@ function GetImageInfosForLab ($DevTestLabName)
     foreach($file in $downloadedFileNames)
     {
         $imageObj = (gc $file.FullName -Raw) | ConvertFrom-Json
+        $imageObj.timestamp = [DateTime]::Parse($imageObj.timestamp)
         $sourceImageInfos += $imageObj
     }
 

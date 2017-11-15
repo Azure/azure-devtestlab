@@ -123,7 +123,14 @@ try
             else
             {
                 Write-Host "A deployment failure occured. Retrying deployment (attempt $i of $($count - 1))"
-                Remove-AzureRmResource -ResourceId $resourceId -Force | Out-Null
+                if ($resourceId)
+                {
+                    Remove-AzureRmResource -ResourceId $resourceId -Force | Out-Null
+                }
+                else
+                {
+                    Write-Host "Resource identifier is not available, will not attempt to remove corresponding resouce before retrying."
+                }
             }
         }
     }

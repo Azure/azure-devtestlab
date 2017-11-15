@@ -8,34 +8,8 @@
         "labName": {
             "type": "string"
         },
-        "sourceLabVmId": {
-            "type": "string"
-        },
-        "osType": {
-            "type": "string",
-            "allowedValues": [
-                "Linux",
-                "Windows"
-            ],
-            "defaultValue": "Windows"
-        },
-        "linuxOsState": {
-            "type": "string",
-            "allowedValues": [
-                "NonDeprovisioned",
-                "DeprovisionRequested",
-                "DeprovisionApplied"
-            ],
-            "defaultValue": "NonDeprovisioned"
-        },
-        "windowsOsState": {
-            "type": "string",
-            "allowedValues": [
-                "NonSysprepped",
-                "SysprepRequested",
-                "SysprepApplied"
-            ],
-            "defaultValue": "NonSysprepped"
+        "vmOsInfo": {
+            "type": "object"
         },
         "description": {
             "type": "string",
@@ -59,16 +33,7 @@
             "properties": {
                 "author": "[parameters('author')]",
                 "description": "[parameters('description')]",
-                "osType": "[parameters('osType')]",
-                "vm": {
-                    "sourceVmId": "[parameters('sourceLabVmId')]",
-                    "linuxOsInfo":  {
-                        "linuxOsState": "[parameters('linuxOsState')]"
-                    },
-                    "windowsOsInfo": {
-                        "windowsOsState": "[parameters('windowsOsState')]"
-                    }
-                }
+                "vm": "[parameters('vmOsInfo')]"
             }
         }
     ],
