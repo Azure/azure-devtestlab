@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
-  "title": "Reset local VM Administrator password",
-  "description": "Artifact to enable local administrator account, reset password and set password to never expire",
+  "title": "Reset build-in VM Administrator password",
+  "description": "Artifact to enable build-in administrator account, reset password and set password to never expire",
   "publisher": "Milan Musec",
   "tags": [
       "Windows"
@@ -10,7 +10,7 @@
   "parameters": {
     "newPassword": {
       "type": "securestring",
-      "displayName": "New Local Administrator Password:",
+      "displayName": "New build-in Administrator Password:",
       "description": "New Password",
       "defaultValue": ""
     }

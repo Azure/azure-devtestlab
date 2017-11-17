@@ -2,7 +2,7 @@
 param
 (
     [Parameter(Mandatory=$true)]
-    [SecureString] $NewPassword
+    [String] $NewPassword
 )
 
 Write-Output "PowerShell $($PSVersionTable.PSVersion)"
