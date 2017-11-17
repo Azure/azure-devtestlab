@@ -11,8 +11,8 @@ Login-AzureRmAccount
 Select-AzureRmSubscription -SubscriptionId ...
 
 # Add one additional size to the lab
-./AddAllowedVMSizes.ps1 -DevTestLabName 'MyDevTestLab' -SizesToAdd 'Standard_A4'
+.\AddAllowedVMSizes.ps1 -DevTestLabName 'MyDevTestLab' -SizesToAdd 'Standard_A4'
 
 # Add multiple additional sizes to the lab
-./AddAllowedVMSizes.ps1 -DevTestLabName 'MyDevTestLab' -SizesToAdd 'Standard_A4', 'Standard_DS3_v2'
+.\AddAllowedVMSizes.ps1 -DevTestLabName 'MyDevTestLab' -SizesToAdd 'Standard_A4', 'Standard_DS3_v2'
 ```

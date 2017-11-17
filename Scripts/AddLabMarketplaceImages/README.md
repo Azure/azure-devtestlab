@@ -11,8 +11,8 @@ Login-AzureRmAccount
 Select-AzureRmSubscription -SubscriptionId ...
 
 # Add one additional image to the lab
-./AddMarketplaceImages.ps1 -DevTestLabName 'MyDevTestLab' -ImagesToAdd 'Windows Server 2016 Datacenter'
+.\AddMarketplaceImages.ps1 -DevTestLabName 'MyDevTestLab' -ImagesToAdd 'Windows Server 2016 Datacenter'
 
 # Add multiple additional images to the lab
-./AddMarketplaceImages.ps1 -DevTestLabName 'MyDevTestLab' -ImagesToAdd 'Windows Server 2016 Datacenter', 'Red Hat Enterprise Linux 7.3'
+.\AddMarketplaceImages.ps1 -DevTestLabName 'MyDevTestLab' -ImagesToAdd 'Windows Server 2016 Datacenter', 'Red Hat Enterprise Linux 7.3'
 ```
