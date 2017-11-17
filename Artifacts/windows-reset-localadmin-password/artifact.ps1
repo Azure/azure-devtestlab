@@ -9,7 +9,7 @@ Write-Output "PowerShell $($PSVersionTable.PSVersion)"
 function Reset-LocalAdminPassword {
     param(
       [String] $computerName = 'localhost',
-      [SecureString] $password
+      [string] $password
     )
     $adsPath = "WinNT://$computerName,Computer"
     try {
