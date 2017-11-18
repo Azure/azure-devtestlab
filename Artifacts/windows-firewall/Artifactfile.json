@@ -12,7 +12,6 @@
       "type": "string",
       "displayName": "Firewall Operation:",
       "description": "Select firewall operation",
-      "defaultValue": "",
       "allowedValues": [
           "Get Firewall Status",
           "Enable ICMP (ping)",
