@@ -6,7 +6,7 @@
   "tags": [
     "Windows"
   ],
-  "iconUri": "https://i3-vso.sec.s-msft.com/dynimg/IC806106.png",
+  "iconUri": "https://www.visualstudio.com/wp-content/uploads/2017/11/microsoft-visual-studio.svg",
   "targetOsType": "Windows",
   "parameters": {
     "version": {
