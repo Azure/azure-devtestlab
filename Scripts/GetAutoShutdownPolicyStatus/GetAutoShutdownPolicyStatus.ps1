@@ -63,7 +63,7 @@ foreach ($subscriptionId in $SubscriptionIds) {
 
         if (-not $schedDisabled) {
             # Get all the VMs in the lab for an override
-            $virtualMachines = Get-AzureRmResource -ResourceId "$($devTestLab.ResourceId)/virtualmachines" -ApiVersion 2016-05-15 
+            [Array] $virtualMachines = Get-AzureRmResource -ResourceId "$($devTestLab.ResourceId)/virtualmachines" -ApiVersion 2016-05-15 
 
             foreach ($virtualMachine in $virtualMachines) {
                 Write-Verbose "   >>> Processing virtual machine $($virtualMachine.Name)"
