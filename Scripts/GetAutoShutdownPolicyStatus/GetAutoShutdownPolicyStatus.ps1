@@ -1,12 +1,13 @@
 ﻿# Example ./GetAutoShutdownPolicyStatus.ps1 -SubscriptionIds ('sub1','sub2','sub3')
 param
 (
-    [Parameter(Mandatory = $false, HelpMessage = "If you want to optionally target specific subscriptions instead of all of them, pass them in as a set")]
+    [CmdletBinding()]
+    [Parameter(HelpMessage = "If you want to optionally target specific subscriptions instead of all of them, pass them in as a set")]
     [Array] $SubscriptionIds,
 
-    [Parameter(Mandatory = $false, HelpMessage = "If you want to optionally target a specific lab instead of all of them, pass the name in")]
+    [CmdletBinding()]
+    [Parameter(HelpMessage = "If you want to optionally target a specific lab instead of all of them, pass the name in")]
     [String] $LabName
-
 )
 
 $console = (Get-Host).PrivateData
@@ -14,15 +15,15 @@ $console.VerboseForegroundColor = "Gray"
 $console.WarningForegroundColor = "Yellow"
 
 if ($SubscriptionIds -eq $null) {
-    $SubscriptionIds = Get-AzureRmSubscription
+    $SubscriptionIds = Get-AzureRmSubscription | Select-Object -Property Id
 }
 
-foreach ($subscription in $SubscriptionIds) {
+foreach ($subscriptionId in $SubscriptionIds) {
 
     # select the subscription
-    $sub = Select-AzureRmSubscription -SubscriptionId $subscription
+    $subscription = Select-AzureRmSubscription -SubscriptionId $subscriptionId
 
-    if ($sub -eq $null) {
+    if ($subscription -eq $null) {
         Write-Output "Unable to find any subscriptions.  Perhaps you need to run 'Add-AzureRmAccount' and login before running this script? Unable to proceed."
         return
     }
@@ -30,10 +31,10 @@ foreach ($subscription in $SubscriptionIds) {
     # Give me all labs in the subscription
     if ($LabName) {
         Write-Verbose "Getting lab $($LabName)"
-        $devTestLabs = Find-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs' -ResourceNameContains $LabName
+        [Array] $devTestLabs = Find-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs' -ResourceNameEquals $LabName
     }
     else {
-        $devTestLabs = Find-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs'
+        [Array] $devTestLabs = Find-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs'
     }
     
     foreach ($devTestLab in $devTestLabs) {
@@ -54,7 +55,7 @@ foreach ($subscription in $SubscriptionIds) {
 
         $schedDisabled = $false
 
-        if (($schedule -eq $null) -or ($schedule.Properties.status -ne 'Enabled')) {
+        if ($schedule.Properties.status -ne 'Enabled') {
             Write-Warning "Lab $($devTestLab.Name) auto-shutdown policy is disabled"
             $schedDisabled = $true
             $labHealthy = $false
