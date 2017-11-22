@@ -1,11 +1,10 @@
 ﻿# Example ./GetAutoShutdownPolicyStatus.ps1 -SubscriptionIds ('sub1','sub2','sub3')
+[CmdletBinding()]
 param
 (
-    [CmdletBinding()]
     [Parameter(HelpMessage = "If you want to optionally target specific subscriptions instead of all of them, pass them in as a set")]
     [Array] $SubscriptionIds,
 
-    [CmdletBinding()]
     [Parameter(HelpMessage = "If you want to optionally target a specific lab instead of all of them, pass the name in")]
     [String] $LabName
 )
