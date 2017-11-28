@@ -220,9 +220,10 @@ function Extract-AgentPackage
         [string] $PackagePath,
         [string] $Destination
     )
+  
+    Add-Type -AssemblyName System.IO.Compression.FileSystem 
+    [System.IO.Compression.ZipFile]::ExtractToDirectory("$PackagePath", "$Destination")
     
-    $destShellFolder = (New-Object -ComObject shell.application).namespace("$Destination")
-    $destShellFolder.CopyHere((New-Object -ComObject shell.application).namespace($PackagePath).Items(), 16)
 }
 
 function Install-Agent
