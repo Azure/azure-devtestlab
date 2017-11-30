@@ -2,7 +2,7 @@
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
     "title": "Configure WinRM",
     "publisher": "Microsoft",
-    "description": "Configures WinRM on the virtual machine.",
+    "description": "Configures WinRM on the virtual machine. If using \"Shared IP address\" for your Lab VM, you will need to also add a NAT rule on the Load Balancer to allow traffic through. Alternatively, use \"Public IP address\" instead.",
     "tags": [
         "Windows"
     ],
