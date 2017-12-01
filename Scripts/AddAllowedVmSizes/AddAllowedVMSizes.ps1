@@ -24,67 +24,98 @@ param
     [Array] $SizesToAdd
 )
 
-$lab = Find-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs' -ResourceNameEquals $DevTestLabName
-
-if(!$lab)
+function Get-Lab
 {
-    throw "Lab named $DevTestLabName was not found"
-}
+    $lab = Find-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs' -ResourceNameEquals $DevTestLabName
 
-$labResourceName = $lab.Name + '/default'
-$existingPolicy = (Get-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs/policySets/policies' -ResourceName $labResourceName -ResourceGroupName $lab.ResourceGroupName -ApiVersion 2016-05-15) | Where-Object {$_.Name -eq 'AllowedVmSizesInLab'}
-if($existingPolicy)
-{
-    $existingSizes = $existingPolicy.Properties.threshold
-    $savePolicyChanges = $false
-}
-else
-{
-    $existingSizes = ''
-    $savePolicyChanges = $true
-}
-
-# Make a list of all the sizes. It needs all their current sizes as well as any from our list that arent already there
-$finalVmSizes = $existingSizes.Replace('[', '').Replace(']', '').Split(',',[System.StringSplitOptions]::RemoveEmptyEntries)
-
-foreach($vmSize in $SizesToAdd)
-{
-    $quotedSize = '"' + $vmSize + '"'
-
-    if(!$finalVmSizes.Contains($quotedSize))
+    if(!$lab)
     {
-        $finalVmSizes += $quotedSize
-        $savePolicyChanges = $true
+        throw "Lab named $DevTestLabName was not found"
     }
+    
+    return $lab
 }
 
-if($savePolicyChanges)
+function Get-PolicyChanges ($lab)
 {
-    $policyObj = @{
-        subscriptionId = $lab.SubscriptionId
-        factName = 'LabVmSize'
-        status = 'Enabled'
-        resourceGroupName = $lab.ResourceGroupName
-        labName = $lab.Name
-        policySetName = 'default'
-        name = $lab.Name + '/default/allowedvmsizesinlab'
-        evaluatorType = 'AllowedValuesPolicy'
-        threshold = ('[' + [String]::Join(',', $finalVmSizes) + ']')
-    }
-
-    $resourceType = "Microsoft.DevTestLab/labs/policySets/policies/AllowedVmSizesInLab"
+    #start by finding the existing policy
+    $script:labResourceName = $lab.Name + '/default'
+    $existingPolicy = (Get-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs/policySets/policies' -ResourceName $labResourceName -ResourceGroupName $lab.ResourceGroupName -ApiVersion 2016-05-15) | Where-Object {$_.Name -eq 'AllowedVmSizesInLab'}
     if($existingPolicy)
     {
-        Write-Output "Updating $($lab.Name) VM Size policy"
-        Set-AzureRmResource -ResourceType $resourceType -ResourceName $labResourceName -ResourceGroupName $lab.ResourceGroupName -ApiVersion 2016-05-15 -Properties $policyObj -Force
+        $existingSizes = $existingPolicy.Properties.threshold
+        $savePolicyChanges = $false
     }
     else
     {
-        Write-Output "Creating $($lab.Name) VM Size policy"
-        New-AzureRmResource -ResourceType $resourceType -ResourceName $labResourceName -ResourceGroupName $lab.ResourceGroupName -ApiVersion 2016-05-15 -Properties $policyObj -Force
+        $existingSizes = ''
+        $savePolicyChanges = $true
+    }
+
+    if($existingPolicy.Properties.threshold -eq '[]')
+    {
+        Write-Output "Skipping $($lab.Name) because it currently allows all sizes"
+        return
+    }
+
+    # Make a list of all the sizes. It needs all their current sizes as well as any from our list that arent already there
+    $finalVmSizes = $existingSizes.Replace('[', '').Replace(']', '').Split(',',[System.StringSplitOptions]::RemoveEmptyEntries)
+
+    foreach($vmSize in $SizesToAdd)
+    {
+        $quotedSize = '"' + $vmSize + '"'
+
+        if(!$finalVmSizes.Contains($quotedSize))
+        {
+            $finalVmSizes += $quotedSize
+            $savePolicyChanges = $true
+        }
+    }
+
+    if(!$savePolicyChanges)
+    {
+        Write-Output "No policy changes required for VMSize in lab $($lab.Name)"
+    }
+
+    return @{
+        existingPolicy = $existingPolicy
+        savePolicyChanges = $savePolicyChanges
+        finalVmSizes = $finalVmSizes
     }
 }
-else
+
+function Set-PolicyChanges ($lab, $policyChanges)
 {
-    Write-Output "No policy changes required for VMSize in lab $($lab.Name)"
+    if($policyChanges.savePolicyChanges)
+    {
+        $thresholdValue = ('[' + [String]::Join(',', $policyChanges.finalVmSizes) + ']')
+
+        $policyObj = @{
+            subscriptionId = $lab.SubscriptionId
+            status = 'Enabled'
+            factName = 'LabVmSize'
+            resourceGroupName = $lab.ResourceGroupName
+            labName = $lab.Name
+            policySetName = 'default'
+            name = $lab.Name + '/default/allowedvmsizesinlab'
+            threshold = $thresholdValue
+            evaluatorType = 'AllowedValuesPolicy'
+        }
+
+        $resourceType = "Microsoft.DevTestLab/labs/policySets/policies/AllowedVmSizesInLab"
+        if($policyChanges.existingPolicy)
+        {
+            Write-Output "Updating $($lab.Name) VM Size policy"
+            Set-AzureRmResource -ResourceType $resourceType -ResourceName $labResourceName -ResourceGroupName $lab.ResourceGroupName -ApiVersion 2016-05-15 -Properties $policyObj -Force
+        }
+        else
+        {
+            Write-Output "Creating $($lab.Name) VM Size policy"
+            New-AzureRmResource -ResourceType $resourceType -ResourceName $labResourceName -ResourceGroupName $lab.ResourceGroupName -ApiVersion 2016-05-15 -Properties $policyObj -Force
+        }
+    }
 }
+
+$lab = Get-Lab
+$policyChanges = Get-PolicyChanges $lab
+Set-PolicyChanges $lab $policyChanges
