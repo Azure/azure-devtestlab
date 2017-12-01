@@ -10,7 +10,7 @@
   "runCommand": {
     "commandToExecute": "cmd /c echo Restarting this virtual machine."
   },
-  "posDeployAction": [
+  "postDeployActions": [
     {
       "action": "restart"
     }
