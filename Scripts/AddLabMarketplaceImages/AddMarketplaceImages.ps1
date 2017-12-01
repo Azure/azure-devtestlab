@@ -16,26 +16,24 @@ The name(s) of the Marketplace Images to enable
 
 #>
 
-#Requires -Version 3.0
-#Requires -Module AzureRM.Resources
-
 param
 (
     [Parameter(Mandatory=$true, HelpMessage="The name of the DevTest Lab to update")]
     [string] $DevTestLabName,
 
     [Parameter(Mandatory=$true, HelpMessage="The array of Marketplace Image names to enable")]
-    $ImagesToAdd
+    [Array] $ImagesToAdd
 )
 
-$lab = Find-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs' | Where-Object {$_.Name -eq $DevTestLabName}
+$lab = Find-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs' -ResourceNameEquals $DevTestLabName
 
 if(!$lab)
 {
     throw "Lab named $DevTestLabName was not found"
 }
 
-$existingPolicy = (Get-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs/policySets/policies' -ResourceName ($lab.Name + '/default') -ResourceGroupName $lab.ResourceGroupName -ApiVersion 2016-05-15) | Where-Object {$_.Name -eq 'GalleryImage'}
+$labResourceName = $lab.Name + '/default'
+$existingPolicy = (Get-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs/policySets/policies' -ResourceName $labResourceName -ResourceGroupName $lab.ResourceGroupName -ApiVersion 2016-05-15) | Where-Object {$_.Name -eq 'GalleryImage'}
 if($existingPolicy)
 {
     $existingImages = [Array] (ConvertFrom-Json $existingPolicy.Properties.threshold)
@@ -70,7 +68,7 @@ foreach($image in $ImagesToAdd)
 
     foreach($finalImage in $finalImages)
     {
-        #determine whether or not the requested image is already allowed in this lab
+        # determine whether or not the requested image is already allowed in this lab
         $parsedFinalImg = ConvertFrom-Json $finalImage
 
         if($parsedFinalImg.offer -eq $parsedAvailableImage.offer -and $parsedFinalImg.publisher -eq $parsedAvailableImage.publisher -and $parsedFinalImg.sku -eq $parsedAvailableImage.sku -and $parsedFinalImg.osType -eq $parsedAvailableImage.osType -and $parsedFinalImg.version -eq $parsedAvailableImage.version)
@@ -110,22 +108,19 @@ if($savePolicyChanges)
         evaluatorType = 'AllowedValuesPolicy'
     }
 
-    $resourceName = $lab.Name + '/default'
     $resourceType = "Microsoft.DevTestLab/labs/policySets/policies/galleryimage"
     if($existingPolicy)
     {
-        #update the existing policy to include our images
         Write-Output "Updating $($lab.Name) Marketplace Images policy"
-        Set-AzureRmResource -ResourceType $resourceType -ResourceName $resourceName -ResourceGroupName $lab.ResourceGroupName -ApiVersion 2017-04-26-preview -Properties $policyObj -Force
+        Set-AzureRmResource -ResourceType $resourceType -ResourceName $labResourceName -ResourceGroupName $lab.ResourceGroupName -ApiVersion 2017-04-26-preview -Properties $policyObj -Force
     }
     else
     {
-        #create a new policy for the specified images
         Write-Output "Creating $($lab.Name) Marketplace Images policy"
-        New-AzureRmResource -ResourceType $resourceType -ResourceName $resourceName -ResourceGroupName $lab.ResourceGroupName -ApiVersion 2017-04-26-preview -Properties $policyObj -Force
+        New-AzureRmResource -ResourceType $resourceType -ResourceName $labResourceName -ResourceGroupName $lab.ResourceGroupName -ApiVersion 2017-04-26-preview -Properties $policyObj -Force
     }
 }
 else
 {
-    Write-Output ("No policy changes required for allowed Marketplace Images in lab " + $lab.Name)
+    Write-Output "No policy changes required for allowed Marketplace Images in lab $($lab.Name)"
 }

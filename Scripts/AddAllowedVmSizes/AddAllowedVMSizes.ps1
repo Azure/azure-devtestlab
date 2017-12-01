@@ -21,17 +21,18 @@ param
     [string] $DevTestLabName,
 
     [Parameter(Mandatory=$true, HelpMessage="The array of VM Sizes to be added")]
-    $SizesToAdd
+    [Array] $SizesToAdd
 )
 
-$lab = Find-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs' | Where-Object {$_.Name -eq $DevTestLabName}
+$lab = Find-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs' -ResourceNameEquals $DevTestLabName
 
 if(!$lab)
 {
     throw "Lab named $DevTestLabName was not found"
 }
 
-$existingPolicy = (Get-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs/policySets/policies' -ResourceName ($lab.Name + '/default') -ResourceGroupName $lab.ResourceGroupName -ApiVersion 2016-05-15) | Where-Object {$_.Name -eq 'AllowedVmSizesInLab'}
+$labResourceName = $lab.Name + '/default'
+$existingPolicy = (Get-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs/policySets/policies' -ResourceName $labResourceName -ResourceGroupName $lab.ResourceGroupName -ApiVersion 2016-05-15) | Where-Object {$_.Name -eq 'AllowedVmSizesInLab'}
 if($existingPolicy)
 {
     $existingSizes = $existingPolicy.Properties.threshold
@@ -43,7 +44,7 @@ else
     $savePolicyChanges = $true
 }
 
-#Make a list of all the sizes. It needs all their current sizes as well as any from our list that arent already there
+# Make a list of all the sizes. It needs all their current sizes as well as any from our list that arent already there
 $finalVmSizes = $existingSizes.Replace('[', '').Replace(']', '').Split(',',[System.StringSplitOptions]::RemoveEmptyEntries)
 
 foreach($vmSize in $SizesToAdd)
@@ -71,22 +72,19 @@ if($savePolicyChanges)
         threshold = ('[' + [String]::Join(',', $finalVmSizes) + ']')
     }
 
-    $resourceName = $lab.Name + '/default'
     $resourceType = "Microsoft.DevTestLab/labs/policySets/policies/AllowedVmSizesInLab"
     if($existingPolicy)
     {
-        #update the existing policy to include our sizes
         Write-Output "Updating $($lab.Name) VM Size policy"
-        Set-AzureRmResource -ResourceType $resourceType -ResourceName $resourceName -ResourceGroupName $lab.ResourceGroupName -ApiVersion 2016-05-15 -Properties $policyObj -Force
+        Set-AzureRmResource -ResourceType $resourceType -ResourceName $labResourceName -ResourceGroupName $lab.ResourceGroupName -ApiVersion 2016-05-15 -Properties $policyObj -Force
     }
     else
     {
-        #create a new policy for the sizes we want
         Write-Output "Creating $($lab.Name) VM Size policy"
-        New-AzureRmResource -ResourceType $resourceType -ResourceName $resourceName -ResourceGroupName $lab.ResourceGroupName -ApiVersion 2016-05-15 -Properties $policyObj -Force
+        New-AzureRmResource -ResourceType $resourceType -ResourceName $labResourceName -ResourceGroupName $lab.ResourceGroupName -ApiVersion 2016-05-15 -Properties $policyObj -Force
     }
 }
 else
 {
-    Write-Output ("No policy changes required for VMSize in lab " + $lab.Name)
+    Write-Output "No policy changes required for VMSize in lab $($lab.Name)"
 }
