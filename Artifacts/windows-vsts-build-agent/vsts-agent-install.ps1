@@ -5,6 +5,7 @@ param(
     [string] $vstsAccount,
     [string] $vstsUserPassword,
     [string] $agentName,
+    [string] $agentNameSuffix,
     [string] $poolName,
     [string] $windowsLogonAccount,
     [string] $windowsLogonPassword,
@@ -20,6 +21,12 @@ param(
 if ([String]::IsNullOrWhiteSpace($agentName))
 {
     $agentName = $env:COMPUTERNAME
+}
+
+# if the agentNameSuffix has a value, add this to the end of the agent name
+if (![String]::IsNullOrWhiteSpace($agentNameSuffix))
+{
+    $agentName = $agentName + $agentNameSuffix
 }
 
 #

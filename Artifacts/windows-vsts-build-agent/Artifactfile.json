@@ -28,6 +28,12 @@
       "description": "The name to give to the agent, as seen by VSTS. If empty, the computer name will be used.",
       "allowEmpty": true
     },
+    "agentNameSuffix": {
+      "type": "string",
+      "displayName": "Agent Name Suffix",
+      "description": "Used to identify multiple build agents on a single machine. Useful if Agent Name is defaulted to computer name.",
+      "allowEmpty": true
+    },
     "poolName": {
       "type": "string",
       "displayName": "Agent Pool",
@@ -66,6 +72,6 @@
     }
   },
   "runCommand": {
-    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./vsts-agent-install.ps1', ' -vstsAccount ''', parameters('vstsAccount'), ''' -vstsUserPassword ', parameters('vstsPassword'), ' -agentName ''', parameters('agentName'), ''' -poolName ''', parameters('poolName'), ''' -windowsLogonAccount ''', parameters('windowsLogonAccount'), ''' -windowsLogonPassword ''', parameters('windowsLogonPassword'), ''' -driveLetter ', parameters('driveLetter'), ' -workDirectory ''', parameters('workDirectory'), '''\"')]"
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./vsts-agent-install.ps1', ' -vstsAccount ''', parameters('vstsAccount'), ''' -vstsUserPassword ', parameters('vstsPassword'), ' -agentName ''', parameters('agentName'), ''' -agentNameSuffix ''', parameters('agentNameSuffix'), ''' -poolName ''', parameters('poolName'), ''' -windowsLogonAccount ''', parameters('windowsLogonAccount'), ''' -windowsLogonPassword ''', parameters('windowsLogonPassword'), ''' -driveLetter ', parameters('driveLetter'), ' -workDirectory ''', parameters('workDirectory'), '''\"')]"
   }
 }
