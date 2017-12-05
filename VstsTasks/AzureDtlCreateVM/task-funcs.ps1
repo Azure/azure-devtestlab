@@ -237,6 +237,8 @@ function Validate-ArtifactStatus
     if ($checkForFailedArtifacts)
     {
         $templateFile = Get-TemplateFile -TemplateName $TemplateName
+        # Read the contents of the ARM template and remove any comments in the form /* ... */
+        # since these cause the call to ConvertFrom-Json later on fail.
         $armTemplateJson = [IO.File]::ReadAllText($templateFile) -replace '/\*([^\*/])*\*/',''
         $expectedArtifactsCount = Get-ExpectedArtifactsCount -ArmTemplateJson $armTemplateJson
         if ($expectedArtifactsCount -gt 0)
