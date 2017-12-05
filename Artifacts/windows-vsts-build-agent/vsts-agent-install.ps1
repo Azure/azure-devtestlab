@@ -5,7 +5,7 @@ param(
     [string] $vstsAccount,
     [string] $vstsUserPassword,
     [string] $agentName,
-	[string] $agentNameSuffix,
+    [string] $agentNameSuffix,
     [string] $poolName,
     [string] $windowsLogonAccount,
     [string] $windowsLogonPassword,
