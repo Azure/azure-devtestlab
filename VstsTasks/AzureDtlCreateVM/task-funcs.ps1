@@ -25,29 +25,18 @@ function Invoke-AzureDtlTask
     )
     $deploymentName = "Dtl$([Guid]::NewGuid().ToString().Replace('-', ''))"
     $resourceGroupName = $Lab.ResourceGroupName
-    $templateFile = $TemplateName
-    if (-not [IO.Path]::IsPathRooted($TemplateName))
+    $templateFile = Get-TemplateFile -TemplateName $TemplateName
+    if (-not $TemplateParameters.Contains('-labName'))
     {
-        $templateFile = Join-Path "$PSScriptRoot" "$TemplateName"
+        $TemplateParameters = "-labName '$($Lab.Name)' $TemplateParameters"
     }
-    if (Test-Path "$templateFile")
-    {
-        if (-not $TemplateParameters.Contains('-labName'))
-        {
-            $TemplateParameters = "-labName '$($Lab.Name)' $TemplateParameters"
-        }
-        $null = @(
-            Write-Host "Invoking deployment with the following parameters:"
-            Write-Host "  DeploymentName = $deploymentName"
-            Write-Host "  ResourceGroupName = $resourceGroupName"
-            Write-Host "  TemplateFile = $templateFile"
-            Write-Host "  TemplateParameters = $TemplateParameters"
-        )
-    }
-    else
-    {
-        throw "Unable to locate template file '$TemplateName'. Make sure the template file exists or the path is correctly specified."
-    }
+    $null = @(
+        Write-Host "Invoking deployment with the following parameters:"
+        Write-Host "  DeploymentName = $deploymentName"
+        Write-Host "  ResourceGroupName = $resourceGroupName"
+        Write-Host "  TemplateFile = $templateFile"
+        Write-Host "  TemplateParameters = $TemplateParameters"
+    )
     $templateParameterObject = ConvertTo-TemplateParameterObject -TemplateParameters "$TemplateParameters"
 
     Test-AzureRmResourceGroupDeployment -ResourceGroupName "$resourceGroupName" -TemplateFile "$templateFile" -TemplateParameterObject $templateParameterObject
@@ -165,6 +154,41 @@ function Get-AzureDtlDeploymentTargetResourceId
     return $targetResource.id
 }
 
+function Get-ExpectedArtifactsCount
+{
+    [CmdletBinding()]
+    param(
+        [string] $ArmTemplateJson
+    )
+    
+    $armTemplateObject = ConvertFrom-Json $ArmTemplateJson
+    $vmTemplate = $armTemplateObject.resources | ? { $_.type -eq 'Microsoft.DevTestLab/labs/virtualmachines' } | Select-Object -First 1
+
+    return $vmTemplate.properties.artifacts.Count
+}
+
+function Get-TemplateFile
+{
+    [CmdletBinding()]
+    param(
+        [string] $TemplateName
+    )
+
+    $templateFile = $TemplateName
+
+    if (-not [IO.Path]::IsPathRooted($TemplateName))
+    {
+        $templateFile = Join-Path "$PSScriptRoot" "$TemplateName"
+    }
+
+    if (-not (Test-Path "$templateFile"))
+    {
+        throw "Unable to locate template file '$TemplateName'. Make sure the template file exists or the path is correctly specified."
+    }
+
+    return $templateFile
+}
+
 function Show-InputParameters
 {
     [CmdletBinding()]
@@ -205,18 +229,39 @@ function Validate-ArtifactStatus
     [CmdletBinding()]
     param(
         [string] $ResourceId,
+        [string] $TemplateName,
         [string] $Fail
     )
 
-    $fail = ConvertTo-Bool -Value $Fail
-    if ($fail)
+    $checkForFailedArtifacts = ConvertTo-Bool -Value $Fail
+    if ($checkForFailedArtifacts)
     {
-        $artifactDeploymentStatus = (Get-AzureRmResource -ResourceId $ResourceId -ODataQuery '$expand=Properties($expand=Artifacts)').Properties.artifactDeploymentStatus
-
-        [array]$failedArtifacts = $artifactDeploymentStatus | ? { $_.deploymentStatus -eq 'Failed' }
-        if ($failedArtifacts.Count -gt 0)
+        $templateFile = Get-TemplateFile -TemplateName $TemplateName
+        # Read the contents of the ARM template and remove any comments of the form /* ... */,
+        # since these cause the call to ConvertFrom-Json, later on, to fail.
+        $armTemplateJson = [IO.File]::ReadAllText($templateFile) -replace '/\*([^\*/])*\*/',''
+        $expectedArtifactsCount = Get-ExpectedArtifactsCount -ArmTemplateJson $armTemplateJson
+        if ($expectedArtifactsCount -gt 0)
         {
-            throw 'At least one artifact failed to apply. Review the lab virtual machine artifact results blade for full details.'
+            $vm = Get-AzureRmResource -ResourceId $ResourceId -ODataQuery '$expand=Properties($expand=Artifacts)'
+            [array]$artifacts = $vm.Properties.artifacts
+            [array]$succeededArtifacts = $artifacts | ? { $_.status -eq 'Succeeded' }
+            if ($succeededArtifacts.Count -lt $expectedArtifactsCount)
+            {
+                foreach ($artifact in $artifacts)
+                {
+                    if ($artifact.status -eq 'Failed')
+                    {
+                        $deploymentStatusMessage = (ConvertFrom-Json $artifact.deploymentStatusMessage).error.details.message
+                        $vmExtensionStatusMessage = (ConvertFrom-Json $artifact.vmExtensionStatusMessage)[1].message
+                        Write-Host "[FAILED] Artifact '$($artifact.artifactId.split('/')[-1])' failed with the following error:"
+                        Write-Host "  deploymentStatusMessage = $deploymentStatusMessage"
+                        Write-Host "  vmExtensionStatusMessage = $vmExtensionStatusMessage"
+                    }
+                }
+                
+                throw 'At least one artifact failed to apply. Review the lab virtual machine artifact results blade for full details.'
+            }
         }
     }
 }
