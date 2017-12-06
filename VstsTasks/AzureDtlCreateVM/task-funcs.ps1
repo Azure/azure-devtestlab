@@ -245,19 +245,28 @@ function Validate-ArtifactStatus
         {
             $vm = Get-AzureRmResource -ResourceId $ResourceId -ODataQuery '$expand=Properties($expand=Artifacts)'
             [array]$artifacts = $vm.Properties.artifacts
+            [array]$failedArtifacts = $artifacts | ? { $_.status -eq 'Failed' }
             [array]$succeededArtifacts = $artifacts | ? { $_.status -eq 'Succeeded' }
-            if ($succeededArtifacts.Count -lt $expectedArtifactsCount)
+            if ($failedArtifacts.Count -gt 0 -or $succeededArtifacts.Count -lt $expectedArtifactsCount)
             {
-                foreach ($artifact in $artifacts)
+                foreach ($failedArtifact in $failedArtifacts)
                 {
-                    if ($artifact.status -eq 'Failed')
+                    $failedArtifactMessage = "[ERROR] Artifact '$($failedArtifact.artifactId.split('/')[-1])' failed with the following error:"
+                    Write-Host "$failedArtifactMessage"
+
+                    if ($failedArtifact.deploymentStatusMessage)
                     {
-                        $deploymentStatusMessage = (ConvertFrom-Json $artifact.deploymentStatusMessage).error.details.message
-                        $vmExtensionStatusMessage = (ConvertFrom-Json $artifact.vmExtensionStatusMessage)[1].message
-                        Write-Host "[FAILED] Artifact '$($artifact.artifactId.split('/')[-1])' failed with the following error:"
-                        Write-Host "  deploymentStatusMessage = $deploymentStatusMessage"
-                        Write-Host "  vmExtensionStatusMessage = $vmExtensionStatusMessage"
+                        $deploymentStatusMessage = (ConvertFrom-Json $failedArtifact.deploymentStatusMessage).error.details.message
+                        Write-Host "deploymentStatusMessage = $deploymentStatusMessage"
                     }
+
+                    if ($failedArtifact.vmExtensionStatusMessage)
+                    {
+                        $vmExtensionStatusMessage = (ConvertFrom-Json $failedArtifact.vmExtensionStatusMessage)[1].message
+                        Write-Host "vmExtensionStatusMessage = $($vmExtensionStatusMessage -replace '\\n','')"
+                    }
+                    
+                    Write-Host $('*' * $failedArtifactMessage.length)
                 }
                 
                 throw 'At least one artifact failed to apply. Review the lab virtual machine artifact results blade for full details.'
