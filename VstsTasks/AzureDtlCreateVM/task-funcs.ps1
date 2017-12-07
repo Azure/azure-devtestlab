@@ -239,7 +239,7 @@ function Validate-ArtifactStatus
         $templateFile = Get-TemplateFile -TemplateName $TemplateName
         # Read the contents of the ARM template and remove any comments of the form /* ... */,
         # since these cause the call to ConvertFrom-Json, later on, to fail.
-        $armTemplateJson = [IO.File]::ReadAllText($templateFile) -replace '/\*([^\*/])*\*/',''
+        $armTemplateJson = [IO.File]::ReadAllText($templateFile) -replace '/\*(.|[\r\n])*?\*/',''
         $expectedArtifactsCount = Get-ExpectedArtifactsCount -ArmTemplateJson $armTemplateJson
         if ($expectedArtifactsCount -gt 0)
         {
@@ -251,22 +251,38 @@ function Validate-ArtifactStatus
             {
                 foreach ($failedArtifact in $failedArtifacts)
                 {
-                    $failedArtifactMessage = "[ERROR] Artifact '$($failedArtifact.artifactId.split('/')[-1])' failed with the following error:"
-                    Write-Host "$failedArtifactMessage"
+                    $failedArtifactName = $failedArtifact.artifactId.split('/')[-1]
 
-                    if ($failedArtifact.deploymentStatusMessage)
+                    # Adding ##[warning] at the beginning of the line helps highlight it in VSTS build/release logs.
+                    Write-Host "##[warning]Failed to apply artifact '$failedArtifactName'."
+
+                    if (-not [string]::IsNullOrEmpty($failedArtifact.deploymentStatusMessage))
                     {
-                        $deploymentStatusMessage = (ConvertFrom-Json $failedArtifact.deploymentStatusMessage).error.details.message
+                        # Using a try/catch when converting from JSON, as the returned text may be plain.
+                        try
+                        {
+                            $deploymentStatusMessage = (ConvertFrom-Json $failedArtifact.deploymentStatusMessage).error.details.message
+                        }
+                        catch
+                        {
+                            $deploymentStatusMessage = $failedArtifact.deploymentStatusMessage
+                        }
                         Write-Host "deploymentStatusMessage = $deploymentStatusMessage"
                     }
 
-                    if ($failedArtifact.vmExtensionStatusMessage)
+                    if (-not [string]::IsNullOrEmpty($failedArtifact.vmExtensionStatusMessage))
                     {
-                        $vmExtensionStatusMessage = (ConvertFrom-Json $failedArtifact.vmExtensionStatusMessage)[1].message
+                        # Using a try/catch when converting from JSON, as the returned text may be plain.
+                        try
+                        {
+                            $vmExtensionStatusMessage = (ConvertFrom-Json $failedArtifact.vmExtensionStatusMessage)[1].message
+                        }
+                        catch
+                        {
+                            $vmExtensionStatusMessage = $failedArtifact.vmExtensionStatusMessage
+                        }
                         Write-Host "vmExtensionStatusMessage = $($vmExtensionStatusMessage -replace '\\n','')"
                     }
-                    
-                    Write-Host $('*' * $failedArtifactMessage.length)
                 }
                 
                 throw 'At least one artifact failed to apply. Review the lab virtual machine artifact results blade for full details.'
