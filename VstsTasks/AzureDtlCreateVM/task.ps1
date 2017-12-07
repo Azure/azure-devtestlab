@@ -124,6 +124,7 @@ try
                 else
                 {
                     Write-Host "Resource identifier is not available, will not attempt to remove corresponding resouce before retrying."
+                    Write-Host "Dumping raw deployment result:`n$result"
                 }
             }
         }
