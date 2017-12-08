@@ -207,7 +207,7 @@
                     "certificateThumbprint": {
                         "value": "[parameters('certificateThumbprint')]"
                     },
-                    "sourceVaultId": {
+                    "sourceVaultValue": {
                         "value": "[resourceId('Microsoft.KeyVault/vaults', variables('vaultName'))]"
                     },
                     "certificateUrlValue": {
