@@ -7,9 +7,6 @@
 #       This is necessary to ensure we capture errors inside the try-catch-finally block.
 $ErrorActionPreference = "Stop"
 
-# Ensure we set the working directory to that of the script.
-pushd $PSScriptRoot
-
 ###################################################################################################
 #
 # Handle all errors in this script.
@@ -39,31 +36,24 @@ trap
 
 try
 {
-    # Remove the registered task, as we don't want it to execute again.
-    Unregister-ScheduledTask -TaskName 'Sysprep' -Confirm:$false | Out-Null
+    # Ensure we set the working directory to that of the script.
+    pushd $PSScriptRoot
 
-    # Clean up registry entries.
-    $cleanRegistryBat = 'C:\Users\Public\CleanRegistry.bat'
-    cmd /c $cleanRegistryBat
-    Remove-Item -Force $cleanRegistryBat | Out-Null
+    Write-Host 'Preparing virtual machine for sysprep.'
+    Copy-Item -Path ".\Sysprep.ps1" -Destination 'C:\Users\Public\Sysprep.ps1' | Out-Null
+    Copy-Item -Path ".\CleanRegistry.bat" -Destination 'C:\Users\Public\CleanRegistry.bat' | Out-Null
 
-    # Remove any left over CustomScriptExtension files.
-    $cseDir = 'C:\Packages\Plugins\Microsoft.Compute.CustomScriptExtension\'
-    if (Test-Path -Path $cseDir)
-    {
-        Remove-Item -Recurse -Force $cseDir | Out-Null
-    }
+    Write-Host 'Scheduling sysprep task to execute after a system restart.'
+    $taskname = 'Sysprep'
+    $taskdescription = 'Sysprep System'
+    $action = New-ScheduledTaskAction -Execute 'Powershell.exe' -Argument " -ExecutionPolicy ByPass -File C:\Users\Public\Sysprep.ps1"
+    $trigger = New-ScheduledTaskTrigger -AtStartup
+    $settings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Minutes 60) -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1)
+    Register-ScheduledTask -Action $action -Trigger $trigger -TaskName $taskname -Description $taskdescription -Settings $settings -User 'System' -RunLevel Highest | Out-Null
 
-    # Execute the Sysprep command.
-    $newProcess = new-object System.Diagnostics.ProcessStartInfo "sysprep.exe" 
-    $newProcess.WorkingDirectory = "${env:SystemDrive}\windows\system32\sysprep" 
-    $newProcess.Arguments = "/generalize /oobe /shutdown" 
-    $newProcess.Verb = "runas"
-    [System.Diagnostics.Process]::Start($newProcess) | Out-Null
+    Write-Host 'Sysprep is not complete until the virtual machine is in a stopped state.'
 }
 finally
 {
-    # Remove this script. PS will continue running since it loads a copy of the script.
-    Remove-Item -Force 'C:\Users\Public\Sysprep.ps1' | Out-Null
     popd
 }
