@@ -272,7 +272,7 @@ try
 
     Write-Host 'Dumping properties used for copy operation.'
     Write-Host "Lab ID = $($lab.ResourceId)"
-    Write-Host "VM ID = $($vmCopyContext.Instance.ResourceId)"
+    Write-Host "VM ID = $($vm.ResourceId)"
     Write-Host "Copy Context: $(ConvertTo-Json $copyContext)"
 
     Write-Host "Copying VHD '$VHDFileName' to lab '$LabName' ... " -NoNewline
