@@ -17,7 +17,7 @@ function Invoke-AzureDtlTask
     param(
         $Lab,
         [string] $TemplateName,
-        [string] $TemplateParameters
+        $TemplateParameterObject
     )
 
     $null = @(
@@ -26,18 +26,14 @@ function Invoke-AzureDtlTask
     $deploymentName = "Dtl$([Guid]::NewGuid().ToString().Replace('-', ''))"
     $resourceGroupName = $Lab.ResourceGroupName
     $templateFile = Get-TemplateFile -TemplateName $TemplateName
-    if (-not $TemplateParameters.Contains('-labName'))
-    {
-        $TemplateParameters = "-labName '$($Lab.Name)' $TemplateParameters"
-    }
+
     $null = @(
         Write-Host "Invoking deployment with the following parameters:"
         Write-Host "  DeploymentName = $deploymentName"
         Write-Host "  ResourceGroupName = $resourceGroupName"
         Write-Host "  TemplateFile = $templateFile"
-        Write-Host "  TemplateParameters = $TemplateParameters"
+        Write-Host ('  TemplateParameters = ' + ($templateParameterObject.GetEnumerator() | sort -Property Key | % { "-$($_.Key) '$(if ($_.Value.GetType().Name -eq 'Hashtable') { ConvertTo-Json $_.Value -Compress } else { $_.Value })'" }))
     )
-    $templateParameterObject = ConvertTo-TemplateParameterObject -TemplateParameters "$TemplateParameters"
 
     Test-AzureRmResourceGroupDeployment -ResourceGroupName "$resourceGroupName" -TemplateFile "$templateFile" -TemplateParameterObject $templateParameterObject
 
@@ -189,6 +185,40 @@ function Get-TemplateFile
     return $templateFile
 }
 
+function Remove-FailedResourcesBeforeRetry
+{
+    [CmdletBinding()]
+    param(
+        $Result,
+        [string] $ResourceId,
+        [string] $DeploymentId,
+        [string] $DeleteDeployment
+    )
+
+    if ($ResourceId)
+    {
+        Remove-AzureRmResource -ResourceId $ResourceId -Force | Out-Null
+    }
+    else
+    {
+        Write-Host "Resource identifier is not available, will not attempt to remove corresponding resouce before retrying."
+        Write-Host "Dumping raw deployment result:`n$Result"
+    }
+
+    $delete = ConvertTo-Bool -Value $DeleteDeployment
+    if ($delete)
+    {
+        if ($DeploymentId)
+        {
+            Remove-AzureRmResourceGroupDeployment -Id $DeploymentId | Out-Null
+        }
+        else
+        {
+            Write-Host "Deployment identifier is not available, will not attempt to remove corresponding deployment before retrying."
+        }
+    }
+}
+
 function Show-InputParameters
 {
     [CmdletBinding()]
@@ -204,23 +234,23 @@ function Show-InputParameters
     Write-Host "  FailOnArtifactError = $FailOnArtifactError"
     Write-Host "  RetryOnFailure = $RetryOnFailure"
     Write-Host "  RetryCount = $RetryCount"
+    Write-Host "  DeleteFailedDeploymentBeforeRetry = $DeleteFailedDeploymentBeforeRetry"
+    Write-Host "  AppendRetryNumberToVMName = $AppendRetryNumberToVMName"
 }
 
 function Validate-InputParameters
 {
     [CmdletBinding()]
     Param(
-        [string] $TemplateParameters
+        $TemplateParameterObject
     )
 
     Write-Host 'Validating input parameters'
 
-    $templateParameterObject = ConvertTo-TemplateParameterObject -TemplateParameters "$TemplateParameters"
-
     # Only required for backward compatibility with earlier versions of the task.
-    Validate-TemplateParameters -TemplateParameterObject $templateParameterObject
+    Validate-TemplateParameters -TemplateParameterObject $TemplateParameterObject
 
-    $vmName = $templateParameterObject.Item('newVMName')
+    $vmName = $TemplateParameterObject.Item('newVMName')
     Validate-VMName -Name "$vmName"
 }
 
