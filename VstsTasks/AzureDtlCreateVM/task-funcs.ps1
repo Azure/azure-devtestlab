@@ -15,7 +15,8 @@ function Invoke-AzureDtlTask
 {
     [CmdletBinding()]
     param(
-        $Lab,
+        [string] $DeploymentName,
+        [string] $ResourceGroupName,
         [string] $TemplateName,
         $TemplateParameterObject
     )
@@ -23,21 +24,19 @@ function Invoke-AzureDtlTask
     $null = @(
         Write-Host "Preparing deployment parameters"
     )
-    $deploymentName = "Dtl$([Guid]::NewGuid().ToString().Replace('-', ''))"
-    $resourceGroupName = $Lab.ResourceGroupName
     $templateFile = Get-TemplateFile -TemplateName $TemplateName
 
     $null = @(
         Write-Host "Invoking deployment with the following parameters:"
-        Write-Host "  DeploymentName = $deploymentName"
-        Write-Host "  ResourceGroupName = $resourceGroupName"
+        Write-Host "  DeploymentName = $DeploymentName"
+        Write-Host "  ResourceGroupName = $ResourceGroupName"
         Write-Host "  TemplateFile = $templateFile"
         Write-Host ('  TemplateParameters = ' + ($templateParameterObject.GetEnumerator() | sort -Property Key | % { "-$($_.Key) '$(if ($_.Value.GetType().Name -eq 'Hashtable') { ConvertTo-Json $_.Value -Compress } else { $_.Value })'" }))
     )
 
-    Test-AzureRmResourceGroupDeployment -ResourceGroupName "$resourceGroupName" -TemplateFile "$templateFile" -TemplateParameterObject $templateParameterObject
+    Test-AzureRmResourceGroupDeployment -ResourceGroupName "$ResourceGroupName" -TemplateFile "$templateFile" -TemplateParameterObject $templateParameterObject
 
-    return New-AzureRmResourceGroupDeployment -Name "$deploymentName" -ResourceGroupName "$resourceGroupName" -TemplateFile "$templateFile" -TemplateParameterObject $templateParameterObject
+    return New-AzureRmResourceGroupDeployment -Name "$DeploymentName" -ResourceGroupName "$ResourceGroupName" -TemplateFile "$templateFile" -TemplateParameterObject $templateParameterObject
 }
 
 function ConvertTo-Bool
@@ -140,11 +139,11 @@ function Get-AzureDtlDeploymentTargetResourceId
     if ([string]::IsNullOrEmpty($targetResource.id))
     {
         $null = @(
-            Write-Host "Dumping resource group deployment operation details for $ResourceGroupName/$DeploymentName`:"
+            Write-Host "Dumping resource group deployment operation details for deployment '$DeploymentName' in resource group name '$ResourceGroupName'`:"
             Write-Host (ConvertTo-Json $operations)
         )
 
-        throw "Unable to extract the target resource from operations for $ResourceGroupName/$DeploymentName"
+        throw "Unable to extract the target resource from operations for deployment '$DeploymentName' in resource group name '$ResourceGroupName'."
     }
 
     return $targetResource.id
@@ -189,33 +188,34 @@ function Remove-FailedResourcesBeforeRetry
 {
     [CmdletBinding()]
     param(
-        $Result,
-        [string] $ResourceId,
-        [string] $DeploymentId,
+        [string] $DeploymentName,
+        [string] $ResourceGroupName,
         [string] $DeleteDeployment
     )
 
-    if ($ResourceId)
+    try
     {
-        Remove-AzureRmResource -ResourceId $ResourceId -Force | Out-Null
-    }
-    else
-    {
-        Write-Host "Resource identifier is not available, will not attempt to remove corresponding resouce before retrying."
-        Write-Host "Dumping raw deployment result:`n$Result"
-    }
-
-    $delete = ConvertTo-Bool -Value $DeleteDeployment
-    if ($delete)
-    {
-        if ($DeploymentId)
+        $resourceId = Get-AzureDtlDeploymentTargetResourceId -DeploymentName $DeploymentName -ResourceGroupName $ResourceGroupName
+        if ($resourceId)
         {
-            Remove-AzureRmResourceGroupDeployment -Id $DeploymentId | Out-Null
+            Write-Host "Removing previously created lab virtual machine with resource ID '$resourceId'."
+            Remove-AzureRmResource -ResourceId $resourceId -Force | Out-Null
         }
         else
         {
-            Write-Host "Deployment identifier is not available, will not attempt to remove corresponding deployment before retrying."
+            Write-Host "Resource identifier is not available, will not attempt to remove corresponding resouce before retrying."
         }
+    
+        $delete = ConvertTo-Bool -Value $DeleteDeployment
+        if ($delete)
+        {
+            Write-Host "Removing previously created deployment '$DeploymentName' in resource group '$ResourceGroupName'."
+            Remove-AzureRmResourceGroupDeployment -Name $DeploymentName -ResourceGroupName $ResourceGroupName | Out-Null
+        }
+    }
+    catch
+    {
+        Write-Host "##[warning]Unable to clean-up failed resources. Operation failed with $($Error[0].Exception.Message)"
     }
 }
 

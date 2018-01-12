@@ -88,6 +88,7 @@ try
     Show-InputParameters
 
     $lab = Get-AzureDtlLab -LabId "$LabId"
+    $resourceGroupName = $lab.ResourceGroupName
     if (-not $TemplateParameters.Contains('-labName'))
     {
         $TemplateParameters = "-labName '$($Lab.Name)' $TemplateParameters"
@@ -108,7 +109,9 @@ try
         
         try
         {
-            $result = Invoke-AzureDtlTask -Lab $lab -TemplateName "$TemplateName" -TemplateParameterObject $templateParameterObject
+            $deploymentName = "Dtl$([Guid]::NewGuid().ToString().Replace('-', ''))"
+            
+            $result = Invoke-AzureDtlTask -DeploymentName $deploymentName -ResourceGroupName $resourceGroupName -TemplateName "$TemplateName" -TemplateParameterObject $templateParameterObject
 
             $resourceId = Get-AzureDtlDeploymentTargetResourceId -DeploymentName $result.DeploymentName -ResourceGroupName $result.ResourceGroupName
 
@@ -125,7 +128,7 @@ try
             else
             {
                 Write-Host "A deployment failure occured. Retrying deployment (attempt $i of $($count - 1))"
-                Remove-FailedResourcesBeforeRetry -Result $result -ResourceId $resourceId -DeploymentId $deploymentId -DeleteDeployment $DeleteFailedDeploymentBeforeRetry
+                Remove-FailedResourcesBeforeRetry -DeploymentName $deploymentName -ResourceGroupName $resourceGroupName -DeleteDeployment $DeleteFailedDeploymentBeforeRetry
                 if ($AppendRetryNumberToVMName)
                 {
                     $templateParameterObject.newVMName = "$baseVmName-$i"
