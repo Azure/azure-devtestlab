@@ -11,7 +11,6 @@ main () {
             apt-get -y update > /dev/null
             apt-get -y install at > /dev/null
         elif [ -n "$isYum" ] ; then
-            yum -y update > /dev/null
             yum install -y at > /dev/null
         elif [ -n "$isZypper" ] ; then
             zypper install -y at > /dev/null
