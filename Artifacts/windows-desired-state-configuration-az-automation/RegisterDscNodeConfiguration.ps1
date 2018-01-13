@@ -19,10 +19,11 @@ param (
 )
 
 $vm = Find-AzureRmResource -ResourceNameContains $Machine -ResourceType "Microsoft.Compute/virtualMachines" 
-$automation = Find-AzureRmResource -ResourceName $AutomationAccount
+$automation = Find-AzureRmResource -ResourceNameEquals $AutomationAccount -ResourceType "Microsoft.Automation/automationAccounts"
 
 Register-AzureRmAutomationDscNode $automation -AzureVMName $vm.Name -NodeConfigurationName $ConfigName `
 -ConfigurationMode $ConfigMode -ConfigurationModeFrequencyMins $ConfigMinutes `
--RefreshFrequencyMins $RefresMinutes -RebootNodeIfNeeded=$Reboot -ActionAfterReboot $AfterReboot `
--AllowModuleOverwrite=$AllowOverwrite -AzureVMResourceGroup $vm.ResourceGroupName `
--AzureVMLocation $vm.Location
+-RefreshFrequencyMins $RefresMinutes -RebootNodeIfNeeded $Reboot -ActionAfterReboot $AfterReboot `
+-AllowModuleOverwrite $AllowOverwrite -AzureVMResourceGroup $vm.ResourceGroupName `
+-AzureVMLocation $vm.Location -AutomationAccountName $automation.Name `
+-ResourceGroupName $automation.ResourceGroupName
