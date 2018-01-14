@@ -1,4 +1,5 @@
 # The DSC configuration that will generate metaconfigurations
+# Courtesy of https://docs.microsoft.com/en-us/azure/automation/automation-dsc-onboarding#secure-registration
 [DscLocalConfigurationManager()]
 Configuration DscMetaConfigs
 {
