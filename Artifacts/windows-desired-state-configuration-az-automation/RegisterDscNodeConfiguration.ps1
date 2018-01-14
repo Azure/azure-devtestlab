@@ -18,12 +18,21 @@ param (
     $AllowOverwrite
 )
 
-$vm = Find-AzureRmResource -ResourceNameContains $Machine -ResourceType "Microsoft.Compute/virtualMachines" 
-$automation = Find-AzureRmResource -ResourceNameEquals $AutomationAccount -ResourceType "Microsoft.Automation/automationAccounts"
+Write-Output "Starting DSC configuration for account: $($AutomationAccount), machine: $($env:COMPUTERNAME)"
 
-Register-AzureRmAutomationDscNode $automation -AzureVMName $vm.Name -NodeConfigurationName $ConfigName `
--ConfigurationMode $ConfigMode -ConfigurationModeFrequencyMins $ConfigMinutes `
--RefreshFrequencyMins $RefresMinutes -RebootNodeIfNeeded $Reboot -ActionAfterReboot $AfterReboot `
--AllowModuleOverwrite $AllowOverwrite -AzureVMResourceGroup $vm.ResourceGroupName `
--AzureVMLocation $vm.Location -AutomationAccountName $automation.Name `
--ResourceGroupName $automation.ResourceGroupName
+try {
+    $vm = Find-AzureRmResource -ResourceNameContains $Machine -ResourceType "Microsoft.Compute/virtualMachines" -Verbose
+    $automation = Find-AzureRmResource -ResourceNameEquals $AutomationAccount -ResourceType "Microsoft.Automation/automationAccounts" -Verbose
+
+    Register-AzureRmAutomationDscNode $automation -AzureVMName $vm.Name -NodeConfigurationName $ConfigName `
+        -ConfigurationMode $ConfigMode -ConfigurationModeFrequencyMins $ConfigMinutes `
+        -RefreshFrequencyMins $RefresMinutes -RebootNodeIfNeeded $Reboot -ActionAfterReboot $AfterReboot `
+        -AllowModuleOverwrite $AllowOverwrite -AzureVMResourceGroup $vm.ResourceGroupName `
+        -AzureVMLocation $vm.Location -AutomationAccountName $automation.Name `
+        -ResourceGroupName $automation.ResourceGroupName -Verbose
+}
+catch {
+    Write-Error $Error[0].Exception
+    Write-Error $Error[0].PSMessageDetails
+}
+Write-Output "Ending DSC configuration."
