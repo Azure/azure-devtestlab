@@ -25,7 +25,6 @@ Write-Output "Starting DSC configuration for machine: $($env:COMPUTERNAME)"
 
 try {
     & .\DscMetaConfigs.ps1
-    $RegistrationKey = ConvertFrom-SecureString $RegistrationKey
     Set-DscLocalConfigurationManager -Path ./DscMetaConfigs
 }
 catch {
