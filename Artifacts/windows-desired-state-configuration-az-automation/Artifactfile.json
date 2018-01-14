@@ -6,10 +6,16 @@
     "iconUri": "https://pbs.twimg.com/profile_images/1604347359/logo_512x512.png",
     "targetOsType": "Windows",
     "parameters": {
-        "accountName": {
+        "registrationUrl": {
             "type": "string",
-            "displayName": "Azure Automation Account Name",
-            "description": "The name of the Azure Automation account.  The account must exist in the same subscription as the lab.",
+            "displayName": "Azure Automation Registration URL",
+            "description": "The URL of the Azure Automation account.  The account must exist in the same subscription as the lab.",
+            "allowEmpty": false
+        },
+        "registrationKey": {
+            "type": "securestring",
+            "displayName": "Azure Automation Registration Key",
+            "description": "The registration key of the Azure Automation account.  The account must exist in the same subscription as the lab.",
             "allowEmpty": false
         },
         "configurationName": {
@@ -64,6 +70,6 @@
         }
     },
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./RegisterDscNodeConfiguration.ps1', ' -AutomationAccount ''', parameters('accountName'), ''' -ConfigName ''', parameters('configurationName'), ''' -ConfigMode ''', parameters('configurationMode'), ''' -ConfigMinutes ', parameters('configurationFrequency'), ' -RefreshMinutes ', parameters('refreshFrequency'), ' -Reboot $', parameters('rebootIfNeeded'), ' -AfterReboot ''', parameters('actionAfterReboot'),''' -AllowOverwrite $', parameters('allowModuleOverwrite'), '\"')]"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./RegisterDscNodeConfiguration.ps1', ' -RegistrationURL ''', parameters('registrationUrl'),''' -RegistrationKey ''', parameters('registrationKey'), ''' -ConfigName ''', parameters('configurationName'), ''' -ConfigMode ''', parameters('configurationMode'), ''' -ConfigMinutes ', parameters('configurationFrequency'), ' -RefreshMinutes ', parameters('refreshFrequency'), ' -Reboot $', parameters('rebootIfNeeded'), ' -AfterReboot ''', parameters('actionAfterReboot'),''' -AllowOverwrite $', parameters('allowModuleOverwrite'), '\"')]"
     }
 }

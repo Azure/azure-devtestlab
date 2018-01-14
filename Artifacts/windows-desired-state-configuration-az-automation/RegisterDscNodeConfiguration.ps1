@@ -3,8 +3,6 @@ param (
     [string]
     $Machine = $env:COMPUTERNAME,   
     [string]
-    $AutomationAccount,
-    [string]
     $ConfigName,
     $ConfigMode,
     [Int32]
@@ -15,21 +13,35 @@ param (
     $Reboot,
     $AfterReboot,
     [Boolean]
-    $AllowOverwrite
+    $AllowOverwrite,
+    [string]
+    $RegistrationUrl,
+    [string]
+    $RegistrationKey
 )
 Start-Transcript "C:\Artifacts\dsc.log"
-Write-Output "Starting DSC configuration for account: $($AutomationAccount), machine: $($env:COMPUTERNAME)"
+Write-Output "Starting DSC configuration for machine: $($env:COMPUTERNAME)"
+.\DscMetaConfigs.ps1
 
 try {
-    $vm = Find-AzureRmResource -ResourceNameContains $Machine -ResourceType "Microsoft.Compute/virtualMachines" -Verbose
-    $automation = Find-AzureRmResource -ResourceNameEquals $AutomationAccount -ResourceType "Microsoft.Automation/automationAccounts" -Verbose
+    # Create the metaconfigurations
+$Params = @{
+    RegistrationUrl = "$($RegistrationUrl)";
+    RegistrationKey = "$($RegistrationKey)";
+    ComputerName = @($Machine);
+    NodeConfigurationName = "$($ConfigName)";
+    RefreshFrequencyMins = $RefreshMinutes;
+    ConfigurationModeFrequencyMins = $ConfigMinutes;
+    RebootNodeIfNeeded = $Reboot;
+    AllowModuleOverwrite = $AllowOverwrite;
+    ConfigurationMode = $ConfigMode;
+    ActionAfterReboot = $AfterReboot;
+    ReportOnly = $False;  # Set to $True to have machines only report to AA DSC but not pull from it
+}
 
-    Register-AzureRmAutomationDscNode $automation -AzureVMName $vm.Name -NodeConfigurationName $ConfigName `
-        -ConfigurationMode $ConfigMode -ConfigurationModeFrequencyMins $ConfigMinutes `
-        -RefreshFrequencyMins $RefresMinutes -RebootNodeIfNeeded $Reboot -ActionAfterReboot $AfterReboot `
-        -AllowModuleOverwrite $AllowOverwrite -AzureVMResourceGroup $vm.ResourceGroupName `
-        -AzureVMLocation $vm.Location -AutomationAccountName $automation.Name `
-        -ResourceGroupName $automation.ResourceGroupName -Verbose
+# Use PowerShell splatting to pass parameters to the DSC configuration being invoked
+# For more info about splatting, run: Get-Help -Name about_Splatting
+DscMetaConfigs @Params
 }
 catch {
     Write-Error $Error[0].Exception
