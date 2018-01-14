@@ -1,4 +1,4 @@
-## PowerShell Desired State Configuration Registrar
+## PowerShell Desired State Configuration Registrar - Azure Automation
 This artifact will register a DevTest Labs virtual machine with a Desired State configuration Pull server.
 This example follows the [Secure Registration](https://docs.microsoft.com/en-us/azure/automation/automation-dsc-onboarding#secure-registration) example for Azure Automation DSC.
 ### Inputs
