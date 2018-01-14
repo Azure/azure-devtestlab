@@ -32,16 +32,14 @@
             "displayName": "Configuration Frequency (minutes)",
             "description": "Number of minutes between configuration sweeps",
             "allowEmpty": false,
-            "defaultValue": 30,
-            "minLength": 30
+            "defaultValue": 30
         },
         "refreshFrequency": {
             "type": "int",
             "displayName": "Refresh Frequency (minutes)",
             "description": "Number of minutes between refresh intervals",
             "allowEmpty": false,
-            "defaultValue": 15,
-            "minLength": 15
+            "defaultValue": 15
         },
         "rebootIfNeeded": {
             "type": "bool",
