@@ -17,7 +17,7 @@ param (
     [Boolean]
     $AllowOverwrite
 )
-
+Start-Transcript "C:\Artifacts\dsc.log"
 Write-Output "Starting DSC configuration for account: $($AutomationAccount), machine: $($env:COMPUTERNAME)"
 
 try {
@@ -35,6 +35,8 @@ try {
 catch {
     Write-Error $Error[0].Exception
     Write-Error $Error[0].PSMessageDetails
+    Stop-Transcript
     exit -1
 }
 Write-Output "Ending DSC configuration."
+Stop-Transcript
