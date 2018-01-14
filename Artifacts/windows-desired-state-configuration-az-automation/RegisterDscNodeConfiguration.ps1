@@ -21,6 +21,7 @@ param (
 Write-Output "Starting DSC configuration for account: $($AutomationAccount), machine: $($env:COMPUTERNAME)"
 
 try {
+    Install-Module AzureRM -Force
     $vm = Find-AzureRmResource -ResourceNameContains $Machine -ResourceType "Microsoft.Compute/virtualMachines" -Verbose
     $automation = Find-AzureRmResource -ResourceNameEquals $AutomationAccount -ResourceType "Microsoft.Automation/automationAccounts" -Verbose
 
@@ -34,5 +35,6 @@ try {
 catch {
     Write-Error $Error[0].Exception
     Write-Error $Error[0].PSMessageDetails
+    exit -1
 }
 Write-Output "Ending DSC configuration."
