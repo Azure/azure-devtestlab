@@ -87,4 +87,22 @@ Configuration DscMetaConfigs
         }
     }
 }
+    # Create the metaconfigurations
+$Params = @{
+    RegistrationUrl = "$($RegistrationUrl)";
+    RegistrationKey = "$($RegistrationKey)";
+    ComputerName = @($Machine);
+    NodeConfigurationName = "$($ConfigName)";
+    RefreshFrequencyMins = $RefreshMinutes;
+    ConfigurationModeFrequencyMins = $ConfigMinutes;
+    RebootNodeIfNeeded = $Reboot;
+    AllowModuleOverwrite = $AllowOverwrite;
+    ConfigurationMode = $ConfigMode;
+    ActionAfterReboot = $AfterReboot;
+    ReportOnly = $False;  # Set to $True to have machines only report to AA DSC but not pull from it
+}
+
+# Use PowerShell splatting to pass parameters to the DSC configuration being invoked
+# For more info about splatting, run: Get-Help -Name about_Splatting
+DscMetaConfigs @Params
 
