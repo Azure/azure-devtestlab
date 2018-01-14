@@ -66,6 +66,6 @@
         }
     },
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./RegisterDscNodeConfiguration.ps1', ' -AutomationAccount ', parameters('accountName'), ' -ConfigName ''', parameters('configurationName'), ''' -ConfigMode ''', parameters('configurationMode'), ''' -ConfigMinutes ', parameters('configurationFrequency'), ' -RefreshMinutes ', parameters('refreshFrequency'), ' -Reboot $', parameters('rebootIfNeeded'), ''' -AfterReboot ''', parameters('actionAfterReboot'),''' -AllowOverwrite $', parameters('allowModuleOverwrite'), '''\"')]"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./RegisterDscNodeConfiguration.ps1', ' -AutomationAccount ''', parameters('accountName'), ''' -ConfigName ''', parameters('configurationName'), ''' -ConfigMode ''', parameters('configurationMode'), ''' -ConfigMinutes ', parameters('configurationFrequency'), ' -RefreshMinutes ', parameters('refreshFrequency'), ' -Reboot $', parameters('rebootIfNeeded'), ''' -AfterReboot ''', parameters('actionAfterReboot'),''' -AllowOverwrite $', parameters('allowModuleOverwrite'), '''\"')]"
     }
 }
