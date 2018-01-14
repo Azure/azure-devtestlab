@@ -25,7 +25,7 @@ Write-Output "Starting DSC configuration for machine: $($env:COMPUTERNAME)"
 
 try {
     & .\DscMetaConfigs.ps1
-    Set-DscLocalConfigurationManager -Path ./DscMetaConfigs
+    Set-DscLocalConfigurationManager -Path ./DscMetaConfigs -Verbose
 }
 catch {
     Write-Error $Error[0].Exception
