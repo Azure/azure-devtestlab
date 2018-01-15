@@ -29,7 +29,9 @@ param(
     [string] $OutputResourceId,
     [string] $FailOnArtifactError,
     [string] $RetryOnFailure,
-    [string] $RetryCount
+    [string] $RetryCount,
+    [string] $DeleteFailedDeploymentBeforeRetry,
+    [string] $AppendRetryNumberToVMName
 )
 
 ###################################################################################################
@@ -85,9 +87,14 @@ try
 
     Show-InputParameters
 
-    Validate-InputParameters -TemplateParameters "$TemplateParameters"
-
     $lab = Get-AzureDtlLab -LabId "$LabId"
+    $resourceGroupName = $lab.ResourceGroupName
+    if (-not $TemplateParameters.Contains('-labName'))
+    {
+        $TemplateParameters = "-labName '$($Lab.Name)' $TemplateParameters"
+    }
+    $templateParameterObject = ConvertTo-TemplateParameterObject -TemplateParameters "$TemplateParameters"
+    $baseVmName = $TemplateParameterObject.Item('newVMName')
 
     $retry = ConvertTo-Bool -Value $RetryOnFailure
     if (-not $retry)
@@ -98,9 +105,13 @@ try
     [int] $count = 1 + (ConvertTo-Int -Value $RetryCount)
     for ($i = 1; $i -le $count; $i++)
     {
+        Validate-InputParameters -TemplateParameterObject $templateParameterObject
+        
         try
         {
-            $result = Invoke-AzureDtlTask -Lab $lab -TemplateName "$TemplateName" -TemplateParameters "$TemplateParameters"
+            $deploymentName = "Dtl$([Guid]::NewGuid().ToString().Replace('-', ''))"
+            
+            $result = Invoke-AzureDtlTask -DeploymentName $deploymentName -ResourceGroupName $resourceGroupName -TemplateName "$TemplateName" -TemplateParameterObject $templateParameterObject
 
             $resourceId = Get-AzureDtlDeploymentTargetResourceId -DeploymentName $result.DeploymentName -ResourceGroupName $result.ResourceGroupName
 
@@ -117,14 +128,10 @@ try
             else
             {
                 Write-Host "A deployment failure occured. Retrying deployment (attempt $i of $($count - 1))"
-                if ($resourceId)
+                Remove-FailedResourcesBeforeRetry -DeploymentName $deploymentName -ResourceGroupName $resourceGroupName -DeleteDeployment $DeleteFailedDeploymentBeforeRetry
+                if ($AppendRetryNumberToVMName)
                 {
-                    Remove-AzureRmResource -ResourceId $resourceId -Force | Out-Null
-                }
-                else
-                {
-                    Write-Host "Resource identifier is not available, will not attempt to remove corresponding resouce before retrying."
-                    Write-Host "Dumping raw deployment result:`n$result"
+                    $templateParameterObject.newVMName = "$baseVmName-$i"
                 }
             }
         }

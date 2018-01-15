@@ -12,7 +12,7 @@
     "version": {
         "Major": 2,
         "Minor": 0,
-        "Patch": 15
+        "Patch": 23
     },
     "demands": [
         "azureps"
@@ -101,6 +101,26 @@
             "required": false,
             "groupName": "advanced",
             "helpMarkDown": "Number of times to retry the deployment when an error occurs, either while creating the lab VM or if any artifact fails to apply successfully.",
+            "visibleRule": "RetryOnFailure = true"
+        },
+        {
+            "name": "DeleteFailedDeploymentBeforeRetry",
+            "type": "boolean",
+            "label": "Delete the failed deployment before retrying",
+            "defaultValue": "false",
+            "required": false,
+            "groupName": "advanced",
+            "helpMarkDown": "Delete the failed deployment before retrying to create the lab VM.",
+            "visibleRule": "RetryOnFailure = true"
+        },
+        {
+            "name": "AppendRetryNumberToVMName",
+            "type": "boolean",
+            "label": "Append the retry iteration number to the VM name",
+            "defaultValue": "false",
+            "required": false,
+            "groupName": "advanced",
+            "helpMarkDown": "Append the retry iteration number to the lab VM name before retrying (i.e. newVMName-1). Note that this may cause your lab VM name to be longer than allowed.",
             "visibleRule": "RetryOnFailure = true"
         }
     ],
