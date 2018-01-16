@@ -94,7 +94,7 @@ try
         $TemplateParameters = "-labName '$($Lab.Name)' $TemplateParameters"
     }
     $templateParameterObject = ConvertTo-TemplateParameterObject -TemplateParameters "$TemplateParameters"
-    $baseVmName = $TemplateParameterObject.Item('newVMName')
+    $baseVmName = $templateParameterObject.Item('newVMName')
 
     $retry = ConvertTo-Bool -Value $RetryOnFailure
     if (-not $retry)
