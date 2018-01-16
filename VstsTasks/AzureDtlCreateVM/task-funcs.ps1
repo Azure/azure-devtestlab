@@ -31,12 +31,12 @@ function Invoke-AzureDtlTask
         Write-Host "  DeploymentName = $DeploymentName"
         Write-Host "  ResourceGroupName = $ResourceGroupName"
         Write-Host "  TemplateFile = $templateFile"
-        Write-Host ('  TemplateParameters = ' + ($templateParameterObject.GetEnumerator() | sort -Property Key | % { "-$($_.Key) '$(if ($_.Value.GetType().Name -eq 'Hashtable') { ConvertTo-Json $_.Value -Compress } else { $_.Value })'" }))
+        Write-Host ('  TemplateParameters = ' + ($TemplateParameterObject.GetEnumerator() | sort -Property Key | % { "-$($_.Key) '$(if ($_.Value.GetType().Name -eq 'Hashtable') { ConvertTo-Json $_.Value -Compress } else { $_.Value })'" }))
     )
 
-    Test-AzureRmResourceGroupDeployment -ResourceGroupName "$ResourceGroupName" -TemplateFile "$templateFile" -TemplateParameterObject $templateParameterObject
+    Test-AzureRmResourceGroupDeployment -ResourceGroupName "$ResourceGroupName" -TemplateFile "$templateFile" -TemplateParameterObject $TemplateParameterObject
 
-    return New-AzureRmResourceGroupDeployment -Name "$DeploymentName" -ResourceGroupName "$ResourceGroupName" -TemplateFile "$templateFile" -TemplateParameterObject $templateParameterObject
+    return New-AzureRmResourceGroupDeployment -Name "$DeploymentName" -ResourceGroupName "$ResourceGroupName" -TemplateFile "$templateFile" -TemplateParameterObject $TemplateParameterObject
 }
 
 function ConvertTo-Bool
