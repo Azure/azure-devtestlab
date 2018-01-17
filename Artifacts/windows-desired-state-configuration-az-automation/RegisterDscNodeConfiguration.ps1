@@ -19,7 +19,10 @@ param (
     [string]
     $RegistrationKey
 )
-Start-Transcript "C:\Artifacts\dsc.log"
+
+$logfile = "C:\Artifacts\dsc.log"
+
+Start-Transcript $logfile
 Write-Output "Starting DSC configuration for machine: $($env:COMPUTERNAME)"
 
 
@@ -30,8 +33,13 @@ try {
 catch {
     Write-Error $Error[0].Exception
     Write-Error $Error[0].PSMessageDetails
-    Stop-Transcript
+    Write-Output $logfile
     exit -1
 }
 Write-Output "Ending DSC configuration."
-Stop-Transcript
+Finish-Transcript $logfile
+
+function Finish-Transcript ($logFilePath){
+    Stop-Transcript
+    Get-Content -Path $logFilePath | Write-Output
+}
