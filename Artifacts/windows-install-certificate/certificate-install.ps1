@@ -96,6 +96,9 @@ try
         		
         Get-ChildItem -Path $tempFilePath | Import-PfxCertificate -CertStoreLocation Cert:\LocalMachine\My -Exportable -Password $securePassword
         Write-Host "Certificate $certificateName added to the CurrentUser\My store succesfully"
+
+        [System.IO.File]::Delete($tempFilePath)
+        Write-Host "Deleted the temp file $tempFilePath"
     }
 
     Write-Host 'Done'
