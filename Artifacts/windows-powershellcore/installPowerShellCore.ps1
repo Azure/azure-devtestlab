@@ -12,12 +12,25 @@ if (-not (Split-Path -Path $url -Leaf).EndsWith('.msi'))
 
 try
 {
-    $coreMSI = "${env:Temp}\PowerShellCore.msi"
-    (New-Object System.Net.WebClient).DownloadFile($Url, $coreMSI)
-    $msiProcess = Start-Process -FilePath msiexe.exe -ArgumentList "/i ${coreMSI} /quiet /qn" -Wait -PassThru
-    if (-not $msiProcess.ExitCode -eq 0)
+    $coreMSI = "${env:Temp}\PowerShellCore.msi"    
+    Write-Verbose -Message "Downloading ${url} to ${coreMSI} ..."
+    Invoke-WebRequest -url $Url -OutFile $coreMSI -Verbose
+
+    if (Test-Path -Path $coreMSI)
     {
-        Write-Error -Message 'Failed to install PowerShell Core'
+        $msiProcess = Start-Process -FilePath msiexe.exe -ArgumentList "/i ${coreMSI} /quiet /qn" -Wait -PassThru
+        if (-not $msiProcess.ExitCode -eq 0)
+        {
+            Write-Error -Message 'Failed to install PowerShell Core.'
+        }
+        else
+        {
+            Write-Verbose -Message 'PowerShell Core install complete.'    
+        }
+    }
+    else
+    {
+        throw "Download of ${url} failed."
     }
 }
 catch
