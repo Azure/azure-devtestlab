@@ -21,11 +21,14 @@ try
         $msiProcess = Start-Process -FilePath msiexec.exe -ArgumentList "/i ${coreMSI} /quiet /qn" -Wait -PassThru
         if (-not $msiProcess.ExitCode -eq 0)
         {
+            Remove-Item -Path $coreMSI -Force
             Write-Error -Message 'Failed to install PowerShell Core.'
+            
         }
         else
         {
-            Write-Verbose -Message 'PowerShell Core install complete.'    
+            Write-Verbose -Message 'PowerShell Core install complete.' 
+            Remove-Item -Path $coreMSI -Force
         }
     }
     else
