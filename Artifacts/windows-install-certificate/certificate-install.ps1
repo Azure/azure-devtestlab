@@ -95,7 +95,7 @@ try
         Write-Host "Certificate saved"
         		
         Get-ChildItem -Path $tempFilePath | Import-PfxCertificate -CertStoreLocation Cert:\LocalMachine\My -Exportable -Password $securePassword
-        Write-Host "Certificate $certificateName added to the CurrentUser\My store succesfully"
+        Write-Host "Certificate $certificateName added to the LocalMachine\My store succesfully"
 
         [System.IO.File]::Delete($tempFilePath)
         Write-Host "Deleted the temp file $tempFilePath"
