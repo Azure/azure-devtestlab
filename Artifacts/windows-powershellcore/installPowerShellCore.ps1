@@ -18,7 +18,7 @@ try
 
     if (Test-Path -Path $coreMSI)
     {
-        $msiProcess = Start-Process -FilePath msiexe.exe -ArgumentList "/i ${coreMSI} /quiet /qn" -Wait -PassThru
+        $msiProcess = Start-Process -FilePath msiexec.exe -ArgumentList "/i ${coreMSI} /quiet /qn" -Wait -PassThru
         if (-not $msiProcess.ExitCode -eq 0)
         {
             Write-Error -Message 'Failed to install PowerShell Core.'
