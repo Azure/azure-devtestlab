@@ -94,7 +94,7 @@ try
         [System.IO.File]::WriteAllBytes($tempFilePath, [System.Convert]::FromBase64String($base64cert))
         Write-Host "Certificate saved"
         		
-        Get-ChildItem -Path $tempFilePath | Import-PfxCertificate -CertStoreLocation Cert:\CurrentUser\My -Exportable -Password $securePassword
+        Get-ChildItem -Path $tempFilePath | Import-PfxCertificate -CertStoreLocation Cert:\LocalMachine\My -Exportable -Password $securePassword
         Write-Host "Certificate $certificateName added to the CurrentUser\My store succesfully"
     }
 
