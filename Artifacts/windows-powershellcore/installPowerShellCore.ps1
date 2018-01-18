@@ -1,20 +1,20 @@
 ﻿param
 (
-    [Parameter(Mandatory)]
+    [Parameter(Mandatory = $true)]
     [String]
-    $Url
+    $packageUrl
 )
 
-if (-not (Split-Path -Path $url -Leaf).EndsWith('.msi'))
+if (-not (Split-Path -Path $packageUrl -Leaf).EndsWith('.msi'))
 {
-    throw "${Url} is not the path to PowerShell Core MSI."
+    throw "${packageUrl} is not the path to PowerShell Core MSI."
 }
 
 try
 {
     $coreMSI = "${env:Temp}\PowerShellCore.msi"    
-    Write-Verbose -Message "Downloading ${url} to ${coreMSI} ..."
-    Invoke-WebRequest -url $Url -OutFile $coreMSI -Verbose
+    Write-Verbose -Message "Downloading ${packageUrl} to ${coreMSI} ..."
+    Invoke-WebRequest -Uri $packageUrl -OutFile $coreMSI -Verbose
 
     if (Test-Path -Path $coreMSI)
     {
@@ -30,7 +30,7 @@ try
     }
     else
     {
-        throw "Download of ${url} failed."
+        throw "Download of ${packageUrl} failed."
     }
 }
 catch

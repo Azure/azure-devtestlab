@@ -20,6 +20,6 @@
         }
     },    
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./installPowerShellCore.ps1',' -Verbose -Url ''', parameters('packageUrl'), '''\"')]"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./installPowerShellCore.ps1',' -Verbose -packageUrl ''', parameters('packageUrl'), '''\"')]"
     }
 }
