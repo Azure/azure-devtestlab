@@ -10,7 +10,7 @@ Param(
     [ValidateNotNullOrEmpty()]
     [string] $base64cert,
     [ValidateNotNullOrEmpty()]
-    [securestring] $certificatePassword
+    [string] $certificatePassword
 )
 
 
@@ -85,11 +85,16 @@ try
     }
     else
     {
+        $securePassword = ConvertTo-SecureString -String $certificatePassword -AsPlainText -Force
+		$certificatePassword = "deleted"
+
         $tempFilePath = [System.IO.Path]::GetTempFileName()
         Write-Host "Temp file path '$tempFilePath'" 
+
         [System.IO.File]::WriteAllBytes($tempFilePath, [System.Convert]::FromBase64String($base64cert))
         Write-Host "Certificate saved"
-        Get-ChildItem -Path $tempFilePath | Import-PfxCertificate -CertStoreLocation Cert:\CurrentUser\My -Exportable -Password $certificatePassword
+        		
+        Get-ChildItem -Path $tempFilePath | Import-PfxCertificate -CertStoreLocation Cert:\CurrentUser\My -Exportable -Password $securePassword
         Write-Host "Certificate $certificateName added to the CurrentUser\My store succesfully"
     }
 
