@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
   "title": "Install Certificate",
   "publisher": "Ross Bohr",
-  "description": "Installs a certificate in the CurrentUser/My store.",
+  "description": "Installs a certificate in the LocalMachine/My store.",
   "tags": [
     "Certificate",
     "PFX",
@@ -26,7 +26,7 @@
     "certificatePassword": {
       "type": "securestring",
       "displayName": "Certificate password",
-      "description": "The password of the certificate. It is only used to install it to the CurrentUser/My store."
+      "description": "The password of the certificate. It is only used to install it to the LocalMachine/My store."
     }
   },
   "runCommand": {
