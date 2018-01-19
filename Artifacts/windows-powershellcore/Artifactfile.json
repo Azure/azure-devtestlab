@@ -9,7 +9,7 @@
         "PowerShell Core",
         "PowerShell 6"
     ],
-    "iconUri": "https://github.com/Azure/azure-devtestlab/raw/master/Artifacts/windows-powershellcore/Powershell_black_64.png",
+    "iconUri": "https://raw.githubusercontent.com/rchaganti/azure-devtestlab/master/Artifacts/windows-powershellcore/Powershell_black_64.png",
     "targetOsType": "Windows",
     "parameters": {
         "packageUrl": {
