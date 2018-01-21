@@ -24,8 +24,8 @@ try
     {
         if ($installCRuntime)
         {
-            $osVersion = [System.Environment]::OSVersion.Version
-            if (($osVersion.Major -lt 10) -and ($osVersion.Major -ge 6))
+            $osVersion = (Get-WmiObject -Class Win32_OperatingSystem).Name.Split('|')[0]
+            if ($osVersion -like "Microsoft Windows Server 2012 R2*")
             {
                 Write-Verbose -Message 'Acquiring C runtime installer ...'
                 $ucArchive = "${env:Temp}\WindowsUCRT.zip"
@@ -36,19 +36,9 @@ try
                 Add-Type -assembly "System.IO.Compression.FileSystem"
                 [IO.Compression.ZipFile]::ExtractToDirectory($ucArchive, "${env:Temp}\ucFiles")
 
-                #installing Universal C Runtime
-                $isX64 = [System.Environment]::Is64BitOperatingSystem
-                $fullOSVersion = "$($osVersion.Major).$($osVersion.Minor)"
-                if ($isX64)
-                {
-                    $msuPath = "${env:Temp}\ucFiles\Windows${fullOSVersion}-KB3118401-${x64}.msu"
-                }
-                else
-                {
-                    $msuPath = "${env:Temp}\ucFiles\Windows${fullOSVersion}-KB3118401-${x86}.msu"
-                }
-
-                #Install MSU
+                #installing Universal C Runtime                
+                $msuPath = "${env:Temp}\ucFiles\Windows8.1-KB3118401-x64.msu"
+                Write-Verbose -Message "installing Universal C runtime from ${msuPath} ..."
                 $msuProcess = Start-Process -FilePath wusa.exe -ArgumentList "/install ${msuPath} /quiet" -Wait -PassThru
                 if (-not $msuProcess.ExitCode -eq 0)
                 {
