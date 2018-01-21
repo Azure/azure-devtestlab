@@ -17,7 +17,13 @@
             "displayName": "Package URL",
             "allowEmpty": false,
             "description": "The PowerShell core package (MSI) URL from https://github.com/PowerShell/PowerShell/releases."
-        }
+        },
+        "installCRuntime": {
+            "type": "bool",
+            "displayName": "Install C runtime for Windows OS prior to Windows Server 2016?",
+            "allowEmpty": false,
+            "description": "Installing C runtime is a prerequisite for using PowerShell Remoting over WinRM in PowerShell core."
+        }      
     },    
     "runCommand": {
         "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./installPowerShellCore.ps1',' -Verbose -packageUrl ''', parameters('packageUrl'), '''\"')]"
