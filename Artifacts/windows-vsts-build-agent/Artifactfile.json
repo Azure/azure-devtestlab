@@ -39,16 +39,22 @@
       "displayName": "Agent Pool",
       "description": "The agent pool this build agent should be added to."
     },
+    "enableAutoLogon": {
+      "type": "bool",
+      "displayName": "Enable Auto Logon",
+      "description": "Enable autologon to run the build agent in interactive mode for UI testing.",
+      "defaultValue": false
+    },
     "windowsLogonAccount": {
       "type": "string",
-      "displayName": "Service Account Name",
-      "description": "The Windows logon account name which will run the agent service.",
-      "defaultValue": "NT AUTHORITY\\NetworkService"
+      "displayName": "Account Name",
+      "description": "The Windows logon account name which will run the agent service or process.",
+      "defaultValue": ""
     },
     "windowsLogonPassword": {
       "type": "securestring",
-      "displayName": "Service Account Password",
-      "description": "The Windows logon account password which will run the agent service.  This is not required for the default NT AUTHORITY\\NetworkService account.",
+      "displayName": "Account Password",
+      "description": "The Windows logon account password which will run the agent service or autologon process. This is not required for the default NT AUTHORITY\\NetworkService account if running as a service.",
       "defaultValue": "",
       "allowEmpty": true
     },
@@ -72,6 +78,6 @@
     }
   },
   "runCommand": {
-    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./vsts-agent-install.ps1', ' -vstsAccount ''', parameters('vstsAccount'), ''' -vstsUserPassword ', parameters('vstsPassword'), ' -agentName ''', parameters('agentName'), ''' -agentNameSuffix ''', parameters('agentNameSuffix'), ''' -poolName ''', parameters('poolName'), ''' -windowsLogonAccount ''', parameters('windowsLogonAccount'), ''' -windowsLogonPassword ''', parameters('windowsLogonPassword'), ''' -driveLetter ', parameters('driveLetter'), ' -workDirectory ''', parameters('workDirectory'), '''\"')]"
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./vsts-agent-install.ps1', ' -vstsAccount ''', parameters('vstsAccount'), ''' -vstsUserPassword ', parameters('vstsPassword'), ' -agentName ''', parameters('agentName'), ''' -agentNameSuffix ''', parameters('agentNameSuffix'), ''' -poolName ''', parameters('poolName'), ''' -enableAutoLogon $', parameters('enableAutoLogon') , ' -windowsLogonAccount ''', parameters('windowsLogonAccount'), ''' -windowsLogonPassword ''', parameters('windowsLogonPassword'), ''' -driveLetter ', parameters('driveLetter'), ' -workDirectory ''', parameters('workDirectory'), '''\"')]"
   }
 }
