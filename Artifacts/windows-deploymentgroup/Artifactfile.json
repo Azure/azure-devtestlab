@@ -62,7 +62,7 @@
         "windowsLogonPassword": {
           "type": "securestring",
           "displayName": "Account Password",
-          "description": "The Windows logon account password which will run the agent. This is not required for the default NT AUTHORITY\\NetworkService account if running as a service.",
+          "description": "The Windows logon account password which will run the agent. This is not required for the default NT AUTHORITY\\NetworkService account when running as a service.",
           "defaultValue": "",
           "allowEmpty": true
         }
