@@ -3,7 +3,7 @@
     [Parameter(Mandatory=$true)] $projectName,
     [Parameter(Mandatory=$true)] $deploymentGroupName,
     [Parameter(Mandatory=$true)] $personalAccessToken,
-    [Parameter(Mandatory=$true)][boolean] $runAsAutoLogon,
+    [Parameter(Mandatory=$true)][Boolean] $runAsAutoLogon,
     [Parameter(Mandatory=$false)][String][AllowEmptyString()] $deploymentAgentTags,
     [Parameter(Mandatory=$false)][String][AllowEmptyString()] $agentInstallPath,
     [Parameter(Mandatory=$false)][String][AllowEmptyString()] $agentName,
@@ -129,7 +129,7 @@ function Configure-DeploymentGroupAgent
         [Parameter(Mandatory=$false)][String][AllowEmptyString()] $agentName,
         [Parameter(Mandatory=$true)] $agentInstallPath,
         [Parameter(Mandatory=$false)][String][AllowEmptyString()] $deploymentAgentTags,
-        [Parameter(Mandatory=$true)][boolean] $runAsAutoLogon,
+        [Parameter(Mandatory=$true)][Boolean] $runAsAutoLogon,
         [Parameter(Mandatory=$false)][String][AllowEmptyString()] $windowsLogonAccount,
         [Parameter(Mandatory=$false)][String][AllowEmptyString()] $windowsLogonPassword
         )
@@ -197,7 +197,7 @@ function Install-DeploymentGroupAgent
         [Parameter(Mandatory=$false)][String][AllowEmptyString()] $deploymentAgentTags,
         [Parameter(Mandatory=$false)][String][AllowEmptyString()] $agentInstallPath,
         [Parameter(Mandatory=$false)][String][AllowEmptyString()] $agentName,
-        [Parameter(Mandatory=$true)][boolean] $runAsAutoLogon,
+        [Parameter(Mandatory=$true)][Boolean] $runAsAutoLogon,
         [Parameter(Mandatory=$false)][String][AllowEmptyString()] $windowsLogonAccount,
         [Parameter(Mandatory=$false)][String][AllowEmptyString()] $windowsLogonPassword
         )
