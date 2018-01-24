@@ -13,7 +13,7 @@ param(
     [ValidateLength(1, 1)]
     [string] $driveLetter,
     [string] $workDirectory,
-    [boolean] $enableAutoLogon
+    [boolean] $runAsAutoLogon
 )
 
 ###################################################################################################
@@ -245,7 +245,7 @@ function Install-Agent
         # Set the current directory to the agent dedicated one previously created.
         pushd -Path $Config.AgentInstallPath
 
-        if ($Config.EnableAutoLogon)
+        if ($Config.RunAsAutoLogon)
         {
             # Arguements to run agent with autologon enabled
             $agentConfigArgs = "--unattended", "--url", $Config.ServerUrl, "--auth", "PAT", "--token", $Config.VstsUserPassword, "--pool", $Config.PoolName, "--agent", $Config.AgentName, "--runAsAutoLogon", "--overwriteAutoLogon", "--windowslogonaccount", $Config.WindowsLogonAccount
@@ -325,7 +325,7 @@ try
         PoolName = $poolName
         ServerUrl = "https://$VstsAccount.visualstudio.com"
         VstsUserPassword = $vstsUserPassword
-        EnableAutoLogon = $enableAutoLogon
+        RunAsAutoLogon = $runAsAutoLogon
         WindowsLogonAccount = $windowsLogonAccount
         WindowsLogonPassword = $windowsLogonPassword
         WorkDirectory = $workDirectory

@@ -39,9 +39,9 @@
       "displayName": "Agent Pool",
       "description": "The agent pool this build agent should be added to."
     },
-    "enableAutoLogon": {
+    "RunAsAutoLogon": {
       "type": "bool",
-      "displayName": "Enable Auto Logon",
+      "displayName": "Run As Auto Logon",
       "description": "Enable autologon to run the build agent in interactive mode for UI testing.",
       "defaultValue": false
     },
@@ -49,7 +49,7 @@
       "type": "string",
       "displayName": "Account Name",
       "description": "The Windows logon account name which will run the agent service or process.",
-      "defaultValue": ""
+      "defaultValue": "NT AUTHORITY\\NetworkService"
     },
     "windowsLogonPassword": {
       "type": "securestring",
@@ -78,6 +78,6 @@
     }
   },
   "runCommand": {
-    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./vsts-agent-install.ps1', ' -vstsAccount ''', parameters('vstsAccount'), ''' -vstsUserPassword ', parameters('vstsPassword'), ' -agentName ''', parameters('agentName'), ''' -agentNameSuffix ''', parameters('agentNameSuffix'), ''' -poolName ''', parameters('poolName'), ''' -enableAutoLogon $', parameters('enableAutoLogon') , ' -windowsLogonAccount ''', parameters('windowsLogonAccount'), ''' -windowsLogonPassword ''', parameters('windowsLogonPassword'), ''' -driveLetter ', parameters('driveLetter'), ' -workDirectory ''', parameters('workDirectory'), '''\"')]"
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./vsts-agent-install.ps1', ' -vstsAccount ''', parameters('vstsAccount'), ''' -vstsUserPassword ', parameters('vstsPassword'), ' -agentName ''', parameters('agentName'), ''' -agentNameSuffix ''', parameters('agentNameSuffix'), ''' -poolName ''', parameters('poolName'), ''' -runAsAutoLogon $', parameters('runAsAutoLogon') , ' -windowsLogonAccount ''', parameters('windowsLogonAccount'), ''' -windowsLogonPassword ''', parameters('windowsLogonPassword'), ''' -driveLetter ', parameters('driveLetter'), ' -workDirectory ''', parameters('workDirectory'), '''\"')]"
   }
 }
