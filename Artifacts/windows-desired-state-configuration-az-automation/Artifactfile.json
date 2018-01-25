@@ -1,0 +1,75 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "PowerShell Desired State Configuration Registrar - Azure Automation",
+    "description": "Applies a PowerShell DSC node configuration from an Azure Automation account to the specified VM.",
+    "publisher": "Josh Garverick",
+    "iconUri": "https://pbs.twimg.com/profile_images/1604347359/logo_512x512.png",
+    "targetOsType": "Windows",
+    "parameters": {
+        "registrationUrl": {
+            "type": "string",
+            "displayName": "Azure Automation Registration URL",
+            "description": "The URL of the Azure Automation account.  The account must exist in the same subscription as the lab.",
+            "allowEmpty": false
+        },
+        "registrationKey": {
+            "type": "securestring",
+            "displayName": "Azure Automation Registration Key",
+            "description": "The registration key of the Azure Automation account.  The account must exist in the same subscription as the lab.",
+            "allowEmpty": false
+        },
+        "configurationName": {
+            "type": "string",
+            "displayName": "DSC Node Configuration name",
+            "description": "The name of the DSC Node Configuration, i.e. 'IIS.localhost'.",
+            "allowEmpty": false
+        },
+        "configurationMode": {
+            "type": "string",
+            "displayName": "Configuration Mode",
+            "description": "How the DSC configuration should be applied",
+            "allowEmpty": false,
+            "allowedValues": [
+                "ApplyOnly","ApplyAndAutocorrect","ApplyAndMonitor"
+            ]
+        },
+        "configurationFrequency": {
+            "type": "int",
+            "displayName": "Configuration Frequency (minutes)",
+            "description": "Number of minutes between configuration sweeps",
+            "allowEmpty": false,
+            "defaultValue": 15
+        },
+        "refreshFrequency": {
+            "type": "int",
+            "displayName": "Refresh Frequency (minutes)",
+            "description": "Number of minutes between refresh intervals",
+            "allowEmpty": false,
+            "defaultValue": 30
+        },
+        "rebootIfNeeded": {
+            "type": "bool",
+            "displayName": "Reboot if Needed",
+            "description": "Reboots the VM if required during configuration",
+            "defaultValue": true
+        },
+        "actionAfterReboot": {
+            "type": "string",
+            "displayName": "Action After Reboot",
+            "description": "Action to take once machine is rebooted",
+            "allowEmpty": true,
+            "allowedValues": [
+                "ContinueConfiguration","StopConfiguration"
+            ]
+        },
+        "allowModuleOverwrite": {
+            "type": "bool",
+            "displayName": "Allow Module Overwrite",
+            "description": "Allows for overwriting the module if needed",
+            "defaultValue": true
+        }
+    },
+    "runCommand": {
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./RegisterDscNodeConfiguration.ps1', ' -RegistrationURL ''', parameters('registrationUrl'),''' -RegistrationKey ''', parameters('registrationKey'), ''' -ConfigName ''', parameters('configurationName'), ''' -ConfigMode ''', parameters('configurationMode'), ''' -ConfigMinutes ', parameters('configurationFrequency'), ' -RefreshMinutes ', parameters('refreshFrequency'), ' -Reboot $', parameters('rebootIfNeeded'), ' -AfterReboot ''', parameters('actionAfterReboot'),''' -AllowOverwrite $', parameters('allowModuleOverwrite'), '\"')]"
+    }
+}
