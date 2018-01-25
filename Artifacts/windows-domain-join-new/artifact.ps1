@@ -10,7 +10,7 @@ param
     [Parameter(Mandatory = $true)]
     [string] $DomainToJoin,
 
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory = $false)]
     [string] $OUPath
 )
 
@@ -20,19 +20,19 @@ function Add-VmToDomain ()
 {
     param
     (
-        [Parameter(Mandatory = $true)] 
-        [string] $VmName, 
-        
-        [Parameter(Mandatory = $true)] 
-        [string] $DomainName, 
-        
-        [Parameter(Mandatory = $true)] 
-        [string] $JoinUser, 
-        
-        [Parameter(Mandatory = $true)] 
-        [securestring] $JoinPassword, 
-        
-        [Parameter(Mandatory = $true)] 
+        [Parameter(Mandatory = $true)]
+        [string] $VmName,
+
+        [Parameter(Mandatory = $true)]
+        [string] $DomainName,
+
+        [Parameter(Mandatory = $true)]
+        [string] $JoinUser,
+
+        [Parameter(Mandatory = $true)]
+        [securestring] $JoinPassword,
+
+        [Parameter(Mandatory = $false)]
         [string] $OU
     )
 
@@ -68,6 +68,10 @@ else
 {
     $securePass = ConvertTo-SecureString $DomainAdminPassword -AsPlainText -Force
     Write-Output "Attempting to join the domain..."
+    # Treat empty string as null to convert to optional parameter
+    if(-not $OUPath) {
+        $OUPath = $null
+    }
     Add-VmToDomain -VmName $env:COMPUTERNAME -DomainName $DomainToJoin -JoinUser $DomainAdminUsername -JoinPassword $securePass -OU $OUPath
 }
 
