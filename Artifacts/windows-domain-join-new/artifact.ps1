@@ -43,8 +43,11 @@ function Add-VmToDomain ()
     else
     {
         $credential = New-Object System.Management.Automation.PSCredential($JoinUser, $JoinPassword)
-    
-        [Microsoft.PowerShell.Commands.ComputerChangeInfo]$computerChangeInfo = Add-Computer -ComputerName $VmName -DomainName $DomainName -Credential $credential -OUPath $OU -Force -PassThru
+        if($OU) {   
+            [Microsoft.PowerShell.Commands.ComputerChangeInfo]$computerChangeInfo = Add-Computer -ComputerName $VmName -DomainName $DomainName -Credential $credential -OUPath $OU -Force -PassThru
+        } else {
+            [Microsoft.PowerShell.Commands.ComputerChangeInfo]$computerChangeInfo = Add-Computer -ComputerName $VmName -DomainName $DomainName -Credential $credential -Force -PassThru
+        }
         if ($computerChangeInfo.HasSucceeded)
         {
             Write-Output "Result: Successfully joined the $DomaintoJoin domain"
@@ -68,10 +71,6 @@ else
 {
     $securePass = ConvertTo-SecureString $DomainAdminPassword -AsPlainText -Force
     Write-Output "Attempting to join the domain..."
-    # Treat empty string as null to convert to optional parameter
-    if(-not $OUPath) {
-        $OUPath = $null
-    }
     Add-VmToDomain -VmName $env:COMPUTERNAME -DomainName $DomainToJoin -JoinUser $DomainAdminUsername -JoinPassword $securePass -OU $OUPath
 }
 
