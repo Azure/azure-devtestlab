@@ -1,12 +1,14 @@
 ﻿param (
-    [Parameter(Mandatory=$true)]$accountUrl,
-    [Parameter(Mandatory=$true)]$projectName,
-    [Parameter(Mandatory=$true)]$deploymentGroupName,
-    [Parameter(Mandatory=$true)]$personalAccessToken,
-    [Parameter(Mandatory=$false)][String] [AllowEmptyString()]$deploymentAgentTags,
-    [Parameter(Mandatory=$false)][String] [AllowEmptyString()]$agentInstallPath,
-    [Parameter(Mandatory=$false)][String] [AllowEmptyString()]$agentName
-    
+    [Parameter(Mandatory=$true)] $accountUrl,
+    [Parameter(Mandatory=$true)] $projectName,
+    [Parameter(Mandatory=$true)] $deploymentGroupName,
+    [Parameter(Mandatory=$true)] $personalAccessToken,
+    [Parameter(Mandatory=$true)][Boolean] $runAsAutoLogon,
+    [Parameter(Mandatory=$false)][String][AllowEmptyString()] $deploymentAgentTags,
+    [Parameter(Mandatory=$false)][String][AllowEmptyString()] $agentInstallPath,
+    [Parameter(Mandatory=$false)][String][AllowEmptyString()] $agentName,
+    [Parameter(Mandatory=$false)][String][AllowEmptyString()] $windowsLogonAccount,
+    [Parameter(Mandatory=$false)][String][AllowEmptyString()] $windowsLogonPassword
 )
 
 function Test-InstallPrerequisites
@@ -28,7 +30,6 @@ function New-AgentPath
         $agentInstallPath = "$env:SystemDrive\vstsagent"
     }
     
-
     If (-NOT (Test-Path "$agentInstallPath"))
     {
         New-Item -ItemType Directory -Path $agentInstallPath -Force | Out-Null
@@ -54,7 +55,6 @@ function New-AgentPath
                     $Retrycount = $Retrycount + 1
                 }
             }
-
         } While ($Stoploop -eq $false)
     }
 
@@ -122,13 +122,16 @@ function Configure-DeploymentGroupAgent
 {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory=$true)]$accountUrl,
-        [Parameter(Mandatory=$true)]$projectName,
-        [Parameter(Mandatory=$true)]$deploymentGroupName,
-        [Parameter(Mandatory=$true)]$personalAccessToken,
-        [Parameter(Mandatory=$false)][String] [AllowEmptyString()]$agentName,
-        [Parameter(Mandatory=$true)]$agentInstallPath,
-        [Parameter(Mandatory=$false)][String] [AllowEmptyString()]$deploymentAgentTags
+        [Parameter(Mandatory=$true)] $accountUrl,
+        [Parameter(Mandatory=$true)] $projectName,
+        [Parameter(Mandatory=$true)] $deploymentGroupName,
+        [Parameter(Mandatory=$true)] $personalAccessToken,
+        [Parameter(Mandatory=$false)][String][AllowEmptyString()] $agentName,
+        [Parameter(Mandatory=$true)] $agentInstallPath,
+        [Parameter(Mandatory=$false)][String][AllowEmptyString()] $deploymentAgentTags,
+        [Parameter(Mandatory=$true)][Boolean] $runAsAutoLogon,
+        [Parameter(Mandatory=$false)][String][AllowEmptyString()] $windowsLogonAccount,
+        [Parameter(Mandatory=$false)][String][AllowEmptyString()] $windowsLogonPassword
         )
 
     If ([string]::IsNullOrEmpty($agentName))
@@ -138,12 +141,29 @@ function Configure-DeploymentGroupAgent
     Write-Host "Configuring Agent: $agentName"
 
     pushd $agentInstallPath
-    if ([string]::IsNullOrEmpty($deploymentAgentTags)) 
+
+    if ($runAsAutoLogon)
     {
-        .\config.cmd --deploymentgroup --agent $agentName --runasservice --work '_work' --url $accountUrl --projectname $projectName --deploymentgroupname $deploymentGroupName --auth PAT --token $personalAccessToken --unattended 
-    } else {
-        .\config.cmd --deploymentgroup --agent $agentName --runasservice --work '_work' --url $accountUrl --projectname $projectName --deploymentgroupname $deploymentGroupName --auth PAT --token $personalAccessToken --adddeploymentgrouptags --deploymentgrouptags $deploymentAgentTags --unattended 
+        # Arguements to run agent with autologon enabled
+        $agentConfigArgs = "--unattended", "--url", $accountUrl, "--auth", "PAT", "--token", $personalAccessToken, "--deploymentgroup", "--projectname", $projectName, "--deploymentgroupname", $deploymentGroupName, "--agent", $agentName, "--runAsAutoLogon", "--overwriteAutoLogon", "--windowslogonaccount", $windowsLogonAccount, "--work", "_work"
     }
+    else
+    {
+        # Arguements to run agent as a service
+        $agentConfigArgs = "--unattended", "--url", $accountUrl, "--auth", "PAT", "--token", $personalAccessToken, "--deploymentgroup", "--projectname", $projectName, "--deploymentgroupname", $deploymentGroupName, "--agent", $agentName, "--runasservice", "--windowslogonaccount", $windowsLogonAccount, "--work", "_work"
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($windowsLogonPassword))
+    {
+        $agentConfigArgs += "--windowslogonpassword", $windowsLogonPassword
+    }
+    if(-not [string]::IsNullOrWhiteSpace($deploymentAgentTags))
+    {
+        $agentConfigArgs += "--deploymentgrouptags", $deploymentAgentTags
+    }
+
+    & .\config.cmd $agentConfigArgs
+
     if (! $?) 
     {
         Write-Host "Deployment agent configuration failed."
@@ -166,18 +186,20 @@ function Remove-InstallFiles
     popd
 }
 
-
 function Install-DeploymentGroupAgent 
 {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory=$true)]$accountUrl,
-        [Parameter(Mandatory=$true)]$projectName,
-        [Parameter(Mandatory=$true)]$deploymentGroupName,
-        [Parameter(Mandatory=$true)]$personalAccessToken,
-        [Parameter(Mandatory=$false)] [String] [AllowEmptyString()] $deploymentAgentTags,
-        [Parameter(Mandatory=$false)] [String] [AllowEmptyString()] $agentInstallPath,
-        [Parameter(Mandatory=$false)] [String] [AllowEmptyString()] $agentName
+        [Parameter(Mandatory=$true)] $accountUrl,
+        [Parameter(Mandatory=$true)] $projectName,
+        [Parameter(Mandatory=$true)] $deploymentGroupName,
+        [Parameter(Mandatory=$true)] $personalAccessToken,
+        [Parameter(Mandatory=$false)][String][AllowEmptyString()] $deploymentAgentTags,
+        [Parameter(Mandatory=$false)][String][AllowEmptyString()] $agentInstallPath,
+        [Parameter(Mandatory=$false)][String][AllowEmptyString()] $agentName,
+        [Parameter(Mandatory=$true)][Boolean] $runAsAutoLogon,
+        [Parameter(Mandatory=$false)][String][AllowEmptyString()] $windowsLogonAccount,
+        [Parameter(Mandatory=$false)][String][AllowEmptyString()] $windowsLogonPassword
         )
 
     $ErrorActionPreference="Stop";
@@ -197,7 +219,7 @@ function Install-DeploymentGroupAgent
         Download-DeploymentGroupAgent $accountUrl $personalAccessToken $agentInstallPath $agentZipFile
 
         #Configure Agent
-        Configure-DeploymentGroupAgent $accountUrl $projectName $deploymentGroupName $personalAccessToken $agentName $agentInstallPath $deploymentAgentTags  
+        Configure-DeploymentGroupAgent $accountUrl $projectName $deploymentGroupName $personalAccessToken $agentName $agentInstallPath $deploymentAgentTags $runAsAutoLogon $windowsLogonAccount $windowsLogonPassword
 
         #Cleanup
         Remove-InstallFiles $agentInstallPath $agentZipFile
@@ -218,7 +240,7 @@ function Install-DeploymentGroupAgent
     }
 }
 
-Install-DeploymentGroupAgent $accountUrl $projectName $deploymentGroupName $personalAccessToken $deploymentAgentTags $agentInstallPath $agentName 
+Install-DeploymentGroupAgent $accountUrl $projectName $deploymentGroupName $personalAccessToken $deploymentAgentTags $agentInstallPath $agentName $runAsAutoLogon $windowsLogonAccount $windowsLogonPassword
 
 
 

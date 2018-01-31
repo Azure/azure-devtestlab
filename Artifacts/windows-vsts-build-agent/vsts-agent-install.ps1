@@ -12,7 +12,8 @@ param(
     [ValidatePattern("[c-zC-Z]")]
     [ValidateLength(1, 1)]
     [string] $driveLetter,
-    [string] $workDirectory
+    [string] $workDirectory,
+    [boolean] $runAsAutoLogon
 )
 
 ###################################################################################################
@@ -244,8 +245,17 @@ function Install-Agent
         # Set the current directory to the agent dedicated one previously created.
         pushd -Path $Config.AgentInstallPath
 
-        # The actual install of the agent. Using --runasservice, and some other values that could be turned into paramenters if needed.
-        $agentConfigArgs = "--unattended", "--url", $Config.ServerUrl, "--auth", "PAT", "--token", $Config.VstsUserPassword, "--pool", $Config.PoolName, "--agent", $Config.AgentName, "--runasservice", "--windowslogonaccount", $Config.WindowsLogonAccount
+        if ($Config.RunAsAutoLogon)
+        {
+            # Arguements to run agent with autologon enabled
+            $agentConfigArgs = "--unattended", "--url", $Config.ServerUrl, "--auth", "PAT", "--token", $Config.VstsUserPassword, "--pool", $Config.PoolName, "--agent", $Config.AgentName, "--runAsAutoLogon", "--overwriteAutoLogon", "--windowslogonaccount", $Config.WindowsLogonAccount
+        }
+        else
+        {
+            # Arguements to run agent as a service
+            $agentConfigArgs = "--unattended", "--url", $Config.ServerUrl, "--auth", "PAT", "--token", $Config.VstsUserPassword, "--pool", $Config.PoolName, "--agent", $Config.AgentName, "--runasservice", "--windowslogonaccount", $Config.WindowsLogonAccount
+        }
+
         if (-not [string]::IsNullOrWhiteSpace($Config.WindowsLogonPassword))
         {
             $agentConfigArgs += "--windowslogonpassword", $Config.WindowsLogonPassword
@@ -315,6 +325,7 @@ try
         PoolName = $poolName
         ServerUrl = "https://$VstsAccount.visualstudio.com"
         VstsUserPassword = $vstsUserPassword
+        RunAsAutoLogon = $runAsAutoLogon
         WindowsLogonAccount = $windowsLogonAccount
         WindowsLogonPassword = $windowsLogonPassword
         WorkDirectory = $workDirectory
