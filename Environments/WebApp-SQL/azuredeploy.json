@@ -2,20 +2,13 @@
     "$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "resourceNamePrefix": {
-            "type": "string",
-            "defaultValue": "waw",
-            "metadata": {
-                "description": "Prefix to use for resource names"
-            }
-        },
-        "databaseAdministratorLogin": {
+        "Database Administrator Login": {
             "type": "string",
             "metadata": {
                 "description": "Database administrator login name"
             }
         },
-        "databaseAdministratorLoginPassword": {
+        "Database Administrator Login Password": {
             "type": "securestring",
             "metadata": {
                 "description": "Database administrator password"
@@ -23,9 +16,10 @@
         }
     },
     "variables": {
-        "hostingPlanName": "[toLower(concat(parameters('resourceNamePrefix'), '-', take(uniqueString(resourceGroup().id), 6), '-sp'))]",
-        "siteName": "[toLower(concat(parameters('resourceNamePrefix'), '-', take(uniqueString(resourceGroup().id), 6)))]",
-        "serverName": "[toLower(concat(parameters('resourceNamePrefix'), '-', take(uniqueString(resourceGroup().id), 6), '-db'))]",
+        "resourceNamePrefix": "[take(uniqueString(resourceGroup().id), 3)]",
+        "hostingPlanName": "[toLower(concat(variables('resourceNamePrefix'), '-', take(uniqueString(resourceGroup().id), 6), '-sp'))]",
+        "siteName": "[toLower(concat(variables('resourceNamePrefix'), '-', take(uniqueString(resourceGroup().id), 6)))]",
+        "serverName": "[toLower(concat(variables('resourceNamePrefix'), '-', take(uniqueString(resourceGroup().id), 6), '-db'))]",
         "databaseName": "[concat('db', uniqueString(resourceGroup().id, variables('siteName')))]",
         "databaseVersion": "12.0"
     },
@@ -66,8 +60,8 @@
             "apiVersion": "2014-04-01",
             "location": "[resourceGroup().location]",
             "properties": {
-                "administratorLogin": "[parameters('databaseAdministratorLogin')]",
-                "administratorLoginPassword": "[parameters('databaseAdministratorLoginPassword')]",
+                "administratorLogin": "[parameters('Database Administrator Login')]",
+                "administratorLoginPassword": "[parameters('Database Administrator Login Password')]",
                 "version": "[variables('databaseVersion')]"
             },
             "resources": [

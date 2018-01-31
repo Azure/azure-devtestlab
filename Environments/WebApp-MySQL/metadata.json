@@ -1,6 +1,6 @@
 {
-  "itemDisplayName": "WebApp on Windows with MySql",
+  "itemDisplayName": "Web App with MySQL",
   "description": "This template creates an Azure Web App with MySQL",
-  "githubUsername": "MSFT - DTL",
+  "githubUsername": "Microsoft",
   "summary": "..."
 }

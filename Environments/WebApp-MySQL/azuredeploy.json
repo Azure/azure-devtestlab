@@ -2,20 +2,13 @@
     "$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "resourceNamePrefix": {
-            "type": "string",
-            "defaultValue": "waw",
-            "metadata": {
-                "description": "Prefix to use for resource names"
-            }
-        },        
-        "databaseAdministratorLogin": {
+        "Database Administrator Login": {
             "type": "string",
             "metadata": {
                 "description": "Database administrator login name"
             }
         },
-        "databaseAdministratorLoginPassword": {
+        "Database Administrator Login Password": {
             "type": "securestring",
             "metadata": {
                 "description": "Database administrator password"
@@ -23,13 +16,14 @@
         }
     },
     "variables": {
-        "hostingPlanName": "[toLower(concat(parameters('resourceNamePrefix'), '-', take(uniqueString(resourceGroup().id), 6), '-sp'))]",
-        "siteName": "[toLower(concat(parameters('resourceNamePrefix'), '-', take(uniqueString(resourceGroup().id), 6)))]",
-        "serverName": "[toLower(concat(parameters('resourceNamePrefix'), '-', take(uniqueString(resourceGroup().id), 6), '-db'))]",
-        "databaseName": "[concat('db', uniqueString(resourceGroup().id, variables('siteName')))]",        
-        "databaseVersion": "9.6",
+        "resourceNamePrefix": "[take(uniqueString(resourceGroup().id), 3)]",
+        "hostingPlanName": "[toLower(concat(variables('resourceNamePrefix'), '-', take(uniqueString(resourceGroup().id), 6), '-sp'))]",
+        "siteName": "[toLower(concat(variables('resourceNamePrefix'), '-', take(uniqueString(resourceGroup().id), 6)))]",
+        "serverName": "[toLower(concat(variables('resourceNamePrefix'), '-', take(uniqueString(resourceGroup().id), 6), '-db'))]",
+        "databaseName": "[concat('db', uniqueString(resourceGroup().id, variables('siteName')))]",
+        "databaseVersion": "5.7",
         "databaseDTU": 100,
-        "databaseSkuName": "PostgreSQLB100",
+        "databaseSkuName": "MYSQLB100",
         "databaseSkuSizeMB": 51200,
         "databaseSkuTier": "Basic"
     },
@@ -70,25 +64,25 @@
             "apiVersion": "2015-04-01",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "[resourceId('Microsoft.DBforPostgreSQL/servers', variables('serverName'))]"
+                "[resourceId('Microsoft.DBforMySQL/servers', variables('serverName'))]"
             ],
             "properties": {
                 "defaultConnection": {
-                    "value": "[concat('Database=', variables('databaseName'), ';Data Source=', variables('serverName'), '.postgresql.database.azure.com;User Id=', parameters('databaseAdministratorLogin'),'@', variables('serverName'),';Password=', parameters('databaseAdministratorLoginPassword'))]",
-                    "type": "PostgreSQL"
+                    "value": "[concat('Database=', variables('databaseName'), ';Data Source=', variables('serverName'), '.mysql.database.azure.com;User Id=', parameters('Database Administrator Login'),'@', variables('serverName'),';Password=', parameters('Database Administrator Login Password'))]",
+                    "type": "MySQL"
                 }
             }
         },
         {
             "name": "[variables('serverName')]",
-            "type": "Microsoft.DBforPostgreSQL/servers",
-            "apiVersion": "2017-04-30-preview",
+            "type": "Microsoft.DBforMySQL/servers",
+            "apiVersion": "2016-02-01-privatepreview",
             "location": "[resourceGroup().location]",
             "kind": "",
             "properties": {
                 "version": "[variables('databaseVersion')]",
-                "administratorLogin": "[parameters('databaseAdministratorLogin')]",
-                "administratorLoginPassword": "[parameters('databaseAdministratorLoginPassword')]",
+                "administratorLogin": "[parameters('Database Administrator Login')]",
+                "administratorLoginPassword": "[parameters('Database Administrator Login Password')]",
                 "storageMB": "[variables('databaseSkuSizeMB')]"
             },
             "sku": {
@@ -105,7 +99,7 @@
                     "apiVersion": "2016-02-01-privatepreview",
                     "location": "[resourceGroup().location]",
                     "dependsOn": [
-                        "[concat('Microsoft.DBforPostgreSQL/servers/', variables('serverName'))]"
+                        "[concat('Microsoft.DBforMySQL/servers/', variables('serverName'))]"
                     ],
                     "properties": {
                         "startIpAddress": "0.0.0.0",
@@ -118,11 +112,11 @@
                     "apiVersion": "2016-02-01-privatepreview",
                     "location": "[resourceGroup().location]",
                     "dependsOn": [
-                        "[concat('Microsoft.DBforPostgreSQL/servers/', variables('serverName'))]"
+                        "[concat('Microsoft.DBforMySQL/servers/', variables('serverName'))]"
                     ],
                     "properties": {
                         "charset": "utf8",
-                        "collation":"English_United States.1252"
+                        "collation": "utf8_general_ci"
                     }
                 }
             ]

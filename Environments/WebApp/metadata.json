@@ -1,6 +1,6 @@
 {
-  "itemDisplayName": "WebApp on Windows",
+  "itemDisplayName": "Web App",
   "description": "This template creates an Azure Web App without a data store.",
-  "githubUsername": "MSFT - DTL",
+  "githubUsername": "Microsoft",
   "summary": "..."
 }
