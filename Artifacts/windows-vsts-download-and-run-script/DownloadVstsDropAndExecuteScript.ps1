@@ -1,6 +1,5 @@
 [CmdletBinding()]
 param(
-    [string] $username,
     [string] $accessToken,
     [string] $buildDefinitionName,
     [string] $vstsProjectUri,
@@ -9,7 +8,6 @@ param(
 )
 
 ###################################################################################################
-
 #
 # PowerShell configurations
 #
@@ -19,23 +17,20 @@ param(
 $ErrorActionPreference = "Stop"
 
 # Ensure we set the working directory to that of the script.
-pushd $PSScriptRoot
+Push-Location $PSScriptRoot
 
 # Configure strict debugging.
 Set-PSDebug -Strict
 
 ###################################################################################################
-
 #
-# Functions used in this script.
+# Handle all errors in this script.
 #
 
-function Handle-LastError
+trap
 {
-    [CmdletBinding()]
-    param(
-    )
-
+    # NOTE: This trap will handle all errors. There should be no need to use a catch below in this
+    #       script, unless you want to ignore a specific error.
     $message = $error[0].Exception.Message
     if ($message)
     {
@@ -49,16 +44,52 @@ function Handle-LastError
     exit -1
 }
 
-function Set-AuthHeaders
+###################################################################################################
+#
+# Functions used in this script.
+#
+
+function Get-BuildArtifacts
 {
     [CmdletBinding()]
     param (
-        [string] $UserName,
-        [string] $AccessToken
+        [string] $ArtifactsUri,
+        [Hashtable] $Headers,
+        [string] $Destination
     )
 
-    $basicAuth = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes("$UserName`:$AccessToken"))
-    return @{ Authorization = "Basic $basicAuth" }
+    # Clean up destination path first, if needed.
+    if (Test-Path $Destination -PathType Container)
+    {
+        Write-Host "Cleaning up destination folder $Destination"
+        Remove-Item -Path $Destination -Force -Recurse | Out-Null
+    }
+
+    Write-Host "Getting build artifacts information from $ArtifactsUri"
+    [Array] $artifacts = (Invoke-RestMethod -Uri $ArtifactsUri -Headers $Headers -Method Get | ConvertTo-Json -Depth 3 | ConvertFrom-Json).value
+
+    # Process all artifacts found.
+    foreach ($artifact in $artifacts)
+    {
+        $artifactName = "$($artifact.name)"
+        $artifactZip = "$artifactName.zip"
+        Write-Host "Preparing to download artifact $artifactName to file $artifactZip"
+
+        $downloadUrl = $artifact.resource.downloadUrl
+        if (-not $downloadUrl)
+        {
+            throw "Unable to get the download URL for artifact $artifactName."
+        }
+
+        $outfile = "$PSScriptRoot\$artifactZip"
+
+        Write-Host "Downloading artifact $artifactName from $downloadUrl"
+        Invoke-RestMethod -Uri "$downloadUrl" -Headers $Headers -Method Get -Outfile $outfile | Out-Null
+
+        Write-Host "Extracting artifact file $artifactZip to $Destination"
+        [System.Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.FileSystem") | Out-Null 
+        [System.IO.Compression.ZipFile]::ExtractToDirectory($outfile, $Destination) | Out-Null
+    }
 }
 
 function Get-BuildDefinitionId
@@ -71,50 +102,34 @@ function Get-BuildDefinitionId
 
     Write-Host "Getting build definition ID from $BuildDefinitionUri"
     $buildDef = Invoke-RestMethod -Uri $BuildDefinitionUri -Headers $Headers -Method Get
-    return $buildDef.value.id
+    $buildDefinitionId = $buildDef.value.id
+    if (-not $buildDefinitionId)
+    {
+        throw "Unable to get the build definition ID from $buildDefinitionUri"
+    }
+
+    return $buildDefinitionId
 }
 
-function Get-LatestBuild
+function Get-LatestBuildId
 {
     param (
         [string] $BuildUri,
         [Hashtable] $Headers
     )
 
-    Write-Host "Getting latest build from $BuildUri"
+    Write-Host "Getting latest build ID from $BuildUri"
     $builds = Invoke-RestMethod -Uri $BuildUri -Headers $Headers -Method Get | ConvertTo-Json | ConvertFrom-Json
-    return $builds.value[0].id
-}
-
-function Download-BuildArtifacts
-{
-    [CmdletBinding()]
-    param (
-        [string] $ArtifactsUri,
-        [Hashtable] $Headers,
-        [string] $Outfile,
-        [string] $Destination
-    )
-
-    Write-Host "Getting build artifacts information from $ArtifactsUri"
-    $artifacts = Invoke-RestMethod -Uri $ArtifactsUri -Headers $Headers -Method Get | ConvertTo-Json -Depth 3 | ConvertFrom-Json
-    $downloadUrl = $artifacts.value.resource.downloadUrl
-    
-    Write-Host "Downloading build artifacts package from $downloadUrl"
-    Invoke-RestMethod -Uri "$downloadUrl" -Headers $Headers -Method Get -Outfile $Outfile | Out-Null
-
-    if (Test-Path $Destination -PathType Container)
+    $buildId = $builds.value[0].id
+    if (-not $buildId)
     {
-        Write-Host "Cleaning up destination $Destination"
-        Remove-Item -Path $Destination -Force -Recurse | Out-Null
+        throw "Unable to get the latest build ID from $BuildUri"
     }
 
-    Write-Host "Extracting build artifacts package content to $Destination"
-    [System.Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.FileSystem") | Out-Null 
-    [System.IO.Compression.ZipFile]::ExtractToDirectory($Outfile, $Destination) | Out-Null
+    return $buildId
 }
  
-function Run-Script
+function Invoke-Script
 {
     [CmdletBinding()]
     param (
@@ -137,21 +152,19 @@ function Run-Script
     }
 }
 
-###################################################################################################
-
-#
-# Handle all errors in this script.
-#
-
-trap
+function Set-AuthHeaders
 {
-    # NOTE: This trap will handle all errors. There should be no need to use a catch below in this
-    #       script, unless you want to ignore a specific error.
-    Handle-LastError
+    [CmdletBinding()]
+    param (
+        [string] $UserName = "",
+        [string] $AccessToken
+    )
+
+    $basicAuth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $UserName,$AccessToken)))
+    return @{ Authorization = "Basic $basicAuth" }
 }
 
 ###################################################################################################
-
 #
 # Main execution block.
 #
@@ -160,14 +173,12 @@ try
 {
     # Prepare values used throughout.
     $vstsApiVersion = "2.0"
-    $outfile = "$PSScriptRoot\$buildDefinitionName.zip"
     $destination = "$($env:HOMEDRIVE)\$buildDefinitionName"
     $vstsProjectUri = $vstsProjectUri.TrimEnd("/")
-    $headers = Set-AuthHeaders -UserName $username -AccessToken $accessToken
+    $headers = Set-AuthHeaders -AccessToken $accessToken
 
     # Output provided parameters.
     Write-Host 'Provided parameters used in this script:'
-    Write-Host "  `$username = $username"
     Write-Host "  `$accessToken = $('*' * $accessToken.Length)"
     Write-Host "  `$buildDefinitionName = $buildDefinitionName"
     Write-Host "  `$vstsProjectUri = $vstsProjectUri"
@@ -183,19 +194,19 @@ try
     # Get the build definition ID.
     $buildDefinitionUri = "$vstsProjectUri/_apis/build/definitions?api-version=$vstsApiVersion&name=$buildDefinitionName"
     $buildDefinitionId = Get-BuildDefinitionId -BuildDefinitionUri $buildDefinitionUri -Headers $headers
-    
+
     # Get the ID of the latest successful build.
     $buildUri = "$vstsProjectUri/_apis/build/builds/?api-version=$vstsApiVersion&definitions=$buildDefinitionId&statusFilter=succeeded";
-    $buildId = Get-LatestBuild -BuildUri $buildUri -Headers $headers
+    $buildId = Get-LatestBuildId -BuildUri $buildUri -Headers $headers
 
     # Download the build artifact package.
     $artifactsUri = "$vstsProjectUri/_apis/build/builds/$buildId/Artifacts?api-version=$vstsApiVersion";
-    Download-BuildArtifacts -ArtifactsUri $artifactsUri -Headers $headers -Outfile $outfile -Destination $destination
+    Get-BuildArtifacts -ArtifactsUri $artifactsUri -Headers $headers -Destination $destination
 
     # Run the script specified after having successfully downloaded the build artifact package.
-    Run-Script -Path $destination -Script $pathToScript -Arguments $scriptArguments
+    Invoke-Script -Path $destination -Script $pathToScript -Arguments $scriptArguments
 }
 finally
 {
-    popd
+    Pop-Location
 }
