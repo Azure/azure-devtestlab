@@ -1,31 +1,36 @@
 # Azure DevTest Labs - Usage Reporting
 This template includes:
+
+
 - Azure Storage account where the DevTest Lab usage data request will store the daily data.
 - Azure SQL Server with database.
 - Azure Automation account with runbooks.
     - Two runbooks, a modules, and various variables are imported.
 
 There are a few items that will need to be executed manually.
-- Update the Azure modules
-    - Open the Resource Group in the Azure Portal.
-    - Open the Azure Automation Account and select the Shared Resources/Modules in the left blade.
-    - On the top bar run "Update Azure Modules".
-- Create RunAs Account
-    - In the Azure Automation Account
-    - Select Account Settings/Run As Accounts
-    - Create the Azure Run As Account
-        - This service principal controls which subscriptions will be checked for DevTest Labs.
+
+-  ###Create RunAs Account
+	-  In the Azure Automation Account
+	-  Select Account Settings/Run As Accounts
+	-  Create the Azure Run As Account
+		-  This service principal controls which subscriptions will be checked for DevTest Labs.
 
 
-To have the automation execute on a regular basis.
-- Setup Scheduling
+- ###Update the Azure modules
+	- Open the Resource Group in the Azure Portal.
+	- Open the Azure Automation Account and select the Shared Resources/Modules in the left blade.
+	- On the top bar run "Update Azure Modules".
+
+
+##To have the automation execute on a regular basis.
+- ###Setup Scheduling
     - In the Azure Automation Account, select Shared Resource/Schedules.
     - Create two schedules one for requesting the data, a second to move the data from storage to SQL.
     - Recommended that the transfer is schedule after you expect the first to complete. 
-- Link Schedule to Runbooks
+- ###Link Schedule to Runbooks
     - Open the individual runbooks and select Schedule from the top bar and link the appropriate schedule.
 
-To setup the included PowerBI dashboard using PowerBI desktop.
+##To setup the included PowerBI dashboard using PowerBI desktop.
 - Import the MasterDB.bacpac into the database as it contains several views to drive the PowerBI
 - Copy .pbix locally
 - Set the SQL Server firewall settings to allow access to the IP where the local dashboard is.
