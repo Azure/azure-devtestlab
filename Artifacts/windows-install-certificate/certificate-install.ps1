@@ -80,8 +80,7 @@ try
         $arguments = "-file `"{0}`"" -f $script:MyInvocation.MyCommand.Path
     
         # Start the new process
-        Start-Process powershell.exe -Verb runas -ArgumentList $arguments
-        exit
+        Start-Process powershell.exe -Verb runas -ArgumentList $arguments -Wait
     }
     else
     {
