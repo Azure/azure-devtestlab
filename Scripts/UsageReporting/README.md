@@ -31,7 +31,8 @@ There are a few items that will need to be executed manually.
     - Open the individual runbooks and select Schedule from the top bar and link the appropriate schedule.
 
 ##To setup the included PowerBI dashboard using PowerBI desktop.
-- Import the MasterDB.bacpac into the database as it contains several views to drive the PowerBI
+- Using the Azure Portal open the Query Editor for the TestTelemetry database
+	- Open the TestTelemetry.sql file in the editor and run it, this will create the infrastructure. 
 - Copy .pbix locally
 - Set the SQL Server firewall settings to allow access to the IP where the local dashboard is.
 - Set the DataSource
