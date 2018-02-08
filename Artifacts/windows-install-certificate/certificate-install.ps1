@@ -86,7 +86,7 @@ try
     else
     {
         $securePassword = ConvertTo-SecureString -String $certificatePassword -AsPlainText -Force
-		$certificatePassword = "deleted"
+        $certificatePassword = "deleted"
 
         $tempFilePath = [System.IO.Path]::GetTempFileName()
         Write-Host "Temp file path '$tempFilePath'" 
@@ -97,7 +97,7 @@ try
         Get-ChildItem -Path $tempFilePath | Import-PfxCertificate -CertStoreLocation Cert:\LocalMachine\My -Exportable -Password $securePassword
         Write-Host "Certificate $certificateName added to the LocalMachine\My store succesfully"
 
-        [System.IO.File]::Delete($tempFilePath)
+        Remove-Item -Path "$tempFilePath" -Force
         Write-Host "Deleted the temp file $tempFilePath"
     }
 
