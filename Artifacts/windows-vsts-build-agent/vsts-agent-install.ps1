@@ -247,6 +247,76 @@ function Install-Agent
 
         if ($Config.RunAsAutoLogon)
         {
+            # Create a PS session for the user to trigger the creation of the registry entries required for autologon
+            if ($windowsLogonAccount.Split("\").Count == 2)
+            {
+                $domain = $windowsLogonAccount.Split("\")[0]
+            }
+            else
+            {
+                $domain = Hostname
+            }
+            $computerName = "localhost"
+            $password = ConvertTo-SecureString $windowsLogonPassword -AsPlainText -Force
+            $credentials = New-Object System.Management.Automation.PSCredential ("$domain\\$windowsLogonAccount", $password)
+            Enter-PSSession -ComputerName $computerName -Credential $credentials
+            Exit-PSSession
+
+            $ErrorActionPreference = "stop"
+
+            # 120 seconds timeout
+            $timeout = 120 
+
+            try
+            {
+                # Check if the HKU drive already exists
+                Get-PSDrive -PSProvider Registry -Name HKU | Out-Null
+                $canCheckRegistry = $true
+            }
+            catch [System.Management.Automation.DriveNotFoundException]
+            {
+                try 
+                {
+                # Create the HKU drive
+                New-PSDrive -PSProvider Registry -Name HKU -Root HKEY_USERS | Out-Null
+                $canCheckRegistry = $true
+                }
+                catch 
+                {
+                # Ignore the failure to create the drive and go ahead with trying to set the agent up
+                Write-Warning "Moving ahead with agent setup as the script failed to create HKU drive necessary for checking if the registry entry for the user's SId exists.\n$_"
+                }
+            }
+
+            # Check if the registry key required for enabling autologon is present on the machine, if not wait for 120 seconds in case the user profile is still getting created
+            while ($timeout -ge 0 -and $canCheckRegistry)
+            {
+                $objUser = New-Object System.Security.Principal.NTAccount($windowsLogonAccount)
+                $securityId = $objUser.Translate([System.Security.Principal.SecurityIdentifier])
+                $securityId = $securityId.Value
+
+                if (Test-Path "HKU:\\$securityId")
+                {
+                    if (!(Test-Path "HKU:\\$securityId\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"))
+                    {
+                        New-Item -Path "HKU:\\$securityId\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run" -Force
+                        Write-Host "Created the registry entry path required to enable autologon."
+                    }
+                
+                    break
+                }
+                else
+                {
+                    $timeout -= 10
+                    Start-Sleep(10)
+                }
+            }
+
+            if ($timeout -lt 0)
+            {
+                Write-Warning "Failed to find the registry entry for the SId of the user, this is required to enable autologon. Trying to start the agent anyway."
+            }
+
             # Arguements to run agent with autologon enabled
             $agentConfigArgs = "--unattended", "--url", $Config.ServerUrl, "--auth", "PAT", "--token", $Config.VstsUserPassword, "--pool", $Config.PoolName, "--agent", $Config.AgentName, "--runAsAutoLogon", "--overwriteAutoLogon", "--windowslogonaccount", $Config.WindowsLogonAccount
         }
