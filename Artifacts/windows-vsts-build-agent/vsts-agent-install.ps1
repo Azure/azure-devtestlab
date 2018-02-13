@@ -61,7 +61,7 @@ function Handle-LastError
     {
         Write-Host -Object "ERROR: $message" -ForegroundColor Red
     }
-    
+
     # IMPORTANT NOTE: Throwing a terminating error (using $ErrorActionPreference = "Stop") still
     # returns exit code zero from the PowerShell script when using -File. The workaround is to
     # NOT use -File when calling this script and leverage the try-catch-finally block and return
@@ -76,7 +76,7 @@ function Test-Parameters
         [string] $VstsAccount,
         [string] $WorkDirectory
     )
-    
+
     if ($VstsAccount -match "https*://" -or $VstsAccount -match "visualstudio.com")
     {
         Write-Error "VSTS account '$VstsAccount' should not be the URL, just the account name."
@@ -93,9 +93,9 @@ function Test-ValidPath
     param(
         [string] $Path
     )
-    
+
     $isValid = Test-Path -Path $Path -IsValid -PathType Container
-    
+
     try
     {
         [IO.Path]::GetFullPath($Path) | Out-Null
@@ -104,7 +104,7 @@ function Test-ValidPath
     {
         $isValid = $false
     }
-    
+
     return $isValid
 }
 
@@ -131,7 +131,7 @@ function Download-AgentPackage
         [string] $VstsAccount,
         [string] $VstsUserPassword
     )
-    
+
     # Create a temporary directory where to download from VSTS the agent package (agent.zip).
     $agentTempFolderName = Join-Path $env:temp ([System.IO.Path]::GetRandomFileName())
     New-Item -ItemType Directory -Force -Path $agentTempFolderName | Out-Null
@@ -147,7 +147,7 @@ function Download-AgentPackage
     {
         try
         {
-            $basicAuth = ("{0}:{1}" -f $vstsUser, $vstsUserPassword) 
+            $basicAuth = ("{0}:{1}" -f $vstsUser, $vstsUserPassword)
             $basicAuth = [System.Text.Encoding]::UTF8.GetBytes($basicAuth)
             $basicAuth = [System.Convert]::ToBase64String($basicAuth)
             $headers = @{ Authorization = ("Basic {0}" -f $basicAuth) }
@@ -248,24 +248,26 @@ function Install-Agent
         if ($Config.RunAsAutoLogon)
         {
             # Create a PS session for the user to trigger the creation of the registry entries required for autologon
-            if ($windowsLogonAccount.Split("\").Count -eq 2)
+            $computerName = "localhost"
+            $password = ConvertTo-SecureString $Config.WindowsLogonPassword -AsPlainText -Force
+            if ($Config.WindowsLogonAccount.Split("\").Count -eq 2)
             {
-                $domain = $windowsLogonAccount.Split("\")[0]
+              $domain = $Config.WindowsLogonAccount.Split("\")[0]
+              $userName = $Config.WindowsLogonAccount.Split('\')[1]
             }
             else
             {
-                $domain = Hostname
+              $domain = Hostname
+              $userName = $Config.WindowsLogonAccount
             }
-            $computerName = "localhost"
-            $password = ConvertTo-SecureString $windowsLogonPassword -AsPlainText -Force
-            $credentials = New-Object System.Management.Automation.PSCredential("$domain\\$windowsLogonAccount", $password)
-            Enter-PSSession -ComputerName $computerName -Credential $credentials
-            Exit-PSSession
+            $credentials = New-Object System.Management.Automation.PSCredential("$domain\\$userName", $password)
+            Enter-PSSession -ComputerName $computerName -Credential $credentials
+            #Exit-PSSession
 
             $ErrorActionPreference = "stop"
 
             # 120 seconds timeout
-            $timeout = 120 
+            $timeout = 120
 
             try
             {
@@ -277,21 +279,21 @@ function Install-Agent
             {
                 try 
                 {
-                # Create the HKU drive
-                New-PSDrive -PSProvider Registry -Name HKU -Root HKEY_USERS | Out-Null
-                $canCheckRegistry = $true
+                    # Create the HKU drive
+                    New-PSDrive -PSProvider Registry -Name HKU -Root HKEY_USERS | Out-Null
+                    $canCheckRegistry = $true
                 }
                 catch 
                 {
-                # Ignore the failure to create the drive and go ahead with trying to set the agent up
-                Write-Warning "Moving ahead with agent setup as the script failed to create HKU drive necessary for checking if the registry entry for the user's SId exists.\n$_"
+                    # Ignore the failure to create the drive and go ahead with trying to set the agent up
+                    Write-Warning "Moving ahead with agent setup as the script failed to create HKU drive necessary for checking if the registry entry for the user's SId exists.\n$_"
                 }
             }
 
             # Check if the registry key required for enabling autologon is present on the machine, if not wait for 120 seconds in case the user profile is still getting created
             while ($timeout -ge 0 -and $canCheckRegistry)
             {
-                $objUser = New-Object System.Security.Principal.NTAccount($windowsLogonAccount)
+                $objUser = New-Object System.Security.Principal.NTAccount($Config.WindowsLogonAccount)
                 $securityId = $objUser.Translate([System.Security.Principal.SecurityIdentifier])
                 $securityId = $securityId.Value
 
@@ -318,7 +320,7 @@ function Install-Agent
             }
 
             # Arguements to run agent with autologon enabled
-            #$agentConfigArgs = "--unattended", "--url", $Config.ServerUrl, "--auth", "PAT", "--token", $Config.VstsUserPassword, "--pool", $Config.PoolName, "--agent", $Config.AgentName, "--runAsAutoLogon", "--overwriteAutoLogon", "--windowslogonaccount", $Config.WindowsLogonAccount
+            $agentConfigArgs = "--unattended", "--url", $Config.ServerUrl, "--auth", "PAT", "--token", $Config.VstsUserPassword, "--pool", $Config.PoolName, "--agent", $Config.AgentName, "--runAsAutoLogon", "--overwriteAutoLogon", "--windowslogonaccount", $Config.WindowsLogonAccount
         }
         else
         {
@@ -401,7 +403,6 @@ try
         WorkDirectory = $workDirectory
     }
     Install-Agent -Config $config
-    
     Write-Host 'Done'
 }
 finally
