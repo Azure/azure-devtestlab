@@ -129,7 +129,8 @@ try
             {
                 Write-Host "A deployment failure occured. Retrying deployment (attempt $i of $($count - 1))"
                 Remove-FailedResourcesBeforeRetry -DeploymentName $deploymentName -ResourceGroupName $resourceGroupName -DeleteDeployment $DeleteFailedDeploymentBeforeRetry
-                if ($AppendRetryNumberToVMName)
+                $appendSuffix = ConvertTo-Bool -Value $AppendRetryNumberToVMName
+                if ($appendSuffix)
                 {
                     $templateParameterObject.newVMName = "$baseVmName-$i"
                 }
