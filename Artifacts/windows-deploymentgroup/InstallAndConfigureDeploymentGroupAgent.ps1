@@ -155,7 +155,7 @@ function Configure-DeploymentGroupAgent
         }
         $computerName = "localhost"
         $password = ConvertTo-SecureString $windowsLogonPassword -AsPlainText -Force
-        $credentials = New-Object System.Management.Automation.PSCredential ("$domain\\$windowsLogonAccount", $password)
+        $credentials = New-Object System.Management.Automation.PSCredential("$domain\\$windowsLogonAccount", $password)
         Enter-PSSession -ComputerName $computerName -Credential $credentials
         Exit-PSSession
 
