@@ -145,7 +145,7 @@ function Configure-DeploymentGroupAgent
     if ($runAsAutoLogon)
     {
         # Create a PS session for the user to trigger the creation of the registry entries required for autologon
-        if ($windowsLogonAccount.Split("\").Count == 2)
+        if ($windowsLogonAccount.Split("\").Count -eq 2)
         {
             $domain = $windowsLogonAccount.Split("\")[0]
         }

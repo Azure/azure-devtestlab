@@ -248,7 +248,7 @@ function Install-Agent
         if ($Config.RunAsAutoLogon)
         {
             # Create a PS session for the user to trigger the creation of the registry entries required for autologon
-            if ($windowsLogonAccount.Split("\").Count == 2)
+            if ($windowsLogonAccount.Split("\").Count -eq 2)
             {
                 $domain = $windowsLogonAccount.Split("\")[0]
             }
@@ -258,7 +258,7 @@ function Install-Agent
             }
             $computerName = "localhost"
             $password = ConvertTo-SecureString $windowsLogonPassword -AsPlainText -Force
-            $credentials = New-Object System.Management.Automation.PSCredential("$domain\\$windowsLogonAccount", $password)
+            $credentials = New-Object System.Management.Automation.PSCredential("$domain\\$windowsLogonAccount", $password)
             Enter-PSSession -ComputerName $computerName -Credential $credentials
             Exit-PSSession
 
@@ -318,7 +318,7 @@ function Install-Agent
             }
 
             # Arguements to run agent with autologon enabled
-            $agentConfigArgs = "--unattended", "--url", $Config.ServerUrl, "--auth", "PAT", "--token", $Config.VstsUserPassword, "--pool", $Config.PoolName, "--agent", $Config.AgentName, "--runAsAutoLogon", "--overwriteAutoLogon", "--windowslogonaccount", $Config.WindowsLogonAccount
+            #$agentConfigArgs = "--unattended", "--url", $Config.ServerUrl, "--auth", "PAT", "--token", $Config.VstsUserPassword, "--pool", $Config.PoolName, "--agent", $Config.AgentName, "--runAsAutoLogon", "--overwriteAutoLogon", "--windowslogonaccount", $Config.WindowsLogonAccount
         }
         else
         {
