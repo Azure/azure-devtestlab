@@ -11,8 +11,6 @@ param (
     [Parameter(Mandatory=$false)][String][AllowEmptyString()] $windowsLogonPassword
 )
 
-$ErrorActionPreference = "Stop"
-
 function Test-InstallPrerequisites
 {
     If(-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))
@@ -127,6 +125,8 @@ function Prep-MachineForAutoLogon
         [Parameter(Mandatory=$false)][String][AllowEmptyString()] $windowsLogonAccount,
         [Parameter(Mandatory=$false)][String][AllowEmptyString()] $windowsLogonPassword
     )
+
+    $ErrorActionPreference = "Stop"
     
     if ([string]::IsNullOrWhiteSpace($Config.WindowsLogonPassword))
     {
@@ -147,7 +147,7 @@ function Prep-MachineForAutoLogon
         $domain = $Env:ComputerName
         $userName = $windowsLogonAccount
     }
-    
+
     $credentials = New-Object System.Management.Automation.PSCredential("$domain\\$userName", $password)
     Enter-PSSession -ComputerName $computerName -Credential $credentials
     Exit-PSSession
