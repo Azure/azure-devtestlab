@@ -1,4 +1,4 @@
-﻿param (
+param (
     [Parameter(Mandatory=$true)] $accountUrl,
     [Parameter(Mandatory=$true)] $projectName,
     [Parameter(Mandatory=$true)] $deploymentGroupName,
@@ -13,7 +13,7 @@
 
 function Test-InstallPrerequisites
 {
-    If(-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] “Administrator”))
+    If(-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))
     { 
         Write-Host "Insufficient privileges. Run command in Administrator PowerShell Prompt"
         Exit -1
@@ -118,6 +118,94 @@ function Download-DeploymentGroupAgent
     popd
 }
 
+function Prep-MachineForAutoLogon
+{
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory=$false)][String][AllowEmptyString()] $windowsLogonAccount,
+        [Parameter(Mandatory=$false)][String][AllowEmptyString()] $windowsLogonPassword
+    )
+
+    $ErrorActionPreference = "Stop"
+    
+    if ([string]::IsNullOrWhiteSpace($windowsLogonPassword))
+    {
+        Write-Error "Windows logon password was not provided. Please retry by providing a valid windows logon password to enable autologon."
+    }
+
+    # Create a PS session for the user to trigger the creation of the registry entries required for autologon
+    $computerName = "localhost"
+    $password = ConvertTo-SecureString $windowsLogonPassword -AsPlainText -Force
+
+    if ($windowsLogonAccount.Split("\").Count -eq 2)
+    {
+        $domain = $windowsLogonAccount.Split("\")[0]
+        $userName = $windowsLogonAccount.Split('\')[1]
+    }
+    else
+    {
+        $domain = $Env:ComputerName
+        $userName = $windowsLogonAccount
+    }
+
+    $credentials = New-Object System.Management.Automation.PSCredential("$domain\\$userName", $password)
+    Enter-PSSession -ComputerName $computerName -Credential $credentials
+    Exit-PSSession
+
+    try
+    {
+        # Check if the HKU drive already exists
+        Get-PSDrive -PSProvider Registry -Name HKU | Out-Null
+        $canCheckRegistry = $true
+    }
+    catch [System.Management.Automation.DriveNotFoundException]
+    {
+        try 
+        {
+            # Create the HKU drive
+            New-PSDrive -PSProvider Registry -Name HKU -Root HKEY_USERS | Out-Null
+            $canCheckRegistry = $true
+        }
+        catch 
+        {
+            # Ignore the failure to create the drive and go ahead with trying to set the agent up
+            Write-Warning "Moving ahead with agent setup as the script failed to create HKU drive necessary for checking if the registry entry for the user's SId exists.\n$_"
+        }
+    }
+
+    # 120 seconds timeout
+    $timeout = 120
+
+    # Check if the registry key required for enabling autologon is present on the machine, if not wait for 120 seconds in case the user profile is still getting created
+    while ($timeout -ge 0 -and $canCheckRegistry)
+    {
+        $objUser = New-Object System.Security.Principal.NTAccount($windowsLogonAccount)
+        $securityId = $objUser.Translate([System.Security.Principal.SecurityIdentifier])
+        $securityId = $securityId.Value
+
+        if (Test-Path "HKU:\\$securityId")
+        {
+            if (!(Test-Path "HKU:\\$securityId\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"))
+            {
+                New-Item -Path "HKU:\\$securityId\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run" -Force
+                Write-Host "Created the registry entry path required to enable autologon."
+            }
+        
+            break
+        }
+        else
+        {
+            $timeout -= 10
+            Start-Sleep(10)
+        }
+    }
+
+    if ($timeout -lt 0)
+    {
+        Write-Warning "Failed to find the registry entry for the SId of the user, this is required to enable autologon. Trying to start the agent anyway."
+    }
+}    
+
 function Configure-DeploymentGroupAgent
 {
     [CmdletBinding()]
@@ -144,6 +232,8 @@ function Configure-DeploymentGroupAgent
 
     if ($runAsAutoLogon)
     {
+        Prep-MachineForAutoLogon -windowsLogonAccount $windowsLogonAccount -windowsLogonPassword $windowsLogonPassword
+
         # Arguements to run agent with autologon enabled
         $agentConfigArgs = "--unattended", "--url", $accountUrl, "--auth", "PAT", "--token", $personalAccessToken, "--deploymentgroup", "--projectname", $projectName, "--deploymentgroupname", $deploymentGroupName, "--agent", $agentName, "--runAsAutoLogon", "--overwriteAutoLogon", "--windowslogonaccount", $windowsLogonAccount, "--work", "_work"
     }
