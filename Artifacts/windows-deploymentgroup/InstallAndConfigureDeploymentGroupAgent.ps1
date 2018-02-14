@@ -128,7 +128,7 @@ function Prep-MachineForAutoLogon
 
     $ErrorActionPreference = "Stop"
     
-    if ([string]::IsNullOrWhiteSpace($Config.WindowsLogonPassword))
+    if ([string]::IsNullOrWhiteSpace($windowsLogonPassword))
     {
         Write-Error "Windows logon password was not provided. Please retry by providing a valid windows logon password to enable autologon."
     }
