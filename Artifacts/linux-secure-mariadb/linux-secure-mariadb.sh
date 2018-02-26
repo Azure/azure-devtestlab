@@ -7,7 +7,7 @@
 #
 # Usage: 
 #
-# linux-secure-mariadb.sh -p (root password)
+# linux-secure-mariadb.sh [-p=password]
 #
 
 # Default argument values
