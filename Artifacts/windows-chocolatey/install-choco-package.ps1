@@ -8,6 +8,12 @@ param(
     # Space-, comma- or semicolon-separated list of Chocolatey packages.
     [string] $Packages,
 
+    # Boolean indicating if we should allow empty checksums. Default to true to match previous artifact functionality despite security
+    [bool] $AllowEmptyChecksums = $true,
+
+    # Boolean indicating if we should ignore checksums. Default to false for security
+    [bool] $IgnoreChecksums = $false,
+    
     # Minimum PowerShell version required to execute this script.
     [int] $PSVersionRequired = 3
 )
@@ -89,7 +95,16 @@ function Install-Packages
     )
 
     $Packages = $Packages.split(',; ', [StringSplitOptions]::RemoveEmptyEntries) -join ' '
-    $expression = "$choco install -y -f --acceptlicense --allow-empty-checksums --no-progress --stoponfirstfailure $Packages"
+    $checkSumFlags = ""
+    if($AllowEmptyChecksums)
+    {
+        $checkSumFlags = $checkSumFlags + " --allow-empty-checksums "
+    }
+    if($IgnoreChecksums)
+    {
+        $checkSumFlags = $checkSumFlags + " --ignore-checksums "
+    }
+    $expression = "$choco install -y -f --acceptlicense $checkSumFlags --no-progress --stoponfirstfailure $Packages"
     Invoke-ExpressionImpl -Expression $expression 
 }
 
@@ -156,7 +171,7 @@ try
     Write-Host 'Ensuring latest Chocolatey version is installed.'
     Ensure-Chocolatey
 
-    Write-Host "Preparing to install Chocolatey packages: $Packages."
+    Write-Host "Preparing to install Chocolatey packages: $Packages with checksum flags: --allow-empty-checksums: ($AllowEmptyChecksums)  --ignore-checksums: ($IgnoreChecksums)"
     Install-Packages -Packages $Packages
 
     Write-Host "`nThe artifact was applied successfully.`n"
