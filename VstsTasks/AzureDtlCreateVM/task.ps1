@@ -31,16 +31,9 @@ param(
     [string] $RetryOnFailure,
     [string] $RetryCount,
     [string] $DeleteFailedDeploymentBeforeRetry,
-    [string] $AppendRetryNumberToVMName
+    [string] $AppendRetryNumberToVMName,
+    [string] $WaitMinutesForApplyArtifacts
 )
-
-###################################################################################################
-#
-# Required modules.
-#
-
-Import-Module Microsoft.TeamFoundation.DistributedTask.Task.Common
-Import-Module Microsoft.TeamFoundation.DistributedTask.Task.Internal
 
 ###################################################################################################
 #
@@ -52,7 +45,7 @@ Import-Module Microsoft.TeamFoundation.DistributedTask.Task.Internal
 $ErrorActionPreference = "Stop"
 
 # Ensure we set the working directory to that of the script.
-pushd $PSScriptRoot
+Push-Location $PSScriptRoot
 
 ###################################################################################################
 #
@@ -70,7 +63,11 @@ trap
 {
     # NOTE: This trap will handle all errors. There should be no need to use a catch below in this
     #       script, unless you want to ignore a specific error.
-    Handle-LastError
+    $message = $error[0].Exception.Message
+    if ($message)
+    {
+        Write-Error "`n$message"
+    }
 }
 
 ###################################################################################################
@@ -87,7 +84,7 @@ try
 
     Show-InputParameters
 
-    $lab = Get-AzureDtlLab -LabId "$LabId"
+    $lab = Get-DtlLab -LabId "$LabId"
     $resourceGroupName = $lab.ResourceGroupName
     if (-not $TemplateParameters.Contains('-labName'))
     {
@@ -105,7 +102,7 @@ try
     [int] $count = 1 + (ConvertTo-Int -Value $RetryCount)
     for ($i = 1; $i -le $count; $i++)
     {
-        Validate-InputParameters -TemplateParameterObject $templateParameterObject
+        Test-InputParameters -TemplateParameterObject $templateParameterObject
         
         try
         {
@@ -113,9 +110,11 @@ try
             
             $result = Invoke-AzureDtlTask -DeploymentName $deploymentName -ResourceGroupName $resourceGroupName -TemplateName "$TemplateName" -TemplateParameterObject $templateParameterObject
 
-            $resourceId = Get-AzureDtlDeploymentTargetResourceId -DeploymentName $result.DeploymentName -ResourceGroupName $result.ResourceGroupName
+            $resourceId = Get-DeploymentTargetResourceId -DeploymentName $result.DeploymentName -ResourceGroupName $result.ResourceGroupName
 
-            Validate-ArtifactStatus -ResourceId $resourceId -TemplateName "$TemplateName" -Fail $FailOnArtifactError
+            Wait-ApplyArtifacts -ResourceId $resourceId -WaitMinutes $WaitMinutesForApplyArtifacts
+
+            Test-ArtifactStatus -ResourceId $resourceId -TemplateName "$TemplateName" -Fail $FailOnArtifactError
             
             break
         }
@@ -144,9 +143,9 @@ finally
     {
         # Capture the resource ID in the output variable.
         Write-Host "Creating variable '$OutputResourceId' with value '$resourceId'"
-        Set-TaskVariable -Variable $OutputResourceId -Value "$resourceId"
+        Write-Host "##vso[task.setvariable variable=$OutputResourceId;]$resourceId"
     }
 
     Write-Host 'Completing Azure DevTest Labs Create VM Task'
-    popd
+    Pop-Location
 }

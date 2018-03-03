@@ -1,16 +1,3 @@
-function Handle-LastError
-{
-    [CmdletBinding()]
-    param(
-    )
-
-    $message = $error[0].Exception.Message
-    if ($message)
-    {
-        Write-Error "`n$message"
-    }
-}
-
 function Invoke-AzureDtlTask
 {
     [CmdletBinding()]
@@ -67,6 +54,16 @@ function ConvertTo-Int
     return $intValue
 }
 
+function ConvertTo-MinutesString
+{
+    [CmdletBinding()]
+    param(
+        [string] $Value
+    )
+
+    return "$Value minute$(if ($Value -ne 1){ 's' })"
+}
+
 function ConvertTo-TemplateParameterObject
 {
     [CmdletBinding()]
@@ -101,23 +98,7 @@ function ConvertTo-TemplateParameterObject
     return $templateParameterObject
 }
 
-function Get-AzureDtlLab
-{
-    [CmdletBinding()]
-    param(
-        [string] $LabId
-    )
-
-    $null = @(
-        $labParts = $LabId.Split('/')
-        $labName = $labParts.Get($labParts.Length - 1)
-        Write-Host "Fetching lab '$labName'"
-    )
-
-    return Get-AzureRmResource -ResourceId "$LabId"
-}
-
-function Get-AzureDtlDeploymentTargetResourceId
+function Get-DeploymentTargetResourceId
 {
     [CmdletBinding()]
     param(
@@ -147,6 +128,22 @@ function Get-AzureDtlDeploymentTargetResourceId
     }
 
     return $targetResource.id
+}
+
+function Get-DtlLab
+{
+    [CmdletBinding()]
+    param(
+        [string] $LabId
+    )
+
+    $null = @(
+        $labParts = $LabId.Split('/')
+        $labName = $labParts.Get($labParts.Length - 1)
+        Write-Host "Fetching lab '$labName'"
+    )
+
+    return Get-AzureRmResource -ResourceId "$LabId"
 }
 
 function Get-ExpectedArtifactsCount
@@ -195,7 +192,7 @@ function Remove-FailedResourcesBeforeRetry
 
     try
     {
-        $resourceId = Get-AzureDtlDeploymentTargetResourceId -DeploymentName $DeploymentName -ResourceGroupName $ResourceGroupName
+        $resourceId = Get-DeploymentTargetResourceId -DeploymentName $DeploymentName -ResourceGroupName $ResourceGroupName
         if ($resourceId)
         {
             Write-Host "Removing previously created lab virtual machine with resource ID '$resourceId'."
@@ -215,7 +212,7 @@ function Remove-FailedResourcesBeforeRetry
     }
     catch
     {
-        Write-Host "##[warning]Unable to clean-up failed resources. Operation failed with $($Error[0].Exception.Message)"
+        Write-Host "##vso[task.logissue type=warning;]Unable to clean-up failed resources. Operation failed with $($Error[0].Exception.Message)"
     }
 }
 
@@ -238,23 +235,7 @@ function Show-InputParameters
     Write-Host "  AppendRetryNumberToVMName = $AppendRetryNumberToVMName"
 }
 
-function Validate-InputParameters
-{
-    [CmdletBinding()]
-    Param(
-        $TemplateParameterObject
-    )
-
-    Write-Host 'Validating input parameters'
-
-    # Only required for backward compatibility with earlier versions of the task.
-    Validate-TemplateParameters -TemplateParameterObject $TemplateParameterObject
-
-    $vmName = $TemplateParameterObject.Item('newVMName')
-    Validate-VMName -Name "$vmName"
-}
-
-function Validate-ArtifactStatus
+function Test-ArtifactStatus
 {
     [CmdletBinding()]
     param(
@@ -277,14 +258,16 @@ function Validate-ArtifactStatus
             [array]$artifacts = $vm.Properties.artifacts
             [array]$failedArtifacts = $artifacts | ? { $_.status -eq 'Failed' }
             [array]$succeededArtifacts = $artifacts | ? { $_.status -eq 'Succeeded' }
+
+            Write-Host "Number of Artifacts Expected: $expectedArtifactsCount, Reported: $($artifacts.Count), Succeeded: $($succeededArtifacts.Count), Failed: $($failedArtifacts.Count)"
+
             if ($failedArtifacts.Count -gt 0 -or $succeededArtifacts.Count -lt $expectedArtifactsCount)
             {
                 foreach ($failedArtifact in $failedArtifacts)
                 {
                     $failedArtifactName = $failedArtifact.artifactId.split('/')[-1]
 
-                    # Adding ##[warning] at the beginning of the line helps highlight it in VSTS build/release logs.
-                    Write-Host "##[warning]Failed to apply artifact '$failedArtifactName'."
+                    Write-Host "##vso[task.logissue type=warning;]Failed to apply artifact '$failedArtifactName'."
 
                     if (-not [string]::IsNullOrEmpty($failedArtifact.deploymentStatusMessage))
                     {
@@ -321,7 +304,23 @@ function Validate-ArtifactStatus
     }
 }
 
-function Validate-TemplateParameters
+function Test-InputParameters
+{
+    [CmdletBinding()]
+    Param(
+        $TemplateParameterObject
+    )
+
+    Write-Host 'Validating input parameters'
+
+    # Only required for backward compatibility with earlier versions of the task.
+    Test-TemplateParameters -TemplateParameterObject $TemplateParameterObject
+
+    $vmName = $TemplateParameterObject.Item('newVMName')
+    Test-VirtualMachineName -Name "$vmName"
+}
+
+function Test-TemplateParameters
 {
     [CmdletBinding()]
     Param(
@@ -361,7 +360,7 @@ function Validate-TemplateParameters
     }
 }
 
-function Validate-VMName
+function Test-VirtualMachineName
 {
     [CmdletBinding()]
     Param(
@@ -383,5 +382,43 @@ function Validate-VMName
     if (-not $regex.Match($Name).Success)
     {
         throw "Invalid VM name '$Name'. Name cannot be entirely numeric and cannot contain most special characters."
+    }
+}
+
+function Wait-ApplyArtifacts
+{
+    [CmdletBinding()]
+    param(
+        [string] $ResourceId,
+        [string] $WaitMinutes
+    )
+
+    $maxWaitMinutes = ConvertTo-Int -Value $WaitMinutes
+    if ($maxWaitMinutes -gt 0)
+    {
+        Write-Host "Waiting for a maximum of $(ConvertTo-MinutesString $maxWaitMinutes) for apply artifacts operation to complete."
+
+        $startWait = [DateTime]::Now
+        do {
+            $waitspan = New-TimeSpan -Start $startWait -End ([DateTime]::Now)
+            $totalWaitMinutes = [Math]::Round($waitspan.TotalMinutes)
+            $expired = $waitspan.TotalMinutes -ge $maxWaitMinutes
+            if ($expired)
+            {
+                throw "Waited for more than $(ConvertTo-MinutesString $totalWaitMinutes). Failing the task."
+            }
+            $vm = Get-AzureRmResource -ResourceId $ResourceId
+            $provisioningState = $vm.Properties.provisioningState
+            $continueWaiting = $provisioningState -eq 'ApplyingArtifacts' -or $provisioningState -eq 'UpgradingVmAgent'
+            if ($continueWaiting)
+            {
+                # The only time we have seen we possibly need to wait is if the ARM deployment completed prematurely,
+                # for some unknown error, and the virtual machine is still applying artifacts. So, it is reasonable to
+                # recheck every 5 minutes.
+                Start-Sleep -Seconds 300
+            }
+        } while ($continueWaiting)
+
+        Write-Host "Waited for a total of $(ConvertTo-MinutesString $totalWaitMinutes)."
     }
 }
