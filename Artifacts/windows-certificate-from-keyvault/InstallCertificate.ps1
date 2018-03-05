@@ -8,7 +8,9 @@ Param(
     [ValidateNotNullOrEmpty()]
     [string]$azureServicePrincipalKey,
     [ValidateNotNullOrEmpty()]
-    [string]$azureServicePrincipalTenantId
+    [string]$azureServicePrincipalTenantId,
+    [ValidateNotNullOrEmpty()]
+    [string]$passwordSecretName
 )
 
 # Handle all errors in this script.
@@ -70,26 +72,26 @@ try{
     }
 
     Write-Host "Converting secret into useable object"
-    $jsonObjectBytes = [System.Convert]::FromBase64String($secret.SecretValueText)
-    $jsonObject = [System.Text.Encoding]::UTF8.GetString($jsonObjectBytes)
-    $customObject = ConvertFrom-Json $jsonObject
+    $certBytes = [System.Convert]::FromBase64String($secret.SecretValueText)
+    $certCollection = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2Collection
+    $certCollection.Import($certBytes,$null,[System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable)
     Write-Host "Done"
 
     Write-Host "Saving pfx to [$env:temp\cert.pfx]"
-    # Deserialize and save the PFX file.
-    $pfxBytes = [System.Convert]::FromBase64String($customObject.data)
-    [io.file]::WriteAllBytes("$env:temp\cert.pfx", $pfxBytes)
+    $protectedCertificateBytes = $certCollection.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Pkcs12, $password)
+    $pfxPath = "$env:temp\cert.pfx"
+    [System.IO.File]::WriteAllBytes($pfxPath, $protectedCertificateBytes)
     Write-Host "Done"
 
     # Convert password to secure string.
-    $password = ConvertTo-SecureString -String $customObject.password -Force -AsPlainText
+    $securePassword = ConvertTo-SecureString -String $passwordSecretName -Force -AsPlainText
 
     Write-Host "Importing the PFX"
     # Install the PFX certificate into the Cert:\LocalMachine\My certificate store.
     Import-PfxCertificate `
     -FilePath "$env:temp\cert.pfx" `
     -CertStoreLocation cert:\localMachine\my `
-    -Password $password
+    -Password $securePassword
     Write-Host "Done"
 }
 finally
