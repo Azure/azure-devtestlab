@@ -34,7 +34,7 @@
         "displayName": "Azure Service Tenant Id",
         "description": "The tenant Id of the Azure Service Principal"
         },
-        "certificateKeyCodeSecretName": {
+        "certificatePasswordSecretName": {
             "type": "string",
             "displayName": "Certificate Password Secret Name",
             "description": "The name of the secret in the vault that contains the password to the certificate"
@@ -42,6 +42,6 @@
     },
     "targetOsType": "Windows",
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -NonInteractive -ExecutionPolicy bypass \"& ./InstallCertificate.ps1 -vaultName ''', parameters('vaultName'), ''' -secretName ''', parameters('secretName'), ''' -azureServicePrincipalClientId ''', parameters('azureServicePrincipalClientId'), ''' -azureServicePrincipalKey ''', parameters('azureServicePrincipalKey'), ''' -azureServicePrincipalTenantId ''', parameters('azureServicePrincipalTenantId'), '''\"')]"
+        "commandToExecute": "[concat('powershell.exe -NonInteractive -ExecutionPolicy bypass \"& ./InstallCertificate.ps1 -vaultName ''', parameters('vaultName'), ''' -secretName ''', parameters('secretName'), ''' -azureServicePrincipalClientId ''', parameters('azureServicePrincipalClientId'), ''' -azureServicePrincipalKey ''', parameters('azureServicePrincipalKey'), ''' -certificatePasswordSecretName ''', parameters('certificatePasswordSecretName'), ''' -azureServicePrincipalTenantId ''', parameters('azureServicePrincipalTenantId'), '''\"')]"
     }
 }
