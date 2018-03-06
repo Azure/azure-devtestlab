@@ -64,11 +64,23 @@ try{
     Write-Host "Logging into Azure"
     Add-AzureRmAccount -Credential $psCred -TenantId $azureServicePrincipalTenantId -ServicePrincipal
     Write-Host "Done"
-
+    Write-Host ""
+    
+    Write-Host "Getting the certificate from the vault"
     $secret = Get-AzureKeyVaultSecret -VaultName $vaultName -Name $secretName
-    $password = (Get-AzureKeyVaultSecret -VaultName $vaultName -Name $passwordSecretName).SecretValueText
-
+    Write-Host "Done"
+    Write-Host ""
+    
     if (!$secret){
+        throw "Failed to locate secret"
+    }
+    
+    Write-Host "Getting the certificate password from the vault"
+    $password = (Get-AzureKeyVaultSecret -VaultName $vaultName -Name $passwordSecretName).SecretValueText
+    Write-Host "Done"
+    Write-Host ""
+
+    if (!$password){
         throw "Failed to locate secret"
     }
 
