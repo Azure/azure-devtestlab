@@ -10,7 +10,7 @@ Param(
     [ValidateNotNullOrEmpty()]
     [string]$azureServicePrincipalTenantId,
     [ValidateNotNullOrEmpty()]
-    [string]$certificateKeyCodeSecretName
+    [string]$certificatePasswordSecretName
 )
 
 # Handle all errors in this script.
@@ -51,7 +51,7 @@ try{
     Write-Host "azureServicePrincipalClientId: $azureServicePrincipalClientId"
     Write-Host "azureServicePrincipalKey: $azureServicePrincipalKey"
     Write-Host "azureServicePrincipalTenantId: $azureServicePrincipalTenantId"
-    Write-Host "certificateKeyCodeSecretName: $certificateKeyCodeSecretName"
+    Write-Host "certificatePasswordSecretName: $certificatePasswordSecretName"
     Write-Host ""
 
     if (-not (Get-Module -Name "AzureRm")){
@@ -85,7 +85,7 @@ try{
     }
     
     Write-Host "Getting the certificate password from the vault"
-    $passwordSecret = Get-AzureKeyVaultSecret -VaultName $vaultName -Name $certificateKeyCodeSecretName
+    $passwordSecret = Get-AzureKeyVaultSecret -VaultName $vaultName -Name $certificatePasswordSecretName
     Write-Host "Done"
     Write-Host ""
 
