@@ -66,6 +66,7 @@ try{
     Write-Host "Done"
 
     $secret = Get-AzureKeyVaultSecret -VaultName $vaultName -Name $secretName
+    $password = (Get-AzureKeyVaultSecret -VaultName $vaultName -Name $passwordSecretName).SecretValueText
 
     if (!$secret){
         throw "Failed to locate secret"
