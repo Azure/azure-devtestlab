@@ -33,6 +33,11 @@
         "type": "string",
         "displayName": "Azure Service Tenant Id",
         "description": "The tenant Id of the Azure Service Principal"
+        },
+        "passwordSecretName": {
+            "type": "string",
+            "displayName": "Certificate Password Secret Name",
+            "description": "The name of the secret in the vault that contains the password to the certificate"
         }
     },
     "targetOsType": "Windows",
