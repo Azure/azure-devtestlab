@@ -45,6 +45,15 @@ function Handle-LastError
 
 try{
 
+    Write-Host "Arguments:"
+    Write-Host "vaultName: $vaultName"
+    Write-Host "secretName: $secretName"
+    Write-Host "azureServicePrincipalClientId: $azureServicePrincipalClientId"
+    Write-Host "azureServicePrincipalKey: $azureServicePrincipalKey"
+    Write-Host "azureServicePrincipalTenantId: $azureServicePrincipalTenantId"
+    Write-Host "passwordSecretName: $passwordSecretName"
+    Write-Host ""
+
     if (-not (Get-Module -Name "AzureRm")){
         if (Get-Module -ListAvailable | Where-Object { $_.Name -eq "AzureRm"}){
             
@@ -76,13 +85,15 @@ try{
     }
     
     Write-Host "Getting the certificate password from the vault"
-    $password = (Get-AzureKeyVaultSecret -VaultName $vaultName -Name $passwordSecretName).SecretValueText
+    $passwordSecret = Get-AzureKeyVaultSecret -VaultName $vaultName -Name $passwordSecretName
     Write-Host "Done"
     Write-Host ""
 
-    if (!$password){
+    if (!$passwordSecret){
         throw "Failed to locate secret"
     }
+    
+    $password = $passwordSecret.SecretValueText
 
     Write-Host "Converting secret into useable object"
     $certBytes = [System.Convert]::FromBase64String($secret.SecretValueText)
@@ -97,7 +108,7 @@ try{
     Write-Host "Done"
 
     # Convert password to secure string.
-    $securePassword = ConvertTo-SecureString -String $passwordSecretName -Force -AsPlainText
+    $securePassword = ConvertTo-SecureString -String $password -Force -AsPlainText
 
     Write-Host "Importing the PFX"
     # Install the PFX certificate into the Cert:\LocalMachine\My certificate store.
