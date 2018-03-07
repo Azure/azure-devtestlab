@@ -98,7 +98,10 @@ try{
     Write-Host "Converting secret into useable object"
     $certBytes = [System.Convert]::FromBase64String($secret.SecretValueText)
     $certCollection = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2Collection
-    $certCollection.Import($certBytes,$null,[System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable)
+    $keyFlags = [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::MachineKeySet 
+    $keyFlags = $keyFlags -bor [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::MachineKeySet
+    $keyFlags = $keyFlags -bor [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable    
+    $certCollection.Import($certBytes,$null,$keyFlags)
     Write-Host "Done"
 
     Write-Host "Saving pfx to [$env:temp\cert.pfx]"
