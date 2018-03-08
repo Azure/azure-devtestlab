@@ -145,9 +145,9 @@ function Add-FirewallException
 
     # Determine if the rule already exists.
     netsh advfirewall firewall show rule name=$ruleName | Out-Null
-    if ($LasExitCode -eq 0)
+    if ($LastExitCode -eq 0)
     {
-        # Delete the exisitng rule.
+        # Delete the existing rule.
         netsh advfirewall firewall delete rule name=$ruleName dir=in protocol=TCP localport=$Port | Out-Null
         Handle-LastExitCode
     }
