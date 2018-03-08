@@ -141,12 +141,19 @@ function Add-FirewallException
         [string] $Port
     )
 
-    # Delete an exisitng rule
-    netsh advfirewall firewall delete rule name="Windows Remote Management (HTTPS-In)" dir=in protocol=TCP localport=$Port | Out-Null
-    Handle-LastExitCode
+    $ruleName = "Windows Remote Management (HTTPS-In)"
 
-    # Add a new firewall rule
-    netsh advfirewall firewall add rule name="Windows Remote Management (HTTPS-In)" dir=in action=allow protocol=TCP localport=$Port | Out-Null
+    # Determine if the rule already exists.
+    netsh advfirewall firewall show rule name=$ruleName | Out-Null
+    if ($LastExitCode -eq 0)
+    {
+        # Delete the existing rule.
+        netsh advfirewall firewall delete rule name=$ruleName dir=in protocol=TCP localport=$Port | Out-Null
+        Handle-LastExitCode
+    }
+
+    # Add a new firewall rule.
+    netsh advfirewall firewall add rule name=$ruleName dir=in action=allow protocol=TCP localport=$Port | Out-Null
     Handle-LastExitCode
 }
 
