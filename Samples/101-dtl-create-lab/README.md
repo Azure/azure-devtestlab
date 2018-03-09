@@ -6,3 +6,5 @@
 
 
 This template creates a new DevTestLab instance.
+
+When deploying via PowerShell, if you use -DeploymentMode parameter, it is recommended to use the "Incremental" option. The "Complete" option will delete the target resource group first. If a lab or other resources are in that resource group, you could lose them or encounter errors.
