@@ -78,7 +78,7 @@ if((gwmi win32_computersystem).partofdomain -eq $true)
 	if(Test-Path "$($env:temp)\SMSSETUP") { Remove-Item "$($env:temp)\SMSSETUP" -Force -Recurse  }
 	
     #Add Tools
-	$proc = (Start-Process -FilePath "$($env:temp)\RZUpdate.exe" -ArgumentList "`"ConfigMgrTools`";`"Collection Commander`";`"SCCMCliCtr`";`"RuckZuck for Configuration Manager`";`"SCUP`";`"Right Click Tools`"" -Wait -PassThru)
+	$proc = (Start-Process -FilePath "$($env:temp)\RZUpdate.exe" -ArgumentList "`"ConfigMgrTools`";`"Collection Commander`";`"SCCMCliCtr`";`"RuckZuck for Configuration Manager`";`"SCUP`";`"LogLauncher`"" -Wait -PassThru)
 	$proc.WaitForExit()
 	
     #Add Domain Admins as Full Admins

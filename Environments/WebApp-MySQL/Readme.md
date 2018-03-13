@@ -1,4 +1,3 @@
-# Azure Web App with MySQL
 
 Azure Web Apps enable you to build and host web applications in the programming language of your choice without managing infrastructure. It offers auto-scaling and high availability and enable automated deployments from GitHub,Visual Studio Team Services, or any Git repo. 
 This template allows you to create a Web App. 
