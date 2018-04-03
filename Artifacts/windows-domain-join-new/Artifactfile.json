@@ -27,11 +27,13 @@
     "ouPath": {
       "type": "string",
       "displayName": "Active Directory (AD) domain OU",
-      "description": "The OU path e.g. OU=Workstations,OU=Machines,DC=corp,DC=contoso,DC=com"
+      "description": "The OU path e.g. OU=Workstations,OU=Machines,DC=corp,DC=contoso,DC=com",
+      "allowEmpty": true,
+      "defaultValue": ""
     }
   },
   "runCommand": {
-    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./artifact-main.ps1', ' -domainAdminUsername ', parameters('domainAdminUsername'), ' -domainAdminPassword ''', parameters('domainAdminPassword'), ''' -domainToJoin ', parameters('domainToJoin'), ' -ouPath ''', parameters('ouPath'), '''\"')]"
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./artifact.ps1', ' -DomainAdminUsername ''', parameters('domainAdminUsername'), ''' -DomainAdminPassword ''', parameters('domainAdminPassword'), ''' -DomainToJoin ', parameters('domainToJoin'), ' -OUPath ''', parameters('ouPath'), '''\"')]"
   },
   "postDeployActions": [
     {

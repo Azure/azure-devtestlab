@@ -1,0 +1,6 @@
+{
+  "itemDisplayName": "Web App with PostgreSQL",
+  "description": "This template creates an Azure Web App with PostgreSQL.  WARNING PostgreSQL WILL NEED TO BE ENABLED IN YOUR SUBSCRIPTION.",
+  "githubUsername": "Microsoft",
+  "summary": "Deploys an Azure Web App with a PostgreSQL instance as an environment in a DevTest Lab."
+}

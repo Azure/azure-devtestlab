@@ -1,6 +1,6 @@
 ##################################################################################################>
 #
-# Optional parameters to this script file.
+# Parameters to this script file.
 #
 
 [CmdletBinding()]
@@ -23,6 +23,9 @@ $ErrorActionPreference = 'Stop'
 
 # Suppress progress bar output.
 $ProgressPreference = 'SilentlyContinue'
+
+# Expected path of the choco.exe file.
+$choco = "$Env:ProgramData/chocolatey/choco.exe"
 
 ###################################################################################################
 #
@@ -59,14 +62,9 @@ function Ensure-Chocolatey
     param(
     )
 
-    if ($Env:ChocolateyInstall)
-    {
-        Invoke-ExpressionImpl -Expression 'choco upgrade chocolatey'
-    }
-    else
+    if (-not (Test-Path "$choco"))
     {
         Invoke-ExpressionImpl -Expression ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1')) | Out-Null
-        $Env:Path += '%ALLUSERSPROFILE%\chocolatey\bin'
     }
 }
 
@@ -91,7 +89,7 @@ function Install-Packages
     )
 
     $Packages = $Packages.split(',; ', [StringSplitOptions]::RemoveEmptyEntries) -join ' '
-    $expression = "choco install -y -f --acceptlicense --allow-empty-checksums --no-progress --stoponfirstfailure $Packages"
+    $expression = "$choco install -y -f --acceptlicense --allow-empty-checksums --no-progress --stoponfirstfailure $Packages"
     Invoke-ExpressionImpl -Expression $expression 
 }
 

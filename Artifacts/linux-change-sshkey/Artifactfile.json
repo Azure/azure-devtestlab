@@ -1,0 +1,44 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "Reset VM SSH Key",
+    "description": "Uses the VMAccess extension to reset the built-in administrator account.",
+    "tags": [
+        "Linux"
+    ],
+    "targetOsType": "Linux",
+    "parameters": {
+        "userName": {
+            "type": "string",
+            "displayName": "User name",
+            "description": "The user account to reset."
+        },
+        "sshKey": {
+            "type": "securestring",
+            "metadata": {
+                "description": "The new public key"
+            }
+        },
+        "sshReset": {
+            "type": "bool",
+            "defaultValue": false,
+            "allowedValues": [
+                true,
+                false
+            ],
+            "metadata" : {
+                "description":"Whether or not reset the ssh."
+            }
+        }
+    },
+    "runAzureVMExtension": {
+        "publisher": "Microsoft.OSTCExtensions",
+        "type": "VMAccessForLinux",
+        "typeHandlerVersion": "1.4",
+        "autoUpgradeMinorVersion": true,
+        "protectedSettings": {
+            "username": "[parameters('userName')]",
+            "ssh_key": "[parameters('sshKey')]",
+            "reset_ssh": "[parameters('sshReset')]"
+        }
+    }
+}
