@@ -19,7 +19,7 @@ runuser -l $TARGET_USER -c 'nvm -v'
 installationStatus=$(echo $?)
 
 if [ $installationStatus -eq 127 ] ; then
-    echo "Installing NVM.."
+    echo "Installing NVM..."
     runuser -l $TARGET_USER -c 'wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | bash'
     echo "Installed NVM for user $TARGET_USER."
 else
