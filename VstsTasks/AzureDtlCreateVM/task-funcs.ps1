@@ -120,7 +120,7 @@ function Get-DeploymentTargetResourceId
     if ([string]::IsNullOrEmpty($targetResource.id))
     {
         $null = @(
-            Write-Host "Dumping resource group deployment operation details for deployment '$DeploymentName' in resource group name '$ResourceGroupName'`:"
+            Write-Host "##vso[task.logissue type=warning;]Dumping resource group deployment operation details for deployment '$DeploymentName' in resource group name '$ResourceGroupName'`:"
             Write-Host (ConvertTo-Json $operations)
         )
 
@@ -340,17 +340,17 @@ function Test-TemplateParameters
     $mustReplaceDefaults = $false
     if ($vmName -and $vmName.Contains($defaultValues.NewVMName))
     {
-        Write-Host 'WARNING: -newVMName value should be replaced with non-default.'
+        Write-Host "##vso[task.logissue type=warning;]-newVMName value should be replaced with non-default."
         $mustReplaceDefaults = $true
     }
     if ($userName -and $userName.Contains($defaultValues.UserName))
     {
-        Write-Host 'WARNING: -userName value should be replaced with non-default.'
+        Write-Host "##vso[task.logissue type=warning;]-userName value should be replaced with non-default."
         $mustReplaceDefaults = $true
     }
     if ($password -and $password.Contains($defaultValues.Password))
     {
-        Write-Host 'WARNING: -password value should be replaced with non-default.'
+        Write-Host "##vso[task.logissue type=warning;]-password value should be replaced with non-default."
         $mustReplaceDefaults = $true
     }
 

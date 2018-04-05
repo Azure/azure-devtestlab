@@ -126,7 +126,7 @@ try
             }
             else
             {
-                Write-Host "A deployment failure occured. Retrying deployment (attempt $i of $($count - 1))"
+                Write-Host "##vso[task.logissue type=warning;]A deployment failure occured. Retrying deployment (attempt $i of $($count - 1))"
                 Remove-FailedResourcesBeforeRetry -DeploymentName $deploymentName -ResourceGroupName $resourceGroupName -DeleteDeployment $DeleteFailedDeploymentBeforeRetry
                 $appendSuffix = ConvertTo-Bool -Value $AppendRetryNumberToVMName
                 if ($appendSuffix)
