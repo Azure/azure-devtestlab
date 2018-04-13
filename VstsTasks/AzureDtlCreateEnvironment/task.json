@@ -1,0 +1,149 @@
+{
+    "id": "1FBE9BB7-B97B-4D08-8CB3-E0A776F68744",
+    "name": "AzureDevTestLabsCreateEnvironment",
+    "friendlyName": "Azure DevTest Labs Create Environment",
+    "description": "Create an Azure DevTest Labs Environment",
+    "category": "Deploy",
+    "visibility": [
+        "Build",
+        "Release"
+    ],
+    "author": "Microsoft Corporation",
+    "version": {
+        "Major": 1,
+        "Minor": 0,
+        "Patch": 27
+    },
+    "demands": [
+        "azureps"
+    ],
+    "minimumAgentVersion": "1.95.1",
+    "groups": [
+        {
+            "name": "advanced",
+            "displayName": "Advanced Options",
+            "isExpanded": true
+        },
+        {
+            "name": "output",
+            "displayName": "Output Variables",
+            "isExpanded": true
+        }
+    ],
+    "inputs": [
+        {
+            "name": "ConnectedServiceName",
+            "type": "connectedService:AzureRM",
+            "label": "Azure RM Subscription",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Azure Resource Manager subscription to configure before running."
+        },
+        {
+            "name": "LabId",
+            "type": "pickList",
+            "label": "Lab Name",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Name of an existing lab in which the lab VM will be created. This is a pick list generated as a result of selecting an **Azure RM Subscription**.",
+            "properties": {
+                "EditableOptions": "True"
+            }
+        },
+        {
+            "name": "RepositoryId",
+            "type": "pickList",
+            "label": "Repository Name",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "",
+            "properties": {
+                "EditableOptions": "True"
+            }
+        },
+        {
+            "name": "TemplateId",
+            "type": "pickList",
+            "label": "Template Name",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "",
+            "properties": {
+                "EditableOptions": "True"
+            }
+        },
+        {
+            "name": "EnvironmentName",
+            "type": "string",
+            "label": "Environment Name",
+            "required": true,
+            "defaultValue": "",
+            "helpMarkDown": "The name of the environment to create."
+        },
+        {
+            "name": "ParameterFile",
+            "type": "filePath",
+            "label": "Parameter File",
+            "required": false,
+            "defaultValue": "",
+            "helpMarkDown": "Path or URL of the ARM template parameters file to use. Must be a fully qualified path or relative to $(System.DefaultWorkingDirectory)."
+        },
+        {
+            "name": "ParameterOverrides",
+            "type": "multiLine",
+            "label": "Parameter Overrides",
+            "defaultValue": "",
+            "required": false,
+            "helpMarkDown": "ARM template parameters to use. You can use any variable such as `$(Build.BuildNumber)` or `$(Release.ReleaseName)` when in a build or a release, respectively, for the `newVMName`. Similarly, you can create variables such as `User.Name` and `User.Password`, where the latter is marked as a _secret_."
+        },
+        {
+            "name": "OutputEnvironmentResourceId",
+            "type": "string",
+            "label": "Lab Environment ID",
+            "required": false,
+            "defaultValue": "labEnvironmentResourceId",
+            "groupName": "output",
+            "helpMarkDown": "Variable to capture the created lab environment ID. Default is `labEnvironmentResourceId`. The variable can be referred as `$(labEnvironmentResourceId)` in subsequent tasks. You can use a name other than the default."
+        },
+        {
+            "name": "OutputEnvironmentResourceGroupId",
+            "type": "string",
+            "label": "Lab Environment Resource Group ID",
+            "required": false,
+            "defaultValue": "labEnvironmentResourceGroupId",
+            "groupName": "output",
+            "helpMarkDown": "Variable to capture the created lab environment ID. Default is `labEnvironmentResourceGroupId`. The variable can be referred as `$(labEnvironmentResourceGroupId)` in subsequent tasks. You can use a name other than the default."
+        }
+    ],
+    "sourceDefinitions": [
+        {
+            "target": "LabId",
+            "endpoint": "https://management.azure.com/subscriptions/$(authKey.SubscriptionId)/resources?$filter=resourceType+EQ+'Microsoft.DevTestLab/labs'&api-version=2015-01-01",
+            "selector": "jsonpath:$.value[*].name",
+            "keySelector": "jsonpath:$.value[*].id",
+            "authKey": "$(ConnectedServiceName)"
+        },
+        {
+            "target": "RepositoryId",
+            "endpoint": "https://management.azure.com$(LabId)/artifactsources?api-version=2016-05-15",
+            "selector": "jsonpath:$.value[*].properties.displayName",
+            "keySelector": "jsonpath:$.value[*].id",
+            "authKey": "$(ConnectedServiceName)"
+        },
+        {
+            "target": "TemplateId",
+            "endpoint": "https://management.azure.com$(RepositoryId)/armtemplates?api-version=2016-05-15",
+            "selector": "jsonpath:$.value[*].name",
+            "keySelector": "jsonpath:$.value[*].id",
+            "authKey": "$(ConnectedServiceName)"
+        }
+    ],
+    "instanceNameFormat": "Create Azure DevTest Labs Environment",
+    "execution": {
+        "AzurePowerShell": {
+            "target": "$(currentDirectory)\\task.ps1",
+            "argumentFormat": "",
+            "workingDirectory": "$(currentDirectory)"
+        }
+    }
+}

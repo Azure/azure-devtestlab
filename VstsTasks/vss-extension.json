@@ -1,7 +1,7 @@
 {
     "manifestVersion": 1,
     "id": "tasks",
-    "version": "1.0.19",
+    "version": "1.0.20",
     "name": "Azure DevTest Labs Tasks",
     "publisher": "ms-azuredevtestlabs",
     "description": "Collection of build/release tasks to interact with Azure DevTest Labs.",
@@ -64,6 +64,16 @@
             }
         },
         {
+            "id": "azure-dtl-task-createEnvironment",
+            "type": "ms.vss-distributed-task.task",
+            "targets": [
+                "ms.vss-distributed-task.tasks"
+            ],
+            "properties": {
+                "name": "AzureDtlCreateEnvironment"
+            }
+        },
+        {
             "id": "azure-dtl-task-createVM",
             "type": "ms.vss-distributed-task.task",
             "targets": [
@@ -87,6 +97,10 @@
     "files": [
         {
             "path": "AzureDtlCreateCustomImage",
+            "addressable": true
+        },
+        {
+            "path": "AzureDtlCreateEnvironment",
             "addressable": true
         },
         {
