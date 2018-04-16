@@ -26,7 +26,9 @@ param(
     [string] $ParameterFile,
     [string] $ParameterOverrides,
     [string] $OutputEnvironmentResourceId,
-    [string] $OutputEnvironmentResourceGroupId
+    [string] $OutputEnvironmentResourceGroupId,
+    [string] $TemplateOutputImport,
+    [string] $TemplateOutputPrefix
 )
 
 ###################################################################################################
@@ -96,12 +98,15 @@ try
 
     $environmentResourceId = New-DevTestLabEnvironment -labId $LabId -templateId $TemplateId -environmentName $EnvironmentName -environmentParameterSet $parameterSet
     $environmentResourceGroupId = Get-DevTestLabEnvironmentResourceGroupId -environmentResourceId $environmentResourceId
-    $environmentResourceTags = [hashtable] (Get-DevTestLabEnvironmentResourceTags -environmentResourceGroupId $environmentResourceGroupId)
+    
+    if ([System.Xml.XmlConvert]::ToBoolean($TemplateOutputImport))
+    {
+        $environmentDeploymentOutput = [hashtable] (Get-DevTestLabEnvironmentOutput -environmentResourceId $environmentResourceId -keyPrefix ("$TemplateOutputPrefix".Trim()))
+        $environmentDeploymentOutput.Keys | % {
 
-    $environmentResourceTags.Keys | % {
-        $value = $environmentResourceTags[$_]
-        Write-Host "Creating variable '$_' with value '$value'"
-        Set-TaskVariable -Variable $_ -Value "$value"        
+            Write-Host "Creating variable '$_' with value '$($environmentDeploymentOutput[$_])'"
+            Set-TaskVariable -Variable $_ -Value "$($environmentDeploymentOutput[$_])"
+        }
     }
 }
 finally

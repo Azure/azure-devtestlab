@@ -46,61 +46,62 @@ function Show-InputParameters {
     Write-Host "  ParameterOverrides = $ParameterOverrides"
     Write-Host "  OutputEnvironmentResourceId = $OutputEnvironmentResourceId"
     Write-Host "  OutputEnvironmentResourceGroupId = $OutputEnvironmentResourceGroupId"
+    Write-Host "  TemplateOutputImport = $TemplateOutputImport"
+    Write-Host "  TemplateOutputPrefix = $TemplateOutputPrefix"
 }
 
 function Get-ParameterSet {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [System.Uri] $path,
+        [string] $path,
         [Parameter(Mandatory = $true)]
         [string] $templateId,
         [Parameter(Mandatory = $false)]
         [string] $overrides
     )
 
-    if (Test-Path $path -PathType Leaf)
-    {        
-        $json = Get-Content -Path $path | Out-String    
-    } 
-    else 
-    {
-        $json = "{ `"parameters`": { } }"
-    }
-     
     $parameterSet = @{}
-    $parameterObject = $json | ConvertFrom-Json
 
-    if ($parameterObject | Get-Member -MemberType NoteProperty -Name parameters -ErrorAction SilentlyContinue) 
-    {
-        $parameterObject.parameters | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | % {
-            $parameterSet.Set_Item([string] $_, ($parameterObject.parameters | Select-Object -ExpandProperty $_).value)
-        }
+    if (Test-Path $path -PathType Leaf) {
+        Write-Host "Reading parameter file '$path' ..."
+        $parameterObject = Get-Content -Path $path | Out-String | ConvertFrom-Json
+        
+        if ($parameterObject | Get-Member -MemberType NoteProperty -Name parameters -ErrorAction SilentlyContinue) {
+            $parameterObject.parameters | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | % {
+                Write-Host "  Reading parameter '$_'"
+                $parameterSet.Set_Item([string] $_, ($parameterObject.parameters | Select-Object -ExpandProperty $_).value)
+            }
+        } 
     }
 
-    if ($overrides)
-    {
-        [regex]::Matches($override, '\-(?<k>\w+)\s+(?<v>[''"].*?[''"]|\(.*?\))') | % {
+    if ($overrides) {
+        Write-Host "Reading override parameters ..."
+        [regex]::Matches($overrides, '\-(?<k>\w+)\s+(?<v>[''"].*?[''"]|\(.*?\))') | % {
+        
             $key = $_.Groups[1].Value
             $val = $_.Groups[2].Value.Trim("`"'")
+
+            Write-Host "  Reading parameter '$key'"
             $parameterSet.Set_Item($key, $val)
         }
     }
 
-    if ($parameterSet.Count -gt 0)
-    {
-        $template = Get-AzureRmResource -ResourceId $templateId
+    if ($parameterSet.Count) {
+
+        Write-Host "Validating parameters ..."
+        $template = Get-AzureRmResource -ResourceId $templateId -ApiVersion '2016-05-15'
         $templateParameterNames = [string[]] (Get-Member -InputObject $template.Properties.contents.parameters -MemberType NoteProperty | Select-Object -ExpandProperty Name)
 
         # remove parameters not available in template
         $parameterSet.Keys | Where-Object { $_ -notin $templateParameterNames } | ConvertTo-Array | % { 
-            Write-Host "Removing parameter '$_' from parameter list (not needed by environment template)."
+            Write-Host "  Removing parameter '$_'"
             $parameterSet.Remove([string] $_) 
         }
 
         # removing parameters set by the lab
         ('_artifactsLocation', '_artifactsLocationSasToken') | ? { $parameterSet.ContainsKey([string] $_) } | % { 
-            Write-Host "Removing parameter '$_' from parameter list (parameter value will provided by lab)."
+            Write-Host "  Removing parameter '$_'"
             $parameterSet.Remove([string] $_) 
         } 
     }
@@ -146,8 +147,10 @@ function New-DevTestLabEnvironment {
 
     $templateProperties = @{ "deploymentProperties" = @{ "armTemplateId" = "$templateId"; "parameters" = $templateParameters }; } 
 
+    Write-Host "Environment properties: $($templateProperties | ConvertTo-Json -Depth 5 -Compress)"
+
     $lab = Get-AzureRmResource -ResourceId $labId
-    $env = New-AzureRmResource -Location $Lab.Location -ResourceGroupName $lab.ResourceGroupName -Properties $templateProperties -ResourceType 'Microsoft.DevTestLab/labs/users/environments' -ResourceName "$($lab.Name)/$userId/$environmentName" -ApiVersion '2016-05-15' -Force 
+    $env = New-AzureRmResource -Location $lab.Location -ResourceGroupName $lab.ResourceGroupName -Properties $templateProperties -ResourceType 'Microsoft.DevTestLab/labs/users/environments' -ResourceName "$($lab.Name)/$userId/$environmentName" -ApiVersion '2016-05-15' -Force 
 
     return [string] $env.ResourceId
 }
@@ -164,23 +167,32 @@ function Get-DevTestLabEnvironmentResourceGroupId {
     return [string] $environment.Properties.resourceGroupId
 } 
 
-function Get-DevTestLabEnvironmentResourceTags {
+function Get-DevTestLabEnvironmentOutput {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [string] $environmentResourceGroupId
+        [string] $environmentResourceId,
+        [Parameter(Mandatory = $false)]
+        [string] $keyPrefix
     )
 
-    $splitOptions = [System.StringSplitOptions]::RemoveEmptyEntries
+    $resourceGroupId = Get-DevTestLabEnvironmentResourceGroupId -environmentResourceId $environmentResourceId
+    $resourceGroupName = Split-Path $resourceGroupId -Leaf
 
-    $tagPattern = "hidden-DevTestLabs-Output:(.+)"
-    $tags = @{}
+    $hashtable = @{}
+    $deployment = Get-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName | Select-Object -Last 1
 
-    Get-AzureRmResource -ResourceId "$environmentResourceGroupId/resources" | select -ExpandProperty Tags -ErrorAction SilentlyContinue | ? { $_.Name -match $tagPattern } | % {
-        $name = $Matches[1]
-        $value = $_.Value
-        $tags.Set_Item($name, $value)
+    if ($deployment -and $deployment.Outputs) {
+
+        Write-Host "Reading template output ..."
+        $deployment.Outputs.Keys | % {
+
+            $key = "$keyPrefix$($_)"
+            $val = $deployment.Outputs[$_].Value
+
+            $hashtable.Set_Item($key, $val)
+        }
     }
 
-    return $tags
+    return [hashtable] $hashtable
 }

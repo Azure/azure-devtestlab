@@ -12,7 +12,7 @@
     "version": {
         "Major": 1,
         "Minor": 0,
-        "Patch": 27
+        "Patch": 48
     },
     "demands": [
         "azureps"
@@ -101,18 +101,37 @@
             "type": "string",
             "label": "Lab Environment ID",
             "required": false,
-            "defaultValue": "labEnvironmentResourceId",
+            "defaultValue": "lab.EnvironmentResourceId",
             "groupName": "output",
-            "helpMarkDown": "Variable to capture the created lab environment ID. Default is `labEnvironmentResourceId`. The variable can be referred as `$(labEnvironmentResourceId)` in subsequent tasks. You can use a name other than the default."
+            "helpMarkDown": "Variable to capture the created lab environment ID. Default is `lab.EnvironmentResourceId`. The variable can be referred as `$(lab.EnvironmentResourceId)` in subsequent tasks. You can use a name other than the default."
         },
         {
             "name": "OutputEnvironmentResourceGroupId",
             "type": "string",
             "label": "Lab Environment Resource Group ID",
             "required": false,
-            "defaultValue": "labEnvironmentResourceGroupId",
+            "defaultValue": "lab.EnvironmentResourceGroupId",
             "groupName": "output",
-            "helpMarkDown": "Variable to capture the created lab environment ID. Default is `labEnvironmentResourceGroupId`. The variable can be referred as `$(labEnvironmentResourceGroupId)` in subsequent tasks. You can use a name other than the default."
+            "helpMarkDown": "Variable to capture the created lab environment ID. Default is `lab.EnvironmentResourceGroupId`. The variable can be referred as `$(lab.EnvironmentResourceGroupId)` in subsequent tasks. You can use a name other than the default."
+        },
+        {
+            "name": "TemplateOutputImport",
+            "type": "boolean",
+            "label": "Use environment template output as build/release variables",
+            "required": true,
+            "defaultValue": "false",
+            "groupName": "output",
+            "helpMarkDown": ""
+        },
+        {
+            "name": "TemplateOutputPrefix",
+            "type": "string",
+            "label": "Add a prefix for build/release variables imported from the template output.",
+            "visibleRule": "TemplateOutputImport = true",
+            "required": false,
+            "defaultValue": "lab.",
+            "groupName": "output",
+            "helpMarkDown": ""
         }
     ],
     "sourceDefinitions": [
