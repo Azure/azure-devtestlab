@@ -43,7 +43,7 @@ function Show-InputParameters {
     Write-Host "  TemplateId = $TemplateId"
     Write-Host "  EnvironmentName = $EnvironmentName"
     Write-Host "  ParameterFile = $ParameterFile"
-    Write-Host "  ParameterOverrides = $ParameterOverrides"
+    Write-Host "  Parameters = [not displayed for security reasons]"
     Write-Host "  OutputEnvironmentResourceId = $OutputEnvironmentResourceId"
     Write-Host "  OutputEnvironmentResourceGroupId = $OutputEnvironmentResourceGroupId"
     Write-Host "  TemplateOutputImport = $TemplateOutputImport"
