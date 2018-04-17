@@ -51,7 +51,7 @@
             "label": "Repository Name",
             "defaultValue": "",
             "required": true,
-            "helpMarkDown": "",
+            "helpMarkDown": "Name of an existing repository from wich you want to pick a template. This is a pick list genereted as a result of selecting a lab.",
             "properties": {
                 "EditableOptions": "True"
             }
@@ -62,7 +62,7 @@
             "label": "Template Name",
             "defaultValue": "",
             "required": true,
-            "helpMarkDown": "",
+            "helpMarkDown": "Name of an existing template that should be used to create a new environment. This is a pick list generated as a result of selecting a repository.",
             "properties": {
                 "EditableOptions": "True"
             }
@@ -81,15 +81,15 @@
             "label": "Parameter File",
             "required": false,
             "defaultValue": "",
-            "helpMarkDown": "Path or URL of the ARM template parameters file to use. Must be a fully qualified path or relative to $(System.DefaultWorkingDirectory)."
+            "helpMarkDown": "Path to a ARM template parameters file that provides parameter values for the environment template."
         },
         {
             "name": "ParameterOverrides",
             "type": "multiLine",
-            "label": "Parameter Overrides",
-            "defaultValue": "",
+            "label": "Parameters",
+            "defaultValue": "-SampleParameter 'SampleValue'",
             "required": false,
-            "helpMarkDown": "ARM template parameters to use. You can use any variable such as `$(Build.BuildNumber)` or `$(Release.ReleaseName)` when in a build or a release, respectively, for the `newVMName`. Similarly, you can create variables such as `User.Name` and `User.Password`, where the latter is marked as a _secret_."
+            "helpMarkDown": "Set parameter values needed by the environment template. Parameter values set by parameters file will be overridden."
         },
         {
             "name": "OutputEnvironmentResourceId",
@@ -116,7 +116,7 @@
             "required": true,
             "defaultValue": "false",
             "groupName": "output",
-            "helpMarkDown": ""
+            "helpMarkDown": "Capture environment template output as build/release variables."
         },
         {
             "name": "TemplateOutputPrefix",
@@ -126,7 +126,7 @@
             "required": false,
             "defaultValue": "lab.",
             "groupName": "output",
-            "helpMarkDown": ""
+            "helpMarkDown": "The variable prefix to use if environment template output is captured. Default is 'lab.'. The variables can be referred as '$(lab.[templateOutputVariableName])' in subsequent tasks. You can use a name other than the default."
         }
     ],
     "sourceDefinitions": [

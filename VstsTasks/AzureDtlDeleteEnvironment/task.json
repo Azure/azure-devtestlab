@@ -46,7 +46,7 @@
             "label": "Environment Name",
             "defaultValue": "",
             "required": true,
-            "helpMarkDown": "",
+            "helpMarkDown": "Name of an existing environment that will be deleted. This is a pick list generated as a result of selecting an lab.",
             "properties": {
                 "EditableOptions": "True"
             }
@@ -68,7 +68,7 @@
             "authKey": "$(ConnectedServiceName)"
         }
     ],
-    "instanceNameFormat": "Create Azure DevTest Labs Environment",
+    "instanceNameFormat": "Delete Azure DevTest Labs Environment",
     "execution": {
         "AzurePowerShell": {
             "target": "$(currentDirectory)\\task.ps1",
