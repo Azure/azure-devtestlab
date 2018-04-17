@@ -163,8 +163,6 @@ function New-DevTestLabEnvironment {
 
     $templateProperties = @{ "deploymentProperties" = @{ "armTemplateId" = "$templateId"; "parameters" = $templateParameters }; } 
 
-    Write-Host "Environment properties: $($templateProperties | ConvertTo-Json -Depth 5 -Compress)"
-
     $lab = Get-AzureRmResource -ResourceId $labId
     $env = New-AzureRmResource -Location $lab.Location -ResourceGroupName $lab.ResourceGroupName -Properties $templateProperties -ResourceType 'Microsoft.DevTestLab/labs/users/environments' -ResourceName "$($lab.Name)/$userId/$environmentName" -ApiVersion '2016-05-15' -Force 
 
@@ -199,13 +197,9 @@ function Get-DevTestLabEnvironmentOutput {
     $deployment = Get-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName | Select-Object -Last 1
 
     if ($deployment -and $deployment.Outputs) {
-
-        Write-Host "Reading template output ..."
         $deployment.Outputs.Keys | % {
-
             $key = "$keyPrefix$($_)"
             $val = $deployment.Outputs[$_].Value
-
             $hashtable.Set_Item($key, $val)
         }
     }
