@@ -89,20 +89,30 @@ function Get-ParameterSet {
 
     if (Test-Path $path -PathType Leaf) {
         # reading parameters from parameters file
-        $parameterObject = Get-Content -Path $path | Out-String | ConvertFrom-Json
-        if ($parameterObject | Get-Member -MemberType NoteProperty -Name parameters -ErrorAction SilentlyContinue) {
-            $parameterObject.parameters | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | % {
-                $parameterSet.Set_Item([string] $_, ($parameterObject.parameters | Select-Object -ExpandProperty $_).value)
-            }
-        } 
+        try {
+            $parameterObject = Get-Content -Path $path | Out-String | ConvertFrom-Json
+            if ($parameterObject | Get-Member -MemberType NoteProperty -Name parameters -ErrorAction SilentlyContinue) {
+                $parameterObject.parameters | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | % {
+                    $parameterSet.Set_Item([string] $_, ($parameterObject.parameters | Select-Object -ExpandProperty $_).value)
+                }
+            } 
+        }
+        catch {
+            throw "Failed to read parameter file '$path'. $($error[0].Exception.Message)"
+        }
     }
 
     if ($overrides) {
         # reading paramteres from overrides string
-        [regex]::Matches($overrides, '\-(?<k>\w+)\s+(?<v>[''"].*?[''"]|\(.*?\))') | % {
-            $key = $_.Groups[1].Value
-            $val = $_.Groups[2].Value.Trim("`"'")
-            $parameterSet.Set_Item($key, $val)
+        try {
+            [regex]::Matches($overrides, '\-(?<k>\w+)\s+(?<v>[''"].*?[''"]|\(.*?\))') | % {
+                $key = $_.Groups[1].Value
+                $val = $_.Groups[2].Value.Trim("`"'")
+                $parameterSet.Set_Item($key, $val)
+            }
+        }
+        catch {
+            throw "Failed to parse parameter string. $($error[0].Exception.Message)"
         }
     }
 
@@ -112,12 +122,12 @@ function Get-ParameterSet {
         $templateParameterNames = [string[]] (Get-Member -InputObject $template.Properties.contents.parameters -MemberType NoteProperty | Select-Object -ExpandProperty Name)
 
         # remove parameters not available in template
-        $parameterSet.Keys | Where-Object { $_ -notin $templateParameterNames } | ConvertTo-Array | % { 
+        $parameterSet.Keys | Where-Object { $_ -notin $templateParameterNames } | ConvertTo-Array | ForEach-Object { 
             $parameterSet.Remove([string] $_) 
         }
 
         # removing parameters set by the lab
-        ('_artifactsLocation', '_artifactsLocationSasToken') | ? { $parameterSet.ContainsKey([string] $_) } | % { 
+        ('_artifactsLocation', '_artifactsLocationSasToken') | ? { $parameterSet.ContainsKey([string] $_) } | ForEach-Object { 
             $parameterSet.Remove([string] $_) 
         } 
     }
