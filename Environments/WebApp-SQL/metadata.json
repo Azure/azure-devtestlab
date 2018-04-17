@@ -1,0 +1,6 @@
+{
+  "itemDisplayName": "Web App with SQL Database",
+  "description": "This template creates an Azure Web App with Azure SQL Database.",
+  "githubUsername": "Microsoft",
+  "summary": "Deploys an Azure Web App with a SQL database as an environment in a DevTest Lab."
+}

@@ -6,12 +6,12 @@ param(
     [switch] $BoolParam,
     [string] $ArrayParam,
     [string] $ObjectParam,
+    [string] $FileContentsParam,
     [int] $ExtraLogLines,
     [switch] $ForceFail
 )
 
 ###################################################################################################
-
 #
 # PowerShell configurations
 #
@@ -24,17 +24,14 @@ $ErrorActionPreference = "Stop"
 pushd $PSScriptRoot
 
 ###################################################################################################
-
 #
-# Functions used in this script.
+# Handle all errors in this script.
 #
 
-function Handle-LastError
+trap
 {
-    [CmdletBinding()]
-    param(
-    )
-
+    # NOTE: This trap will handle all errors. There should be no need to use a catch below in this
+    #       script, unless you want to ignore a specific error.
     $message = $error[0].Exception.Message
     if ($message)
     {
@@ -49,39 +46,26 @@ function Handle-LastError
 }
 
 ###################################################################################################
-
-#
-# Handle all errors in this script.
-#
-
-trap
-{
-    # NOTE: This trap will handle all errors. There should be no need to use a catch below in this
-    #       script, unless you want to ignore a specific error.
-    Handle-LastError
-}
-
-###################################################################################################
-
 #
 # Main execution block.
 #
 
 try
 {
-    Write-Output 'Processing parameters:'
-    Write-Output "  string: $StringParam"
-    Write-Output "  securestring: '********'"
-    Write-Output "  int: $IntParam"
-    Write-Output "  bool: $BoolParam"
-    Write-Output "  array: $(ConvertFrom-Json $ArrayParam)"
-    Write-Output "  object: $(ConvertFrom-Json $ObjectParam)"
+    Write-Host 'Processing parameters:'
+    Write-Host "  string: $StringParam"
+    Write-Host "  securestring: '********'"
+    Write-Host "  int: $IntParam"
+    Write-Host "  bool: $BoolParam"
+    Write-Host "  array: $(ConvertFrom-Json $ArrayParam)"
+    Write-Host "  object: $(ConvertFrom-Json $ObjectParam)"
+    Write-Host "  filecontents: $FileContentsParam"
 
     if ($ExtraLogLines -gt 0)
     {
-        Write-Output 'Dumping extra log lines:'
+        Write-Host 'Dumping extra log lines:'
         1..$ExtraLogLines | % {
-            Write-Output "  INFO: Sample log line #$_"
+            Write-Host "  INFO: Sample log line #$_"
         }
     }
 

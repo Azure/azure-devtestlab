@@ -1,58 +1,29 @@
-function Handle-LastError
-{
-    [CmdletBinding()]
-    param(
-    )
-
-    $message = $error[0].Exception.Message
-    if ($message)
-    {
-        Write-Error "`n$message"
-    }
-}
-
 function Invoke-AzureDtlTask
 {
     [CmdletBinding()]
     param(
-        $Lab,
+        [string] $DeploymentName,
+        [string] $ResourceGroupName,
         [string] $TemplateName,
-        [string] $TemplateParameters
+        $TemplateParameterObject
     )
 
     $null = @(
         Write-Host "Preparing deployment parameters"
     )
-    $deploymentName = "Dtl$([Guid]::NewGuid().ToString().Replace('-', ''))"
-    $resourceGroupName = $Lab.ResourceGroupName
-    $templateFile = $TemplateName
-    if (-not [IO.Path]::IsPathRooted($TemplateName))
-    {
-        $templateFile = Join-Path "$PSScriptRoot" "$TemplateName"
-    }
-    if (Test-Path "$templateFile")
-    {
-        if (-not $TemplateParameters.Contains('-labName'))
-        {
-            $TemplateParameters = "-labName '$($Lab.Name)' $TemplateParameters"
-        }
-        $null = @(
-            Write-Host "Invoking deployment with the following parameters:"
-            Write-Host "  DeploymentName = $deploymentName"
-            Write-Host "  ResourceGroupName = $resourceGroupName"
-            Write-Host "  TemplateFile = $templateFile"
-            Write-Host "  TemplateParameters = $TemplateParameters"
-        )
-    }
-    else
-    {
-        throw "Unable to locate template file '$TemplateName'. Make sure the template file exists or the path is correctly specified."
-    }
-    $templateParameterObject = ConvertTo-TemplateParameterObject -TemplateParameters "$TemplateParameters"
+    $templateFile = Get-TemplateFile -TemplateName $TemplateName
 
-    Test-AzureRmResourceGroupDeployment -ResourceGroupName "$resourceGroupName" -TemplateFile "$templateFile" -TemplateParameterObject $templateParameterObject
+    $null = @(
+        Write-Host "Invoking deployment with the following parameters:"
+        Write-Host "  DeploymentName = $DeploymentName"
+        Write-Host "  ResourceGroupName = $ResourceGroupName"
+        Write-Host "  TemplateFile = $templateFile"
+        Write-Host ('  TemplateParameters = ' + ($TemplateParameterObject.GetEnumerator() | sort -Property Key | % { "-$($_.Key) '$(if ($_.Value.GetType().Name -eq 'Hashtable') { ConvertTo-Json $_.Value -Compress } else { $_.Value })'" }))
+    )
 
-    return New-AzureRmResourceGroupDeployment -Name "$deploymentName" -ResourceGroupName "$resourceGroupName" -TemplateFile "$templateFile" -TemplateParameterObject $templateParameterObject
+    Test-AzureRmResourceGroupDeployment -ResourceGroupName "$ResourceGroupName" -TemplateFile "$templateFile" -TemplateParameterObject $TemplateParameterObject
+
+    return New-AzureRmResourceGroupDeployment -Name "$DeploymentName" -ResourceGroupName "$ResourceGroupName" -TemplateFile "$templateFile" -TemplateParameterObject $TemplateParameterObject
 }
 
 function ConvertTo-Bool
@@ -81,6 +52,16 @@ function ConvertTo-Int
     $null = [int]::TryParse($Value, [ref]$intValue)
 
     return $intValue
+}
+
+function ConvertTo-MinutesString
+{
+    [CmdletBinding()]
+    param(
+        [string] $Value
+    )
+
+    return "$Value minute$(if ($Value -ne 1){ 's' })"
 }
 
 function ConvertTo-TemplateParameterObject
@@ -117,23 +98,7 @@ function ConvertTo-TemplateParameterObject
     return $templateParameterObject
 }
 
-function Get-AzureDtlLab
-{
-    [CmdletBinding()]
-    param(
-        [string] $LabId
-    )
-
-    $null = @(
-        $labParts = $LabId.Split('/')
-        $labName = $labParts.Get($labParts.Length - 1)
-        Write-Host "Fetching lab '$labName'"
-    )
-
-    return Get-AzureRmResource -ResourceId "$LabId"
-}
-
-function Get-AzureDtlDeploymentTargetResourceId
+function Get-DeploymentTargetResourceId
 {
     [CmdletBinding()]
     param(
@@ -155,14 +120,100 @@ function Get-AzureDtlDeploymentTargetResourceId
     if ([string]::IsNullOrEmpty($targetResource.id))
     {
         $null = @(
-            Write-Host "Dumping resource group deployment operation details for $ResourceGroupName/$DeploymentName`:"
+            Write-Host "##vso[task.logissue type=warning;]Dumping resource group deployment operation details for deployment '$DeploymentName' in resource group name '$ResourceGroupName'`:"
             Write-Host (ConvertTo-Json $operations)
         )
 
-        throw "Unable to extract the target resource from operations for $ResourceGroupName/$DeploymentName"
+        throw "Unable to extract the target resource from operations for deployment '$DeploymentName' in resource group name '$ResourceGroupName'."
     }
 
     return $targetResource.id
+}
+
+function Get-DtlLab
+{
+    [CmdletBinding()]
+    param(
+        [string] $LabId
+    )
+
+    $null = @(
+        $labParts = $LabId.Split('/')
+        $labName = $labParts.Get($labParts.Length - 1)
+        Write-Host "Fetching lab '$labName'"
+    )
+
+    return Get-AzureRmResource -ResourceId "$LabId"
+}
+
+function Get-ExpectedArtifactsCount
+{
+    [CmdletBinding()]
+    param(
+        [string] $ArmTemplateJson
+    )
+    
+    $armTemplateObject = ConvertFrom-Json $ArmTemplateJson
+    $vmTemplate = $armTemplateObject.resources | ? { $_.type -eq 'Microsoft.DevTestLab/labs/virtualmachines' } | Select-Object -First 1
+
+    return $vmTemplate.properties.artifacts.Count
+}
+
+function Get-TemplateFile
+{
+    [CmdletBinding()]
+    param(
+        [string] $TemplateName
+    )
+
+    $templateFile = $TemplateName
+
+    if (-not [IO.Path]::IsPathRooted($TemplateName))
+    {
+        $templateFile = Join-Path "$PSScriptRoot" "$TemplateName"
+    }
+
+    if (-not (Test-Path "$templateFile"))
+    {
+        throw "Unable to locate template file '$TemplateName'. Make sure the template file exists or the path is correctly specified."
+    }
+
+    return $templateFile
+}
+
+function Remove-FailedResourcesBeforeRetry
+{
+    [CmdletBinding()]
+    param(
+        [string] $DeploymentName,
+        [string] $ResourceGroupName,
+        [string] $DeleteDeployment
+    )
+
+    try
+    {
+        $resourceId = Get-DeploymentTargetResourceId -DeploymentName $DeploymentName -ResourceGroupName $ResourceGroupName
+        if ($resourceId)
+        {
+            Write-Host "Removing previously created lab virtual machine with resource ID '$resourceId'."
+            Remove-AzureRmResource -ResourceId $resourceId -Force | Out-Null
+        }
+        else
+        {
+            Write-Host "Resource identifier is not available, will not attempt to remove corresponding resouce before retrying."
+        }
+    
+        $delete = ConvertTo-Bool -Value $DeleteDeployment
+        if ($delete)
+        {
+            Write-Host "Removing previously created deployment '$DeploymentName' in resource group '$ResourceGroupName'."
+            Remove-AzureRmResourceGroupDeployment -Name $DeploymentName -ResourceGroupName $ResourceGroupName | Out-Null
+        }
+    }
+    catch
+    {
+        Write-Host "##vso[task.logissue type=warning;]Unable to clean-up failed resources. Operation failed with $($Error[0].Exception.Message)"
+    }
 }
 
 function Show-InputParameters
@@ -180,48 +231,96 @@ function Show-InputParameters
     Write-Host "  FailOnArtifactError = $FailOnArtifactError"
     Write-Host "  RetryOnFailure = $RetryOnFailure"
     Write-Host "  RetryCount = $RetryCount"
+    Write-Host "  DeleteFailedDeploymentBeforeRetry = $DeleteFailedDeploymentBeforeRetry"
+    Write-Host "  AppendRetryNumberToVMName = $AppendRetryNumberToVMName"
 }
 
-function Validate-InputParameters
-{
-    [CmdletBinding()]
-    Param(
-        [string] $TemplateParameters
-    )
-
-    Write-Host 'Validating input parameters'
-
-    $templateParameterObject = ConvertTo-TemplateParameterObject -TemplateParameters "$TemplateParameters"
-
-    # Only required for backward compatibility with earlier versions of the task.
-    Validate-TemplateParameters -TemplateParameterObject $templateParameterObject
-
-    $vmName = $templateParameterObject.Item('newVMName')
-    Validate-VMName -Name "$vmName"
-}
-
-function Validate-ArtifactStatus
+function Test-ArtifactStatus
 {
     [CmdletBinding()]
     param(
         [string] $ResourceId,
+        [string] $TemplateName,
         [string] $Fail
     )
 
-    $fail = ConvertTo-Bool -Value $Fail
-    if ($fail)
+    $checkForFailedArtifacts = ConvertTo-Bool -Value $Fail
+    if ($checkForFailedArtifacts)
     {
-        $artifactDeploymentStatus = (Get-AzureRmResource -ResourceId $ResourceId -ODataQuery '$expand=Properties($expand=Artifacts)').Properties.artifactDeploymentStatus
-
-        [array]$failedArtifacts = $artifactDeploymentStatus | ? { $_.deploymentStatus -eq 'Failed' }
-        if ($failedArtifacts.Count -gt 0)
+        $templateFile = Get-TemplateFile -TemplateName $TemplateName
+        # Read the contents of the ARM template and remove any comments of the form /* ... */,
+        # since these cause the call to ConvertFrom-Json, later on, to fail.
+        $armTemplateJson = [IO.File]::ReadAllText($templateFile) -replace '/\*(.|[\r\n])*?\*/',''
+        $expectedArtifactsCount = Get-ExpectedArtifactsCount -ArmTemplateJson $armTemplateJson
+        if ($expectedArtifactsCount -gt 0)
         {
-            throw 'At least one artifact failed to apply. Review the lab virtual machine artifact results blade for full details.'
+            $vm = Get-AzureRmResource -ResourceId $ResourceId -ODataQuery '$expand=Properties($expand=Artifacts)'
+            [array]$artifacts = $vm.Properties.artifacts
+            [array]$failedArtifacts = $artifacts | ? { $_.status -eq 'Failed' }
+            [array]$succeededArtifacts = $artifacts | ? { $_.status -eq 'Succeeded' }
+
+            Write-Host "Number of Artifacts Expected: $expectedArtifactsCount, Reported: $($artifacts.Count), Succeeded: $($succeededArtifacts.Count), Failed: $($failedArtifacts.Count)"
+
+            if ($failedArtifacts.Count -gt 0 -or $succeededArtifacts.Count -lt $expectedArtifactsCount)
+            {
+                foreach ($failedArtifact in $failedArtifacts)
+                {
+                    $failedArtifactName = $failedArtifact.artifactId.split('/')[-1]
+
+                    Write-Host "##vso[task.logissue type=warning;]Failed to apply artifact '$failedArtifactName'."
+
+                    if (-not [string]::IsNullOrEmpty($failedArtifact.deploymentStatusMessage))
+                    {
+                        # Using a try/catch when converting from JSON, as the returned text may be plain.
+                        try
+                        {
+                            $deploymentStatusMessage = (ConvertFrom-Json $failedArtifact.deploymentStatusMessage).error.details.message
+                        }
+                        catch
+                        {
+                            $deploymentStatusMessage = $failedArtifact.deploymentStatusMessage
+                        }
+                        Write-Host "deploymentStatusMessage = $deploymentStatusMessage"
+                    }
+
+                    if (-not [string]::IsNullOrEmpty($failedArtifact.vmExtensionStatusMessage))
+                    {
+                        # Using a try/catch when converting from JSON, as the returned text may be plain.
+                        try
+                        {
+                            $vmExtensionStatusMessage = (ConvertFrom-Json $failedArtifact.vmExtensionStatusMessage)[1].message
+                        }
+                        catch
+                        {
+                            $vmExtensionStatusMessage = $failedArtifact.vmExtensionStatusMessage
+                        }
+                        Write-Host "vmExtensionStatusMessage = $($vmExtensionStatusMessage -replace '\\n','')"
+                    }
+                }
+                
+                throw 'At least one artifact failed to apply. Review the lab virtual machine artifact results blade for full details.'
+            }
         }
     }
 }
 
-function Validate-TemplateParameters
+function Test-InputParameters
+{
+    [CmdletBinding()]
+    Param(
+        $TemplateParameterObject
+    )
+
+    Write-Host 'Validating input parameters'
+
+    # Only required for backward compatibility with earlier versions of the task.
+    Test-TemplateParameters -TemplateParameterObject $TemplateParameterObject
+
+    $vmName = $TemplateParameterObject.Item('newVMName')
+    Test-VirtualMachineName -Name "$vmName"
+}
+
+function Test-TemplateParameters
 {
     [CmdletBinding()]
     Param(
@@ -241,17 +340,17 @@ function Validate-TemplateParameters
     $mustReplaceDefaults = $false
     if ($vmName -and $vmName.Contains($defaultValues.NewVMName))
     {
-        Write-Host 'WARNING: -newVMName value should be replaced with non-default.'
+        Write-Host "##vso[task.logissue type=warning;]-newVMName value should be replaced with non-default."
         $mustReplaceDefaults = $true
     }
     if ($userName -and $userName.Contains($defaultValues.UserName))
     {
-        Write-Host 'WARNING: -userName value should be replaced with non-default.'
+        Write-Host "##vso[task.logissue type=warning;]-userName value should be replaced with non-default."
         $mustReplaceDefaults = $true
     }
     if ($password -and $password.Contains($defaultValues.Password))
     {
-        Write-Host 'WARNING: -password value should be replaced with non-default.'
+        Write-Host "##vso[task.logissue type=warning;]-password value should be replaced with non-default."
         $mustReplaceDefaults = $true
     }
 
@@ -261,7 +360,7 @@ function Validate-TemplateParameters
     }
 }
 
-function Validate-VMName
+function Test-VirtualMachineName
 {
     [CmdletBinding()]
     Param(
@@ -283,5 +382,43 @@ function Validate-VMName
     if (-not $regex.Match($Name).Success)
     {
         throw "Invalid VM name '$Name'. Name cannot be entirely numeric and cannot contain most special characters."
+    }
+}
+
+function Wait-ApplyArtifacts
+{
+    [CmdletBinding()]
+    param(
+        [string] $ResourceId,
+        [string] $WaitMinutes
+    )
+
+    $maxWaitMinutes = ConvertTo-Int -Value $WaitMinutes
+    if ($maxWaitMinutes -gt 0)
+    {
+        Write-Host "Waiting for a maximum of $(ConvertTo-MinutesString $maxWaitMinutes) for apply artifacts operation to complete."
+
+        $startWait = [DateTime]::Now
+        do {
+            $waitspan = New-TimeSpan -Start $startWait -End ([DateTime]::Now)
+            $totalWaitMinutes = [Math]::Round($waitspan.TotalMinutes)
+            $expired = $waitspan.TotalMinutes -ge $maxWaitMinutes
+            if ($expired)
+            {
+                throw "Waited for more than $(ConvertTo-MinutesString $totalWaitMinutes). Failing the task."
+            }
+            $vm = Get-AzureRmResource -ResourceId $ResourceId
+            $provisioningState = $vm.Properties.provisioningState
+            $continueWaiting = $provisioningState -eq 'ApplyingArtifacts' -or $provisioningState -eq 'UpgradingVmAgent'
+            if ($continueWaiting)
+            {
+                # The only time we have seen we possibly need to wait is if the ARM deployment completed prematurely,
+                # for some unknown error, and the virtual machine is still applying artifacts. So, it is reasonable to
+                # recheck every 5 minutes.
+                Start-Sleep -Seconds 300
+            }
+        } while ($continueWaiting)
+
+        Write-Host "Waited for a total of $(ConvertTo-MinutesString $totalWaitMinutes)."
     }
 }

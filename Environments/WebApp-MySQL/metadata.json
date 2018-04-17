@@ -1,0 +1,6 @@
+{
+  "itemDisplayName": "Web App with MySQL",
+  "description": "This template creates an Azure Web App with MySQL",
+  "githubUsername": "Microsoft",
+  "summary": "Deploys an Azure Web App with a MySQL instance as an environment in a DevTest Lab."
+}

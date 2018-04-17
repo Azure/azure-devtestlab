@@ -56,8 +56,10 @@ function Invoke-AzureDtlTask
         Write-Host "  DeploymentName = $deploymentName"
         Write-Host "  ResourceGroupName = $resourceGroupName"
         Write-Host "  TemplateFile = $templateFile"
-        Write-Host ('  TemplateParameters = ' + ($templateParameterObject.GetEnumerator() | sort -Property Key | % { "-$($_.Key) `"$($_.Value)`"" }))
+        Write-Host ('  TemplateParameters = ' + ($templateParameterObject.GetEnumerator() | sort -Property Key | % { "-$($_.Key) '$(if ($_.Value.GetType().Name -eq 'Hashtable') { ConvertTo-Json $_.Value -Compress } else { $_.Value })'" }))
     )
+
+    Test-AzureRmResourceGroupDeployment -ResourceGroupName "$resourceGroupName" -TemplateFile "$templateFile" -TemplateParameterObject $templateParameterObject
 
     return New-AzureRmResourceGroupDeployment -Name "$deploymentName" -ResourceGroupName "$resourceGroupName" -TemplateFile "$templateFile" -TemplateParameterObject $templateParameterObject
 }
@@ -103,26 +105,33 @@ function Get-TemplateParameterObject
         $Description = "Custom image created from $authorType $author requested for $requestedFor."
     }
 
+    $vmOsInfo = @{
+        sourceVmId = $SourceLabVMId
+    }
+
+    if ($OsType -eq 'Linux')
+    {
+        $vmOsInfo += @{
+            linuxOsInfo = @{
+                linuxOsState = $LinuxOsState
+            }
+        }
+    }
+    elseif ($OsType -eq 'Windows')
+    {
+        $vmOsInfo += @{
+            windowsOsInfo = @{
+                windowsOsState = $WindowsOsState
+            }
+        }
+    }
+
     $templateParameterObject = @{
         author = $author
         description = $Description
         labName = $lab.Name
         newCustomImageName = $NewCustomImageName
-        osType = $OsType
-        sourceLabVmId = $SourceLabVMId
-    }
-
-    if ($OsType -eq 'Linux')
-    {
-        $templateParameterObject += @{
-            linuxOsState = $LinuxOsState
-        }
-    }
-    elseif ($OsType -eq 'Windows')
-    {
-        $templateParameterObject += @{
-            windowsOsState = $WindowsOsState
-        }
+        vmOsInfo = $vmOsInfo
     }
 
     return $templateParameterObject

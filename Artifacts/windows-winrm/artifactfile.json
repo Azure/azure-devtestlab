@@ -1,0 +1,21 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "Configure WinRM",
+    "publisher": "Microsoft",
+    "description": "Configures WinRM on the virtual machine. If using \"Shared IP address\" for your Lab VM, you will need to also add a NAT rule on the Load Balancer to allow traffic through. Alternatively, use \"Public IP address\" instead.",
+    "tags": [
+        "Windows"
+    ],
+    "iconUri": "https://i.microsoft.com/global/ImageStore/PublishingImages/logos/56x56/windows_symbol_clr_56x56.png",
+    "targetOsType": "Windows",
+    "parameters": {
+        "hostName": {
+            "type": "string",
+            "displayName": "Host Name",
+            "description": "Specifies the FQDN of the machine or domain."
+        }
+    },
+    "runCommand": {
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./config-winrm.ps1 -HostName ''', parameters('hostName'), '''\"')]"
+    }
+}

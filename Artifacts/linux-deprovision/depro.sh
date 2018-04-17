@@ -11,14 +11,20 @@ main () {
             apt-get -y update > /dev/null
             apt-get -y install at > /dev/null
         elif [ -n "$isYum" ] ; then
-            yum -y update > /dev/null
             yum install -y at > /dev/null
         elif [ -n "$isZypper" ] ; then
             zypper install -y at > /dev/null
-            systemctl enable atd.service && systemctl start atd.service
         else
             echo 'OS type not supported' #> /dev/null 2>&1
             exit 1
+        fi
+
+        # Make sure that the atd service is running to cover our dependency below.
+        isSystemctl=`command -v systemctl`
+        if [ -n "$isSystemctl" ] ; then
+            systemctl enable atd.service && systemctl start atd.service > /dev/null
+        else
+            insserv atd && /etc/init.d/atd start > /dev/null
         fi
 
         # chdir to waagent's directory before running it

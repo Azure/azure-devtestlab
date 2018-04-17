@@ -1,0 +1,6 @@
+{
+  "itemDisplayName": "Web App",
+  "description": "This template creates an Azure Web App without a data store.",
+  "githubUsername": "Microsoft",
+  "summary": "Deploys an Azure Web App as an environment in a DevTest Lab."
+}

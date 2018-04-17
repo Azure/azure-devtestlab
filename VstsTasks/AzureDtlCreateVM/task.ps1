@@ -16,7 +16,6 @@
     - N/A.    
 
 ##################################################################################################>
-
 #
 # Parameters to this script file.
 #
@@ -30,20 +29,13 @@ param(
     [string] $OutputResourceId,
     [string] $FailOnArtifactError,
     [string] $RetryOnFailure,
-    [string] $RetryCount
+    [string] $RetryCount,
+    [string] $DeleteFailedDeploymentBeforeRetry,
+    [string] $AppendRetryNumberToVMName,
+    [string] $WaitMinutesForApplyArtifacts
 )
 
 ###################################################################################################
-
-#
-# Required modules.
-#
-
-Import-Module Microsoft.TeamFoundation.DistributedTask.Task.Common
-Import-Module Microsoft.TeamFoundation.DistributedTask.Task.Internal
-
-###################################################################################################
-
 #
 # PowerShell configurations
 #
@@ -53,10 +45,9 @@ Import-Module Microsoft.TeamFoundation.DistributedTask.Task.Internal
 $ErrorActionPreference = "Stop"
 
 # Ensure we set the working directory to that of the script.
-pushd $PSScriptRoot
+Push-Location $PSScriptRoot
 
 ###################################################################################################
-
 #
 # Functions used in this script.
 #
@@ -64,7 +55,6 @@ pushd $PSScriptRoot
 .".\task-funcs.ps1"
 
 ###################################################################################################
-
 #
 # Handle all errors in this script.
 #
@@ -73,11 +63,14 @@ trap
 {
     # NOTE: This trap will handle all errors. There should be no need to use a catch below in this
     #       script, unless you want to ignore a specific error.
-    Handle-LastError
+    $message = $error[0].Exception.Message
+    if ($message)
+    {
+        Write-Error "`n$message"
+    }
 }
 
 ###################################################################################################
-
 #
 # Main execution block.
 #
@@ -91,9 +84,14 @@ try
 
     Show-InputParameters
 
-    Validate-InputParameters -TemplateParameters "$TemplateParameters"
-
-    $lab = Get-AzureDtlLab -LabId "$LabId"
+    $lab = Get-DtlLab -LabId "$LabId"
+    $resourceGroupName = $lab.ResourceGroupName
+    if (-not $TemplateParameters.Contains('-labName'))
+    {
+        $TemplateParameters = "-labName '$($Lab.Name)' $TemplateParameters"
+    }
+    $templateParameterObject = ConvertTo-TemplateParameterObject -TemplateParameters "$TemplateParameters"
+    $baseVmName = $templateParameterObject.Item('newVMName')
 
     $retry = ConvertTo-Bool -Value $RetryOnFailure
     if (-not $retry)
@@ -104,13 +102,19 @@ try
     [int] $count = 1 + (ConvertTo-Int -Value $RetryCount)
     for ($i = 1; $i -le $count; $i++)
     {
+        Test-InputParameters -TemplateParameterObject $templateParameterObject
+        
         try
         {
-            $result = Invoke-AzureDtlTask -Lab $lab -TemplateName "$TemplateName" -TemplateParameters "$TemplateParameters"
+            $deploymentName = "Dtl$([Guid]::NewGuid().ToString().Replace('-', ''))"
+            
+            $result = Invoke-AzureDtlTask -DeploymentName $deploymentName -ResourceGroupName $resourceGroupName -TemplateName "$TemplateName" -TemplateParameterObject $templateParameterObject
 
-            $resourceId = Get-AzureDtlDeploymentTargetResourceId -DeploymentName $result.DeploymentName -ResourceGroupName $result.ResourceGroupName
+            $resourceId = Get-DeploymentTargetResourceId -DeploymentName $result.DeploymentName -ResourceGroupName $result.ResourceGroupName
 
-            Validate-ArtifactStatus -ResourceId $resourceId -Fail $FailOnArtifactError
+            Wait-ApplyArtifacts -ResourceId $resourceId -WaitMinutes $WaitMinutesForApplyArtifacts
+
+            Test-ArtifactStatus -ResourceId $resourceId -TemplateName "$TemplateName" -Fail $FailOnArtifactError
             
             break
         }
@@ -122,14 +126,12 @@ try
             }
             else
             {
-                Write-Host "A deployment failure occured. Retrying deployment (attempt $i of $($count - 1))"
-                if ($resourceId)
+                Write-Host "##vso[task.logissue type=warning;]A deployment failure occured. Retrying deployment (attempt $i of $($count - 1))"
+                Remove-FailedResourcesBeforeRetry -DeploymentName $deploymentName -ResourceGroupName $resourceGroupName -DeleteDeployment $DeleteFailedDeploymentBeforeRetry
+                $appendSuffix = ConvertTo-Bool -Value $AppendRetryNumberToVMName
+                if ($appendSuffix)
                 {
-                    Remove-AzureRmResource -ResourceId $resourceId -Force | Out-Null
-                }
-                else
-                {
-                    Write-Host "Resource identifier is not available, will not attempt to remove corresponding resouce before retrying."
+                    $templateParameterObject.newVMName = "$baseVmName-$i"
                 }
             }
         }
@@ -141,9 +143,9 @@ finally
     {
         # Capture the resource ID in the output variable.
         Write-Host "Creating variable '$OutputResourceId' with value '$resourceId'"
-        Set-TaskVariable -Variable $OutputResourceId -Value "$resourceId"
+        Write-Host "##vso[task.setvariable variable=$OutputResourceId;]$resourceId"
     }
 
     Write-Host 'Completing Azure DevTest Labs Create VM Task'
-    popd
+    Pop-Location
 }
