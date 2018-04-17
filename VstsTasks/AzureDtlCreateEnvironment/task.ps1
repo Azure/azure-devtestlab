@@ -25,10 +25,7 @@ param(
     [string] $EnvironmentName,
     [string] $ParameterFile,
     [string] $ParameterOverrides,
-    [string] $OutputEnvironmentResourceId,
-    [string] $OutputEnvironmentResourceGroupId,
-    [string] $TemplateOutputImport,
-    [string] $TemplateOutputPrefix
+    [string] $TemplateOutputVariables
 )
 
 ###################################################################################################
@@ -101,28 +98,28 @@ try
     $environmentResourceId = New-DevTestLabEnvironment -labId $LabId -templateId $TemplateId -environmentName $EnvironmentName -environmentParameterSet $parameterSet
     $environmentResourceGroupId = Get-DevTestLabEnvironmentResourceGroupId -environmentResourceId $environmentResourceId
     
-    if ([System.Xml.XmlConvert]::ToBoolean($TemplateOutputImport))
+    if ([System.Xml.XmlConvert]::ToBoolean($TemplateOutputVariables))
     {
-        $environmentDeploymentOutput = [hashtable] (Get-DevTestLabEnvironmentOutput -environmentResourceId $environmentResourceId -keyPrefix ("$TemplateOutputPrefix".Trim()))
-        $environmentDeploymentOutput.Keys | % {
-
-            Write-Host "Creating variable '$_' with value '$($environmentDeploymentOutput[$_])'"
-            Set-TaskVariable -Variable $_ -Value "$($environmentDeploymentOutput[$_])"
+        $environmentDeploymentOutput = [hashtable] (Get-DevTestLabEnvironmentOutput -environmentResourceId $environmentResourceId) 
+        $environmentDeploymentOutput.Keys | ForEach-Object {
+            if(Test-DevTestLabEnvironmentOutputIsSecret -templateId $TemplateId -key $_) {
+                Write-Host "##vso[task.setvariable variable=$_;isSecret=true;isOutput=true;]$($environmentDeploymentOutput[$_])"
+            } else {
+                Write-Host "##vso[task.setvariable variable=$_;isSecret=false;isOutput=true;]$($environmentDeploymentOutput[$_])"
+            }   
         }
     }
 }
 finally
 {
-    if ($OutputEnvironmentResourceId -and -not [string]::IsNullOrWhiteSpace($environmentResourceId))
+    if (-not [string]::IsNullOrWhiteSpace($environmentResourceId))
     {
-        Write-Host "Creating variable '$OutputEnvironmentResourceId' with value '$environmentResourceId'"
-        Set-TaskVariable -Variable $OutputEnvironmentResourceId -Value "$environmentResourceId"
+        Write-Host "##vso[task.setvariable variable=environmentResourceId;isSecret=false;isOutput=true;]$environmentResourceId"
     }
 
-    if ($OutputEnvironmentResourceGroupId -and -not [string]::IsNullOrWhiteSpace($environmentResourceGroupId))
+    if (-not [string]::IsNullOrWhiteSpace($environmentResourceGroupId))
     {
-        Write-Host "Creating variable '$OutputEnvironmentResourceGroupId' with value '$environmentResourceGroupId'"
-        Set-TaskVariable -Variable $OutputEnvironmentResourceGroupId -Value "$environmentResourceGroupId"
+        Write-Host "##vso[task.setvariable variable=environmentResourceGroupId;isSecret=false;isOutput=true;]$environmentResourceGroupId"
     }
 
     Write-Host 'Completing Azure DevTest Labs Create Environment Task'

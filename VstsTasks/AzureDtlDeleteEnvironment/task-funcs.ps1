@@ -39,7 +39,7 @@ function Remove-DevTestLabEnvironment {
         $env = Get-AzureRmResource -ResourceGroupName $lab.ResourceGroupName -ResourceType 'Microsoft.DevTestLab/labs/users/environments' -ResourceName "$($lab.Name)/$usr/$environmentId" -ApiVersion 2016-05-15 -ErrorAction SilentlyContinue | Select-Object -First 1
     }
     else {
-        $env = Get-AzureRmResource -ResourceId $environmentId -ErrorAction SilentlyContinue
+        $env = Get-AzureRmResource -ResourceId $environmentId  -ApiVersion 2016-05-15 -ErrorAction SilentlyContinue
     }
     
     if ($env) {

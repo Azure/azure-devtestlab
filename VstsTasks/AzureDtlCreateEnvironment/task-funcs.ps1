@@ -44,10 +44,7 @@ function Show-InputParameters {
     Write-Host "  EnvironmentName = $EnvironmentName"
     Write-Host "  ParameterFile = $ParameterFile"
     Write-Host "  Parameters = [not displayed for security reasons]"
-    Write-Host "  OutputEnvironmentResourceId = $OutputEnvironmentResourceId"
-    Write-Host "  OutputEnvironmentResourceGroupId = $OutputEnvironmentResourceGroupId"
-    Write-Host "  TemplateOutputImport = $TemplateOutputImport"
-    Write-Host "  TemplateOutputPrefix = $TemplateOutputPrefix"
+    Write-Host "  TemplateOutputVariables = $TemplateOutputVariables"
 }
 
 function Show-TemplateParameters {
@@ -191,13 +188,29 @@ function Get-DevTestLabEnvironmentResourceGroupId {
     return [string] $environment.Properties.resourceGroupId
 } 
 
+function Test-DevTestLabEnvironmentOutputIsSecret {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $templateId,
+        [Parameter(Mandatory = $true)]
+        [string] $key
+    )
+
+    $template = Get-AzureRmResource -ResourceId $templateId -ApiVersion '2016-05-15'
+    
+    try {
+        return ($template.Properties.contents.outputs.$key.type -like "secure*")
+    } catch {
+        return $false
+    }
+}
+
 function Get-DevTestLabEnvironmentOutput {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
-        [string] $environmentResourceId,
-        [Parameter(Mandatory = $false)]
-        [string] $keyPrefix
+        [string] $environmentResourceId
     )
 
     $resourceGroupId = Get-DevTestLabEnvironmentResourceGroupId -environmentResourceId $environmentResourceId
@@ -207,10 +220,8 @@ function Get-DevTestLabEnvironmentOutput {
     $deployment = Get-AzureRmResourceGroupDeployment -ResourceGroupName $resourceGroupName | Select-Object -Last 1
 
     if ($deployment -and $deployment.Outputs) {
-        $deployment.Outputs.Keys | % {
-            $key = "$keyPrefix$($_)"
-            $val = $deployment.Outputs[$_].Value
-            $hashtable.Set_Item($key, $val)
+        $deployment.Outputs.Keys | ForEach-Object {
+            $hashtable.Set_Item($_, $deployment.Outputs[$_].Value)
         }
     }
 
