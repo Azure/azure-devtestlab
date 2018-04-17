@@ -74,6 +74,16 @@
             }
         },
         {
+            "id": "azure-dtl-task-deleteEnvironment",
+            "type": "ms.vss-distributed-task.task",
+            "targets": [
+                "ms.vss-distributed-task.tasks"
+            ],
+            "properties": {
+                "name": "AzureDtlDeleteEnvironment"
+            }
+        },
+        {
             "id": "azure-dtl-task-createVM",
             "type": "ms.vss-distributed-task.task",
             "targets": [
@@ -101,6 +111,10 @@
         },
         {
             "path": "AzureDtlCreateEnvironment",
+            "addressable": true
+        },
+        {
+            "path": "AzureDtlDeleteEnvironment",
             "addressable": true
         },
         {
