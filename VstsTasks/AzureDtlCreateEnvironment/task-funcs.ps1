@@ -50,6 +50,30 @@ function Show-InputParameters {
     Write-Host "  TemplateOutputPrefix = $TemplateOutputPrefix"
 }
 
+function Show-TemplateParameters {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $templateId,
+        [Parameter(Mandatory = $true)]
+        [hashtable] $parameters
+    )
+
+    if ($parameters) {
+        Write-Host "Creating Environment with parameters"
+        $template = Get-AzureRmResource -ResourceId $templateId -ApiVersion '2016-05-15'
+        $parameters.Keys | % {
+            $key = $_
+            if ($template.Properties.contents.parameters.$key.type -like "secure*") {
+                Write-Host "  $key = *****"
+            }
+            else {
+                Write-Host "  $key = $($parameters[$key])"
+            }
+        }
+    }
+}
+
 function Get-ParameterSet {
     [CmdletBinding()]
     param(
@@ -64,44 +88,36 @@ function Get-ParameterSet {
     $parameterSet = @{}
 
     if (Test-Path $path -PathType Leaf) {
-        Write-Host "Reading parameter file '$path' ..."
+        # reading parameters from parameters file
         $parameterObject = Get-Content -Path $path | Out-String | ConvertFrom-Json
-        
         if ($parameterObject | Get-Member -MemberType NoteProperty -Name parameters -ErrorAction SilentlyContinue) {
             $parameterObject.parameters | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | % {
-                Write-Host "  Reading parameter '$_'"
                 $parameterSet.Set_Item([string] $_, ($parameterObject.parameters | Select-Object -ExpandProperty $_).value)
             }
         } 
     }
 
     if ($overrides) {
-        Write-Host "Reading override parameters ..."
+        # reading paramteres from overrides string
         [regex]::Matches($overrides, '\-(?<k>\w+)\s+(?<v>[''"].*?[''"]|\(.*?\))') | % {
-        
             $key = $_.Groups[1].Value
             $val = $_.Groups[2].Value.Trim("`"'")
-
-            Write-Host "  Reading parameter '$key'"
             $parameterSet.Set_Item($key, $val)
         }
     }
 
     if ($parameterSet.Count) {
 
-        Write-Host "Validating parameters ..."
         $template = Get-AzureRmResource -ResourceId $templateId -ApiVersion '2016-05-15'
         $templateParameterNames = [string[]] (Get-Member -InputObject $template.Properties.contents.parameters -MemberType NoteProperty | Select-Object -ExpandProperty Name)
 
         # remove parameters not available in template
         $parameterSet.Keys | Where-Object { $_ -notin $templateParameterNames } | ConvertTo-Array | % { 
-            Write-Host "  Removing parameter '$_'"
             $parameterSet.Remove([string] $_) 
         }
 
         # removing parameters set by the lab
         ('_artifactsLocation', '_artifactsLocationSasToken') | ? { $parameterSet.ContainsKey([string] $_) } | % { 
-            Write-Host "  Removing parameter '$_'"
             $parameterSet.Remove([string] $_) 
         } 
     }
