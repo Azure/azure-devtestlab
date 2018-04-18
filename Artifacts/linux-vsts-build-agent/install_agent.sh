@@ -1,19 +1,10 @@
-# Script to install the linux VSTS build agent and register the machine with a
-# specific pool
-
-# Require arguments
-# vsts_account name
-# vsts_agent_working_dir
-
-#  URL -> https://vstsagentpackage.azureedge.net/agent/2.131.0/vsts-agent-linux-x64-2.131.0.tar.gz
-
 DOWNLOAD_URL="https://vstsagentpackage.azureedge.net/agent/2.131.0/vsts-agent-linux-x64-2.131.0.tar.gz"
-INSTALL_PATH=/usr/share/vsts-agent-install
+INSTALL_PATH=/usr/local/vsts-agent-install
 VSTS_ACCOUNT=""
 VSTS_ACCOUNT_TOKEN=""
 VSTS_AGENT_NAME="$HOSTNAME"
 VSTS_AGENT_POOL=""
-VSTS_AGENT_WORK_DIR=/vsts-agent
+VSTS_AGENT_WORK_DIR=/usr/local/vsts-agent
 
 LOGCMD='echo [AZDEVTST_VSTSAGENT] '
 
@@ -22,7 +13,7 @@ if [ $? -ne 4 ]; then
     $LOGCMD "ERROR: Could not find getopt, required for arg parsing"
     exit 1
 fi
-# Indicates account, token and pool are required to have arguments, other arguments are just flags
+# Indicates all options require an argument after, none are flags
 OPTIONS='a:t:n:p:w:'
 PARSED_OPTIONS=`getopt --options=$OPTIONS --name "$0" -- "$@"`
 if [ $? -ne 0 ]; then
@@ -70,9 +61,17 @@ while true; do
         break
         ;;
     *)
+	$LOGCMD "ERROR: Coding error"
         exit 3
         ;;
     esac
+done
+
+$LOGCMD "INFO: VSTS configuration parameters..."
+$LOGCMD "INFO: Account name - $VSTS_ACCOUNT"
+$LOGCMD "INFO: Agent name - $VSTS_AGENT_NAME"
+$LOGCMD "INFO: Agent pool name - $VSTS_AGENT_POOL"
+$LOGCMD "INFO: Agent work directory - $VSTS_AGENT_WORK_DIR"
 
 DOWNLOAD_FILE=`mktemp -t vsts_agent_XXXXXX.tar.gz`
 if [ $? -ne 0 ]; then
@@ -94,10 +93,56 @@ fi
 mkdir -p $INSTALL_PATH
 tar zxf $DOWNLOAD_FILE -C $INSTALL_PATH
 $LOGCMD "Extraction complete"
+rm -f $DOWNLOAD_FILE
 
-pushd $INSTALL_PATH
+pushd $INSTALL_PATH > /dev/null
 AGENT_VERSION=`./config.sh --version`
 $LOGCMD "Found agent version $AGENT_VERSION"
 $LOGCMD "Starting configuration..."
+# As a workaround remove the check if running as sudo, see https://github.com/Microsoft/vsts-agent/issues/1481
+sed -e '5,9d' "./config.sh" > "./config2.sh"
+chmod +x "./config2.sh"
 
+$LOGCMD "Installing git.."
+apt-get install git -y
+
+$LOGCMD "Installing VSTS dependencies..."
+./bin/installdependencies.sh
+if [ $? -ne 0 ]; then
+    $LOGCMD "ERROR: Could not install required dependencies"
+    exit 1
+fi
+
+$LOGCMD "Creating work directory"
+mkdir $VSTS_AGENT_WORK_DIR
+
+$LOGCMD "Configuring VSTS agent..."
+./config2.sh --unattended  --url "https://$VSTS_ACCOUNT.visualstudio.com" --auth pat --token "$VSTS_ACCOUNT_TOKEN" --pool "$VSTS_AGENT_POOL" --agent "$VSTS_AGENT_NAME" --work "$VSTS_AGENT_WORK_DIR" --acceptTeeEula --replace
+if [ $? -ne 0 ]; then
+    $LOGCMD "ERROR: Could not configue VSTS agent correctly"
+    exit 1
+fi
+
+$LOGCMD "Installing VSTS agent service..."
+./svc.sh install root
+if [ $? -ne 0 ]; then
+    $LOGCMD "ERROR: Could not install VSTS agent"
+    exit 1
+fi
+
+$LOGCMD "Launching VSTS agent service..."
+./svc.sh start
+if [ $? -ne 0 ]; then
+    $LOGCMD "ERROR: Could not start VSTS agent"
+    exit 1
+fi
+
+$LOGCMD "VSTS agent service status..."
+./svc.sh status
+if [ $? -ne 0 ]; then
+    $LOGCMD "ERROR: Could not get VSTS agent status"
+    exit 1
+fi
+
+$LOGCMD "Done!"
 popd
