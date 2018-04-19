@@ -39,6 +39,6 @@
           }
     },
     "runCommand": {
-        "commandToExecute": "[concat('bash install_agent.sh', ' -a ', parameters('vstsAccount'), ' -t ', parameters('vstsPassword'), ' -n ', parameters('agentNameSuffix'), ' -p ', parameters('poolName'), ' -w ', parameters('workDirectory'))]"
+        "commandToExecute": "[concat('bash install_agent.sh', ' -a ''', parameters('vstsAccount'), ''' -t ''', parameters('vstsPassword'), ''' -n ''', parameters('agentNameSuffix'), ''' -p ''', parameters('poolName'), ''' -w ''', parameters('workDirectory'), '''')]"
     }
 }

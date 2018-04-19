@@ -20,7 +20,6 @@ if [ $? -ne 0 ]; then
     $LOGCMD "ERROR: Option parsing failed"
     exit 2
 fi
-$LOGCMD "Found arguments: $PARSED_OPTIONS"
 if [[ ! $PARSED_OPTIONS =~ "-a" ]]; then
     $LOGCMD "ERROR: Missing VSTS account name (-a)"
     exit 2
@@ -103,7 +102,7 @@ $LOGCMD "Starting configuration..."
 sed -e '5,9d' "./config.sh" > "./config2.sh"
 chmod +x "./config2.sh"
 
-$LOGCMD "Installing git.."
+$LOGCMD "Installing git..."
 apt-get install git -y
 
 $LOGCMD "Installing VSTS dependencies..."
@@ -113,7 +112,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-$LOGCMD "Creating work directory"
+$LOGCMD "Creating work directory..."
 mkdir $VSTS_AGENT_WORK_DIR
 
 $LOGCMD "Configuring VSTS agent..."
