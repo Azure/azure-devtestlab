@@ -44,7 +44,7 @@ fi
 
 # Check if mysql is available
 echo "Checking if mysql command is available"
-command -v foo >/dev/null 2>&1 || { echo >&2 "mysql command is required but not installed. Aborting"; exit 1; }
+command -v mysql >/dev/null 2>&1 || { echo >&2 "mysql command is required but not installed. Aborting"; exit 1; }
 
 # Set root password and make sure that nobody can access the server without a password
 echo "Updating root password"
