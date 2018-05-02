@@ -7,63 +7,67 @@
 #
 # Usage: 
 #
-# linux-secure-mariadb.sh [-p=password]
+# linux-secure-mariadb.sh [-p password]
 #
 
-# Default argument values
-USAGE_STRING="Usage:
-linux-secure-mariadb.sh -p (root password)
-root password
-    Specify new root password
-"
-
-# Initialize logger
-export LOGCMD='logger -i -t azure-devtestlab --'
-which logger
-if [ $? -ne 0 ] ; then
-    LOGCMD='echo [azure-devtestlab] '
-fi
-
-# Check for minimum number of parameters first - must be at minimum 1
-if [ $# -lt 1 ] ; then
-    $LOGCMD "ERROR: This script needs at least 1 command-line argument, password=."
-    $LOGCMD "$USAGE_STRING"
-    exit 1
-fi
-
 # Get parameter value for password
-while getopts p: option
-do
-    case "${option}"
-    in
-    p) ROOT_PASSWORD=${OPTARG};;
+usage() { echo "Usage: $0 [-p password]" 1>&2; exit 1; }
+
+while getopts ":p:" option; do
+    case "${option}" in
+        p)
+            p=${OPTARG}
+            ;;
+        *)
+            usage
+            ;;
     esac
 done
+shift $((OPTIND-1))
+
+if [ -z "${p}" ]; then
+    usage
+fi
+
 
 set -e
 
+# Check if mariadb is running
+running=$(pgrep mysql | wc -l)
+if [ "$running" -eq 0 ];
+then
+        echo "MariaDB not running. Aborting"
+        exit 1
+else
+        echo "Found running MariaDB instance"
+fi
+
+# Check if mysql is available
+echo "Checking if mysql command is available"
+command -v foo >/dev/null 2>&1 || { echo >&2 "mysql command is required but not installed. Aborting"; exit 1; }
+
 # Set root password and make sure that nobody can access the server without a password
-$LOGCMD "Updating root password"
+echo "Updating root password"
 mysql -e "UPDATE mysql.user SET Password=PASSWORD('$ROOT_PASSWORD') WHERE User='root';"
 
 # Remove anonymous users
-$LOGCMD "Removing anonymous users"
+echo "Removing anonymous users"
 mysql -e "DELETE FROM mysql.user WHERE User='';"
 
 # Disallow root login remotely
-$LOGCMD "Disallowing root login remotely"
+echo "Disallowing root login remotely"
 mysql -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"
 
 # Remove test database and access to it. Use IF EXISTS since sometimes
 # test database is not present (e.g. Debian based systems) 
-$LOGCMD "Removing test database and access to it"
+echo "Removing test database and access to it"
 mysql -e "DROP DATABASE IF EXISTS test;"
 mysql -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';"
 
 # Reload privilege tables
-$LOGCMD "Reloading privilege tables"
+echo "Reloading privilege tables"
 mysql -e "FLUSH PRIVILEGES;"
 
-$LOGCMD "Finished securing MariaDB installation"
+echo "Done securing MariaDB installation"
 
 set +e
