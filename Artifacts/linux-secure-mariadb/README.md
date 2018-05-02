@@ -12,7 +12,7 @@ The script is based on [Twitters implementation of mysql_secure_installation.sh]
 The script is intended for use in the Azure DevTest Labs artifact system, and the parameters for the artifact are fed directly
 into the script. However, you can run it from any bash shell using the following format:
 
-        bash> ./linux-secure-mariadb.sh [-p=password]  
+        bash> ./linux-secure-mariadb.sh [-p password]  
 
 ## Compatibility
 The Artifact has been tested with the following images
