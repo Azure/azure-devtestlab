@@ -1,13 +1,20 @@
 #!/bin/bash
 
+echo "Installing MongoDb"
+
+isApt=`command -v apt-get`
+isYum=`command -v yum`
+
+# Some of the previous commands will fail with an exit code other than zero (intentionally), 
+# so we do not set error handling to stop (set e) until after they've run
 set -e
 
-if [ -f /usr/bin/apt ] ; then
+if [ -n "$isApt" ] ; then
     echo "Using APT package manager"
     
     apt-get -y update
     apt-get -y install mongodb
-elif [ -f /usr/bin/yum ] ; then 
+elif [ -n "$isYum" ] ; then
     echo "Using YUM package manager"
 
     yum clean all

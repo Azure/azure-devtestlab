@@ -1,0 +1,29 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+  "title": "Windows Firewall operations",
+  "description": "Artifact to execute basic Windows firewall commands",
+  "publisher": "Milan Musec",
+  "tags": [
+      "Windows"
+  ],
+  "targetOsType": "Windows",
+  "parameters": {
+    "firewallOperation": {
+      "type": "string",
+      "displayName": "Firewall Operation:",
+      "description": "Select firewall operation",
+      "allowedValues": [
+          "Get Firewall Status",
+          "Enable ICMP (ping)",
+          "Enable RDP Port (tcp/3389)",
+          "Enable SSH Port (tcp/22)",
+          "Enable HTTP/HTTPS Port (tcp/80,443)",
+          "Enable Firewall",
+          "Disable Firewall"
+      ] 
+    }
+  },
+  "runCommand": {
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./artifact-main.ps1', ' -firewallOperation ''', parameters('firewallOperation'), '''\"')]"
+  }
+}

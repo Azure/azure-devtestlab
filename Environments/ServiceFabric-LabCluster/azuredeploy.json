@@ -1,0 +1,228 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "clusterOS": {
+            "type": "string",
+            "allowedValues": [
+                "Windows",
+                "Linux"
+            ],
+            "defaultValue": "Windows",
+            "metadata": {
+                "description": "Select the cluster OS."
+            }
+        },
+        "adminUsername": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "Remote desktop user Id"
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Remote desktop user password. Must be a strong password"
+            }
+        },
+        "certificate": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "Certificate as Base64 encoded string."
+            }
+        },
+        "certificatePassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Certificate password for installation."
+            }
+        },
+        "certificateThumbprint": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "Certificate thumbprint for identification in the local certificate store."
+            }
+        },
+        "appPort1": {
+            "type": "int",
+            "defaultValue": 80,
+            "minValue": 1,
+            "metadata": {
+                "description": "Public accessible application port #1."
+            }
+        },
+        "appPort2": {
+            "type": "int",
+            "defaultValue": 443,
+            "minValue": 1,
+            "metadata": {
+                "description": "Public accessible application port #2."
+            }
+        }
+    },
+    "variables": {
+        "quickstartRepoRoot": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/",
+        "clusterName": "[concat('sf-', toLower(uniqueString(resourceGroup().name)))]",
+        "vaultName": "[concat('kv-', toLower(uniqueString(resourceGroup().name)))]",
+        "vaultSecret": "ClusterCertificate",
+        "loadBalancedAppPort1": "[parameters('appPort1')]",
+        "loadBalancedAppPort2": "[parameters('appPort2')]",
+        "nt0InstanceCount": 5
+    },
+    "resources": [
+        {
+            "name": "[variables('vaultName')]",
+            "type": "Microsoft.KeyVault/vaults",
+            "apiVersion": "2015-06-01",
+            "location": "[resourceGroup().location]",
+            "tags": {},
+            "properties": {
+                "enabledForDeployment": true,
+                "enabledForTemplateDeployment": false,
+                "enabledForVolumeEncryption": false,
+                "tenantId": "[subscription().tenantId]",
+                "sku": {
+                    "name": "standard",
+                    "family": "A"
+                },
+                "accessPolicies": []
+            }
+        },
+        {
+            "name": "[concat(variables('vaultName'), '/', variables('vaultSecret'))]",
+            "type": "Microsoft.KeyVault/vaults/secrets",
+            "apiVersion": "2015-06-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', variables('vaultName'))]"
+            ],
+            "properties": {
+                "value": "[base64(concat('{ \"data\":\"', parameters('certificate'), '\", \"dataType\":\"pfx\", \"password\":\"', parameters('certificatePassword'), '\" }'))]"
+            }
+        },
+        {
+            "condition": "[equals(parameters('clusterOS'), 'Windows')]",
+            "name": "[concat(deployment().name, '-QuickstartTemplate-Windows')]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2015-01-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('vaultName'), variables('vaultSecret'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(variables('quickstartRepoRoot'), 'service-fabric-secure-cluster-5-node-1-nodetype/azuredeploy.json')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "clusterName": {
+                        "value": "[variables('clusterName')]"
+                    },
+                    "adminUsername": {
+                        "value": "[parameters('adminUsername')]"
+                    },
+                    "adminPassword": {
+                        "value": "[parameters('adminPassword')]"
+                    },
+                    "vmImagePublisher": {
+                        "value": "MicrosoftWindowsServer"
+                    },
+                    "vmImageOffer": {
+                        "value": "WindowsServer"
+                    },
+                    "vmImageSku": {
+                        "value": "2016-Datacenter-with-Containers"
+                    },
+                    "vmImageVersion": {
+                        "value": "latest"
+                    },
+                    "loadBalancedAppPort1": {
+                        "value": "[variables('loadBalancedAppPort1')]"
+                    },
+                    "loadBalancedAppPort2": {
+                        "value": "[variables('loadBalancedAppPort2')]"
+                    },
+                    "certificateThumbprint": {
+                        "value": "[parameters('certificateThumbprint')]"
+                    },
+                    "sourceVaultResourceId": {
+                        "value": "[resourceId('Microsoft.KeyVault/vaults', variables('vaultName'))]"
+                    },
+                    "certificateUrlValue": {
+                        "value": "[reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('vaultName'), variables('vaultSecret'))).secretUriWithVersion]"
+                    },
+                    "nt0InstanceCount": {
+                        "value": "[variables('nt0InstanceCount')]"
+                    },
+                    "nodeDataDrive": {
+                        "value": "OS"
+                    }
+                }
+            }
+        },
+        {
+            "condition": "[equals(parameters('clusterOS'), 'Linux')]",
+            "name": "[concat(deployment().name, '-QuickstartTemplate-Linux')]",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2015-01-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('vaultName'), variables('vaultSecret'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(variables('quickstartRepoRoot'), 'service-fabric-cluster-ubuntu-5-node-1-nodetype/azuredeploy.json')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "clusterDnsName": {
+                        "value": "[variables('clusterName')]"
+                    },
+                    "adminUsername": {
+                        "value": "[parameters('adminUsername')]"
+                    },
+                    "adminPassword": {
+                        "value": "[parameters('adminPassword')]"
+                    },
+                    "vmImagePublisher": {
+                        "value": "Microsoft.Azure.ServiceFabric"
+                    },
+                    "vmImageOffer": {
+                        "value": "UbuntuServer"
+                    },
+                    "vmImageSku": {
+                        "value": "16.04"
+                    },
+                    "vmImageVersion": {
+                        "value": "6.0.11"
+                    },
+                    "loadBalancedAppPort1": {
+                        "value": "[variables('loadBalancedAppPort1')]"
+                    },
+                    "loadBalancedAppPort2": {
+                        "value": "[variables('loadBalancedAppPort2')]"
+                    },
+                    "certificateThumbprint": {
+                        "value": "[parameters('certificateThumbprint')]"
+                    },
+                    "sourceVaultValue": {
+                        "value": "[resourceId('Microsoft.KeyVault/vaults', variables('vaultName'))]"
+                    },
+                    "certificateUrlValue": {
+                        "value": "[reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('vaultName'), variables('vaultSecret'))).secretUriWithVersion]"
+                    },
+                    "nt0InstanceCount": {
+                        "value": "[variables('nt0InstanceCount')]"
+                    },
+                    "nodeDataDrive": {
+                        "value": "OS"
+                    }
+                }
+            }
+        }
+    ],
+    "outputs": {
+    }
+}

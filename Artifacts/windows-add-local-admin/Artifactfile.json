@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+  "title": "Add user to Administrators Group",
+  "description": "Adds the given Active Directory (AD) account to the local Administrators group of the target virtual machine. The virtual machine must already be joined to the same domain as the AD account before this artifact is run.",
+  "publisher": "Microsoft",
+  "tags": [
+    "Windows"
+  ],
+  "iconUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/Artifacts/windows-domain-join/domainJoinArtifact.png",
+  "targetOsType": "Windows",
+  "parameters": {
+    "domainJoinUsername": {
+      "type": "string",
+      "displayName": "Domain user account",
+      "description": "The Active Directory (AD) account (e.g. CORP\\user or user@corp.contoso.com) that will be added to the local Administrators group of the target virtual machine."
+    }
+  },
+  "runCommand": {
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./artifact-main.ps1', ' -domainJoinUsername ', parameters('domainJoinUsername'), '\"')]"
+  }
+}

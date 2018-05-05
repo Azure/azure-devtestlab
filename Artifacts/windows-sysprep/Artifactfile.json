@@ -9,14 +9,14 @@
     "targetOsType": "Windows",
     "parameters": {},
     "runCommand": {
-        "commandToExecute": "['powershell.exe -executionpolicy bypass -File Sysprep.ps1']"
+      "commandToExecute": "powershell.exe -ExecutionPolicy bypass \"& ./OldSysprep.ps1\""
     },
     "postDeployActions": [
-        {
-            "action": "waitForShutdown"
-        },
-        {
-            "action": "deallocate"
-        }
+      {
+        "action": "waitForShutdown"
+      },
+      {
+        "action": "deallocate"
+      }
     ]
-}
+  }

@@ -1,0 +1,87 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "newLabName": {
+      "type": "string",
+      "defaultValue": "lv-lab-shutdown"
+    },
+    "shutDownTime": {
+      "type": "string",
+      "defaultValue": "06:00"
+    },
+    "startupTime": {
+      "type": "string",
+      "defaultValue": "03:00"
+    },
+    "timeZoneId": {
+      "type": "string",
+      "defaultValue": "Eastern Standard Time"
+    }
+  },
+  "variables": {
+    "labId": "[resourceId('Microsoft.DevTestLab/labs', parameters('newLabName'))]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2016-05-15",
+      "name": "[parameters('newLabName')]",
+      "type": "Microsoft.DevTestLab/labs",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "labStorageType": "Premium"
+      },
+      "resources": [
+        {
+          "apiVersion": "2016-05-15",
+          "name": "[concat(parameters('newLabName'), '/', 'LabVmsShutdown')]",
+          "type": "Microsoft.DevTestLab/labs/schedules",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[variables('labId')]"
+          ],
+          "properties": {
+            "status": "Enabled",
+            "timeZoneId": "[parameters('timeZoneId')]",
+            "taskType": "LabVmsShutdownTask",
+            "notificationSettings": {
+              "status": "Disabled",
+              "timeInMinutes": 15
+            },
+            "dailyRecurrence": {
+              "time": "[replace(parameters('shutDownTime'),':','')]"
+            }
+          }
+        },
+        {
+          "apiVersion": "2017-04-26-preview",
+          "name": "[concat(parameters('newLabName'), '/', 'LabVmAutoStart')]",
+          "location": "[resourceGroup().location]",
+          "type": "microsoft.devtestlab/labs/schedules",
+          "dependsOn": [
+            "[variables('labId')]"
+          ],
+          "properties": {
+            "status": "Enabled",
+            "timeZoneId": "[parameters('timeZoneId')]",
+            "weeklyRecurrence": {
+              "time": "[replace(parameters('startupTime'),':','')]",
+              "weekdays": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday"
+              ]
+            },
+            "taskType": "LabVmsStartupTask",
+            "notificationSettings": {
+              "status": "Disabled",
+              "timeInMinutes": 15
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

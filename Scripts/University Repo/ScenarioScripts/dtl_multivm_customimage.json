@@ -1,0 +1,33 @@
+{
+    "type": "Microsoft.DevTestLab/labs/virtualmachines",
+    "name": "__Name__",
+    "location": "__Location__",
+    "properties": {
+        "labVirtualNetworkId": "/subscriptions/__SubscriptionId__/resourcegroups/__ResourceGroupName__/providers/microsoft.devtestlab/labs/__LabName__/virtualnetworks/__VirtualNetworkName__",
+        "customImageId": "__ImageName__",
+        "size": "__Size__",
+        "isAuthenticationWithSshKey": false,
+        "labSubnetName": "__SubnetName__",
+        "disallowPublicIpAddress": true,
+        "storageType": "__StorageType__",
+        "allowClaim": true,
+        "expirationDate": "__ExpirationDate__",
+        "networkInterface": {
+            "sharedPublicIpAddressConfiguration": {
+                "inboundNatRules": [
+                    {
+                        "transportProtocol": "tcp",
+                        "backendPort": 3389
+                    }
+                ]
+            }
+        },
+        "bulkCreationParameters": {
+            "instanceCount": __Count__
+        }
+    },
+    "tags": 
+    {
+        "AutoStartOn": "__EnableStartupTime__"
+    }
+}

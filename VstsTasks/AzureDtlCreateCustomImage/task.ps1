@@ -11,7 +11,6 @@
     - N/A.    
 
 ##################################################################################################>
-
 #
 # Parameters to this script file.
 #
@@ -30,7 +29,6 @@ param(
 )
 
 ###################################################################################################
-
 #
 # Required modules.
 #
@@ -39,7 +37,6 @@ Import-Module Microsoft.TeamFoundation.DistributedTask.Task.Common
 Import-Module Microsoft.TeamFoundation.DistributedTask.Task.Internal
 
 ###################################################################################################
-
 #
 # PowerShell configurations
 #
@@ -52,7 +49,6 @@ $ErrorActionPreference = "Stop"
 pushd $PSScriptRoot
 
 ###################################################################################################
-
 #
 # Functions used in this script.
 #
@@ -60,7 +56,6 @@ pushd $PSScriptRoot
 .".\task-funcs.ps1"
 
 ###################################################################################################
-
 #
 # Handle all errors in this script.
 #
@@ -73,7 +68,6 @@ trap
 }
 
 ###################################################################################################
-
 #
 # Main execution block.
 #
@@ -81,7 +75,7 @@ trap
 try
 {
     Write-Host 'Starting Azure DevTest Labs Create Custom Image Task'
-
+    
     Show-InputParameters
 
     $lab = Get-AzureDtlLab -LabId "$LabId"

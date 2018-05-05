@@ -1,0 +1,95 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+  "title": "Test Parameter Types",
+  "publisher": "Microsoft",
+  "description": "Template to test supported artifact parameter types.",
+  "tags": [
+    "Windows",
+    "Template"
+  ],
+  "targetOsType": "Windows",
+  "parameters": {
+    "stringParam": {
+      "type": "string",
+      "displayName": "String Parameter",
+      "description": "Any text string is allowed, including spaces.",
+      "defaultValue": "Default string param value",
+      "allowEmpty": false
+    },
+    "securestringParam": {
+      "type": "securestring",
+      "displayName": "Secure String Parameter",
+      "description": "Any text string is allowed, including spaces, and will be presented in UI as masked characters.",
+      "allowEmpty": false
+    },
+    "intParam": {
+      "type": "int",
+      "displayName": "Integer Parameter",
+      "description": "Any integer value is allowed.",
+      "defaultValue": 0,
+      "allowEmpty": false
+    },
+    "boolParam": {
+      "type": "bool",
+      "displayName": "Boolean Parameter",
+      "description": "Only valid boolean values are allowed (i.e. true, false, 0, 1).",
+      "defaultValue": false,
+      "allowEmpty": false
+    },
+    "selectParam": {
+      "type": "string",
+      "displayName": "Select Parameter",
+      "description": "Only a selection from the list is allowed.",
+      "defaultValue": "test1",
+      "allowEmpty": false,
+      "allowedValues": [
+        "test1",
+        "test2"
+      ]
+    },
+    "arrayParam": {
+      "type": "array",
+      "displayName": "Array Parameter",
+      "description": "To specify multiple values, format them as a JSON array (e.g. [\"item1\", \"item2\"]).",
+      "defaultValue": [
+        "item1",
+        "item2"
+      ],
+      "allowEmpty": false
+    },
+    "objectParam": {
+      "type": "object",
+      "displayName": "Object Parameter",
+      "description": "To specify multiple properties, format them as a JSON object (e.g. { prop1: \"value1\", prop2: \"value2\" }).",
+      "defaultValue": {
+        "prop1": "value1",
+        "prop2": "value2"
+      },
+      "allowEmpty": false
+    },
+    "fileContentsParam": {
+      "type": "string",
+      "controlType": "fileContents",
+      "displayName": "File Contents Parameter",
+      "description": "Upload a file contents.",
+      "allowEmpty": true
+    },
+    "extraLogLines": {
+      "type": "int",
+      "displayName": "Extra Log Lines",
+      "description": "Number of additional lines to log as part of the Extension Message.",
+      "defaultValue": 0,
+      "allowEmpty": false
+    },
+    "forceFail": {
+      "type": "bool",
+      "displayName": "Force Fail",
+      "description": "For the artifact to fail by throwing an exception.",
+      "defaultValue": false,
+      "allowEmpty": false
+    }
+  },
+  "runCommand": {
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./artifact.ps1 -StringParam ''', parameters('stringParam'), ''' -SecureStringParam (ConvertTo-SecureString ''', parameters('securestringParam'), ''' -AsPlainText -Force) -IntParam ', parameters('intParam'), ' -BoolParam:$', parameters('boolParam'), ' -FileContentsParam ''', parameters('fileContentsParam'), ''' -ExtraLogLines ', parameters('extraLogLines'), ' -ForceFail:$', parameters('forceFail'), '\"')]"
+  }
+}

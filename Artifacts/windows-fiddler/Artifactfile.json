@@ -1,8 +1,8 @@
 {
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
-    "title": "Fiddler4",
+    "title": "[Deprecated] Fiddler4",
     "publisher": "Microsoft",
-    "description": "Installs Fiddler4 using the Chocolatey package manager",
+    "description": "This artifact is deprecated. This package has been unlisted/removed from the chocolatey repo at the request of Telerik and for legal purposes will not get any more updates. Telerik owns the IP and does not have a public download url at this time.",
     "tags": [
         "Windows",
         "Fiddler"
@@ -10,6 +10,6 @@
     "iconUri": "https://cdn.rawgit.com/chocolatey/chocolatey-coreteampackages/e4a49519947c3cff55c17a0b08266c56b0613e64/icons/fiddler.svg",
     "targetOsType": "Windows",
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', 'fiddler4', '\"')]"
+        "commandToExecute": "cmd /c echo This artifact is deprecated. This package has been unlisted/removed from the chocolatey repo at the request of Telerik and for legal purposes will not get any more updates. Telerik owns the IP and does not have a public download url at this time."
     }
 }

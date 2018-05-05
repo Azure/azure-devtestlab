@@ -5,8 +5,8 @@
       "SubscriptionId": "<subscription ID that contains the lab>",
       "LabName": "<Name of the DevTest Lab>",
       "ImagePaths": [
-        "Win2012R2",
-        "Win2016/Datacenter.json"
+        "Win2012R2/VS2015 Enterprise with Azure SDK.json",
+        "Win2016"
       ]
     }
   ]

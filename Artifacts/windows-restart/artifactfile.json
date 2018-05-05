@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+  "title": "Restart",
+  "publisher": "Microsoft",
+  "description": "Restarts the virtual machine.",
+  "tags": [
+    "Windows"
+  ],
+  "targetOsType": "Windows",
+  "runCommand": {
+    "commandToExecute": "cmd /c echo Restarting this virtual machine."
+  },
+  "postDeployActions": [
+    {
+      "action": "restart"
+    }
+  ]
+}

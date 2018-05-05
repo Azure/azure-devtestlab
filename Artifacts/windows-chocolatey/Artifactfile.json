@@ -13,10 +13,10 @@
         "packages": {
             "type": "string",
             "displayName": "Packages",
-            "description": "Comma delimited list of package names to be installed, for example: 7Zip,Fiddler4. A complete list of public packages can be found at https://chocolatey.org/packages."
+            "description": "Space-, comma- or semicolon-delimited list of package names to be installed, for example: 7Zip,Fiddler4. A complete list of public packages can be found at https://chocolatey.org/packages."
         }
     },
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ''', parameters('packages'), '''\"')]"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./install-choco-package.ps1 -Packages ''', parameters('packages'), '''\"')]"
     }
 }

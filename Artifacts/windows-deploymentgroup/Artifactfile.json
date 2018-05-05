@@ -1,0 +1,73 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "VSTS Deployment group agent",
+    "description": "Downloads the latest deployment agent from VSTS and configures it against specified deployment group.",
+    "publisher": "Microsoft",
+    "iconUri": "https://www.visualstudio.com/favicon.ico",
+    "targetOsType": "Windows",
+    "parameters": {
+        "accountUrl": {
+            "type": "string",
+            "displayName": "VSTS account URL",
+            "description": "The URL for the VSTS account, example https://accountName.visualstudio.com"
+        },
+        "projectName": {
+            "type": "string",
+            "displayName": "Project name",
+            "description": "The VSTS project name, eg MyFirstProject"
+        },
+        "deploymentGroupName": {
+            "type": "string",
+            "displayName": "Deployment group name",
+            "description": "Name of the deployment group against which the agent has to be configured"
+        },
+        "PersonalAccessToken": {
+            "type": "securestring",
+            "displayName": "Personal Access Token",
+            "description": "Personal Access Token for downloading and configuring VSTS deployment agent"
+        },
+        "deploymentAgentTags": {
+            "type": "string",
+            "displayName": "Deployment agent tags",
+            "description": "Optionally provide comma separated list of tags for deployment agent. Example Web, DB",
+            "allowEmpty": true,
+            "defaultValue": ""
+        },
+        "agentInstallPath": {
+            "type": "string",
+            "displayName": "Install path",
+            "description": "Optinally provide agent install path. Defaults to $env:SystemDrive\\vstsagent",
+            "allowEmpty": true,
+            "defaultValue": ""
+        },
+        "agentName": {
+            "type": "string",
+            "displayName": "Agent name",
+            "description": "Optionally provide agent name. Defaults to $env:COMPUTERNAME",
+            "allowEmpty": true,
+            "defaultValue": ""
+        },
+        "RunAsAutoLogon": {
+            "type": "bool",
+            "displayName": "Enable Autologon",
+            "description": "Enable autologon to run the build agent in interactive mode that can sustain machine reboots.<br>Set this to true if the agents will be used to run UI tests.",
+            "defaultValue": false
+        },
+        "windowsLogonAccount": {
+            "type": "string",
+            "displayName": "Account Name",
+            "description": "The Windows logon account which will run the agent.<br>When autologon is enabled, agent runs as a process in the context of the specified user.",
+            "defaultValue": "NT AUTHORITY\\NetworkService"
+        },
+        "windowsLogonPassword": {
+          "type": "securestring",
+          "displayName": "Account Password",
+          "description": "The Windows logon account password which will run the agent. This is not required for the default NT AUTHORITY\\NetworkService account when running as a service.",
+          "defaultValue": "",
+          "allowEmpty": true
+        }
+    },
+    "runCommand": {
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./InstallAndConfigureDeploymentGroupAgent.ps1', ' -accountUrl ', parameters('accountUrl'), ' -projectName ''', parameters('projectName'), ''' -windowsLogonPassword ''', parameters('windowsLogonPassword'), ''' -deploymentGroupName ''', parameters('deploymentGroupName'), ''' -personalAccessToken ', parameters('PersonalAccessToken'), ' -deploymentAgentTags ''', parameters('deploymentAgentTags'), ''' -agentInstallPath ''', parameters('agentInstallPath'), ''' -agentName ''', parameters('agentName'), ''' -runAsAutoLogon $', parameters('runAsAutoLogon') , ' -windowsLogonAccount ''', parameters('windowsLogonAccount'), '''\"')]"
+    }
+}

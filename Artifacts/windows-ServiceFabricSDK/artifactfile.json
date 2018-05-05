@@ -1,0 +1,35 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+  "title": "Service Fabric SDK and Tools",
+  "publisher": "Microsoft",
+  "description": "Installs the latest available version of the Microsoft Azure Service Fabric SDK using WebPI. Service Fabric SDK Tools for Visual Studio are also installed. Microsoft Visual Studio 2015 or Microsoft Visual Studio 2017 must already be installed before using this artifact.",
+  "tags": [
+    "Microsoft",
+    "Windows",
+    "Azure",
+    "ServiceFabric"
+  ],
+  "iconUri": "https://106c4.wpc.azureedge.net/80106C4/Gallery-Prod/cdn/2015-02-24/prod20161101-microsoft-windowsazure-gallery/Microsoft.ServiceFabricCluster.1.0.6/Icons/Small.png",
+  "targetOsType": "Windows",
+  "parameters": {
+    "VSVersion": {
+      "type": "string",
+      "allowedValues": [
+        "Visual Studio 2015",
+        "Visual Studio 2017"
+      ],
+      "defaultValue": "Visual Studio 2017",
+      "allowEmpty": false,
+      "displayName": "Visual Studio Version",
+      "description": "Target Visual Studio version to apply the Service Fabric SDK and Tools."
+    }
+  },
+  "runCommand": {
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./InstallServiceFabricSDKAndTools.ps1 -VSVersion ''', parameters('VSVersion'), '''\"')]"
+  },
+  "postDeployActions": [
+    {
+      "action": "restart"
+    }
+  ]
+}

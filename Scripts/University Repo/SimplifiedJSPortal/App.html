@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="js/dtljs.js"></script>
+    <script src="js/spin.min.js"></script>
+    <title>Simple ClaimVM Api</title>
+</head>
+<!-- Before use you have to replace the placeholders #PLACEHOLDER# -->
+
+<body onload="ConnectAndStoreToken(#CLIENTID#)">
+
+    <div class="container">
+        <button onClick="ClaimAnyVm(#SUBSCRIPTIONID#, #RESOURCEGROUPNAME#, #LABNAME#, #SUCCESSCALLBACK#, #FAILURECALLBACK#)" class="btn btn-default">
+                ClaimAnyVM If Available
+            </button>
+        <br/>
+    </div>
+</body>
+
+</html>

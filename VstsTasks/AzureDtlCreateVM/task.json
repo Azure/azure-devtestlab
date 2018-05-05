@@ -10,15 +10,20 @@
     ],
     "author": "Microsoft Corporation",
     "version": {
-        "Major": 1,
+        "Major": 2,
         "Minor": 0,
-        "Patch": 13
+        "Patch": 24
     },
     "demands": [
         "azureps"
     ],
     "minimumAgentVersion": "1.95.1",
     "groups": [
+        {
+            "name": "advanced",
+            "displayName": "Advanced Options",
+            "isExpanded": true
+        },
         {
             "name": "output",
             "displayName": "Output Variables",
@@ -69,6 +74,54 @@
             "defaultValue": "labVMId",
             "groupName": "output",
             "helpMarkDown": "Variable to capture the created lab VM ID. Default is `labVMId`. The variable can be referred as `$(labVMId)` in subsequent tasks. You can use a name other than the default."
+        },
+        {
+            "name": "FailOnArtifactError",
+            "type": "boolean",
+            "label": "Fail on artifact error",
+            "defaultValue": "false",
+            "required": false,
+            "groupName": "advanced",
+            "helpMarkDown": "Fail the task if any artifact fails to apply successfully."
+        },
+        {
+            "name": "RetryOnFailure",
+            "type": "boolean",
+            "label": "Retry the deployment following any failure",
+            "defaultValue": "false",
+            "required": false,
+            "groupName": "advanced",
+            "helpMarkDown": "Retry the deployment when failing to create the lab VM or if any artifact fails to apply successfully."
+        },
+        {
+            "name": "RetryCount",
+            "type": "string",
+            "label": "Number of times to retry the deployment",
+            "defaultValue": "3",
+            "required": false,
+            "groupName": "advanced",
+            "helpMarkDown": "Number of times to retry the deployment when an error occurs, either while creating the lab VM or if any artifact fails to apply successfully.",
+            "visibleRule": "RetryOnFailure = true"
+        },
+        {
+            "name": "DeleteFailedDeploymentBeforeRetry",
+            "type": "boolean",
+            "label": "Delete the failed deployment before retrying",
+            "defaultValue": "false",
+            "required": false,
+            "groupName": "advanced",
+            "helpMarkDown": "Delete the failed deployment before retrying to create the lab VM.",
+            "visibleRule": "RetryOnFailure = true"
+        },
+        {
+            "name": "AppendRetryNumberToVMName",
+            "type": "boolean",
+            "label": "Append the retry iteration number to the VM name",
+            "defaultValue": "false",
+            "required": false,
+            "groupName": "advanced",
+            "helpMarkDown": "Append the retry iteration number to the lab VM name before retrying (i.e. newVMName-1). Note that this may cause your lab VM name to be longer than allowed.",
+            "visibleRule": "RetryOnFailure = true"
         }
     ],
     "sourceDefinitions": [

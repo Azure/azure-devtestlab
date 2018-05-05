@@ -1,135 +1,212 @@
-#parameters
+[CmdletBinding()]
 param(
-    [Parameter]
-    [AllowEmptyString()]
-    [string] $username,
-
-    [Parameter (Mandatory=$True)]
     [string] $accessToken,
-
-    [Parameter (Mandatory=$True)]
     [string] $buildDefinitionName,
-
-    [Parameter (Mandatory=$True)]
     [string] $vstsProjectUri,
-
-    [Parameter (Mandatory=$True)]
-    [string] $pathToScript
+    [string] $pathToScript,
+    [string] $scriptArguments
 )
 
+###################################################################################################
+#
+# PowerShell configurations
+#
+
+# NOTE: Because the $ErrorActionPreference is "Stop", this script will stop on first failure.
+#       This is necessary to ensure we capture errors inside the try-catch-finally block.
+$ErrorActionPreference = "Stop"
+
+# Ensure we set the working directory to that of the script.
+Push-Location $PSScriptRoot
+
+# Configure strict debugging.
 Set-PSDebug -Strict
 
-# VSTS Variables
-$vstsApiVersion = "2.0"
+###################################################################################################
+#
+# Handle all errors in this script.
+#
 
-# Script Variables
-$outfile = $PSScriptRoot + "\" + $buildDefinitionName + ".zip";
-$destination = $env:HOMEDRIVE + "\" + $buildDefinitionName;
-
-function SetAuthHeaders
+trap
 {
-    $basicAuth = ("{0}:{1}" -f $username,$accessToken)
-    $basicAuth = [System.Text.Encoding]::UTF8.GetBytes($basicAuth)
-    $basicAuth = [System.Convert]::ToBase64String($basicAuth)
-    return @{Authorization=("Basic {0}" -f $basicAuth)}
+    # NOTE: This trap will handle all errors. There should be no need to use a catch below in this
+    #       script, unless you want to ignore a specific error.
+    $message = $error[0].Exception.Message
+    if ($message)
+    {
+        Write-Host -Object "ERROR: $message" -ForegroundColor Red
+    }
+    
+    # IMPORTANT NOTE: Throwing a terminating error (using $ErrorActionPreference = "Stop") still
+    # returns exit code zero from the PowerShell script when using -File. The workaround is to
+    # NOT use -File when calling this script and leverage the try-catch-finally block and return
+    # a non-zero exit code from the catch block.
+    exit -1
 }
 
-function GetBuildDefinitionId
+###################################################################################################
+#
+# Functions used in this script.
+#
+
+function Get-BuildArtifacts
 {
-    $buildDefinitionUri = ("{0}/_apis/build/definitions?api-version={1}&name={2}" -f $vstsProjectUri, $vstsApiVersion, $buildDefinitionName)
-    try
+    [CmdletBinding()]
+    param (
+        [string] $ArtifactsUri,
+        [Hashtable] $Headers,
+        [string] $Destination
+    )
+
+    # Clean up destination path first, if needed.
+    if (Test-Path $Destination -PathType Container)
     {
-        Write-Host "GetBuildDefinitionId from $buildDefinitionUri"
-        $buildDef = Invoke-RestMethod -Uri $buildDefinitionUri -Headers $headers -method Get -ErrorAction Stop
-        return $buildDef.value.id
+        Write-Host "Cleaning up destination folder $Destination"
+        Remove-Item -Path $Destination -Force -Recurse | Out-Null
     }
-    catch
+
+    Write-Host "Getting build artifacts information from $ArtifactsUri"
+    [Array] $artifacts = (Invoke-RestMethod -Uri $ArtifactsUri -Headers $Headers -Method Get | ConvertTo-Json -Depth 3 | ConvertFrom-Json).value
+
+    # Process all artifacts found.
+    foreach ($artifact in $artifacts)
     {
-        if (($null -ne $Error[0]) -and ($null -ne $Error[0].Exception) -and ($null -ne $Error[0].Exception.Message))
+        $artifactName = "$($artifact.name)"
+        $artifactZip = "$artifactName.zip"
+        Write-Host "Preparing to download artifact $artifactName to file $artifactZip"
+
+        $downloadUrl = $artifact.resource.downloadUrl
+        if (-not $downloadUrl)
         {
-            $errMsg = $Error[0].Exception.Message
-            Write-Host $errMsg
+            throw "Unable to get the download URL for artifact $artifactName."
         }
-        exit -1
+
+        $outfile = "$PSScriptRoot\$artifactZip"
+
+        Write-Host "Downloading artifact $artifactName from $downloadUrl"
+        Invoke-RestMethod -Uri "$downloadUrl" -Headers $Headers -Method Get -Outfile $outfile | Out-Null
+
+        Write-Host "Extracting artifact file $artifactZip to $Destination"
+        [System.Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.FileSystem") | Out-Null 
+        [System.IO.Compression.ZipFile]::ExtractToDirectory($outfile, $Destination) | Out-Null
     }
 }
 
-function GetLatestBuild
+function Get-BuildDefinitionId
+{
+    [CmdletBinding()]
+    param (
+        [string] $BuildDefinitionUri,
+        [Hashtable] $Headers
+    )
+
+    Write-Host "Getting build definition ID from $BuildDefinitionUri"
+    $buildDef = Invoke-RestMethod -Uri $BuildDefinitionUri -Headers $Headers -Method Get
+    $buildDefinitionId = $buildDef.value.id
+    if (-not $buildDefinitionId)
+    {
+        throw "Unable to get the build definition ID from $buildDefinitionUri"
+    }
+
+    return $buildDefinitionId
+}
+
+function Get-LatestBuildId
 {
     param (
-        [Parameter(Mandatory=$True)]
-        [int] $buildDefinitionId 
+        [string] $BuildUri,
+        [Hashtable] $Headers
     )
-    $buildUri = ("{0}/_apis/build/builds?api-version={1}&definitions={2}&resultFilter=succeeded" -f $vstsProjectUri, $vstsApiVersion, $buildDefinitionId);
 
-    try 
+    Write-Host "Getting latest build ID from $BuildUri"
+    $builds = Invoke-RestMethod -Uri $BuildUri -Headers $Headers -Method Get | ConvertTo-Json | ConvertFrom-Json
+    $buildId = $builds.value[0].id
+    if (-not $buildId)
     {
-        Write-Host "GetLatestBuild from $buildUri"
-        $builds = Invoke-RestMethod -Uri $buildUri -Headers $headers -Method Get -ErrorAction Stop | ConvertTo-Json | ConvertFrom-Json
-        return $builds.value[0].id
-    }
-    catch
-    {
-        if (($null -ne $Error[0]) -and ($null -ne $Error[0].Exception) -and ($null -ne $Error[0].Exception.Message))
-        {
-            $errMsg = $Error[0].Exception.Message
-            Write-Host $errMsg
-        }
-        exit -1
-    }
-   
-}
-
-function DownloadBuildArtifacts
-{
-	if ($vstsProjectUri.EndsWith("/")) {
-        $vstsProjectUri = $vstsProjectUri.Substring(0, $vstsProjectUri.Length -1)
+        throw "Unable to get the latest build ID from $BuildUri"
     }
 
-    $headers = SetAuthHeaders
-    $buildId = GetLatestBuild ( GetBuildDefinitionId )
-    $artifactsUri = ("{0}/_apis/build/builds/{1}/Artifacts?api-version={2}" -f $vstsProjectUri, $buildId, $vstsApiVersion);
-
-    try 
-    {
-        Write-Host "Get artifacts from $artifactsUri"
-        $artifacts = Invoke-RestMethod -Uri $artifactsUri -Headers $headers -Method Get  -ErrorAction Stop | ConvertTo-Json -Depth 3 | ConvertFrom-Json
-        $DownloadUri = $artifacts.value.resource.downloadUrl
-
-        Write-Host "Download from $DownloadUri"
-        Invoke-RestMethod -Uri $DownloadUri -Headers $headers -Method Get -Outfile $outfile -ErrorAction Stop
-
-        if (Test-Path $destination -PathType Container)
-        {
-            Remove-Item -Path $destination -Force -Recurse -Verbose
-        }
-
-        [System.Reflection.Assembly]::LoadWithPartialName("System.IO.Compression.FileSystem") | Out-Null 
-        [System.IO.Compression.ZipFile]::ExtractToDirectory($outfile, $destination)
-    }
-    catch
-    {
-        if (($null -ne $Error[0]) -and ($null -ne $Error[0].Exception) -and ($null -ne $Error[0].Exception.Message))
-        {
-            $errMsg = $Error[0].Exception.Message
-            Write-Host $errMsg
-        }
-        exit -1
-    }
+    return $buildId
 }
  
-function RunScript
+function Invoke-Script
 {
-    $scriptPath = Join-Path -Path $destination -ChildPath $pathToScript 
+    [CmdletBinding()]
+    param (
+        [string] $Path,
+        [string] $Script,
+        [string] $Arguments
+    )
 
-    Write-Output $scriptPath
+    $scriptPath = Join-Path -Path $Path -ChildPath $Script
+
+    Write-Host "Running $scriptPath"
 
     if (Test-Path $scriptPath -PathType Leaf)
     {
-        & $scriptPath 
+        Invoke-Expression "& `"$scriptPath`" $Arguments"
+    }
+    else
+    {
+        Write-Error "Unable to locate $scriptPath"
     }
 }
 
-DownloadBuildArtifacts
-RunScript
+function Set-AuthHeaders
+{
+    [CmdletBinding()]
+    param (
+        [string] $UserName = "",
+        [string] $AccessToken
+    )
 
+    $basicAuth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(("{0}:{1}" -f $UserName,$AccessToken)))
+    return @{ Authorization = "Basic $basicAuth" }
+}
+
+###################################################################################################
+#
+# Main execution block.
+#
+
+try
+{
+    # Prepare values used throughout.
+    $vstsApiVersion = "2.0"
+    $destination = "$($env:HOMEDRIVE)\$buildDefinitionName"
+    $vstsProjectUri = $vstsProjectUri.TrimEnd("/")
+    $headers = Set-AuthHeaders -AccessToken $accessToken
+
+    # Output provided parameters.
+    Write-Host 'Provided parameters used in this script:'
+    Write-Host "  `$accessToken = $('*' * $accessToken.Length)"
+    Write-Host "  `$buildDefinitionName = $buildDefinitionName"
+    Write-Host "  `$vstsProjectUri = $vstsProjectUri"
+    Write-Host "  `$pathToScript = $pathToScript"
+    Write-Host "  `$scriptArguments = $scriptArguments"
+
+    # Output constructed variables.
+    Write-Host 'Variables used in this script:'
+    Write-Host "  `$vstsApiVersion = $vstsApiVersion"
+    Write-Host "  `$outfile = $outfile"
+    Write-Host "  `$destination = $destination"
+
+    # Get the build definition ID.
+    $buildDefinitionUri = "$vstsProjectUri/_apis/build/definitions?api-version=$vstsApiVersion&name=$buildDefinitionName"
+    $buildDefinitionId = Get-BuildDefinitionId -BuildDefinitionUri $buildDefinitionUri -Headers $headers
+
+    # Get the ID of the latest successful build.
+    $buildUri = "$vstsProjectUri/_apis/build/builds/?api-version=$vstsApiVersion&definitions=$buildDefinitionId&statusFilter=succeeded";
+    $buildId = Get-LatestBuildId -BuildUri $buildUri -Headers $headers
+
+    # Download the build artifact package.
+    $artifactsUri = "$vstsProjectUri/_apis/build/builds/$buildId/Artifacts?api-version=$vstsApiVersion";
+    Get-BuildArtifacts -ArtifactsUri $artifactsUri -Headers $headers -Destination $destination
+
+    # Run the script specified after having successfully downloaded the build artifact package.
+    Invoke-Script -Path $destination -Script $pathToScript -Arguments $scriptArguments
+}
+finally
+{
+    Pop-Location
+}
