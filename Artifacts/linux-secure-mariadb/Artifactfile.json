@@ -1,8 +1,8 @@
 {
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
-    "title": "Secure MariaDB installation",
+    "title": "Secure MariaDB",
     "publisher": "Stefan Johner",
-    "description": "Secure MariaDB installation on Linux based on mysql_secure_installation",
+    "description": "Secure MariaDB instance on Linux based on mysql_secure_installation",
     "tags": [
         "MariaDB",
         "Linux",
@@ -15,7 +15,7 @@
         "password": {
             "type": "securestring",
             "displayName": "Root password",
-            "description": "The new root password which is set for MariaDB installation",
+            "description": "The new root password which is set for MariaDB instance",
             "allowEmpty": false
         }
     },
