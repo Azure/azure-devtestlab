@@ -1,13 +1,13 @@
 # Importing Virtual Machines into a DevTest Lab
-Azure DevTest Labs is now able to copy or move a Virtual Machine from one lab to another!  This is done through the new "importVirtualMachine" action provided in the DevTest Labs Rest API.
+Azure DevTest Labs is now able to copy or move a Virtual Machine from one lab to another!  This is done through the new "ImportVirtualMachine" action provided in the DevTest Labs Rest API.
 
 The Rest API enables copying a single virtual machine from one lab to another and optionally renaming the virtual machine.  The ImportVirtualMachines.ps1 powershell script automates this process allowing you to import a single virtual machine or ALL the virtual machines in a lab.
 
-There are two important caveats in using this script and the importVirtualMachine Rest API action:
+There are two important caveats in using this script:
 * The source DevTest Lab and destination DevTest Lab must be in a subscription associated to the same Azure Active Directory tenant
 * The virtual machine in the source lab must NOT be in a 'claimable' state
 
-To learn more about this feature and scenarios where it's used, see [this blog post on Importing Virtual Machines.](http://blogs.msdn.microsoft.com/devtestlab/2018/05/09/importing-virtual-machines-across-labs/)
+To learn more about this feature and scenarios where it's used, see blog post [Importing Virtual Machines](http://blogs.msdn.microsoft.com/devtestlab/2018/05/09/importing-virtual-machines-across-labs/).
 
 The syntax of the script is as follows:
 ```powershell
