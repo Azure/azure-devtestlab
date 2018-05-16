@@ -145,54 +145,56 @@ ValidateParameters -SourceSubscriptionId $SourceSubscriptionId `
                    -DestinationSubscriptionId $DestinationSubscriptionId `
                    -DestinationDevTestLabName $DestinationDevTestLabName
 
-# Parameters are good if we made it here, now we initiate the copy
-Write-Output "Starting the jobs to import VMs... "
+try {
 
-# Switch back to the source subscription to get the list of VMs
-SelectSubscription $SourceSubscriptionId
-$sourceLab = Find-AzureRmResource -ResourceNameEquals $SourceDevTestLabName -ResourceType "Microsoft.DevTestLab/labs"
-$sourceVirtualMachine = Find-AzureRmResource -ResourceNameEquals "$SourceDevTestLabName/$SourceVirtualMachineName" -ResourceType "Microsoft.DevTestLab/labs/virtualmachines"
+    # Parameters are good if we made it here, now we initiate the copy
+    Write-Output "Starting the jobs to import VMs... "
 
-$sourceResourceIds = @()
+    # Switch back to the source subscription to get the list of VMs
+    SelectSubscription $SourceSubscriptionId
+    $sourceLab = Find-AzureRmResource -ResourceNameEquals $SourceDevTestLabName -ResourceType "Microsoft.DevTestLab/labs"
+    $sourceVirtualMachine = Find-AzureRmResource -ResourceNameEquals "$SourceDevTestLabName/$SourceVirtualMachineName" -ResourceType "Microsoft.DevTestLab/labs/virtualmachines"
 
-if ($sourceVirtualMachine -ne $null) {
-    # We have a single VM to copy
-    $sourceResourceIds += $sourceVirtualMachine.ResourceId
-}
-else {
+    $sourceResourceIds = @()
 
-    # We need to copy all the VMs in the lab
-    Get-AzureRmResource `
-            -ResourceType "Microsoft.DevTestLab/labs/virtualmachines" `
-            -ResourceGroupName $sourceLab.ResourceGroupName `
-            | ForEach-Object {
-                $sourceResourceIds += $_.ResourceId
-            }
-}
-
-Write-Output "Importing $($sourceResourceIds.Count) VMs..."
-
-# Switch back to the destination subscription to start moving VMs
-SelectSubscription $DestinationSubscriptionId
-$profilePath = Join-Path $PSScriptRoot "profile.json"
-Save-AzureRmContext -Path $profilePath -Force
-
-$destinationLab = Find-AzureRmResource -ResourceNameEquals $DestinationDevTestLabName -ResourceType "Microsoft.DevTestLab/labs"
-
-# kick off all the jobs in parallel and then wait for results
-$jobs = @()
-
-if ($sourceResourceIds.Count -eq 1) {
-    # if the source VM was specifed (results in only 1 source Id) we can also rename the VM
-    $jobs += Start-Job -ScriptBlock $copyVirtualMachineCodeBlock -ArgumentList $profilePath, $sourceResourceIds[0], $destinationLab, $DestinationVirtualMachineName
-
-}
-else {
-    $sourceResourceIds | ForEach-Object {
-        $jobs += Start-Job -ScriptBlock $copyVirtualMachineCodeBlock -ArgumentList $profilePath, $_, $destinationLab 
+    if ($sourceVirtualMachine -ne $null) {
+        # We have a single VM to copy
+        $sourceResourceIds += $sourceVirtualMachine.ResourceId
     }
-}
+    else {
 
-Write-Output "Waiting for $($jobs.Count) virtual machine import job(s) to complete."
-$jobs | ForEach-Object { Receive-Job $_ -Wait  | Write-Output }
-$jobs | Remove-Job
+        # We need to copy all the VMs in the lab
+        [array] $sourceResourceIds = (Get-AzureRmResource -ResourceType "Microsoft.DevTestLab/labs/virtualmachines" -ResourceGroupName $sourceLab.ResourceGroupName).ResourceId
+    }
+
+    Write-Output "Importing $($sourceResourceIds.Count) VMs..."
+
+    # Switch back to the destination subscription to start moving VMs
+    SelectSubscription $DestinationSubscriptionId
+    $profilePath = Join-Path $PSScriptRoot "profile.json"
+    Save-AzureRmContext -Path $profilePath -Force
+
+    $destinationLab = Find-AzureRmResource -ResourceNameEquals $DestinationDevTestLabName -ResourceType "Microsoft.DevTestLab/labs"
+
+    # kick off all the jobs in parallel and then wait for results
+    $jobs = @()
+
+    if ($sourceResourceIds.Count -eq 1) {
+        # if the source VM was specifed (results in only 1 source Id) we can also rename the VM
+        $jobs += Start-Job -ScriptBlock $copyVirtualMachineCodeBlock -ArgumentList $profilePath, $sourceResourceIds[0], $destinationLab, $DestinationVirtualMachineName
+
+    }
+    else {
+        $sourceResourceIds | ForEach-Object {
+            $jobs += Start-Job -ScriptBlock $copyVirtualMachineCodeBlock -ArgumentList $profilePath, $_, $destinationLab 
+        }
+    }
+
+    Write-Output "Waiting for $($jobs.Count) virtual machine import job(s) to complete."
+    $jobs | ForEach-Object { Receive-Job $_ -Wait  | Write-Output }
+    $jobs | Remove-Job
+
+}
+finally {
+    Remove-Item -Path "$profilePath" -Force -ErrorAction SilentlyContinue
+}
