@@ -12,7 +12,7 @@
     "version": {
         "Major": 2,
         "Minor": 0,
-        "Patch": 27
+        "Patch": 30
     },
     "demands": [
         "azureps"
@@ -101,6 +101,16 @@
             "required": false,
             "groupName": "advanced",
             "helpMarkDown": "Number of times to retry the deployment when an error occurs, either while creating the lab VM or if any artifact fails to apply successfully.",
+            "visibleRule": "RetryOnFailure = true"
+        },
+        {
+            "name": "DeleteFailedLabVMBeforeRetry",
+            "type": "boolean",
+            "label": "Delete the failed lab VM before retrying",
+            "defaultValue": "false",
+            "required": false,
+            "groupName": "advanced",
+            "helpMarkDown": "Delete the failed lab VM before retrying to create a new lab VM.",
             "visibleRule": "RetryOnFailure = true"
         },
         {
