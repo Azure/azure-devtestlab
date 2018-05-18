@@ -236,7 +236,7 @@ function Show-InputParameters
     Write-Host "  FailOnArtifactError = $FailOnArtifactError"
     Write-Host "  RetryOnFailure = $RetryOnFailure"
     Write-Host "  RetryCount = $RetryCount"
-    Write-Hist "  DeleteFailedLabVMBeforeRetry = $DeleteFailedLabVMBeforeRetry"
+    Write-Host "  DeleteFailedLabVMBeforeRetry = $DeleteFailedLabVMBeforeRetry"
     Write-Host "  DeleteFailedDeploymentBeforeRetry = $DeleteFailedDeploymentBeforeRetry"
     Write-Host "  AppendRetryNumberToVMName = $AppendRetryNumberToVMName"
     Write-Host "  WaitMinutesForApplyArtifacts = $WaitMinutesForApplyArtifacts"
