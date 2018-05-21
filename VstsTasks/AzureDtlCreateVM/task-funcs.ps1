@@ -187,24 +187,29 @@ function Remove-FailedResourcesBeforeRetry
     param(
         [string] $DeploymentName,
         [string] $ResourceGroupName,
+        [string] $DeleteLabVM,
         [string] $DeleteDeployment
     )
 
     try
     {
-        $resourceId = Get-DeploymentTargetResourceId -DeploymentName $DeploymentName -ResourceGroupName $ResourceGroupName
-        if ($resourceId)
+        # Delete the failed lab VM.
+        if (ConvertTo-Bool -Value $DeleteLabVM)
         {
-            Write-Host "Removing previously created lab virtual machine with resource ID '$resourceId'."
-            Remove-AzureRmResource -ResourceId $resourceId -Force | Out-Null
-        }
-        else
-        {
-            Write-Host "Resource identifier is not available, will not attempt to remove corresponding resouce before retrying."
+            $resourceId = Get-DeploymentTargetResourceId -DeploymentName $DeploymentName -ResourceGroupName $ResourceGroupName
+            if ($resourceId)
+            {
+                Write-Host "Removing previously created lab virtual machine with resource ID '$resourceId'."
+                Remove-AzureRmResource -ResourceId $resourceId -Force | Out-Null
+            }
+            else
+            {
+                Write-Host "Resource identifier is not available, will not attempt to remove corresponding resouce before retrying."
+            }
         }
     
-        $delete = ConvertTo-Bool -Value $DeleteDeployment
-        if ($delete)
+        # Delete the failed deployment.
+        if (ConvertTo-Bool -Value $DeleteDeployment)
         {
             Write-Host "Removing previously created deployment '$DeploymentName' in resource group '$ResourceGroupName'."
             Remove-AzureRmResourceGroupDeployment -Name $DeploymentName -ResourceGroupName $ResourceGroupName | Out-Null
@@ -231,8 +236,10 @@ function Show-InputParameters
     Write-Host "  FailOnArtifactError = $FailOnArtifactError"
     Write-Host "  RetryOnFailure = $RetryOnFailure"
     Write-Host "  RetryCount = $RetryCount"
+    Write-Host "  DeleteFailedLabVMBeforeRetry = $DeleteFailedLabVMBeforeRetry"
     Write-Host "  DeleteFailedDeploymentBeforeRetry = $DeleteFailedDeploymentBeforeRetry"
     Write-Host "  AppendRetryNumberToVMName = $AppendRetryNumberToVMName"
+    Write-Host "  WaitMinutesForApplyArtifacts = $WaitMinutesForApplyArtifacts"
 }
 
 function Test-ArtifactStatus

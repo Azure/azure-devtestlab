@@ -7,7 +7,7 @@
         "Windows",
         "Chocolatey"
     ],
-    "iconUri": "https://github.com/chocolatey/chocolatey/raw/master/docs/logo/chocolateyicon.gif",
+    "iconUri": "https://github.com/chocolatey/choco/raw/master/docs/logo/chocolateyicon.gif",
     "targetOsType": "Windows",
     "parameters": {
         "feedName": {
@@ -35,7 +35,7 @@
         "disableDefault": {
             "type": "bool",
             "displayName": "Disable Default Feed",
-            "description": "Disable the default Chocolatey feed (https://chocolatey.org/api/v2/).",      
+            "description": "Disable the default Chocolatey feed (https://chocolatey.org/api/v2/).",
             "defaultValue": false,
             "allowEmpty": true
         }
