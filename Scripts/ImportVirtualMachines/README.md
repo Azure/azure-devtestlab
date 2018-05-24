@@ -9,6 +9,8 @@ There are two important caveats in using this script:
 
 To learn more about this feature and scenarios where it's used, see blog post [Importing Virtual Machines](https://blogs.msdn.microsoft.com/devtestlab/2018/05/18/importing-virtual-machines-across-labs/).
 
+If you're using **Powershell 5** please use "ImportVirtualMachines.ps1", for **Powershell 6** please use "ImportVirtualMachines_ps6.ps1".
+
 The syntax of the script is as follows:
 ```powershell
 
