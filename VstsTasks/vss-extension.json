@@ -64,6 +64,26 @@
             }
         },
         {
+            "id": "azure-dtl-task-createEnvironment",
+            "type": "ms.vss-distributed-task.task",
+            "targets": [
+                "ms.vss-distributed-task.tasks"
+            ],
+            "properties": {
+                "name": "AzureDtlCreateEnvironment"
+            }
+        },
+        {
+            "id": "azure-dtl-task-deleteEnvironment",
+            "type": "ms.vss-distributed-task.task",
+            "targets": [
+                "ms.vss-distributed-task.tasks"
+            ],
+            "properties": {
+                "name": "AzureDtlDeleteEnvironment"
+            }
+        },
+        {
             "id": "azure-dtl-task-createVM",
             "type": "ms.vss-distributed-task.task",
             "targets": [
@@ -87,6 +107,14 @@
     "files": [
         {
             "path": "AzureDtlCreateCustomImage",
+            "addressable": true
+        },
+        {
+            "path": "AzureDtlCreateEnvironment",
+            "addressable": true
+        },
+        {
+            "path": "AzureDtlDeleteEnvironment",
             "addressable": true
         },
         {
