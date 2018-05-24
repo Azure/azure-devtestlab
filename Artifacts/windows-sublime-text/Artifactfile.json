@@ -6,7 +6,7 @@
         "Windows",
         "SublimeText"
     ],
-    "iconUri": "https://chocolatey.org/content/packageimages/SublimeText3.PackageControl.2.0.0.20140915.png",
+    "iconUri": "https://upload.wikimedia.org/wikipedia/en/thumb/d/d2/Sublime_Text_3_logo.png/150px-Sublime_Text_3_logo.png",
     "targetOsType": "Windows",
     "runCommand": {
         "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', 'sublimetext3', '\"')]"
