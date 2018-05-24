@@ -7,7 +7,7 @@
         "Linux",
         "Packages"
     ],
-    "iconUri": "https://www.npmjs.com/favicon.ico",
+    "iconUri": "https://raw.githubusercontent.com/github/explore/6c6508f34230f0ac0d49e847a326429eefbfc030/topics/npm/npm.png",
     "targetOsType": "Linux",
     "parameters": {
         "installLocation": {
