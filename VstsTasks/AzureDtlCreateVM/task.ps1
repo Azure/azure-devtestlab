@@ -30,6 +30,7 @@ param(
     [string] $FailOnArtifactError,
     [string] $RetryOnFailure,
     [string] $RetryCount,
+    [string] $DeleteFailedLabVMBeforeRetry,
     [string] $DeleteFailedDeploymentBeforeRetry,
     [string] $AppendRetryNumberToVMName,
     [string] $WaitMinutesForApplyArtifacts
@@ -126,8 +127,11 @@ try
             }
             else
             {
+                # Reset $resourceId to ensure we don't mistakenly return a previously invalid value in case of a subsequent retry error.
+                $resourceId = ''
+
                 Write-Host "##vso[task.logissue type=warning;]A deployment failure occured. Retrying deployment (attempt $i of $($count - 1))"
-                Remove-FailedResourcesBeforeRetry -DeploymentName $deploymentName -ResourceGroupName $resourceGroupName -DeleteDeployment $DeleteFailedDeploymentBeforeRetry
+                Remove-FailedResourcesBeforeRetry -DeploymentName $deploymentName -ResourceGroupName $resourceGroupName -DeleteLabVM $DeleteFailedLabVMBeforeRetry -DeleteDeployment $DeleteFailedDeploymentBeforeRetry
                 $appendSuffix = ConvertTo-Bool -Value $AppendRetryNumberToVMName
                 if ($appendSuffix)
                 {
