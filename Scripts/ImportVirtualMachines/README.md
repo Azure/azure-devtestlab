@@ -7,7 +7,7 @@ There are two important caveats in using this script:
 * The source DevTest Lab and destination DevTest Lab must be in a subscription associated to the same Azure Active Directory tenant
 * The virtual machine in the source lab must NOT be in a 'claimable' state
 
-To learn more about this feature and scenarios where it's used, see blog post [Importing Virtual Machines](http://blogs.msdn.microsoft.com/devtestlab/2018/05/09/importing-virtual-machines-across-labs/).
+To learn more about this feature and scenarios where it's used, see blog post [Importing Virtual Machines](https://blogs.msdn.microsoft.com/devtestlab/2018/05/18/importing-virtual-machines-across-labs/).
 
 The syntax of the script is as follows:
 ```powershell
