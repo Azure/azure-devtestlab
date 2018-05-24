@@ -164,7 +164,7 @@ try {
     else {
 
         # We need to copy all the VMs in the lab
-        [array] $sourceResourceIds = (Get-AzureRmResource -ResourceType "Microsoft.DevTestLab/labs/virtualmachines" -ResourceGroupName $sourceLab.ResourceGroupName).ResourceId
+        [array] $sourceResourceIds = (Get-AzureRmResource -ResourceType "Microsoft.DevTestLab/labs/virtualmachines" -ResourceGroupName $sourceLab.ResourceGroupName | Where-Object {$_.ResourceName -like "$SourceDevTestLabName/*" }).ResourceId
     }
 
     Write-Output "Importing $($sourceResourceIds.Count) VMs..."
