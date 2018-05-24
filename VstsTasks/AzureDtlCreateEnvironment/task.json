@@ -1,0 +1,139 @@
+{
+    "id": "1FBE9BB7-B97B-4D08-8CB3-E0A776F68744",
+    "name": "AzureDevTestLabsCreateEnvironment",
+    "friendlyName": "Azure DevTest Labs Create Environment",
+    "description": "Create an Azure DevTest Labs Environment",
+    "category": "Deploy",
+    "visibility": [
+        "Build",
+        "Release"
+    ],
+    "author": "Microsoft Corporation",
+    "version": {
+        "Major": 1,
+        "Minor": 0,
+        "Patch": 57
+    },
+    "demands": [
+        "azureps"
+    ],
+    "minimumAgentVersion": "1.95.1",
+    "groups": [
+    ],
+    "inputs": [
+        {
+            "name": "ConnectedServiceName",
+            "type": "connectedService:AzureRM",
+            "label": "Azure RM Subscription",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Azure Resource Manager subscription to configure before running."
+        },
+        {
+            "name": "LabId",
+            "type": "pickList",
+            "label": "Lab Name",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Name of an existing lab in which the lab VM will be created. This is a pick list generated as a result of selecting an **Azure RM Subscription**.",
+            "properties": {
+                "EditableOptions": "True"
+            }
+        },
+        {
+            "name": "RepositoryId",
+            "type": "pickList",
+            "label": "Repository Name",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Name of an existing repository from wich you want to pick a template. This is a pick list genereted as a result of selecting a lab.",
+            "properties": {
+                "EditableOptions": "True"
+            }
+        },
+        {
+            "name": "TemplateId",
+            "type": "pickList",
+            "label": "Template Name",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Name of an existing template that should be used to create a new environment. This is a pick list generated as a result of selecting a repository.",
+            "properties": {
+                "EditableOptions": "True"
+            }
+        },
+        {
+            "name": "EnvironmentName",
+            "type": "string",
+            "label": "Environment Name",
+            "required": true,
+            "defaultValue": "",
+            "helpMarkDown": "The name of the environment to create."
+        },
+        {
+            "name": "ParameterFile",
+            "type": "filePath",
+            "label": "Parameter File",
+            "required": false,
+            "defaultValue": "",
+            "helpMarkDown": "Path to a ARM template parameters file that provides parameter values for the environment template."
+        },
+        {
+            "name": "ParameterOverrides",
+            "type": "multiLine",
+            "label": "Parameters",
+            "defaultValue": "-SampleParameter 'SampleValue'",
+            "required": false,
+            "helpMarkDown": "Set parameter values needed by the environment template. Parameter values set by parameters file will be overridden."
+        },
+        {
+            "name": "TemplateOutputVariables",
+            "type": "boolean",
+            "label": "Create output variables based on the environment template output?",
+            "required": true,
+            "defaultValue": "false",
+            "helpMarkDown": "Capture environment template output as build/release variables."
+        }
+    ],
+    "outputVariables": [
+        {
+            "name": "environmentResourceId",
+            "description": "Capture the created lab environment ID"
+        },
+        {
+            "name": "environmentResourceGroupId",
+            "description": "Capture the created lab environment resource group ID"
+        }
+    ],
+    "sourceDefinitions": [
+        {
+            "target": "LabId",
+            "endpoint": "https://management.azure.com/subscriptions/$(authKey.SubscriptionId)/resources?$filter=resourceType+EQ+'Microsoft.DevTestLab/labs'&api-version=2015-01-01",
+            "selector": "jsonpath:$.value[*].name",
+            "keySelector": "jsonpath:$.value[*].id",
+            "authKey": "$(ConnectedServiceName)"
+        },
+        {
+            "target": "RepositoryId",
+            "endpoint": "https://management.azure.com$(LabId)/artifactsources?api-version=2016-05-15",
+            "selector": "jsonpath:$.value[*].properties.displayName",
+            "keySelector": "jsonpath:$.value[*].id",
+            "authKey": "$(ConnectedServiceName)"
+        },
+        {
+            "target": "TemplateId",
+            "endpoint": "https://management.azure.com$(RepositoryId)/armtemplates?api-version=2016-05-15",
+            "selector": "jsonpath:$.value[*].name",
+            "keySelector": "jsonpath:$.value[*].id",
+            "authKey": "$(ConnectedServiceName)"
+        }
+    ],
+    "instanceNameFormat": "Create Azure DevTest Labs Environment",
+    "execution": {
+        "AzurePowerShell": {
+            "target": "$(currentDirectory)\\task.ps1",
+            "argumentFormat": "",
+            "workingDirectory": "$(currentDirectory)"
+        }
+    }
+}

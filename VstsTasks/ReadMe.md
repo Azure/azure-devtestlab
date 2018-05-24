@@ -22,6 +22,10 @@ To test each task independently, for example, in MYPROJ (i.e. a single task inst
 
    `tfx build tasks upload --task-path .\AzureDtlCreateCustomImage --overwrite`
 
+   `tfx build tasks upload --task-path .\AzureDtlCreateEnvironment --overwrite`
+
+   `tfx build tasks upload --task-path .\AzureDtlDeleteEnvironment --overwrite`
+
    `tfx build tasks upload --task-path .\AzureDtlCreateVM --overwrite`
 
    `tfx build tasks upload --task-path .\AzureDtlDeleteVM --overwrite`
