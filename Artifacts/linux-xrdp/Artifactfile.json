@@ -1,0 +1,15 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "xrdp",
+    "publisher": "Microsoft",
+    "description": "Install xrdp on Linux",
+    "tags": [
+        "xrdp",
+        "Linux"
+    ],
+    "iconUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/Artifacts/linux-xrdp/xrdpArtifact.png",
+    "targetOsType": "Linux",
+    "runCommand": {
+        "commandToExecute": "['sh Artifact.sh']"
+    }
+}
