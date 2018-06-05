@@ -24,6 +24,17 @@ if [ -n "$isApt" ] ; then
 elif [ -n "$isYum" ] ; then
     trace "Using YUM package manager"
 
-    yum install epel-release -y
+    sudo yum install -y epel-release
+    sudo yum install -y xrdp
+    sudo yum groupinstall -y xfce
+    
+    if [ ! -f ~/.Xclients ] ; then
 
+        trace "Register XFCE4 as session manager"
+        echo "xfce4-session" > ~/.Xclients
+        chmod a+x ~/.Xclients
+    fi
+
+    sudo systemctl enable xrdp
+    sudo systemctl start xrdp
 fi
