@@ -11,6 +11,6 @@
     "iconUri": "https://raw.githubusercontent.com/PowerShell/PowerShell/master/assets/Powershell_64.png",
     "targetOsType": "Windows",
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', 'windowsazurepowershell', '\"')]"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', 'azurepowershell', '\"')]"
     }
 }
