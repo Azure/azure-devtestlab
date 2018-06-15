@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+  "title": "NVM",
+  "publisher": "Ross Bohr",
+  "description": "Install NVM on Linux",
+  "tags": [
+    "Node",
+    "NodeJS",
+    "NVM",
+    "Javascript",
+    "Linux"
+  ],
+  "iconUri": "https://cdn.rawgit.com/ferventcoder/chocolatey-packages/02c21bebe5abb495a56747cbb9b4b5415c933fc0/icons/nodejs.png",
+  "targetOsType": "Linux",
+  "parameters": {
+    "targetUser": {
+      "type": "string",
+      "displayName": "Target linux user",
+      "allowEmpty": false,
+      "description": "The name of the linux user for which NVM will be installed."
+    }
+  },
+  "runCommand": {
+    "commandToExecute": "[concat('sh linux_install_nvm_v1.sh ', parameters('targetUser'))]"
+  }
+}

@@ -1,0 +1,79 @@
+{
+    "id": "1D06D619-904C-4671-9EE1-0A1D919EB00B",
+    "name": "AzureDevTestLabsDeleteEnvironment",
+    "friendlyName": "Azure DevTest Labs Delete Environment",
+    "description": "Delete an Azure DevTest Labs Environment",
+    "category": "Deploy",
+    "visibility": [
+        "Build",
+        "Release"
+    ],
+    "author": "Microsoft Corporation",
+    "version": {
+        "Major": 1,
+        "Minor": 0,
+        "Patch": 4
+    },
+    "demands": [
+        "azureps"
+    ],
+    "minimumAgentVersion": "1.95.1",
+    "groups": [
+    ],
+    "inputs": [
+        {
+            "name": "ConnectedServiceName",
+            "type": "connectedService:AzureRM",
+            "label": "Azure RM Subscription",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Azure Resource Manager subscription to configure before running."
+        },
+        {
+            "name": "LabId",
+            "type": "pickList",
+            "label": "Lab Name",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Name of an existing lab in which the lab environment will be deleted. This is a pick list generated as a result of selecting an **Azure RM Subscription**.",
+            "properties": {
+                "EditableOptions": "True"
+            }
+        },
+        {
+            "name": "EnvironmentId",
+            "type": "pickList",
+            "label": "Environment Name",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Name of an existing environment that will be deleted. This is a pick list generated as a result of selecting an lab.",
+            "properties": {
+                "EditableOptions": "True"
+            }
+        }
+    ],
+    "sourceDefinitions": [
+        {
+            "target": "LabId",
+            "endpoint": "https://management.azure.com/subscriptions/$(authKey.SubscriptionId)/resources?$filter=resourceType+EQ+'Microsoft.DevTestLab/labs'&api-version=2015-01-01",
+            "selector": "jsonpath:$.value[*].name",
+            "keySelector": "jsonpath:$.value[*].id",
+            "authKey": "$(ConnectedServiceName)"
+        },
+        {
+            "target": "EnvironmentId",
+            "endpoint": "https://management.azure.com$(LabId)/users/@all/environments?api-version=2017-04-26-preview",
+            "selector": "jsonpath:$.value[*].name",
+            "keySelector": "jsonpath:$.value[*].id",
+            "authKey": "$(ConnectedServiceName)"
+        }
+    ],
+    "instanceNameFormat": "Delete Azure DevTest Labs Environment",
+    "execution": {
+        "AzurePowerShell": {
+            "target": "$(currentDirectory)\\task.ps1",
+            "argumentFormat": "",
+            "workingDirectory": "$(currentDirectory)"
+        }
+    }
+}
