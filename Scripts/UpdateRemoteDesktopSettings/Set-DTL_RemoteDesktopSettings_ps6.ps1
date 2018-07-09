@@ -18,7 +18,7 @@ Experience Level:  Must be an integer from 1 to 7, following this table:
     7  -  Detect connection quality automatically
 
 .EXAMPLE
-.\Set-DTL_RemoteDesktopSettings.ps1 -DevTestLabName "PeteDevBoxes" -RemoteDesktopGateway "customrds.eastus.cloudapp.azure.com" -ExperienceLevel 2
+.\Set-DTL_RemoteDesktopSettings_ps6.ps1 -DevTestLabName "PeteDevBoxes" -RemoteDesktopGateway "customrds.eastus.cloudapp.azure.com" -ExperienceLevel 2
 
 .LINK
 https://github.com/Azure/azure-devtestlab/tree/master/Scripts
