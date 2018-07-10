@@ -1,9 +1,9 @@
 # Updating the RDP settings in a DevTest Lab
-Azure DevTest Labs has remote desktop configuration settings accessible by the Rest API!  This is done through "ExtendedProperties" in the lab.  The effect of setting these properties is that whenver a user clicks the "Connect" button on a Virtual Machine, the resulting generated RDP file will include the appropriate settings.  The available settings are:
-* **Experience**:  Set the connection speed as a proxy for how much data to send over the network.  The RDP client sends & receives less information when slower 'speed' is selected.  This is the same setting found in the RDP client (start -> Run, "mstsc", select "Experience" tab)
-* **Remote Desktop Gatway**:  The RDP Gateway settings can be found on the "advanced" tab of the remote desktop client.  To enable the Lab to automatically use the RDP Gatway, just include the correct URL in the ExtendedProperties.
+Azure DevTest Labs has remote desktop configuration settings accessible by the Rest API!  This is done through `ExtendedProperties` in the lab.  The effect of setting these properties is that whenever a user clicks the "Connect" button on a Virtual Machine, the resulting generated RDP file will include the appropriate settings.  The available settings are:
+* **Experience**:  Set the connection speed as a proxy for how much data to send over the network.  The RDP client sends & receives less information when a slower 'speed' is selected.  This is the same setting found in the RDP client (start -> Run, "mstsc", select "Experience" tab)
+* **Remote Desktop Gatway**:  The RDP Gateway settings can be found on the "advanced" tab of the remote desktop client.  To enable the Lab to automatically use the RDP Gatway, just include the correct URL in the `ExtendedProperties`.
 
-If you're using **Powershell 5** please use "Set-DTL-RemoteDesktopSettings.ps1", for **Powershell 6** please use "Set-DTL-RemoteDesktopSettings_ps6.ps1".
+If you're using **PowerShell 5** please use `Set-DTL-RemoteDesktopSettings.ps1`.  For **PowerShell 6** please use `Set-DTL-RemoteDesktopSettings_ps6.ps1`.
 
 The syntax of the script is as follows:
 ```powershell
