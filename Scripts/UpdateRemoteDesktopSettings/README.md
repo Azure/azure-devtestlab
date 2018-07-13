@@ -6,16 +6,17 @@ Azure DevTest Labs has remote desktop configuration settings accessible by the R
 The syntax of the script is as follows:
 ```powershell
 
-# Set only the Remote Desktop Gateway property for a lab
-.\Set-DTL-RemoteDesktopSettings.ps1 -DevTestLabName "TeamA_DevResources" `
+# Set only the Remote Desktop Gateway property for a lab, identified by the Resource Group Name and the DevTest Lab Name
+.\Set-DTL-RemoteDesktopSettings.ps1 -ResourceGroupName "TeamA_rg" `
+                                    -DevTestLabName "TeamA" `
                                     -RemoteDesktopGateway "customrds.eastus.cloudapp.azure.com"
 
-# Set only the Experience Level property for a lab
-.\Set-DTL-RemoteDesktopSettings.ps1 -DevTestLabName "TeamA_DevResources" `
+# Set only the Experience Level property for a lab, identified by the ResourceId of the DevTest Lab
+.\Set-DTL-RemoteDesktopSettings.ps1 -DevTestLabResourceId "/subscriptions/<subid>/resourceGroups/TeamA_rg/providers/Microsoft.DevTestLab/labs/TeamA" `
                                     -ExperienceLevel 2
 
 # Clear the Remote Desktop Gateway and Experience level properrties in a lab
-.\Set-DTL-RemoteDesktopSettings.ps1 -DevTestLabName "TeamA_DevResources"
+.\Set-DTL-RemoteDesktopSettings.ps1 -ResourceGroupName "TeamA_rg" -DevTestLabName "TeamA_DevResources"
 
 ```
 Here's an example of what the Lab's properties object looks like (in JSON format) including the new Remote Desktop settings
