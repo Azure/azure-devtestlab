@@ -3,8 +3,6 @@ Azure DevTest Labs has remote desktop configuration settings accessible by the R
 * **Experience**:  Set the connection speed as a proxy for how much data to send over the network.  The RDP client sends & receives less information when a slower 'speed' is selected.  This is the same setting found in the RDP client (start -> Run, "mstsc", select "Experience" tab)
 * **Remote Desktop Gatway**:  The RDP Gateway settings can be found on the "advanced" tab of the remote desktop client.  To enable the Lab to automatically use the RDP Gatway, just include the correct URL in the `ExtendedProperties`.
 
-If you're using **PowerShell 5** please use `Set-DTL-RemoteDesktopSettings.ps1`.  For **PowerShell 6** please use `Set-DTL-RemoteDesktopSettings_ps6.ps1`.
-
 The syntax of the script is as follows:
 ```powershell
 
