@@ -27,8 +27,8 @@
         },
         "skipDos2Unix": {
             "type": "bool",
-            "displayName": "Convert script from MSDOS to Unix line ending",
-            "description": "Script arguments to pass",
+            "displayName": "Skip dos2unix conversion",
+            "description": "Skip the script conversion from MSDOS to Unix line ending",
             "allowEmpty": true,
             "defaultValue": "true"
         }
