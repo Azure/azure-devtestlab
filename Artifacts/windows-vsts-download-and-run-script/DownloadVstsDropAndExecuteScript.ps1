@@ -4,7 +4,8 @@ param(
     [string] $buildDefinitionName,
     [string] $vstsProjectUri,
     [string] $pathToScript,
-    [string] $scriptArguments
+    [string] $scriptArguments,
+    [string] $buildDefId
 )
 
 ###################################################################################################
@@ -102,11 +103,20 @@ function Get-BuildDefinitionId
 
     Write-Host "Getting build definition ID from $BuildDefinitionUri"
     $buildDef = Invoke-RestMethod -Uri $BuildDefinitionUri -Headers $Headers -Method Get
-    $buildDefinitionId = $buildDef.value.id
-    if (-not $buildDefinitionId)
+    if (-not $buildDefId)
     {
-        throw "Unable to get the build definition ID from $buildDefinitionUri"
+     $buildDefinitionId = $buildDef.value.id[0]
+     if (-not $buildDefinitionId)
+      {
+          throw "Unable to get the build definition ID from $buildDefinitionUri"
+      }
     }
+    else
+    {
+        $buildDefinitionId = $buildDefId
+    }
+    
+   
 
     return $buildDefinitionId
 }
