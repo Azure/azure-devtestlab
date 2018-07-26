@@ -105,20 +105,18 @@ function Get-BuildDefinitionId
     $buildDef = Invoke-RestMethod -Uri $BuildDefinitionUri -Headers $Headers -Method Get
     if (-not $buildDefId)
     {
-     $buildDefinitionId = $buildDef.value.id[0]
-     if (-not $buildDefinitionId)
+      $buildDefId = $buildDef.value.id[0]
+     if (-not $buildDefId)
       {
-          throw "Unable to get the build definition ID from $buildDefinitionUri"
+           throw "Unable to get the build definition ID from $buildDefId"
       }
+      return $buildDefId
     }
     else
     {
-        $buildDefinitionId = $buildDefId
+        return $buildDefId
     }
-    
-   
 
-    return $buildDefinitionId
 }
 
 function Get-LatestBuildId
