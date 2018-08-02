@@ -1,6 +1,7 @@
 {
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
     "title": "JDK",
+    "publisher": "ALM Rangers",
     "description": "Install Java Development Kit on Debian-based and Red Hat based distributions.",
     "tags": [
       "JDK",
