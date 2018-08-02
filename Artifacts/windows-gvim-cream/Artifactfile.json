@@ -1,6 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
   "title": "gVim (Cream) for Windows",
+  "publisher": "Microsoft",
   "description": "Installs gVim for Windows, with the Cream superset of functionality added. You can view the current status of the Cream project here: http://cream.sourceforge.net/. The application is installed to the default location and should show up in the recently installed list for all users on the VM (depending on the quantity of software being installed prior to logging in). Vim is not installed in such a way as to be made available on the system path.",
   "tags": [
     "Windows",

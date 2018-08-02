@@ -1,6 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
   "title": "Chrome",
+  "publisher": "estebang",
   "description": "Installs Chrome using the Chocolatey package manager",
   "tags": [
     "Windows",
