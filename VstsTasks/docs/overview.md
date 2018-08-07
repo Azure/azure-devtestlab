@@ -4,6 +4,8 @@ This extension provides several build / release tasks to allow you to integrate 
 1. **Create Custom Image**
 2. **Create VM**
 3. **Delete VM**
+4. **Create Environment**
+5. **Delete Environment**
 
 You can find more details about Azure DevTest Labs [here](https://azure.microsoft.com/en-us/services/devtest-lab/).
 # Details
@@ -72,3 +74,46 @@ The task requires the following inputs:
 **Azure RM Subscription** - Azure Resource Manager subscription to configure before running. 
 
 **Lab VM ID** - Resource ID of the lab VM to delete. Default is `$(labVMId)`. You can use any variable such as `$(labVMId)`, which is the output of calling **Create Azure DevTest Labs VM**, that contains a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}/virtualMachines/{vmName}`.
+
+## Create Environment
+![Create Environment](screenshots/azure-dtl-createenvironment.png)
+The task allows you to create an Environment.
+### Input Parameters
+The task requires the following inputs:
+
+**Azure RM Subscription** - Azure Resource Manager subscription to configure before running.
+
+**Lab Name** - Azure DevTest Lab name.
+
+**Repository Name** - Repository friendly name where the environment ARM templates are stored.
+
+**Template Name** - Name of the environment ARM template.
+
+**Environment Name** - Name of the deployed template.
+
+**Parameters File** - The input parameters file. Use either a parameters file or the parameters.
+
+**Parameters** - The individual parameters.
+
+**Create output variables based on the environment template output?** - Checkbox to create output variables for the environment template. 
+
+### Output Variables
+The task can product the following outputs into corresponding variables
+
+**EnvironmentResourceId** - Resource ID of the environment created.
+
+**EnvironmentResourceGroupId** - Resource ID of the resource group for the environment created.
+
+## Delete Environment
+![Delete Environment](screenshots/azure-dtl-deleteenvironment.png)
+The task allows you to delete an Environment.
+### Input Parameters
+The task requires the following inputs.
+
+**Azure RM Subscription** - Azure Resource Manager subscription to configure before running.
+
+**Lab Name** - Azure DevTest Lab name.
+
+**Environment Name** - Name of the environment to be deleted.
+
+For more information on [Creating and Deleting environments.](https://blogs.msdn.microsoft.com/devtestlab/2018/07/11/integrate-azure-devtest-labs-environments-into-your-vsts-continuous-integration-and-delivery-pipeline/)
