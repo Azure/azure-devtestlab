@@ -91,18 +91,18 @@ The task requires the following inputs:
 
 **Environment Name** - Name of the deployed template.
 
-**Parameters File** - The input parameters file. Use either a parameters file or the parameters.
+**Parameters File (optional)** - The input parameters file. Use either a parameters file or the parameters.
 
 **Parameters** - The individual parameters.
 
-**Create output variables based on the environment template output?** - Checkbox to create output variables for the environment template. 
+**Create output variables based on the environment template output.** - Create output variables resulting from the creation of the environment. See Output Variables for details. 
 
 ### Output Variables
-The task can product the following outputs into corresponding variables
+If enabled, the task can produce the following output variables.  Note that you will need to define a Reference Name under the Output Variables section to correctly reference the variables in the list.
 
-**EnvironmentResourceId** - Resource ID of the environment created.
+**EnvironmentResourceId** - Resource ID of the environment created. Usage $(<refName>.environmentResourceId).
 
-**EnvironmentResourceGroupId** - Resource ID of the resource group for the environment created.
+**EnvironmentResourceGroupId** - Resource ID of the resource group for the environment created. Usage $(<refName>.environmentResourceGroupId).
 
 ## Delete Environment
 ![Delete Environment](screenshots/azure-dtl-deleteenvironment.png)
@@ -116,4 +116,4 @@ The task requires the following inputs.
 
 **Environment Name** - Name of the environment to be deleted.
 
-For more information on [Creating and Deleting environments.](https://blogs.msdn.microsoft.com/devtestlab/2018/07/11/integrate-azure-devtest-labs-environments-into-your-vsts-continuous-integration-and-delivery-pipeline/)
+For more information about creating and deleting environments, refer to [Integrate Azure DevTest Labs Environments into your VSTS continuous integration and delivery pipeline.](https://blogs.msdn.microsoft.com/devtestlab/2018/07/11/integrate-azure-devtest-labs-environments-into-your-vsts-continuous-integration-and-delivery-pipeline/)
