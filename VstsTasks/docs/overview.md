@@ -93,7 +93,7 @@ The task requires the following inputs:
 
 **Parameters File (optional)** - The input parameters file. Use either a parameters file or the parameters.
 
-**Parameters** - The individual parameters.
+**Parameters (optional)** - The individual parameters.
 
 **Create output variables based on the environment template output.** - Create output variables resulting from the creation of the environment. See Output Variables for details. 
 
@@ -114,6 +114,6 @@ The task requires the following inputs.
 
 **Lab Name** - Azure DevTest Lab name.
 
-**Environment Name** - Name of the environment to be deleted.
+**Environment Name or ID** - Either the name of the environment to be deleted, selected from the dropdown list; or, the fully qualified resource ID of the environment to be deleted. This can be a reference to the output variable from a call to the Create Environment task. For example, $(<refName>.environmentResourceId).
 
 For more information about creating and deleting environments, refer to [Integrate Azure DevTest Labs Environments into your VSTS continuous integration and delivery pipeline.](https://blogs.msdn.microsoft.com/devtestlab/2018/07/11/integrate-azure-devtest-labs-environments-into-your-vsts-continuous-integration-and-delivery-pipeline/)
