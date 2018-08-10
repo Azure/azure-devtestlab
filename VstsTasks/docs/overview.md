@@ -98,11 +98,11 @@ The task requires the following inputs:
 **Create output variables based on the environment template output.** - Create output variables resulting from the creation of the environment. See Output Variables for details. 
 
 ### Output Variables
-If enabled, the task can produce the following output variables.  Note that you will need to define a Reference Name under the Output Variables section to correctly reference the variables in the list.
+If enabled, the task can produce the following output variables.  Note that you will need to define a Reference Name (i.e. `<refName>` such as `dtl`) under the Output Variables section to correctly reference the variables in the list.
 
-**EnvironmentResourceId** - Resource ID of the environment created. Usage $(<refName>.environmentResourceId).
+**EnvironmentResourceId** - Resource ID of the environment created. Usage: `$(<refName>.environmentResourceId)`.
 
-**EnvironmentResourceGroupId** - Resource ID of the resource group for the environment created. Usage $(<refName>.environmentResourceGroupId).
+**EnvironmentResourceGroupId** - Resource ID of the resource group for the environment created. Usage: `$(<refName>.environmentResourceGroupId)`.
 
 ## Delete Environment
 ![Delete Environment](screenshots/azure-dtl-deleteenvironment.png)
@@ -114,6 +114,6 @@ The task requires the following inputs.
 
 **Lab Name** - Azure DevTest Lab name.
 
-**Environment Name or ID** - Either the name of the environment to be deleted, selected from the dropdown list; or, the fully qualified resource ID of the environment to be deleted. This can be a reference to the output variable from a call to the Create Environment task. For example, $(<refName>.environmentResourceId).
+**Environment Name or ID** - Either the name of the environment to be deleted, selected from the dropdown list; or, the fully qualified resource ID of the environment to be deleted. This can be a reference to the output variable from a call to the Create Environment task. For example, `$(<refName>.environmentResourceId)`.
 
 For more information about creating and deleting environments, refer to [Integrate Azure DevTest Labs Environments into your VSTS continuous integration and delivery pipeline.](https://blogs.msdn.microsoft.com/devtestlab/2018/07/11/integrate-azure-devtest-labs-environments-into-your-vsts-continuous-integration-and-delivery-pipeline/)
