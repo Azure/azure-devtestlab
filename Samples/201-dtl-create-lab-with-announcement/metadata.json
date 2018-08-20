@@ -1,0 +1,7 @@
+{
+  "itemDisplayName": "Create a new lab with announcement",
+  "description": "This template creates a lab in Azure DevTest Labs with an announcement and expiration date.",
+  "summary": "This template creates a lab in Azure DevTest Labs with an announcement and expiration date.",
+  "githubUsername": "EMaher",
+  "dateUpdated": "2018-08-14"
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "newLabName": {
+      "value": "MyLab1"
+    },
+    "announcementTitle": {
+      "value": "Important Information"
+    },
+    "announcementMarkdown": {
+      "value": "# Important Information for All Lab Users\nFor more information how to use Azure Lab Service read online [documentation](https://docs.microsoft.com/en-us/azure/lab-services/)."
+    },
+    "announcementExpiration":{
+      "value": "2100-01-01T17:00:00+00:00"
+    }
+  }
+}

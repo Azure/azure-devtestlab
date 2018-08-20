@@ -1,0 +1,12 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "newLabName": {
+      "value": "MyLab1"
+    },
+    "supportMessageMarkdown": {
+      "value": "Welcome to the lab!  \n[My support link](http://microsoft.com) [Documentation](https://docs.microsoft.com/en-us/azure/lab-services/)"
+    }
+  }
+}
