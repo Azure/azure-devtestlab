@@ -12,13 +12,17 @@
     "version": {
         "Major": 1,
         "Minor": 0,
-        "Patch": 106
+        "Patch": 127
     },
     "demands": [
         "azureps"
     ],
     "minimumAgentVersion": "1.95.1",
-    "groups": [
+    "groups": [{
+        "name": "advanced",
+        "displayName": "Advanced",
+        "isExpanded": false
+    }
     ],
     "inputs": [
         {
@@ -93,6 +97,42 @@
             "required": true,
             "defaultValue": "false",
             "helpMarkDown": "Capture environment template output as build/release variables."
+        },
+        {
+            "name": "StoreEnvironmentTemplate",
+            "type": "boolean",
+            "label": "Create artifact based on the environment template output?",
+            "required": true,
+            "defaultValue": "false",
+            "helpMarkDown": "Capture environment template output as build/release artifact.",
+            "groupName": "advanced"
+        },
+        {
+            "name": "StoreEnvironmentTemplateLocation",
+            "type": "string",
+            "label": "Build store location",
+            "required": true,
+            "defaultValue": "$(Build.ArtifactStagingDirectory)",
+            "helpMarkDown": "The location to store the template.",
+            "groupName": "advanced"
+        },
+        {
+            "name": "EnvironmentTemplateLocationVariable",
+            "type": "string",
+            "label": "Template Output name for location",
+            "required": true,
+            "defaultValue": "EnvironmentLocation",
+            "helpMarkDown": "The output name for the location to store the template.",
+            "groupName": "advanced"
+        },
+        {
+            "name": "EnvironmentTemplateSasTokenVariable",
+            "type": "string",
+            "label": "Template Output name for the SAS token",
+            "required": true,
+            "defaultValue": "EnvironmentSAS",
+            "helpMarkDown": "The output name for the SAS token.",
+            "groupName": "advanced"
         }
     ],
     "outputVariables": [
