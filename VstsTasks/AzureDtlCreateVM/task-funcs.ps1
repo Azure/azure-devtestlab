@@ -438,15 +438,23 @@ function Wait-ApplyArtifacts
             }
 
             $vmName = $vm.Name
-            $vmParentName = $vm.ParentResource.Split('/')[-1]
-            $vmFullName = "$vmParentName/$vmName"
+            if ($vm.ResourceName)
+            {
+                $vmLabName = $vm.ResourceName.Split('/')[0]
+                $vmFullName = $vm.ResourceName
+            }
+            else
+            {
+                $vmLabName = $(if ($vm.ParentResource){ $vm.ParentResource.Split('/')[-1] } else { $null })
+                $vmFullName = $(if ($vmLabName){ "$vmLabName/$vmName" } else { $vmName })
+            }
             $vmResourceGroupName = $vm.ResourceGroupName
             $vmResourceType = $vm.ResourceType
 
             $vmDetails = Get-AzureRmResource -ApiVersion '2017-04-26-preview' -Name $vmFullName -ResourceGroupName $vmResourceGroupName -ResourceType $vmResourceType -ODataQuery '$expand=Properties($expand=Artifacts)'
             if (-not $vmDetails)
             {
-                throw "Unable to get details for VM '$vmName' under lab '$vmParentName' and resource group '$vmResourceGroupName'."
+                throw "Unable to get details for VM '$vmName' under lab '$vmLabName' and resource group '$vmResourceGroupName'."
             }
 
             $provisioningState = $vm.Properties.provisioningState
