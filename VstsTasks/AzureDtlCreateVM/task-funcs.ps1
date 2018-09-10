@@ -242,6 +242,19 @@ function Show-InputParameters
     Write-Host "  WaitMinutesForApplyArtifacts = $WaitMinutesForApplyArtifacts"
 }
 
+function Test-ArtifactsInstalling
+{
+    [CmdletBinding()]
+    param(
+        [array] $Artifacts
+    )
+
+    [array]$installingArtifacts = $artifacts | ? { $_.status -eq 'Installing' }
+    [array]$pendingArtifacts = $artifacts | ? { $_.status -eq 'Pending' }
+
+    return $installingArtifacts.Count -gt 0 -or $pendingArtifacts.Count -gt 0
+}
+
 function Test-ArtifactStatus
 {
     [CmdletBinding()]
@@ -408,6 +421,7 @@ function Wait-ApplyArtifacts
         $totalWaitMinutes = 0
         [string] $provisioningState
         $startWait = [DateTime]::Now
+        $continueWaiting = $true
         do {
             $waitspan = New-TimeSpan -Start $startWait -End ([DateTime]::Now)
             $totalWaitMinutes = [Math]::Round($waitspan.TotalMinutes)
@@ -417,14 +431,34 @@ function Wait-ApplyArtifacts
                 throw "Waited for more than $(ConvertTo-MinutesString $totalWaitMinutes). Failing the task."
             }
 
-            $continueWaiting = $true
-
             $vm = Get-AzureRmResource -ResourceId $ResourceId
-            if ($vm)
+            if (-not $vm)
             {
-                $provisioningState = $vm.Properties.provisioningState
-                $continueWaiting = $provisioningState -and ($provisioningState -eq 'ApplyingArtifacts' -or $provisioningState -eq 'UpgradingVmAgent')
+                throw "Unable to find VM with resource ID '$ResourceId'."
             }
+
+            $vmName = $vm.Name
+            if ($vm.ResourceName)
+            {
+                $vmLabName = $vm.ResourceName.Split('/')[0]
+                $vmFullName = $vm.ResourceName
+            }
+            else
+            {
+                $vmLabName = $(if ($vm.ParentResource){ $vm.ParentResource.Split('/')[-1] } else { $null })
+                $vmFullName = $(if ($vmLabName){ "$vmLabName/$vmName" } else { $vmName })
+            }
+            $vmResourceGroupName = $vm.ResourceGroupName
+            $vmResourceType = $vm.ResourceType
+
+            $vmDetails = Get-AzureRmResource -ApiVersion '2017-04-26-preview' -Name $vmFullName -ResourceGroupName $vmResourceGroupName -ResourceType $vmResourceType -ODataQuery '$expand=Properties($expand=Artifacts)'
+            if (-not $vmDetails)
+            {
+                throw "Unable to get details for VM '$vmName' under lab '$vmLabName' and resource group '$vmResourceGroupName'."
+            }
+
+            $provisioningState = $vm.Properties.provisioningState
+            $continueWaiting = $provisioningState -and ($provisioningState -eq 'Creating' -or $provisioningState -eq 'ApplyingArtifacts' -or $provisioningState -eq 'UpgradingVmAgent') -and (Test-ArtifactsInstalling -Artifacts $vmDetails.Properties.artifacts)
 
             if ($continueWaiting)
             {
