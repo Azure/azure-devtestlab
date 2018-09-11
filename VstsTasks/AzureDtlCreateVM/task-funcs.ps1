@@ -457,8 +457,8 @@ function Wait-ApplyArtifacts
                 throw "Unable to get details for VM '$vmName' under lab '$vmLabName' and resource group '$vmResourceGroupName'."
             }
 
-            $provisioningState = $vm.Properties.provisioningState
-            $continueWaiting = $provisioningState -and ($provisioningState -eq 'Creating' -or $provisioningState -eq 'ApplyingArtifacts' -or $provisioningState -eq 'UpgradingVmAgent') -and (Test-ArtifactsInstalling -Artifacts $vmDetails.Properties.artifacts)
+            $provisioningState = $vmDetails.Properties.provisioningState
+            $continueWaiting = Test-ArtifactsInstalling -Artifacts $vmDetails.Properties.artifacts
 
             if ($continueWaiting)
             {
