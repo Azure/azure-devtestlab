@@ -116,44 +116,35 @@ try
         }
 
         if ([System.Xml.XmlConvert]::ToBoolean($StoreEnvironmentTemplate)) {
-            #Test saving the template
-            Write-Host "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 
             $EnvironmentSasToken = $environmentDeploymentOutput["$EnvironmentTemplateSasTokenVariable"]
             $EnvironmentLocation = $environmentDeploymentOutput["$EnvironmentTemplateLocationVariable"]
 
-            Write-Host "loc: $EnvironmentLocation"
-            Write-Host "sas: $EnvironmentSasToken"
-            Write-Host "build: $StoreEnvironmentTemplateLocation"
-
             $tempEnvLoc = $EnvironmentLocation.Split("/")
             $storageAccountName = $tempEnvLoc[2].Split(".")[0]
             $containerName = $tempEnvLoc[3]
-
-            Write-Host "store acct name: $storageAccountName"
-            Write-Host "container Name: $containerName"
+            $dtlPrefix = "$($tempEnvLoc[4])/$($tempEnvLoc[5])"
 
             $context = New-AzureStorageContext -StorageAccountName $storageAccountName -SasToken $EnvironmentSasToken
 
-            Write-Host "Post Context"
-        
-            # !!!!! SasToken only has read permissions not list
+            $blobs = Get-AzureStorageBlob -Container $containerName -Context $context -Prefix $dtlPrefix
 
-            $blobs = Get-AzureStorageBlob -Container $containerName -Context $context
-
-            Write-Host "Post Blobs: $($blobs.Length)"
+            New-Item -ItemType Directory -Force -Path $StoreEnvironmentTemplateLocation
 
             foreach ($blob in $blobs)
-                {
-		            #New-Item -ItemType Directory -Force -Path $destination_path
-                    Write-Host "In Loop $blob"
+                {		            
+                    $shortName = $($blob.Name.TrimStart($dtlPrefix))
+
+                    if ($shortName.Contains("/")) {
+                        New-Item -ItemType Directory -Force -Path "$StoreEnvironmentTemplateLocation\$($shortName.Substring(0,$shortName.IndexOf("/")))"
+                    }
+
                     Get-AzureStorageBlobContent `
-                    -Container $containerName -Blob $blob.Name -Destination $StoreEnvironmentTemplateLocation `
+                    -Container $containerName -Blob $blob.Name -Destination "$StoreEnvironmentTemplateLocation\$($blob.Name.TrimStart($dtlPrefix))" `
 		            -Context $context
       
                 }
 
-            Write-Host "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
         }
     }
     

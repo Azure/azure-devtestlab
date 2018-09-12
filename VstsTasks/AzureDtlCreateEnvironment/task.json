@@ -12,7 +12,7 @@
     "version": {
         "Major": 1,
         "Minor": 0,
-        "Patch": 127
+        "Patch": 148
     },
     "demands": [
         "azureps"
@@ -111,8 +111,8 @@
             "name": "StoreEnvironmentTemplateLocation",
             "type": "string",
             "label": "Build store location",
-            "required": true,
-            "defaultValue": "$(Build.ArtifactStagingDirectory)",
+            "required": false,
+            "defaultValue": "$(Build.ArtifactStagingDirectory)\\DeployedEnvironment",
             "helpMarkDown": "The location to store the template.",
             "groupName": "advanced"
         },
@@ -120,7 +120,7 @@
             "name": "EnvironmentTemplateLocationVariable",
             "type": "string",
             "label": "Template Output name for location",
-            "required": true,
+            "required": false,
             "defaultValue": "EnvironmentLocation",
             "helpMarkDown": "The output name for the location to store the template.",
             "groupName": "advanced"
@@ -129,7 +129,7 @@
             "name": "EnvironmentTemplateSasTokenVariable",
             "type": "string",
             "label": "Template Output name for the SAS token",
-            "required": true,
+            "required": false,
             "defaultValue": "EnvironmentSAS",
             "helpMarkDown": "The output name for the SAS token.",
             "groupName": "advanced"
