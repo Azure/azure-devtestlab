@@ -105,7 +105,9 @@ try
     if ([System.Xml.XmlConvert]::ToBoolean($TemplateOutputVariables))
     {
         $environmentDeploymentOutput = [hashtable] (Get-DevTestLabEnvironmentOutput -environmentResourceId $environmentResourceId)
-         
+
+        Write-Host "Parse Output information."
+
         $environmentDeploymentOutput.Keys | ForEach-Object {
 
             if(Test-DevTestLabEnvironmentOutputIsSecret -templateId $TemplateId -key $_) {
@@ -115,10 +117,18 @@ try
             }   
         }
 
+        Write-Host "Completed Output information."
+
         if ([System.Xml.XmlConvert]::ToBoolean($StoreEnvironmentTemplate)) {
 
             $EnvironmentSasToken = $environmentDeploymentOutput["$EnvironmentTemplateSasTokenVariable"]
             $EnvironmentLocation = $environmentDeploymentOutput["$EnvironmentTemplateLocationVariable"]
+            
+            if (($EnvironmentLocation -eq "") -or ($EnvironmentSasToken -eq "")) {
+                Write-Host "Missing Environment Location or Environment SAS token as outputs."
+            }
+
+            Write-Host "Parse Environment information."
 
             $tempEnvLoc = $EnvironmentLocation.Split("/")
             $storageAccountName = $tempEnvLoc[2].Split(".")[0]
@@ -129,8 +139,10 @@ try
 
             $blobs = Get-AzureStorageBlob -Container $containerName -Context $context -Prefix $dtlPrefix
 
-            New-Item -ItemType Directory -Force -Path $StoreEnvironmentTemplateLocation
-
+            New-Item -ItemType Directory -Force -Path $StoreEnvironmentTemplateLocation | Out-Null
+            
+            Write-Host "Downloading Azure templates"
+            
             foreach ($blob in $blobs)
                 {		            
                     $shortName = $($blob.Name.TrimStart($dtlPrefix))
@@ -140,16 +152,14 @@ try
                     }
 
                     Get-AzureStorageBlobContent `
-                    -Container $containerName -Blob $blob.Name -Destination "$StoreEnvironmentTemplateLocation\$($blob.Name.TrimStart($dtlPrefix))" `
-		            -Context $context
+                    -Container $containerName -Blob $blob.Name -Destination "$StoreEnvironmentTemplateLocation\$shortName" `
+		            -Context $context | Out-Null
       
                 }
+            Write-Host "Azure RM templates stored."
 
         }
     }
-    
-
-    
 }
 finally
 {
