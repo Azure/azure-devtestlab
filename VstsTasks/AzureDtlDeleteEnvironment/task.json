@@ -62,7 +62,7 @@
         },
         {
             "target": "EnvironmentId",
-            "endpoint": "https://management.azure.com$(LabId)/users/@all/environments?api-version=2017-04-26-preview",
+            "endpoint": "https://management.azure.com$(LabId)/users/@all/environments?api-version=2018-10-15-preview",
             "selector": "jsonpath:$.value[*].name",
             "keySelector": "jsonpath:$.value[*].id",
             "authKey": "$(ConnectedServiceName)"

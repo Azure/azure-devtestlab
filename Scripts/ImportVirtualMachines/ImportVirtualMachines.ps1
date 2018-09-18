@@ -121,7 +121,7 @@ $copyVirtualMachineCodeBlock = {
                                            -ResourceType $resourceType `
                                            -ResourceName $resourceName `
                                            -Action ImportVirtualMachine `
-                                           -ApiVersion 2017-04-26-preview `
+                                           -ApiVersion 2018-10-15-preview `
                                            -Force
     
     # For writing nice output, we extract the source info from the Resource Id

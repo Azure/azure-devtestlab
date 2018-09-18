@@ -82,11 +82,11 @@ function Update-Member ($labProperties, $fieldName, $fieldValue) {
 
 if ($PSCmdlet.ParameterSetName -eq "ResourceGroupAndLabName") {
     # Get the lab with the Resource Group Name and the Lab Name
-    $lab = Get-AzureRmResource -ResourceGroupName $ResourceGroupName -ResourceName $DevTestLabName -ResourceType "Microsoft.DevTestLab/labs" -ApiVersion "2017-04-26-preview"
+    $lab = Get-AzureRmResource -ResourceGroupName $ResourceGroupName -ResourceName $DevTestLabName -ResourceType "Microsoft.DevTestLab/labs" -ApiVersion "2018-10-15-preview"
 }
 else {
     # Get the lab wit hthe Resource Id
-    $lab = Get-AzureRmResource -ResourceId $DevTestLabResourceId -ApiVersion "2017-04-26-preview"
+    $lab = Get-AzureRmResource -ResourceId $DevTestLabResourceId -ApiVersion "2018-10-15-preview"
 }
 
 
@@ -106,7 +106,7 @@ if ($lab) {
     }
 
     # Update the lab
-    Set-AzureRmResource -ResourceId $lab.ResourceId -Properties $lab.Properties -ApiVersion "2017-04-26-preview" -Force | Out-Null
+    Set-AzureRmResource -ResourceId $lab.ResourceId -Properties $lab.Properties -ApiVersion "2018-10-15-preview" -Force | Out-Null
 
     Write-Output "Update of Lab properties completed"
 }
