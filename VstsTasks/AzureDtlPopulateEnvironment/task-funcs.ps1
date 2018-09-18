@@ -223,6 +223,19 @@ function Get-DevTestLabEnvironmentResourceGroupId {
     return [string] $environment.Properties.resourceGroupId
 } 
 
+function Get-DevTestLabEnvironmentResourceGroupLocation {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $environmentResourceId
+    )
+
+    $environment = Get-AzureRmResource -ResourceId $environmentResourceId  -ApiVersion '2016-05-15'
+
+    return [string] $environment.Location
+}
+
+
 function Test-DevTestLabEnvironmentOutputIsSecret {
     [CmdletBinding()]
     param(
@@ -261,4 +274,24 @@ function Get-DevTestLabEnvironmentOutput {
     }
 
     return [hashtable] $hashtable
+}
+
+function ConvertTo-Optionals {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $overrideParameters
+    )
+
+    $splitEntries = $overrideParameters.Split("-")
+    $hashtable = @{}
+
+    foreach ($entry in $splitEntries) {
+        if ($entry -ne "") {
+            $hashtable.Add($($entry.Split(" ",2)[0]),$($entry.Split(" ",2)[1]))
+        }
+    }   
+
+    return [hashtable] $hashtable
+
 }

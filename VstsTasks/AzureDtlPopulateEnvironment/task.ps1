@@ -91,21 +91,72 @@ trap
 
 try
 {
+    $OptionalParameters = @{}
+
     Write-Host 'Starting Azure DevTest Labs Create and Populate Environment Task'
 
     Show-InputParameters
 
     $parameterSet = Get-ParameterSet -templateId $TemplateId -path $EnvironmentParameterFile -overrides $EnvironmentParameterOverrides
-    #$localparameterSet = Get-ParameterSet -templateId $TemplateId -path $LocalParameterFile -overrides $LocalParameterOverrides
-
+    $OptionalParameter = ConvertTo-Optionals -overrideParameters $LocalParameterOverrides
+    
     Show-TemplateParameters -templateId $TemplateId -parameters $parameterSet
 
     $environmentResourceId = New-DevTestLabEnvironment -labId $LabId -templateId $TemplateId -environmentName $EnvironmentName -environmentParameterSet $parameterSet
+
+    Write-Host "A: $environmentResourceId"
+
     $environmentResourceGroupId = Get-DevTestLabEnvironmentResourceGroupId -environmentResourceId $environmentResourceId
 
-    # Create new storage account in environment RG
-    New-AzureStorageAccount -
+    Write-Host "B: $environmentResourceGroupId"
+
+    $environmentResourceGroupName = $environmentResourceGroupId.Split('/')[4]
+    Write-Host "C: $environmentResourceGroupName"
+
+    $environmentResourceGroupLocation = Get-DevTestLabEnvironmentResourceGroupLocation -environmentResourceId $environmentResourceId
+    Write-Host "D: $environmentResourceGroupLocation"
     
+    #Create storage and copy files up
+    $StorageContainerName = $environmentResourceGroupName.ToLowerInvariant() + '-stageartifacts'
+    $StorageAccountName = 'stage' + ((Get-AzureRmContext).Subscription.SubscriptionId).Replace('-', '').substring(0, 19)
+    $StorageAccount = New-AzureRmStorageAccount -StorageAccountName $StorageAccountName -Type 'Standard_LRS' -ResourceGroupName $environmentResourceGroupName -Location $environmentResourceGroupLocation
+    New-AzureStorageContainer -Name $StorageContainerName -Context $StorageAccount.Context -ErrorAction SilentlyContinue *>&1
+
+    Write-Host "E: $StorageAccount"
+
+    $localRootDir = Split-Path $LocalTemplateName
+    $rootFile = Split-Path $LocalTemplateName -Leaf
+
+
+    $localFilePaths = Get-ChildItem $localRootDir -Recurse -File | ForEach-Object -Process {$_.FullName}
+    foreach ($SourcePath in $localFilePaths) {
+        Set-AzureStorageBlobContent -File $SourcePath -Blob $SourcePath.Substring($localRootDir.length + 1) `
+            -Container $StorageContainerName -Context $StorageAccount.Context -Force
+        Write-Host "F: $SourcePath"
+    }
+
+    $OptionalParameters.$ArtifactsLocationName = $StorageAccount.Context.BlobEndPoint + $StorageContainerName
+    Write-Host "G: $OptionalParameters"
+
+    # Generate a 4 hour SAS token for the artifacts location if one was not provided in the parameters file
+    $OptionalParameters.$ArtifactsLocationSasTokenName = ConvertTo-SecureString -AsPlainText -Force `
+       (New-AzureStorageContainerSASToken -Container $StorageContainerName -Context $StorageAccount.Context -Permission r -ExpiryTime (Get-Date).AddHours(4))
+    
+    Write-Host "H: $OptionalParameters"
+
+    # Update RG
+    $localDeploymentOutput = New-AzureRmResourceGroupDeployment -Name ((Get-ChildItem $rootFile).BaseName + '-' + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')) `
+                                       -ResourceGroupName $environmentResourceGroupName `
+                                       -TemplateFile $StorageAccount.Context.BlobEndPoint + $StorageContainerName + $rootFile `
+                                       -TemplateParameterFile $EnvironmentParameterFile `
+                                       @OptionalParameters `
+                                       -Force
+
+    Write-Host "I: $localDeploymentOutput"
+    Write-Host "Z: Remove storage"
+    Remove-AzureRmStorageAccount -ResourceGroupName $environmentResourceGroupName -Name $StorageAccountName -Force
+    Write-Host "Post Remove"
+        
     if ([System.Xml.XmlConvert]::ToBoolean($EnvironmentTemplateOutputVariables))
     {
         $environmentDeploymentOutput = [hashtable] (Get-DevTestLabEnvironmentOutput -environmentResourceId $environmentResourceId) 
