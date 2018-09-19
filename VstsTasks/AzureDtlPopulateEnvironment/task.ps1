@@ -96,10 +96,24 @@ try
     Write-Host 'Starting Azure DevTest Labs Create and Populate Environment Task'
 
     Show-InputParameters
-
-    $parameterSet = Get-ParameterSet -templateId $TemplateId -path $EnvironmentParameterFile -overrides $EnvironmentParameterOverrides
-    $OptionalParameter = ConvertTo-Optionals -overrideParameters $LocalParameterOverrides
     
+    $parameterSet = Get-ParameterSet -templateId $TemplateId -path $EnvironmentParameterFile -overrides $EnvironmentParameterOverrides
+
+    #$OptionalParameter = ConvertTo-Optionals -overrideParameters $LocalParameterOverrides
+    if ($LocalParameterOverrides -ne $null) {
+        $splitEntries = $LocalParameterOverrides.Split("-")
+        #$hashtable = @{}
+
+        foreach ($entry in $splitEntries) {
+            if ($entry -ne "") {
+                $OptionalParameters.Add($($entry.Split(" ",2)[0]),$($entry.Split(" ",2)[1]))
+            }
+        }   
+    }
+    
+    
+    Write-Host "Opt: $($OptionalParameters)"
+
     Show-TemplateParameters -templateId $TemplateId -parameters $parameterSet
 
     $environmentResourceId = New-DevTestLabEnvironment -labId $LabId -templateId $TemplateId -environmentName $EnvironmentName -environmentParameterSet $parameterSet
@@ -120,38 +134,44 @@ try
     $StorageContainerName = $environmentResourceGroupName.ToLowerInvariant() + '-stageartifacts'
     $StorageAccountName = 'stage' + ((Get-AzureRmContext).Subscription.SubscriptionId).Replace('-', '').substring(0, 19)
     $StorageAccount = New-AzureRmStorageAccount -StorageAccountName $StorageAccountName -Type 'Standard_LRS' -ResourceGroupName $environmentResourceGroupName -Location $environmentResourceGroupLocation
+    Write-Host "E1: $($StorageAccount.StorageAccountName) "
     New-AzureStorageContainer -Name $StorageContainerName -Context $StorageAccount.Context -ErrorAction SilentlyContinue *>&1
 
-    Write-Host "E: $StorageAccount"
+    Write-Host "E2: $StorageContainerName"
 
     $localRootDir = Split-Path $LocalTemplateName
     $rootFile = Split-Path $LocalTemplateName -Leaf
 
-
+    Write-Host "F: $localRootDir F1: $rootFile"
+    
     $localFilePaths = Get-ChildItem $localRootDir -Recurse -File | ForEach-Object -Process {$_.FullName}
+    
+    Write-Host "F3: $localFilePaths"
+
     foreach ($SourcePath in $localFilePaths) {
+        Write-Host "F3a: $SourcePath"
         Set-AzureStorageBlobContent -File $SourcePath -Blob $SourcePath.Substring($localRootDir.length + 1) `
             -Container $StorageContainerName -Context $StorageAccount.Context -Force
-        Write-Host "F: $SourcePath"
+        Write-Host "F3b: $SourcePath"
     }
-
+    Write "F4"
     $OptionalParameters.$ArtifactsLocationName = $StorageAccount.Context.BlobEndPoint + $StorageContainerName
     Write-Host "G: $OptionalParameters"
 
-    # Generate a 4 hour SAS token for the artifacts location if one was not provided in the parameters file
-    $OptionalParameters.$ArtifactsLocationSasTokenName = ConvertTo-SecureString -AsPlainText -Force `
-       (New-AzureStorageContainerSASToken -Container $StorageContainerName -Context $StorageAccount.Context -Permission r -ExpiryTime (Get-Date).AddHours(4))
+    # Generate a 4 hour SAS token for the artifacts location if one was not provided in the parameters file    
+    
+    $OptionalParameters.$ArtifactsLocationSasTokenName = New-AzureStorageContainerSASToken -Container $StorageContainerName -Context $StorageAccount.Context -Permission r -ExpiryTime (Get-Date).AddHours(4)
     
     Write-Host "H: $OptionalParameters"
 
-    # Update RG
-    $localDeploymentOutput = New-AzureRmResourceGroupDeployment -Name ((Get-ChildItem $rootFile).BaseName + '-' + ((Get-Date).ToUniversalTime()).ToString('MMdd-HHmm')) `
-                                       -ResourceGroupName $environmentResourceGroupName `
-                                       -TemplateFile $StorageAccount.Context.BlobEndPoint + $StorageContainerName + $rootFile `
-                                       -TemplateParameterFile $EnvironmentParameterFile `
-                                       @OptionalParameters `
-                                       -Force
-
+    $storageFile = $StorageAccount.Context.BlobEndPoint + $StorageContainerName + "/" + $rootFile + $OptionalParameters.$ArtifactsLocationSasTokenName
+    
+    if ($LocalParameterFile -ne $null) {
+        $localDeploymentOutput = New-AzureRmResourceGroupDeployment -ResourceGroupName $environmentResourceGroupName -TemplateFile $storageFile -TemplateParameterObject $OptionalParameters -Force
+    } else {
+        $localDeploymentOutput = New-AzureRmResourceGroupDeployment -ResourceGroupName $environmentResourceGroupName -TemplateFile $storageFile -TemplateParameterFile $LocalParameterFile -Force
+    }
+                                                                              
     Write-Host "I: $localDeploymentOutput"
     Write-Host "Z: Remove storage"
     Remove-AzureRmStorageAccount -ResourceGroupName $environmentResourceGroupName -Name $StorageAccountName -Force
@@ -166,6 +186,17 @@ try
             } else {
                 Write-Host "##vso[task.setvariable variable=$_;isSecret=false;isOutput=true;]$($environmentDeploymentOutput[$_])"
             }   
+        }
+    }
+    if ([System.Xml.XmlConvert]::ToBoolean($LocalTemplateOutputVariables))
+    {
+        $secondaryDeploymentOutput = [hashtable] (Get-AzureRmResourceGroupDeployment -ResourceGroupName $environmentResourceGroupName -Name $localDeploymentOutput.DeploymentName) 
+        $secondaryDeploymentOutput.Keys | ForEach-Object {
+            #if(Test-DevTestLabEnvironmentOutputIsSecret -templateId $TemplateId -key $_) {
+            #    Write-Host "##vso[task.setvariable variable=$_;isSecret=true;isOutput=true;]$($environmentDeploymentOutput[$_])"
+            #} else {
+                Write-Host "##vso[task.setvariable variable=$_;isSecret=false;isOutput=true;]$($secondaryDeploymentOutput[$_])"
+            #}   
         }
     }
 }

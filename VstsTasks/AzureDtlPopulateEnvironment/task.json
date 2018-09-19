@@ -1,5 +1,5 @@
 {
-    "id": "1FBE9BB7-B97B-4D08-8CB3-E0A776F68744",
+    "id": "1FBE9BB7-B97B-4D08-8CB3-E0A776F687AA",
     "name": "AzureDevTestLabsPopulateEnvironment",
     "friendlyName": "Azure DevTest Labs Populate Environment",
     "description": "Create an Azure DevTest Labs Environment and populate with Azure Resource Management template",
@@ -12,7 +12,7 @@
     "version": {
         "Major": 1,
         "Minor": 0,
-        "Patch": 101
+        "Patch": 107
     },
     "demands": [
         "azureps"
