@@ -27,7 +27,11 @@ param(
     [string] $EnvironmentParameterOverrides,
     [string] $EnvironmentTemplateOutputVariables,
     [string] $LocalTemplateName,
-    [string] $LocalParameterFile,
+    #[string] $LocalParameterFile,,
+    [string] $StoreEnvironmentTemplate,
+    [string] $StoreEnvironmentTemplateLocation,
+    [string] $EnvironmentTemplateLocationVariable,
+    [string] $EnvironmentTemplateSasTokenVariable,
     [string] $LocalParameterOverrides,
     [string] $LocalTemplateOutputVariables
 )
@@ -88,6 +92,8 @@ trap
 
 [string] $environmentResourceId = ''
 [string] $environmentResourceGroupId = ''
+[string] $ArtifactsLocationName = '_artifactsLocation'
+[string] $ArtifactsLocationSasTokenName = '_artifactsLocationSasToken'
 
 try
 {
@@ -106,6 +112,7 @@ try
 
         foreach ($entry in $splitEntries) {
             if ($entry -ne "") {
+                Write-Host "entry: $entry"
                 $OptionalParameters.Add($($entry.Split(" ",2)[0]),$($entry.Split(" ",2)[1]))
             }
         }   
@@ -154,23 +161,26 @@ try
             -Container $StorageContainerName -Context $StorageAccount.Context -Force
         Write-Host "F3b: $SourcePath"
     }
-    Write "F4"
-    $OptionalParameters.$ArtifactsLocationName = $StorageAccount.Context.BlobEndPoint + $StorageContainerName
-    Write-Host "G: $OptionalParameters"
+    Write-Host "F4: $($StorageAccount.Context.BlobEndPoint)"
+    Write-Host "F4a: $StorageContainerName"
+    $OptionalParameters.Set_Item($ArtifactsLocationName, $($StorageAccount.Context.BlobEndPoint + $StorageContainerName))
+    Write-Host "G: $($OptionalParameters.$ArtifactsLocationName)"
 
     # Generate a 4 hour SAS token for the artifacts location if one was not provided in the parameters file    
     
-    $OptionalParameters.$ArtifactsLocationSasTokenName = New-AzureStorageContainerSASToken -Container $StorageContainerName -Context $StorageAccount.Context -Permission r -ExpiryTime (Get-Date).AddHours(4)
+    $OptionalParameters.Set_Item($ArtifactsLocationSasTokenName, $(New-AzureStorageContainerSASToken -Container $StorageContainerName -Context $StorageAccount.Context -Permission r -ExpiryTime (Get-Date).AddHours(4)))
     
-    Write-Host "H: $OptionalParameters"
+    Write-Host "H: $($OptionalParameters.$ArtifactsLocationSasTokenName)"
 
     $storageFile = $StorageAccount.Context.BlobEndPoint + $StorageContainerName + "/" + $rootFile + $OptionalParameters.$ArtifactsLocationSasTokenName
     
-    if ($LocalParameterFile -ne $null) {
-        $localDeploymentOutput = New-AzureRmResourceGroupDeployment -ResourceGroupName $environmentResourceGroupName -TemplateFile $storageFile -TemplateParameterObject $OptionalParameters -Force
-    } else {
-        $localDeploymentOutput = New-AzureRmResourceGroupDeployment -ResourceGroupName $environmentResourceGroupName -TemplateFile $storageFile -TemplateParameterFile $LocalParameterFile -Force
-    }
+    Write-Host "H1: $storageFile"
+    Write-Host "H2: $OptionalParameters"
+    #if ($LocalParameterFile -ne $null) {
+        $localDeploymentOutput = New-AzureRmResourceGroupDeployment -ResourceGroupName $environmentResourceGroupName -TemplateFile $storageFile -TemplateParameterObject $OptionalParameters -Force -Mode Incremental
+    #} else {
+    #    $localDeploymentOutput = New-AzureRmResourceGroupDeployment -ResourceGroupName $environmentResourceGroupName -TemplateFile $storageFile -TemplateParameterFile $LocalParameterFile -Force
+    #}
                                                                               
     Write-Host "I: $localDeploymentOutput"
     Write-Host "Z: Remove storage"
@@ -187,6 +197,50 @@ try
                 Write-Host "##vso[task.setvariable variable=$_;isSecret=false;isOutput=true;]$($environmentDeploymentOutput[$_])"
             }   
         }
+
+        Write-Host "Completed Output information."
+
+        if ([System.Xml.XmlConvert]::ToBoolean($StoreEnvironmentTemplate)) {
+
+            $EnvironmentSasToken = $environmentDeploymentOutput["$EnvironmentTemplateSasTokenVariable"]
+            $EnvironmentLocation = $environmentDeploymentOutput["$EnvironmentTemplateLocationVariable"]
+            
+            if (($EnvironmentLocation -eq "") -or ($EnvironmentSasToken -eq "")) {
+                Write-Host "Missing Environment Location or Environment SAS token as outputs."
+            }
+
+            Write-Host "Parse Environment information."
+
+            $tempEnvLoc = $EnvironmentLocation.Split("/")
+            $storageAccountName = $tempEnvLoc[2].Split(".")[0]
+            $containerName = $tempEnvLoc[3]
+            $dtlPrefix = "$($tempEnvLoc[4])/$($tempEnvLoc[5])"
+
+            $context = New-AzureStorageContext -StorageAccountName $storageAccountName -SasToken $EnvironmentSasToken
+
+            $blobs = Get-AzureStorageBlob -Container $containerName -Context $context -Prefix $dtlPrefix
+
+            New-Item -ItemType Directory -Force -Path $StoreEnvironmentTemplateLocation | Out-Null
+            
+            Write-Host "Downloading Azure templates"
+            
+            foreach ($blob in $blobs)
+                {		            
+                    $shortName = $($blob.Name.TrimStart($dtlPrefix))
+
+                    if ($shortName.Contains("/")) {
+                        New-Item -ItemType Directory -Force -Path "$StoreEnvironmentTemplateLocation\$($shortName.Substring(0,$shortName.IndexOf("/")))"
+                    }
+
+                    Get-AzureStorageBlobContent `
+                    -Container $containerName -Blob $blob.Name -Destination "$StoreEnvironmentTemplateLocation\$shortName" `
+		            -Context $context | Out-Null
+      
+                }
+            Write-Host "Azure RM templates stored."
+
+        }
+
     }
     if ([System.Xml.XmlConvert]::ToBoolean($LocalTemplateOutputVariables))
     {

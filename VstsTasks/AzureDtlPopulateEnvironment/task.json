@@ -12,14 +12,17 @@
     "version": {
         "Major": 1,
         "Minor": 0,
-        "Patch": 107
+        "Patch": 115
     },
     "demands": [
         "azureps"
     ],
     "minimumAgentVersion": "1.95.1",
-    "groups": [
-    ],
+    "groups": [{
+        "name": "advanced",
+        "displayName": "Advanced Environment",
+        "isExpanded": false
+    }],
     "inputs": [
         {
             "name": "ConnectedServiceName",
@@ -95,21 +98,49 @@
             "helpMarkDown": "Capture environment template output as build/release variables."
         },
         {
+            "name": "StoreEnvironmentTemplate",
+            "type": "boolean",
+            "label": "Create artifact based on the environment template output?",
+            "required": true,
+            "defaultValue": "false",
+            "helpMarkDown": "Capture environment template output as build/release artifact.",
+            "groupName": "advanced"
+        },
+        {
+            "name": "StoreEnvironmentTemplateLocation",
+            "type": "string",
+            "label": "Build store location",
+            "required": false,
+            "defaultValue": "$(Build.ArtifactStagingDirectory)\\DeployedEnvironment",
+            "helpMarkDown": "The location to store the template.",
+            "groupName": "advanced"
+        },
+        {
+            "name": "EnvironmentTemplateLocationVariable",
+            "type": "string",
+            "label": "Template Output name for location",
+            "required": false,
+            "defaultValue": "EnvironmentLocation",
+            "helpMarkDown": "The output name for the location to store the template.",
+            "groupName": "advanced"
+        },
+        {
+            "name": "EnvironmentTemplateSasTokenVariable",
+            "type": "string",
+            "label": "Template Output name for the SAS token",
+            "required": false,
+            "defaultValue": "EnvironmentSAS",
+            "helpMarkDown": "The output name for the SAS token.",
+            "groupName": "advanced"
+        },
+        {
             "name": "LocalTemplateName",
             "type": "filePath",
             "label": "Local Template Name",
             "required": true,
             "defaultValue": "",
             "helpMarkDown": "Path to an ARM template to add to the environment."
-        },
-        {
-            "name": "LocalParameterFile",
-            "type": "filePath",
-            "label": "Local Parameter File",
-            "required": false,
-            "defaultValue": "",
-            "helpMarkDown": "Path to a ARM template parameters file that provides parameter values for the local template."
-        },
+        },        
         {
             "name": "LocalParameterOverrides",
             "type": "multiLine",
