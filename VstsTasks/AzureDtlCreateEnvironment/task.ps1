@@ -153,8 +153,8 @@ try
                     }
 
                     Get-AzureStorageBlobContent `
-                    -Container $containerName -Blob $blob.Name -Destination "$ExportEnvironmentTemplateLocation\$shortName" `
-		            -Context $context | Out-Null
+                        -Container $containerName -Blob $blob.Name -Destination "$ExportEnvironmentTemplateLocation\$shortName" `
+		                -Context $context | Out-Null
       
                 }
             Write-Host "Azure RM templates stored."
