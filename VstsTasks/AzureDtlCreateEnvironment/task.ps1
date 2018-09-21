@@ -26,8 +26,8 @@ param(
     [string] $ParameterFile,
     [string] $ParameterOverrides,
     [string] $TemplateOutputVariables,
-    [string] $StoreEnvironmentTemplate,
-    [string] $StoreEnvironmentTemplateLocation,
+    [string] $ExportEnvironmentTemplate,
+    [string] $ExportEnvironmentTemplateLocation,
     [string] $EnvironmentTemplateLocationVariable,
     [string] $EnvironmentTemplateSasTokenVariable
 )
@@ -119,7 +119,7 @@ try
 
         Write-Host "Completed Output information."
 
-        if ([System.Xml.XmlConvert]::ToBoolean($StoreEnvironmentTemplate)) {
+        if ([System.Xml.XmlConvert]::ToBoolean($ExportEnvironmentTemplate)) {
 
             $EnvironmentSasToken = $environmentDeploymentOutput["$EnvironmentTemplateSasTokenVariable"]
             $EnvironmentLocation = $environmentDeploymentOutput["$EnvironmentTemplateLocationVariable"]
@@ -135,11 +135,12 @@ try
             $containerName = $tempEnvLoc[3]
             $dtlPrefix = "$($tempEnvLoc[4])/$($tempEnvLoc[5])"
 
+            #Get Environment instance storage context
             $context = New-AzureStorageContext -StorageAccountName $storageAccountName -SasToken $EnvironmentSasToken
 
             $blobs = Get-AzureStorageBlob -Container $containerName -Context $context -Prefix $dtlPrefix
 
-            New-Item -ItemType Directory -Force -Path $StoreEnvironmentTemplateLocation | Out-Null
+            New-Item -ItemType Directory -Force -Path $ExportEnvironmentTemplateLocation | Out-Null
             
             Write-Host "Downloading Azure templates"
             
@@ -148,11 +149,11 @@ try
                     $shortName = $($blob.Name.TrimStart($dtlPrefix))
 
                     if ($shortName.Contains("/")) {
-                        New-Item -ItemType Directory -Force -Path "$StoreEnvironmentTemplateLocation\$($shortName.Substring(0,$shortName.IndexOf("/")))"
+                        New-Item -ItemType Directory -Force -Path "$ExportEnvironmentTemplateLocation\$($shortName.Substring(0,$shortName.IndexOf("/")))"
                     }
 
                     Get-AzureStorageBlobContent `
-                    -Container $containerName -Blob $blob.Name -Destination "$StoreEnvironmentTemplateLocation\$shortName" `
+                    -Container $containerName -Blob $blob.Name -Destination "$ExportEnvironmentTemplateLocation\$shortName" `
 		            -Context $context | Out-Null
       
                 }

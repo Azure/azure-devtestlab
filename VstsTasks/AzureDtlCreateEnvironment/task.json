@@ -99,7 +99,7 @@
             "helpMarkDown": "Capture environment template output as build/release variables."
         },
         {
-            "name": "StoreEnvironmentTemplate",
+            "name": "ExportEnvironmentTemplate",
             "type": "boolean",
             "label": "Create artifact based on the environment template output?",
             "required": true,
@@ -108,7 +108,7 @@
             "groupName": "advanced"
         },
         {
-            "name": "StoreEnvironmentTemplateLocation",
+            "name": "ExportEnvironmentTemplateLocation",
             "type": "string",
             "label": "Build store location",
             "required": false,
