@@ -1,8 +1,8 @@
 {
     "id": "1FBE9BB7-B97B-4D08-8CB3-E0A776F687AA",
     "name": "AzureDevTestLabsPopulateEnvironment",
-    "friendlyName": "Azure DevTest Labs Populate Environment",
-    "description": "Create an Azure DevTest Labs Environment and populate with Azure Resource Management template",
+    "friendlyName": "Azure DevTest Labs Deploy ARM.",
+    "description": "Deploy an Azure Resource Management template to an existing DevTest Lab environment.",
     "category": "Deploy",
     "visibility": [
         "Build",
@@ -12,17 +12,13 @@
     "version": {
         "Major": 1,
         "Minor": 0,
-        "Patch": 115
+        "Patch": 122
     },
     "demands": [
         "azureps"
     ],
     "minimumAgentVersion": "1.95.1",
-    "groups": [{
-        "name": "advanced",
-        "displayName": "Advanced Environment",
-        "isExpanded": false
-    }],
+    "groups": [],
     "inputs": [
         {
             "name": "ConnectedServiceName",
@@ -44,129 +40,50 @@
             }
         },
         {
-            "name": "RepositoryId",
+            "name": "EnvironmentId",
             "type": "pickList",
-            "label": "Repository Name",
-            "defaultValue": "",
-            "required": true,
-            "helpMarkDown": "Name of an existing repository from wich you want to pick a template. This is a pick list genereted as a result of selecting a lab.",
-            "properties": {
-                "EditableOptions": "True"
-            }
-        },
-        {
-            "name": "TemplateId",
-            "type": "pickList",
-            "label": "Template Name",
-            "defaultValue": "",
-            "required": true,
-            "helpMarkDown": "Name of an existing template that should be used to create a new environment. This is a pick list generated as a result of selecting a repository.",
-            "properties": {
-                "EditableOptions": "True"
-            }
-        },
-        {
-            "name": "EnvironmentName",
-            "type": "string",
             "label": "Environment Name",
-            "required": true,
             "defaultValue": "",
-            "helpMarkDown": "The name of the environment to create."
-        },
-        {
-            "name": "EnvironmentParameterFile",
-            "type": "filePath",
-            "label": "Environment Parameter File",
-            "required": false,
-            "defaultValue": "",
-            "helpMarkDown": "Path to a ARM template parameters file that provides parameter values for the environment template."
-        },
-        {
-            "name": "EnvironmentParameterOverrides",
-            "type": "multiLine",
-            "label": "Environment Parameters",
-            "defaultValue": "-SampleParameter 'SampleValue'",
-            "required": false,
-            "helpMarkDown": "Set parameter values needed by the environment template. Parameter values set by parameters file will be overridden."
-        },
-        {
-            "name": "EnvironmentTemplateOutputVariables",
-            "type": "boolean",
-            "label": "Create output variables based on the environment template output?",
             "required": true,
-            "defaultValue": "false",
-            "helpMarkDown": "Capture environment template output as build/release variables."
+            "helpMarkDown": "Name of an existing environment that will be deleted. This is a pick list generated as a result of selecting an lab.",
+            "properties": {
+                "EditableOptions": "True"
+            }
         },
         {
-            "name": "StoreEnvironmentTemplate",
-            "type": "boolean",
-            "label": "Create artifact based on the environment template output?",
-            "required": true,
-            "defaultValue": "false",
-            "helpMarkDown": "Capture environment template output as build/release artifact.",
-            "groupName": "advanced"
-        },
-        {
-            "name": "StoreEnvironmentTemplateLocation",
-            "type": "string",
-            "label": "Build store location",
-            "required": false,
-            "defaultValue": "$(Build.ArtifactStagingDirectory)\\DeployedEnvironment",
-            "helpMarkDown": "The location to store the template.",
-            "groupName": "advanced"
-        },
-        {
-            "name": "EnvironmentTemplateLocationVariable",
-            "type": "string",
-            "label": "Template Output name for location",
-            "required": false,
-            "defaultValue": "EnvironmentLocation",
-            "helpMarkDown": "The output name for the location to store the template.",
-            "groupName": "advanced"
-        },
-        {
-            "name": "EnvironmentTemplateSasTokenVariable",
-            "type": "string",
-            "label": "Template Output name for the SAS token",
-            "required": false,
-            "defaultValue": "EnvironmentSAS",
-            "helpMarkDown": "The output name for the SAS token.",
-            "groupName": "advanced"
-        },
-        {
-            "name": "LocalTemplateName",
+            "name": "SourceTemplate",
             "type": "filePath",
-            "label": "Local Template Name",
+            "label": "Source ARM Template",
             "required": true,
             "defaultValue": "",
             "helpMarkDown": "Path to an ARM template to add to the environment."
-        },        
+        }, 
         {
-            "name": "LocalParameterOverrides",
+            "name": "SourceTemplateParameterFile",
+            "type": "filePath",
+            "label": "Source ARM Parameter File",
+            "required": false,
+            "defaultValue": "",
+            "helpMarkDown": "Path to a ARM template parameters file that provides parameter values for the template."
+        },       
+        {
+            "name": "SourceTemplateParameterOverrides",
             "type": "multiLine",
-            "label": "Local Parameters",
+            "label": "Source ARM Template Parameters",
             "defaultValue": "-SampleParameter 'SampleValue'",
             "required": false,
-            "helpMarkDown": "Set parameter values needed by the local template. Parameter values set by parameters file will be overridden."
+            "helpMarkDown": "Set parameter values needed by the template."
         },
         {
-            "name": "LocalTemplateOutputVariables",
+            "name": "SourceTemplateOutputVariables",
             "type": "boolean",
-            "label": "Create output variables based on the local template output?",
+            "label": "Create output variables based on the Source ARM Template output?",
             "required": true,
             "defaultValue": "false",
-            "helpMarkDown": "Capture local template output as build/release variables."
+            "helpMarkDown": "Capture source template output as build/release variables."
         }
     ],
-    "outputVariables": [
-        {
-            "name": "environmentResourceId",
-            "description": "Capture the created lab environment ID"
-        },
-        {
-            "name": "environmentResourceGroupId",
-            "description": "Capture the created lab environment resource group ID"
-        }
+    "outputVariables": [        
     ],
     "sourceDefinitions": [
         {
@@ -184,14 +101,14 @@
             "authKey": "$(ConnectedServiceName)"
         },
         {
-            "target": "TemplateId",
-            "endpoint": "https://management.azure.com$(RepositoryId)/armtemplates?api-version=2016-05-15",
+            "target": "EnvironmentId",
+            "endpoint": "https://management.azure.com$(LabId)/users/@all/environments?api-version=2017-04-26-preview",
             "selector": "jsonpath:$.value[*].name",
             "keySelector": "jsonpath:$.value[*].id",
             "authKey": "$(ConnectedServiceName)"
         }
     ],
-    "instanceNameFormat": "Create and Populate Azure DevTest Labs Environment",
+    "instanceNameFormat": "Deploy ARM template to existing Azure DevTest Labs Environment",
     "execution": {
         "AzurePowerShell": {
             "target": "$(currentDirectory)\\task.ps1",

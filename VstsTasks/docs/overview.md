@@ -118,8 +118,9 @@ The task requires the following inputs.
 **Environment Name or ID** - Either the name of the environment to be deleted, selected from the dropdown list; or, the fully qualified resource ID of the environment to be deleted. This can be a reference to the output variable from a call to the Create Environment task. For example, `$(<refName>.environmentResourceId)`.
 
 For more information about creating and deleting environments, refer to [Integrate Azure DevTest Labs Environments into your VSTS continuous integration and delivery pipeline.](https://blogs.msdn.microsoft.com/devtestlab/2018/07/11/integrate-azure-devtest-labs-environments-into-your-vsts-continuous-integration-and-delivery-pipeline/)
+
 ## Populate Environment
-The task allows you to create an environment then populate or update with Azure resource from a local ARM template
+The task allows you to deploy an ARM template to an existing DevTest Lab environment.
 ### Input Parameters
 The task requires the following inputs.
 **Azure RM Subscription** - Azure Resource Manager subscription to configure before running.
