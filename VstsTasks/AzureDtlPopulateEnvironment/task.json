@@ -1,7 +1,7 @@
 {
     "id": "1FBE9BB7-B97B-4D08-8CB3-E0A776F687AA",
     "name": "AzureDevTestLabsPopulateEnvironment",
-    "friendlyName": "Azure DevTest Labs Deploy ARM.",
+    "friendlyName": "Azure DevTest Labs Populate Environment.",
     "description": "Deploy an Azure Resource Management template to an existing DevTest Lab environment.",
     "category": "Deploy",
     "visibility": [
@@ -12,7 +12,7 @@
     "version": {
         "Major": 1,
         "Minor": 0,
-        "Patch": 122
+        "Patch": 130
     },
     "demands": [
         "azureps"

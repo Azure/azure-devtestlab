@@ -94,8 +94,9 @@ try
     
     # Get parameters overrides
     if ($SourceTemplateParameterOverrides -ne $null) {
+        Write-Host "Getting parameters from input."
+
         $splitEntries = $SourceTemplateParameterOverrides.Split("-")
-        #$hashtable = @{}
 
         foreach ($entry in $splitEntries) {
             if ($entry -ne "") {
@@ -132,11 +133,14 @@ try
     # Generate a 4 hour SAS token for the artifacts location if one was not provided in the parameters file    
     $OptionalParameters.Set_Item($ArtifactsLocationSasTokenName, $(New-AzureStorageContainerSASToken -Container $StorageContainerName -Context $StorageAccount.Context -Permission r -ExpiryTime (Get-Date).AddHours(4)))
 
+    # Set the file to be deployed
     $storageFile = $StorageAccount.Context.BlobEndPoint + $StorageContainerName + "/" + $rootFile + $OptionalParameters.$ArtifactsLocationSasTokenName
 
     if ($SourceTemplateParameterFile -ne $null) {
+        Write-Host "Deploy using file."
         $localDeploymentOutput = New-AzureRmResourceGroupDeployment -ResourceGroupName $environmentResourceGroupName -TemplateFile $storageFile -TemplateParameterFile $SourceTemplateParameterFile -Force -Mode Incremental
     } else {
+        Write-Host "Deploy using override."
         $localDeploymentOutput = New-AzureRmResourceGroupDeployment -ResourceGroupName $environmentResourceGroupName -TemplateFile $storageFile -TemplateParameterObject $OptionalParameters -Force -Mode Incremental
     }
     # Remove storage account                                                                      
@@ -155,4 +159,5 @@ try
 finally
 {
     Write-Host 'Completing Azure DevTest Labs Populate Environment Task'
+    Pop-Location
 }
