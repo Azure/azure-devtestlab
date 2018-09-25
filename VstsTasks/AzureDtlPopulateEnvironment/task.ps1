@@ -105,47 +105,60 @@ try
             }
         }   
     }
-    
+
     $environmentResourceGroupId = Get-DevTestLabEnvironmentResourceGroupId -environmentResourceId $EnvironmentId
     $environmentResourceGroupName = $environmentResourceGroupId.Split('/')[4]
     $environmentResourceGroupLocation = Get-DevTestLabEnvironmentResourceGroupLocation -environmentResourceId $EnvironmentId
-    
+
     #Create storage and copy files up
     $StorageContainerName = $environmentResourceGroupName.ToLowerInvariant() + '-stageartifacts'
     $StorageAccountName = 'stage' + ((Get-AzureRmContext).Subscription.SubscriptionId).Replace('-', '').substring(0, 19)
     $StorageAccount = New-AzureRmStorageAccount -StorageAccountName $StorageAccountName -Type 'Standard_LRS' -ResourceGroupName $environmentResourceGroupName -Location $environmentResourceGroupLocation
-
     New-AzureStorageContainer -Name $StorageContainerName -Context $StorageAccount.Context -ErrorAction SilentlyContinue *>&1
 
-    $localRootDir = Split-Path $SourceTemplateName
-    $rootFile = Split-Path $SourceTemplateName -Leaf
+
+    $localRootDir = Split-Path -Path $SourceTemplate
+    $rootFile = Split-Path -Path $SourceTemplate -Leaf
     
     $localFilePaths = Get-ChildItem $localRootDir -Recurse -File | ForEach-Object -Process {$_.FullName}
 
     foreach ($SourcePath in $localFilePaths) {
-        Set-AzureStorageBlobContent -File $SourcePath -Blob $SourcePath.Substring($localRootDir.length + 1) `
+        Write-Host "C: $SourcePath"
+        $blob = Set-AzureStorageBlobContent -File $SourcePath -Blob $SourcePath.Substring($localRootDir.length + 1) `
             -Container $StorageContainerName -Context $StorageAccount.Context -Force
+        Write-Host "D: $($blob.LastModified.ToString())"
     }
     
-    # Get the storage location
-    $OptionalParameters.Set_Item($ArtifactsLocationName, $($StorageAccount.Context.BlobEndPoint + $StorageContainerName))
+    $checkParameters = Get-Content -Raw -Path $SourceTemplate | ConvertFrom-Json
 
-    # Generate a 4 hour SAS token for the artifacts location if one was not provided in the parameters file    
-    $OptionalParameters.Set_Item($ArtifactsLocationSasTokenName, $(New-AzureStorageContainerSASToken -Container $StorageContainerName -Context $StorageAccount.Context -Permission r -ExpiryTime (Get-Date).AddHours(4)))
+    if ($($checkParameters.parameters | Get-Member -MemberType NoteProperty | Select -ExpandProperty Name).Contains($ArtifactsLocationName)){
+        # Get the storage location
+        $OptionalParameters.Set_Item($ArtifactsLocationName, $($StorageAccount.Context.BlobEndPoint + $StorageContainerName))
+    }
 
-    # Set the file to be deployed
-    $storageFile = $StorageAccount.Context.BlobEndPoint + $StorageContainerName + "/" + $rootFile + $OptionalParameters.$ArtifactsLocationSasTokenName
+    if ($($checkParameters.parameters | Get-Member -MemberType NoteProperty | Select -ExpandProperty Name).Contains($ArtifactsLocationSasTokenName)){
+        Write-Host "Include Parameter."
+        # Generate a 4 hour SAS token for the artifacts location if one was not provided in the parameters file    
+        $OptionalParameters.Set_Item($ArtifactsLocationSasTokenName, $(New-AzureStorageContainerSASToken -Container $StorageContainerName -Context $StorageAccount.Context -Permission r -ExpiryTime (Get-Date).AddHours(4)))
 
-    if ($SourceTemplateParameterFile -ne $null) {
+        # Set the file to be deployed
+        $storageFile = $StorageAccount.Context.BlobEndPoint + $StorageContainerName + "/" + $rootFile + $OptionalParameters.$ArtifactsLocationSasTokenName
+    } else {
+        Write-Host "Exclude Parameter"
+        $storageFile = $StorageAccount.Context.BlobEndPoint + $StorageContainerName + "/" + $rootFile + $(New-AzureStorageContainerSASToken -Container $StorageContainerName -Context $StorageAccount.Context -Permission r -ExpiryTime (Get-Date).AddHours(4))
+    }
+
+    if ($(Test-Path -Path $SourceTemplateParameterFile -PathType Leaf )) {
         Write-Host "Deploy using file."
-        $localDeploymentOutput = New-AzureRmResourceGroupDeployment -ResourceGroupName $environmentResourceGroupName -TemplateFile $storageFile -TemplateParameterFile $SourceTemplateParameterFile -Force -Mode Incremental
+        $localDeploymentOutput = New-AzureRmResourceGroupDeployment -ResourceGroupName $environmentResourceGroupName -TemplateFile $storageFile -TemplateParameterFile $SourceTemplateParameterFile -Force -Mode Incremental        
     } else {
         Write-Host "Deploy using override."
         $localDeploymentOutput = New-AzureRmResourceGroupDeployment -ResourceGroupName $environmentResourceGroupName -TemplateFile $storageFile -TemplateParameterObject $OptionalParameters -Force -Mode Incremental
     }
+
     # Remove storage account                                                                      
-    Remove-AzureRmStorageAccount -ResourceGroupName $environmentResourceGroupName -Name $StorageAccountName -Force
-    
+    $removeOut = Remove-AzureRmStorageAccount -ResourceGroupName $environmentResourceGroupName -Name $StorageAccountName -Force
+
     # Set output to devops variables
     if ([System.Xml.XmlConvert]::ToBoolean($SourceTemplateOutputVariables))
     {
