@@ -123,10 +123,8 @@ try
     $localFilePaths = Get-ChildItem $localRootDir -Recurse -File | ForEach-Object -Process {$_.FullName}
 
     foreach ($SourcePath in $localFilePaths) {
-        Write-Host "C: $SourcePath"
         $blob = Set-AzureStorageBlobContent -File $SourcePath -Blob $SourcePath.Substring($localRootDir.length + 1) `
             -Container $StorageContainerName -Context $StorageAccount.Context -Force
-        Write-Host "D: $($blob.LastModified.ToString())"
     }
     
     $checkParameters = Get-Content -Raw -Path $SourceTemplate | ConvertFrom-Json
@@ -149,15 +147,15 @@ try
     }
 
     if ($(Test-Path -Path $SourceTemplateParameterFile -PathType Leaf )) {
-        Write-Host "Deploy using file."
+        Write-Host "Deploy using parameter file."
         $localDeploymentOutput = New-AzureRmResourceGroupDeployment -ResourceGroupName $environmentResourceGroupName -TemplateFile $storageFile -TemplateParameterFile $SourceTemplateParameterFile -Force -Mode Incremental        
     } else {
-        Write-Host "Deploy using override."
+        Write-Host "Deploy using parameter override."
         $localDeploymentOutput = New-AzureRmResourceGroupDeployment -ResourceGroupName $environmentResourceGroupName -TemplateFile $storageFile -TemplateParameterObject $OptionalParameters -Force -Mode Incremental
     }
 
     # Remove storage account                                                                      
-    $removeOut = Remove-AzureRmStorageAccount -ResourceGroupName $environmentResourceGroupName -Name $StorageAccountName -Force
+    Remove-AzureRmStorageAccount -ResourceGroupName $environmentResourceGroupName -Name $StorageAccountName -Force
 
     # Set output to devops variables
     if ([System.Xml.XmlConvert]::ToBoolean($SourceTemplateOutputVariables))
