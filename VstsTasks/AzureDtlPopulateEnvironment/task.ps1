@@ -135,7 +135,7 @@ try
     }
 
     if ($($checkParameters.parameters | Get-Member -MemberType NoteProperty | Select -ExpandProperty Name).Contains($ArtifactsLocationSasTokenName)){
-        Write-Host "Include Parameter."
+        Write-Host "Include $ArtifactsLocationName Parameter."
         # Generate a 4 hour SAS token for the artifacts location if one was not provided in the parameters file    
         $OptionalParameters.Set_Item($ArtifactsLocationSasTokenName, $(New-AzureStorageContainerSASToken -Container $StorageContainerName -Context $StorageAccount.Context -Permission r -ExpiryTime (Get-Date).AddHours(4)))
 
