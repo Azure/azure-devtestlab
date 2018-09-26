@@ -123,33 +123,22 @@ For more information about creating and deleting environments, refer to [Integra
 The task allows you to deploy an ARM template to an existing DevTest Lab environment.
 ### Input Parameters
 The task requires the following inputs.
+
 **Azure RM Subscription** - Azure Resource Manager subscription to configure before running.
 
 **Lab Name** - Azure DevTest Lab name.
 
 **Repository Name** - Repository friendly name where the environment ARM templates are stored.
 
-**Template Name** - Name of the environment ARM template.
+**Environment Name** - Name of the deployed environment.
 
-**Environment Name** - Name of the deployed template.
+**Source ARM template** - Name of the template to be deployed.
 
-** Environment Parameters File (optional)** - The input parameters file. Use either a parameters file or the parameters.
+**Source ARM Parameter File (optional)** - The input parameters file. Use either a parameters file or the parameters.
 
-**Environment Parameters (optional)** - The individual parameters.
-
-**Local template** - Name of the deployed template.
-
-**Local Parameters File (optional)** - The input parameters file. Use either a parameters file or the parameters.
-
-**Local Parameters (optional)** - The individual parameters.
-
-**Create output variables based on the environment template output.** - Create output variables resulting from the creation of the environment. See Output Variables for details. 
+**Source ARM Template Parameters (optional)** - The individual parameters.
 
 **Create output variables based on the local template output.** - Create output variables resulting from the creation of the environment. See Output Variables for details.
 
 ### Output Variables
 If enabled, the task can produce the following output variables.  Note that you will need to define a Reference Name (i.e. `<refName>` such as `dtl`) under the Output Variables section to correctly reference the variables in the list.
-
-**EnvironmentResourceId** - Resource ID of the environment created. Usage: `$(<refName>.environmentResourceId)`.
-
-**EnvironmentResourceGroupId** - Resource ID of the resource group for the environment created. Usage: `$(<refName>.environmentResourceGroupId)`.
