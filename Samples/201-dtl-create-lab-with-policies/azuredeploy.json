@@ -51,13 +51,13 @@
   },
   "resources": [
     {
-      "apiVersion": "2017-04-26-preview",
+      "apiVersion": "2018-10-15-preview",
       "type": "Microsoft.DevTestLab/labs",
       "name": "[trim(parameters('newLabName'))]",
       "location": "[resourceGroup().location]",
       "resources": [
         {
-          "apiVersion": "2017-04-26-preview",
+          "apiVersion": "2018-10-15-preview",
           "name": "[variables('labVirtualNetworkName')]",
           "type": "virtualNetworks",
           "dependsOn": [
@@ -65,7 +65,7 @@
           ]
         },
         {
-          "apiVersion": "2017-04-26-preview",
+          "apiVersion": "2018-10-15-preview",
           "name": "LabVmsShutdown",
           "type": "schedules",
           "dependsOn": [
@@ -81,7 +81,7 @@
           }
         },
         {
-          "apiVersion": "2017-04-26-preview",
+          "apiVersion": "2018-10-15-preview",
           "name": "default/MaxVmsAllowedPerUser",
           "type": "policySets/policies",
           "dependsOn": [
@@ -96,7 +96,7 @@
           }
         },
         {
-          "apiVersion": "2017-04-26-preview",
+          "apiVersion": "2018-10-15-preview",
           "name": "default/MaxVmsAllowedPerLab",
           "type": "policySets/policies",
           "dependsOn": [
@@ -111,7 +111,7 @@
           }
         },
         {
-          "apiVersion": "2017-04-26-preview",
+          "apiVersion": "2018-10-15-preview",
           "name": "default/AllowedVmSizesInLab",
           "type": "policySets/policies",
           "dependsOn": [

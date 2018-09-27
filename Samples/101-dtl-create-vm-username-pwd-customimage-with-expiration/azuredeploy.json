@@ -54,7 +54,7 @@
   },
   "resources": [
     {
-      "apiVersion": "2017-04-26-preview",
+      "apiVersion": "2018-10-15-preview",
       "type": "Microsoft.DevTestLab/labs/virtualMachines",
       "name": "[variables('resourceName')]",
       "location": "[resourceGroup().location]",

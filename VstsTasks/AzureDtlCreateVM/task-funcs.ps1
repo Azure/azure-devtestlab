@@ -451,7 +451,7 @@ function Wait-ApplyArtifacts
             $vmResourceGroupName = $vm.ResourceGroupName
             $vmResourceType = $vm.ResourceType
 
-            $vmDetails = Get-AzureRmResource -ApiVersion '2017-04-26-preview' -Name $vmFullName -ResourceGroupName $vmResourceGroupName -ResourceType $vmResourceType -ODataQuery '$expand=Properties($expand=Artifacts)'
+            $vmDetails = Get-AzureRmResource -ApiVersion '2018-10-15-preview' -Name $vmFullName -ResourceGroupName $vmResourceGroupName -ResourceType $vmResourceType -ODataQuery '$expand=Properties($expand=Artifacts)'
             if (-not $vmDetails)
             {
                 throw "Unable to get details for VM '$vmName' under lab '$vmLabName' and resource group '$vmResourceGroupName'."

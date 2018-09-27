@@ -34,13 +34,13 @@
   },
   "resources": [
     {
-      "apiVersion": "2017-04-26-preview",
+      "apiVersion": "2018-10-15-preview",
       "type": "Microsoft.DevTestLab/labs",
       "name": "[parameters('labName')]",
       "location": "[resourceGroup().location]",
       "resources": [
         {
-          "apiVersion": "2017-04-26-preview",
+          "apiVersion": "2018-10-15-preview",
           "name": "[variables('labVirtualNetworkName')]",
           "type": "virtualNetworks",
           "dependsOn": [
@@ -48,7 +48,7 @@
           ]
         },
         {
-          "apiVersion": "2017-04-26-preview",
+          "apiVersion": "2018-10-15-preview",
           "name": "[variables('artifactRepositoryName')]",
           "type": "artifactSources",
           "dependsOn": [
