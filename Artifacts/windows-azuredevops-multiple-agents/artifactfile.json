@@ -1,8 +1,8 @@
 {
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
-    "title": "Azure Pipelines Multiple Agents",
-    "publisher": "onlyutkarsh",
-    "description": "Downloads latest Azure Pipelines agent, and creates the specified instances of the agents inside the specified VM. Registers the agent with the specified Azure DevOps account, and adds agents to the specified agent pool. Note - If the specified agent already exists it will be overwritten.",
+    "title": "Azure Pipelines Agent(s)",
+    "publisher": "Utkarsh Shigihalli",
+    "description": "Downloads latest Azure Pipelines agent for the account, and installs the specified number instances of the agents inside one VM. Registers the agent with the Azure DevOps account, and adds agents to the specified agent pool. Note - If the specified agent folder already exists it will be overwritten.",
     "tags": [
       "Azure DevOps",
       "Pipelines",
