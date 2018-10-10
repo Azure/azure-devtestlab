@@ -32,7 +32,7 @@ Param(
     [string]
     $VHDFileName = '<VHDFileName>.vhd',
 
-    # Enter the seconds after the Shared Access Signature on source will expired. Default value ist 3600.
+    # Enter the seconds after the Shared Access Signature on source will expired. Default value is 3600.
     [Parameter(Mandatory = $false)]
     [int]
     $SignatureExpire = 3600
@@ -212,8 +212,7 @@ function Copy-AzureDtlVirtualMachineVhd
 try
 {
     Write-Host "Selecting subscription '$SubscriptionId' ... " -NoNewline
-    Select-AzureSubscription -SubscriptionId $SubscriptionId -ErrorAction SilentlyContinue | Out-Null
-    Select-AzureRMSubscription -SubscriptionId $SubscriptionId -ErrorAction SilentlyContinue | Out-Null
+    Select-AzureRMSubscription -SubscriptionId $SubscriptionId | Out-Null
     Write-Host $Done
     
     Write-Host "Getting lab '$LabName' under resource group '$LabResourceGroupName' ... " -NoNewline
