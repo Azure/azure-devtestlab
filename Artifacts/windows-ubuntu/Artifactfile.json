@@ -9,13 +9,14 @@
     ],
     "targetOsType": "Windows",
     "parameters": {
-        "distro": {
-            "type": "string",
-            "displayName": "Ubuntu Distro",
-            "description": "Specifies the specific distro (e.g., 1804)"
-        }
+            "distro": {
+                "type": "string",
+                "displayName": "Ubuntu Distro",
+                "description": "Specifies the specific distro (e.g., 1804)",
+                "defaultValue": "1804"
+            }
     },
     "runCommand": {
-      "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./InstallUbuntu.ps1 -distro ''', parameters('distro'), '''\"')]"
+      "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./InstallUbuntu.ps1 ', ' -distro ''', parameters('distro'), '''\"')]"
     }
 }
