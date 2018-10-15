@@ -1,8 +1,8 @@
 {
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
-    "title": "Windows WSL Ubuntu",
+    "title": "Windows WSL",
     "publisher": "Steve Kurtz",
-    "description": "Enables the WSL Windows feature and installs the latest Ubuntu distro",
+    "description": "Enables the WSL Windows feature",
     "tags": [
         "WSL"
     ],
