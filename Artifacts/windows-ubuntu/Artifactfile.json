@@ -17,6 +17,6 @@
             }
     },
     "runCommand": {
-      "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./InstallUbuntu.ps1 ', ' -distro ''', parameters('distro'), '''\"')]"
+      "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./InstallUbuntu.ps1 -distro ''', parameters('distro'), '''\"')]"
     }
 }
