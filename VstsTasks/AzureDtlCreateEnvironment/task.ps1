@@ -124,7 +124,7 @@ try
             $EnvironmentSasToken = $environmentDeploymentOutput["$EnvironmentTemplateSasTokenVariable"]
             $EnvironmentLocation = $environmentDeploymentOutput["$EnvironmentTemplateLocationVariable"]
             
-            if (($EnvironmentLocation -eq "") -or ($EnvironmentSasToken -eq "")) {
+            if (-not $EnvironmentLocation -or -not $EnvironmentSasToken) {
                 Write-Host "Missing Environment Location or Environment SAS token as outputs."
             }
 
@@ -144,19 +144,18 @@ try
             
             Write-Host "Downloading Azure templates"
             
-            foreach ($blob in $blobs)
-                {		            
-                    $shortName = $($blob.Name.TrimStart($dtlPrefix))
+            foreach ($blob in $blobs) {		            
+                $shortName = $($blob.Name.TrimStart($dtlPrefix))
 
-                    if ($shortName.Contains("/")) {
-                        New-Item -ItemType Directory -Force -Path "$ExportEnvironmentTemplateLocation\$($shortName.Substring(0,$shortName.IndexOf("/")))"
-                    }
-
-                    Get-AzureStorageBlobContent `
-                        -Container $containerName -Blob $blob.Name -Destination "$ExportEnvironmentTemplateLocation\$shortName" `
-		                -Context $context | Out-Null
-      
+                if ($shortName.Contains("/")) {
+                    New-Item -ItemType Directory -Force -Path "$ExportEnvironmentTemplateLocation\$($shortName.Substring(0,$shortName.IndexOf("/")))"
                 }
+
+                Get-AzureStorageBlobContent `
+                    -Container $containerName -Blob $blob.Name -Destination "$ExportEnvironmentTemplateLocation\$shortName" `
+		            -Context $context | Out-Null
+      
+            }
             Write-Host "Azure RM templates stored."
 
         }
