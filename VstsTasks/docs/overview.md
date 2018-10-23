@@ -6,6 +6,7 @@ This extension provides several build / release tasks to allow you to integrate 
 3. **Delete VM**
 4. **Create Environment**
 5. **Delete Environment**
+6. **Populate Environment**
 
 You can find more details about Azure DevTest Labs [here](https://azure.microsoft.com/en-us/services/devtest-lab/).
 # Details
@@ -117,3 +118,27 @@ The task requires the following inputs.
 **Environment Name or ID** - Either the name of the environment to be deleted, selected from the dropdown list; or, the fully qualified resource ID of the environment to be deleted. This can be a reference to the output variable from a call to the Create Environment task. For example, `$(<refName>.environmentResourceId)`.
 
 For more information about creating and deleting environments, refer to [Integrate Azure DevTest Labs Environments into your VSTS continuous integration and delivery pipeline.](https://blogs.msdn.microsoft.com/devtestlab/2018/07/11/integrate-azure-devtest-labs-environments-into-your-vsts-continuous-integration-and-delivery-pipeline/)
+
+## Populate Environment
+The task allows you to deploy an ARM template to an existing DevTest Lab environment.
+### Input Parameters
+The task requires the following inputs.
+
+**Azure RM Subscription** - Azure Resource Manager subscription to configure before running.
+
+**Lab Name** - Azure DevTest Lab name.
+
+**Repository Name** - Repository friendly name where the environment ARM templates are stored.
+
+**Environment Name** - Name of the deployed environment.
+
+**Source ARM template** - Name of the template to be deployed.
+
+**Source ARM Parameter File (optional)** - The input parameters file. Use either a parameters file or the parameters.
+
+**Source ARM Template Parameters (optional)** - The individual parameters.
+
+**Create output variables based on the local template output.** - Create output variables resulting from the creation of the environment. See Output Variables for details.
+
+### Output Variables
+If enabled, the task can produce the following output variables.  Note that you will need to define a Reference Name (i.e. `<refName>` such as `dtl`) under the Output Variables section to correctly reference the variables in the list.

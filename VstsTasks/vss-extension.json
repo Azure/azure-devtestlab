@@ -84,6 +84,16 @@
             }
         },
         {
+            "id": "azure-dtl-task-populateEnvironment",
+            "type": "ms.vss-distributed-task.task",
+            "targets": [
+                "ms.vss-distributed-task.tasks"
+            ],
+            "properties": {
+                "name": "AzureDtlPopulateEnvironment"
+            }
+        },
+        {
             "id": "azure-dtl-task-createVM",
             "type": "ms.vss-distributed-task.task",
             "targets": [
@@ -118,13 +128,17 @@
             "addressable": true
         },
         {
+            "path": "AzureDtlPopulateEnvironment",
+            "addressable": true
+        },
+        {
             "path": "AzureDtlCreateVM",
             "addressable": true
         },
         {
             "path": "AzureDtlDeleteVM",
             "addressable": true
-        },
+        },        
         {
             "path": "images",
             "addressable": true
