@@ -235,7 +235,6 @@ function Get-DevTestLabEnvironmentResourceGroupLocation {
     return [string] $environment.Location
 }
 
-
 function Test-DevTestLabEnvironmentOutputIsSecret {
     [CmdletBinding()]
     param(
@@ -293,5 +292,4 @@ function ConvertTo-Optionals {
     }   
 
     return [hashtable] $hashtable
-
 }

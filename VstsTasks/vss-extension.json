@@ -1,7 +1,7 @@
 {
     "manifestVersion": 1,
     "id": "tasks",
-    "version": "1.0.50",
+    "version": "1.0.51",
     "name": "Azure DevTest Labs Tasks",
     "publisher": "ms-azuredevtestlabs",
     "description": "Collection of build/release tasks to interact with Azure DevTest Labs.",
@@ -138,7 +138,7 @@
         {
             "path": "AzureDtlDeleteVM",
             "addressable": true
-        },        
+        },
         {
             "path": "images",
             "addressable": true
