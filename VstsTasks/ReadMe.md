@@ -30,7 +30,7 @@ To test each task independently, for example, in MYPROJ (i.e. a single task inst
 
    `tfx build tasks upload --task-path .\AzureDtlDeleteVM --overwrite`
 	
-`tfx build tasks upload --task-path .\AzureDtlPopulateEnvironment --overwrite`
+   `tfx build tasks upload --task-path .\AzureDtlPopulateEnvironment --overwrite`
 
 3. Go to a build / release definition.
 4. Add a step, locating your task, and validate its functionality.
