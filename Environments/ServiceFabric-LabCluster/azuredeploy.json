@@ -173,7 +173,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(variables('quickstartRepoRoot'), 'service-fabric-cluster-ubuntu-5-node-1-nodetype/azuredeploy.json')]",
+                    "uri": "[concat(variables('quickstartRepoRoot'), 'service-fabric-secure-cluster-5-node-1-nodetype/azuredeploy.json')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
