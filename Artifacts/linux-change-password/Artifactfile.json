@@ -33,7 +33,7 @@
     "runAzureVMExtension": {
         "publisher": "Microsoft.OSTCExtensions",
         "type": "VMAccessForLinux",
-        "typeHandlerVersion": "1.4",
+        "typeHandlerVersion": "1.5",
         "autoUpgradeMinorVersion": true,
         "protectedSettings": {
             "username": "[parameters('userName')]",
