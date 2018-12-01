@@ -38,8 +38,8 @@
         },
         "AgentInstallLocation": {
             "type": "string",
-            "displayName": "Agent Name Prefix",
-            "description": "Prefixes every agent with string specified here.",
+            "displayName": "Agent Install Location",
+            "description": "Install location for the agent(s)",
             "defaultValue": "c:\\agents"
         },
         "PoolName": {
