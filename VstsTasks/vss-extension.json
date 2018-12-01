@@ -1,7 +1,7 @@
 {
     "manifestVersion": 1,
     "id": "tasks",
-    "version": "1.0.50",
+    "version": "1.0.51",
     "name": "Azure DevTest Labs Tasks",
     "publisher": "ms-azuredevtestlabs",
     "description": "Collection of build/release tasks to interact with Azure DevTest Labs.",
@@ -84,6 +84,16 @@
             }
         },
         {
+            "id": "azure-dtl-task-populateEnvironment",
+            "type": "ms.vss-distributed-task.task",
+            "targets": [
+                "ms.vss-distributed-task.tasks"
+            ],
+            "properties": {
+                "name": "AzureDtlPopulateEnvironment"
+            }
+        },
+        {
             "id": "azure-dtl-task-createVM",
             "type": "ms.vss-distributed-task.task",
             "targets": [
@@ -115,6 +125,10 @@
         },
         {
             "path": "AzureDtlDeleteEnvironment",
+            "addressable": true
+        },
+        {
+            "path": "AzureDtlPopulateEnvironment",
             "addressable": true
         },
         {
