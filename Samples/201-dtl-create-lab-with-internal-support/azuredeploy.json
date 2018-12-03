@@ -1,0 +1,28 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "newLabName": {
+            "type": "string"
+        },
+        "supportMessageMarkdown": {
+            "type": "string"
+        }
+    },
+    "resources": [
+        {
+            "apiVersion": "2018-10-15-preview",
+            "name": "[parameters('newLabName')]",
+            "type": "Microsoft.DevTestLab/labs",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "labStorageType": "Premium",
+                "support":
+                {
+                    "enabled": "Enabled",
+                    "markdown": "[parameters('supportMessageMarkdown')]"
+                }
+            }
+        }
+    ]
+}

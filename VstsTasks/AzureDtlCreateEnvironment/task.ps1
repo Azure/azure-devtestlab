@@ -25,7 +25,11 @@ param(
     [string] $EnvironmentName,
     [string] $ParameterFile,
     [string] $ParameterOverrides,
-    [string] $TemplateOutputVariables
+    [string] $TemplateOutputVariables,
+    [string] $ExportEnvironmentTemplate,
+    [string] $ExportEnvironmentTemplateLocation,
+    [string] $EnvironmentTemplateLocationVariable,
+    [string] $EnvironmentTemplateSasTokenVariable
 )
 
 ###################################################################################################
@@ -94,19 +98,66 @@ try
     $parameterSet = Get-ParameterSet -templateId $TemplateId -path $ParameterFile -overrides $ParameterOverrides
 
     Show-TemplateParameters -templateId $TemplateId -parameters $parameterSet
-
+    
     $environmentResourceId = New-DevTestLabEnvironment -labId $LabId -templateId $TemplateId -environmentName $EnvironmentName -environmentParameterSet $parameterSet
     $environmentResourceGroupId = Get-DevTestLabEnvironmentResourceGroupId -environmentResourceId $environmentResourceId
     
     if ([System.Xml.XmlConvert]::ToBoolean($TemplateOutputVariables))
     {
-        $environmentDeploymentOutput = [hashtable] (Get-DevTestLabEnvironmentOutput -environmentResourceId $environmentResourceId) 
+        $environmentDeploymentOutput = [hashtable] (Get-DevTestLabEnvironmentOutput -environmentResourceId $environmentResourceId)
+
+        Write-Host "Parse Output information."
+
         $environmentDeploymentOutput.Keys | ForEach-Object {
+
             if(Test-DevTestLabEnvironmentOutputIsSecret -templateId $TemplateId -key $_) {
                 Write-Host "##vso[task.setvariable variable=$_;isSecret=true;isOutput=true;]$($environmentDeploymentOutput[$_])"
             } else {
                 Write-Host "##vso[task.setvariable variable=$_;isSecret=false;isOutput=true;]$($environmentDeploymentOutput[$_])"
             }   
+        }
+
+        Write-Host "Completed Output information."
+
+        if ([System.Xml.XmlConvert]::ToBoolean($ExportEnvironmentTemplate)) {
+
+            $EnvironmentSasToken = $environmentDeploymentOutput["$EnvironmentTemplateSasTokenVariable"]
+            $EnvironmentLocation = $environmentDeploymentOutput["$EnvironmentTemplateLocationVariable"]
+            
+            if (-not $EnvironmentLocation -or -not $EnvironmentSasToken) {
+                Write-Host "Missing Environment Location or Environment SAS token as outputs."
+            }
+
+            Write-Host "Parse Environment information."
+
+            $tempEnvLoc = $EnvironmentLocation.Split("/")
+            $storageAccountName = $tempEnvLoc[2].Split(".")[0]
+            $containerName = $tempEnvLoc[3]
+            $dtlPrefix = "$($tempEnvLoc[4])/$($tempEnvLoc[5])"
+
+            #Get Environment instance storage context
+            $context = New-AzureStorageContext -StorageAccountName $storageAccountName -SasToken $EnvironmentSasToken
+
+            $blobs = Get-AzureStorageBlob -Container $containerName -Context $context -Prefix $dtlPrefix
+
+            New-Item -ItemType Directory -Force -Path $ExportEnvironmentTemplateLocation | Out-Null
+            
+            Write-Host "Downloading Azure templates"
+            
+            foreach ($blob in $blobs) {		            
+                $shortName = $($blob.Name.TrimStart($dtlPrefix))
+
+                if ($shortName.Contains("/")) {
+                    New-Item -ItemType Directory -Force -Path "$ExportEnvironmentTemplateLocation\$($shortName.Substring(0,$shortName.IndexOf("/")))"
+                }
+
+                Get-AzureStorageBlobContent `
+                    -Container $containerName -Blob $blob.Name -Destination "$ExportEnvironmentTemplateLocation\$shortName" `
+		            -Context $context | Out-Null
+      
+            }
+            Write-Host "Azure RM templates stored."
+
         }
     }
 }

@@ -1,49 +1,49 @@
 {
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
-    "title": "VSTS Deployment group agent",
-    "description": "Downloads the latest deployment agent from VSTS and configures it against specified deployment group.",
+    "title": "Azure Pipelines Deployment Group Agent",
+    "description": "Downloads the latest deployment agent from Azure DevOps and configures it against the specified deployment group.",
     "publisher": "Microsoft",
     "iconUri": "https://www.visualstudio.com/favicon.ico",
     "targetOsType": "Windows",
     "parameters": {
         "accountUrl": {
             "type": "string",
-            "displayName": "VSTS account URL",
-            "description": "The URL for the VSTS account, example https://accountName.visualstudio.com"
+            "displayName": "Azure DevOps account URL",
+            "description": "The URL for the Azure DevOps account, e.g. 'myorg' in https://dev.azure.com/myorg."
         },
         "projectName": {
             "type": "string",
             "displayName": "Project name",
-            "description": "The VSTS project name, eg MyFirstProject"
+            "description": "The Azure DevOps project name, eg MyFirstProject."
         },
         "deploymentGroupName": {
             "type": "string",
             "displayName": "Deployment group name",
-            "description": "Name of the deployment group against which the agent has to be configured"
+            "description": "Name of the deployment group against which the agent has to be configured."
         },
         "PersonalAccessToken": {
             "type": "securestring",
             "displayName": "Personal Access Token",
-            "description": "Personal Access Token for downloading and configuring VSTS deployment agent"
+            "description": "Personal Access Token for downloading and configuring Azure Pipelines deployment group agent."
         },
         "deploymentAgentTags": {
             "type": "string",
             "displayName": "Deployment agent tags",
-            "description": "Optionally provide comma separated list of tags for deployment agent. Example Web, DB",
+            "description": "Optionally provide comma separated list of tags for deployment agent. Example Web, DB.",
             "allowEmpty": true,
             "defaultValue": ""
         },
         "agentInstallPath": {
             "type": "string",
             "displayName": "Install path",
-            "description": "Optinally provide agent install path. Defaults to $env:SystemDrive\\vstsagent",
+            "description": "Optinally provide agent install path.",
             "allowEmpty": true,
             "defaultValue": ""
         },
         "agentName": {
             "type": "string",
             "displayName": "Agent name",
-            "description": "Optionally provide agent name. Defaults to $env:COMPUTERNAME",
+            "description": "Optionally provide agent name. Defaults to $env:COMPUTERNAME.",
             "allowEmpty": true,
             "defaultValue": ""
         },

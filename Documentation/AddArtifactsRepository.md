@@ -3,13 +3,12 @@
 By default, a DevTest Lab includes artifacts from the official Azure DevTest
 Lab artifact repository. You can add a Git artifact repository (repo) to your
 lab to include the artifacts that your team creates. The repository can be 
-hosted on [Github](https://www.github.com/) or on [Visual Studio Team 
-Services (VS Team Services)](https://visualstudio.com/).
+hosted on [Github](https://www.github.com/) or on [Azure DevOps](https://dev.azure.com).
 
 - To learn how to create a Github repository, see [Github 
   Bootcamp](https://help.github.com/categories/bootcamp/).
-- To learn how to create a VSO project with a Git Repository, see [Set up 
-  Visual Studio](https://www.visualstudio.com/get-started/setup/set-up-vs).
+- To learn how to create an Azure DevOps project with a Git Repository, see [Set up 
+  Visual Studio with Azure DevOps](https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/set-up-vs).
 
 The repository must contain a top level folder with subfolders corresponding
 to each Artifacts. Each Artifact subfolder must contain an artifact definition
@@ -88,36 +87,36 @@ enter that information in your lab.
 On the Visual Studio web page of your artifact project
 
 1. Open the home page of your team collection (for example, 
-   https://contoso-web-team.visualstudio.com), and then choose the artifact
+   https://dev.azure.com/contoso-web-team), and then choose the artifact
    project.
 
-   ![Choose your VS Team Services home page][vsts-choose-team]
+   ![Choose your Azure DevOps Services home page][ado-choose-team]
 
 2. On the project home page, choose the Code link.
 
-   ![Choose the 'CODE' tab in VS Team Services][code-tab-vsts]
+   ![Choose the 'CODE' tab in Azure DevOps Services][ado-code-tab]
 
 3. To view the clone url, on the project Code page, choose the Clone link.
 
-   ![Click on the 'Clone' button in the VS Team Services CODE UI][vsts-clone-button]
+   ![Click on the 'Clone' button in the Azure DevOps Services CODE UI][ado-clone-button]
 
 4. Copy and save the url that's displayed. For example, save it to a temporary
    Notepad file.
 
-   ![Copy/Paste the URI to clone the Git repo with][vsts-clone-uri]
+   ![Copy/Paste the URI to clone the Git repo with][ado-clone-uri]
    
 5. To create a Personal Access Token, choose My profile from the user account
    drop-down menu.
    
-   ![VS Team Services profile User Account menu][vsts-profile-menu]
+   ![Azure DevOps Services profile User Account menu][ado-profile-menu]
    
 6. On the profile information page choose the Security tab.
 
-   ![VS Team Services security tab][vsts-security-tab]
+   ![Azure DevOps Services security tab][ado-security-tab]
    
 7. On the **Security** tab,choose the **Add** link.
  
-   ![VS Team Services add PAT menu][vsts-security-pat-add]
+   ![Azure DevOps Services add PAT menu][ado-security-pat-add]
    
 8. In Create a personal access token
    1. Enter a Description for the token.
@@ -126,12 +125,12 @@ On the Visual Studio web page of your artifact project
    4. Choose the All scopes option.
    5. Choose Create Token
    
-   ![Create your Personal Access Token UI][vsts-create-pat]
+   ![Create your Personal Access Token UI][ado-create-pat]
    
 9. The new token appears in the **Personal Access Tokens** list. Choose the
    **Copy Token** and then save the token value.
    
-   ![Copy your personal access token to the clipboard (button)][vsts-copy-token]
+   ![Copy your personal access token to the clipboard (button)][ado-copy-token]
    
 ## In the DevTest Lab
 
@@ -161,15 +160,15 @@ On the Visual Studio web page of your artifact project
 [github-pat]: images/github-personal-access-tokens-ui.png
 [azure-devtest-lab-settings]: images/azure-devtest-lab-settings.png
 [azure-artifact-repo-settings]: images/azure-artifact-repo-settings.png
-[vsts-choose-team]: images/vsts-choose-team.png
-[code-tab-vsts]: images/vsts-tab-code.png
-[vsts-clone-button]: images/vsts-clone-link-button.png
-[vsts-clone-uri]: images/vsts-clone-uri.png
-[vsts-profile-menu]: images/vsts-profile-menu.png
-[vsts-security-tab]: images/vsts-security-tab.png
-[vsts-security-pat-add]: images/vsts-pat-add.png
-[vsts-create-pat]: images/vsts-create-pat.png
-[vsts-copy-token]: images/vsts-copy-token.png
+[ado-choose-team]: images/vsts-choose-team.png
+[ado-code-tab]: images/vsts-tab-code.png
+[ado-clone-button]: images/vsts-clone-link-button.png
+[ado-clone-uri]: images/vsts-clone-uri.png
+[ado-profile-menu]: images/vsts-profile-menu.png
+[ado-security-tab]: images/vsts-security-tab.png
+[ado-security-pat-add]: images/vsts-pat-add.png
+[ado-create-pat]: images/vsts-create-pat.png
+[ado-copy-token]: images/vsts-copy-token.png
 [azure-devtest-lab-settings-button]: images/azure-devtest-lab-settings-button.png
 [azure-devtest-settings-pane]: images/azure-devtest-settings-pane.png
 [azure-devtest-lab-artifact-repo-pane]: images/azure-devtest-lab-artifact-repo-pane.png

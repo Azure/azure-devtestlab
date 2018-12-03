@@ -57,18 +57,43 @@ function Show-TemplateParameters {
     )
 
     if ($parameters) {
+        
         Write-Host "Creating Environment with parameters"
-        $template = Get-AzureRmResource -ResourceId $templateId -ApiVersion '2016-05-15'
-        $parameters.Keys | % {
+        $templateParameters = Get-TemplateParameters -templateId $templateId
+
+        $parameters.Keys | ForEach-Object {
+
             $key = $_
-            if ($template.Properties.contents.parameters.$key.type -like "secure*") {
-                Write-Host "  $key = *****"
-            }
-            else {
-                Write-Host "  $key = $($parameters[$key])"
+            $type = $templateParameters | Where-Object { ($_.Name) -eq $key } | Select-Object -First 1 -ExpandProperty Type
+            
+            if ($type -like "secure*") {
+                Write-Host "  $key [$type] = *****"
+            } else {
+                Write-Host "  $key [$type] = $($parameters[$key])"
             }
         }
     }
+}
+
+function Get-TemplateParameters {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $templateId
+    )
+
+    $template = Get-AzureRmResource -ResourceId $templateId -ApiVersion '2016-05-15'
+    $parameters = @()
+
+    $template.Properties.contents.parameters | Get-Member -MemberType NoteProperty | Select-Object -ExpandProperty Name | ForEach-Object {
+
+        $parameters += New-Object -TypeName psobject |  Add-Member -MemberType NoteProperty -Name "Name" -Value "$_" -PassThru |
+                                                        Add-Member -MemberType NoteProperty -Name "UnifiedName" -Value "$($_ -replace ' ', '')" -PassThru |
+                                                        Add-Member -MemberType NoteProperty -Name "Type" -Value "$($template.Properties.contents.parameters.$_.type)" -PassThru        
+
+    }
+
+    return $parameters
 }
 
 function Get-ParameterSet {
@@ -115,18 +140,28 @@ function Get-ParameterSet {
 
     if ($parameterSet.Count) {
 
-        $template = Get-AzureRmResource -ResourceId $templateId -ApiVersion '2016-05-15'
-        $templateParameterNames = [string[]] (Get-Member -InputObject $template.Properties.contents.parameters -MemberType NoteProperty | Select-Object -ExpandProperty Name)
+        Write-Host "Clean up parameters"
 
-        # remove parameters not available in template
-        $parameterSet.Keys | Where-Object { $_ -notin $templateParameterNames } | ConvertTo-Array | ForEach-Object { 
-            $parameterSet.Remove([string] $_) 
+        $templateParameters = Get-TemplateParameters -templateId $templateId | ConvertTo-Array
+        $templateParameterNames = $templateParameters | Select-Object -ExpandProperty Name | ConvertTo-Array
+
+        # handle template parameters with spaces
+        $templateParameters | Where-Object {($_.Name) -ne ($_.UnifiedName) -and $parameterSet.ContainsKey($_.UnifiedName)} | ForEach-Object {
+            Write-Host "  Mapping parameter '$($_.UnifiedName)' -> '$($_.Name)'"
+            $parameterSet.Add($_.Name, $parameterSet[$_.UnifiedName])
         }
 
-        # removing parameters set by the lab
-        ('_artifactsLocation', '_artifactsLocationSasToken') | ? { $parameterSet.ContainsKey([string] $_) } | ForEach-Object { 
-            $parameterSet.Remove([string] $_) 
-        } 
+        # resolve parameters given but not needed by the template
+        $unusedParameterNames = $parameterSet.Keys | Where-Object { $_ -notin $templateParameterNames } | ConvertTo-Array 
+
+        # resolve parameters provided by the lab during provisioning
+        $unusedParameterNames += ('_artifactsLocation', '_artifactsLocationSasToken') | Where-Object { $parameterSet.ContainsKey([string] $_) } | ConvertTo-Array
+
+        # remove unused parameters
+        $unusedParameterNames | ForEach-Object { 
+            Write-Host "  Removing parameter '$_'"
+            $parameterSet.Remove($_) 
+        }
     }
 
     return $parameterSet
@@ -172,7 +207,7 @@ function New-DevTestLabEnvironment {
 
     $lab = Get-AzureRmResource -ResourceId $labId
     $env = New-AzureRmResource -Location $lab.Location -ResourceGroupName $lab.ResourceGroupName -Properties $templateProperties -ResourceType 'Microsoft.DevTestLab/labs/users/environments' -ResourceName "$($lab.Name)/$userId/$environmentName" -ApiVersion '2016-05-15' -Force 
-
+    
     return [string] $env.ResourceId
 }
 

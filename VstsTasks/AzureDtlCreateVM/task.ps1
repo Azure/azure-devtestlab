@@ -13,7 +13,7 @@
     Coming soon / planned work
     ==========================
 
-    - N/A.    
+    - N/A.
 
 ##################################################################################################>
 #
@@ -99,16 +99,16 @@ try
     {
         $RetryCount = '0'
     }
-    
+
     [int] $count = 1 + (ConvertTo-Int -Value $RetryCount)
     for ($i = 1; $i -le $count; $i++)
     {
         Test-InputParameters -TemplateParameterObject $templateParameterObject
-        
+
         try
         {
             $deploymentName = "Dtl$([Guid]::NewGuid().ToString().Replace('-', ''))"
-            
+
             $result = Invoke-AzureDtlTask -DeploymentName $deploymentName -ResourceGroupName $resourceGroupName -TemplateName "$TemplateName" -TemplateParameterObject $templateParameterObject
 
             $resourceId = Get-DeploymentTargetResourceId -DeploymentName $result.DeploymentName -ResourceGroupName $result.ResourceGroupName
@@ -116,7 +116,7 @@ try
             Wait-ApplyArtifacts -ResourceId $resourceId -WaitMinutes $WaitMinutesForApplyArtifacts
 
             Test-ArtifactStatus -ResourceId $resourceId -TemplateName "$TemplateName" -Fail $FailOnArtifactError
-            
+
             break
         }
         catch
