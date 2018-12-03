@@ -1,0 +1,29 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "Install Java SE Development Kit",
+    "publisher": "Microsoft",
+    "description": "Installs the Java Development Kit using Chocolatey installer for JDK10 or JDK8", 
+    "tags": [
+        "Windows",
+        "Java",
+        "JDK"
+    ],
+    "iconUri": "https://upload.wikimedia.org/wikipedia/en/thumb/3/30/Java_programming_language_logo.svg/128px-Java_programming_language_logo.svg.png",
+    "targetOsType": "Windows",
+    "parameters": {
+        "JDKVersion": {
+          "type": "string",
+          "displayName": "Choose Java Development Kit to install",
+          "description": "Only a selection from the list is allowed",
+          "defaultValue": "jdk10",
+          "allowEmpty": false,
+          "allowedValues": [
+            "jdk10",
+            "jdk8"
+          ]
+        }
+    },
+    "runCommand": {
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./artifact-main.ps1', ' -JDKVersion ''', parameters('JDKVersion'), '''\"')]"
+    }
+}
