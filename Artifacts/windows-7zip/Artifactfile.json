@@ -7,7 +7,7 @@
         "Windows",
         "7-Zip"
     ],
-    "iconUri": "https://cdn.rawgit.com/ferventcoder/chocolatey-packages/02c21bebe5abb495a56747cbb9b4b5415c933fc0/icons/7zip.svg",
+    "iconUri": "https://cdn.combinatronics.com/ferventcoder/chocolatey-packages/02c21bebe5abb495a56747cbb9b4b5415c933fc0/icons/7zip.svg",
     "targetOsType": "Windows",
     "runCommand": {
         "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', '7zip', '\"')]"
