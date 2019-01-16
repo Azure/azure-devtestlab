@@ -1,0 +1,125 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "Install PAVC",
+    "publisher": "Microsoft",
+    "description": "Install PAVC",
+    "tags": [
+        "Windows",
+        "PAVC"
+    ],
+    "iconUri": "https://github.com/Azure/azure-devtestlab/raw/master/Artifacts/windows-pavc/pavc.png",
+    "targetOsType": "Windows",
+    "parameters": {
+        "tenantId": {
+            "type": "securestring",
+            "displayName": "Tenant ID",
+            "description": "The ID of the Tenant.",
+            "defaultValue": "[[tenantId]]"
+        },
+        "applicationId": {
+            "type": "securestring",
+            "displayName": "Application ID",
+            "description": "The ID of the Application.",
+            "defaultValue": "[[applicationId]]"
+        },
+        "servicePrincipalPassword": {
+            "type": "securestring",
+            "displayName": "Service Principal Password",
+            "description": "The Service Principal Password.",
+            "defaultValue": "[[servicePrincipalPassword]]"
+        },
+        "keyVault": {
+            "type": "string",
+            "displayName": "KeyVault Name",
+            "description": "The KeyVault Name. Where all secrets are stored.",
+            "defaultValue": ""
+        },
+        "keyVaultCertName": {
+            "type": "string",
+            "displayName": "PAVC KeyVault Certificate name",
+            "description": "The PAVC Certificate name from the KeyVault. Used by the PAVC installation.",
+            "defaultValue": ""
+        },
+        "keyVaultCertPasswordKeyName": {
+            "type": "string",
+            "displayName": "PAVC KeyVault Certificate Password Key name",
+            "description": "The PAVC Certificate Password Key name from the KeyVault. Used by the PAVC installation.",
+            "defaultValue": ""
+        },
+        "serviceAccount": {
+            "type": "string",
+            "displayName": "Service Account Name",
+            "description": "The Azure DevOps Service Account Name used to access the PAVC NuGet Feed.",
+            "defaultValue": ""
+        },
+        "keyVaultPavcServiceAccountPatKeyName": {
+            "type": "string",
+            "displayName": "KeyVault Service Account PAT Key name",
+            "description": "The Service Account PAT Key name from the KeyVault. Used to authenticate to the NuGet feed where the PAVC package is stored.",
+            "defaultValue": ""
+        },
+        "nuGetVersion": {
+            "type": "string",
+            "displayName": "NuGet Version",
+            "description": "The NuGet Version to download.",
+            "defaultValue": "4.9.2"
+        },
+        "pavcNnuGetFeed": {
+            "type": "string",
+            "displayName": "PAVC NuGet Feed",
+            "description": "The PAVC NuGet Feed. i.e. https://xxx.pkgs.visualstudio.com/_packaging/xxx/nuget/v3/index.json",
+            "defaultValue": ""
+        },
+        "pavcNuGetPackageName": {
+            "type": "string",
+            "displayName": "PAVC NuGet Package name",
+            "description": "The PAVC NuGet Package name.",
+            "defaultValue": ""
+        },
+        "pavcVersion": {
+            "type": "string",
+            "displayName": "PAVC Version",
+            "description": "The PAVC Version to download.",
+            "defaultValue": ""
+        },
+        "pavcWorkload": {
+            "type": "string",
+            "displayName": "PAVC Workload",
+            "description": "The PAVC Workload. PAVC specific setting required during installation. Please contact your security expert for more information.",
+            "defaultValue": ""
+        },
+        "pavcServiceLine": {
+            "type": "string",
+            "displayName": "PAVC ServiceLine",
+            "description": "The PAVC ServiceLine. PAVC specific setting required during installation. Please contact your security expert for more information.",
+            "defaultValue": ""
+        },
+        "pavcCertificateNameWildCard": {
+            "type": "string",
+            "displayName": "PAVC CertificateNameWildCard",
+            "description": "The PAVC CertificateNameWildCard. PAVC specific setting required during installation. Please contact your security expert for more information.",
+            "defaultValue": ""
+        },
+        "pavcEnvironment": {
+            "type": "string",
+            "displayName": "PAVC Environment",
+            "description": "The PAVC Environment. PAVC specific setting required during installation. Please contact your security expert for more information.",
+            "defaultValue": ""
+        },
+        "pavcCPURateLimit": {
+            "type": "string",
+            "displayName": "PAVC CPURateLimit",
+            "description": "The PAVC CPURateLimit. PAVC specific setting required during installation. Please contact your security expert for more information.",
+            "defaultValue": ""
+        },
+        "pavcScanStartTime": {
+            "type": "string",
+            "displayName": "PAVC ScanStartTime",
+            "description": "The PAVC ScanStartTime. PAVC specific setting required during installation. Please contact your security expert for more information.",
+            "defaultValue": ""
+        }
+    },
+    "runCommand": {
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./InstallPAVC.ps1 -tenantId ', parameters('tenantId'), ' -applicationId ', parameters('applicationId'), ' -servicePrincipalPassword ''', parameters('servicePrincipalPassword'), ''' -pavcVersion ', parameters('pavcVersion'), ' -keyVault ', parameters('keyVault'), ' -keyVaultCertPasswordKeyName ', parameters('keyVaultCertPasswordKeyName'), ' -keyVaultCertName ', parameters('keyVaultCertName'), ' -keyVaultPavcServiceAccountPatKeyName ', parameters('keyVaultPavcServiceAccountPatKeyName'), ' -nuGetVersion ', parameters('nuGetVersion'), ' -pavcWorkload ', parameters('pavcWorkload'), ' -pavcServiceLine ''', parameters('pavcServiceLine'), ''' -pavcCertificateNameWildCard ', parameters('pavcCertificateNameWildCard'), ' -pavcEnvironment ', parameters('pavcEnvironment'), ' -pavcCPURateLimit ', parameters('pavcCPURateLimit'), ' -pavcScanStartTime ', parameters('pavcScanStartTime'), ' -pavcNnuGetFeed ', parameters('pavcNnuGetFeed'), ' -serviceAccount ', parameters('serviceAccount'), ' -pavcNuGetPackageName ', parameters('pavcNuGetPackageName'), '\"')]"
+    }
+}
