@@ -232,7 +232,7 @@ function Download-NuGet
         [string] $nuGetVersion
     )
 
-    $nugetUrl = "https://dist.nuget.org/win-x86-commandline/v$nuGetVersion/nuget.exe"
+    $nugetUrl = "https://dist.nuget.org/win-x86-commandline/$nuGetVersion/nuget.exe"
 
     try
     {

@@ -62,7 +62,7 @@
             "type": "string",
             "displayName": "NuGet Version",
             "description": "The NuGet Version to download.",
-            "defaultValue": "4.9.2"
+            "defaultValue": "v4.9.2"
         },
         "pavcNnuGetFeed": {
             "type": "string",
