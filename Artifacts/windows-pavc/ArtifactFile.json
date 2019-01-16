@@ -7,7 +7,7 @@
         "Windows",
         "PAVC"
     ],
-    "iconUri": "https://github.com/Azure/azure-devtestlab/raw/master/Artifacts/windows-pavc/pavc.png",
+    "iconUri": "https://github.com/Azure/azure-devtestlab/raw/master/Artifacts/windows-pavc/pavc.jpeg",
     "targetOsType": "Windows",
     "parameters": {
         "tenantId": {
