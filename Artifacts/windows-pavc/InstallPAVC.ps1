@@ -15,7 +15,7 @@ param(
     [string] $pavcEnvironment,
     [string] $pavcCPURateLimit,
     [string] $pavcScanStartTime,
-    [string] $pavcNnuGetFeed,
+    [string] $pavcNuGetFeed,
     [string] $serviceAccount,
     [string] $pavcNuGetPackageName
 )
@@ -57,7 +57,7 @@ function Test-Parameters
         [string] $pavcEnvironment,
         [string] $pavcCPURateLimit,
         [string] $pavcScanStartTime,
-        [string] $pavcNnuGetFeed,
+        [string] $pavcNuGetFeed,
         [string] $serviceAccount,
         [string] $pavcNuGetPackageName
     )
@@ -137,9 +137,9 @@ function Test-Parameters
         Write-Error "PAVC ScanStartTime not set! Please retry by providing a valid PAVC ScanStartTime!"
     }
 
-    if ([string]::IsNullOrWhiteSpace($pavcNnuGetFeed))
+    if ([string]::IsNullOrWhiteSpace($pavcNuGetFeed))
     {
-        Write-Error "PAVC NnuGet Feed not set! Please retry by providing a valid NnuGet Feed!"
+        Write-Error "PAVC NuGet Feed not set! Please retry by providing a valid NuGet Feed!"
     }
 
     if ([string]::IsNullOrWhiteSpace($serviceAccount))
@@ -149,7 +149,7 @@ function Test-Parameters
 
     if ([string]::IsNullOrWhiteSpace($pavcNuGetPackageName))
     {
-        Write-Error "PAVC NnuGet package name not set! Please retry by providing a valid PAVC NnuGet package name!"
+        Write-Error "PAVC NuGet package name not set! Please retry by providing a valid PAVC NuGet package name!"
     }
 }
 
@@ -251,7 +251,7 @@ function Download-PAVC
         [string] $pavcVersion,
         [string] $keyVault,
         [string] $keyVaultPavcServiceAccountPatKeyName,
-        [string] $pavcNnuGetFeed,
+        [string] $pavcNuGetFeed,
         [string] $serviceAccount,
         [string] $pavcNuGetPackageName
     )
@@ -262,7 +262,7 @@ function Download-PAVC
 
     try
     {
-        Invoke-Expression -Command "$nugetExe source Add -Name $nugetPavcSourceName -Source $pavcNnuGetFeed -UserName $serviceAccount -Password $kvPavcAccountSecret"
+        Invoke-Expression -Command "$nugetExe source Add -Name $nugetPavcSourceName -Source $pavcNuGetFeed -UserName $serviceAccount -Password $kvPavcAccountSecret"
         Invoke-Expression -Command "$nugetExe install $pavcNuGetPackageName -NonInteractive -DirectDownload -Version $pavcVersion -OutputDirectory $Env:HOMEDRIVE/ -ExcludeVersion"
         Invoke-Expression -Command "$nugetExe source Remove -Name $nugetPavcSourceName"
         Remove-Item -Path $nugetExe -Force
@@ -320,7 +320,7 @@ try
                     -pavcEnvironment $pavcEnvironment `
                     -pavcCPURateLimit $pavcCPURateLimit `
                     -pavcScanStartTime $pavcScanStartTime `
-                    -pavcNnuGetFeed $pavcNnuGetFeed `
+                    -pavcNuGetFeed $pavcNuGetFeed `
                     -serviceAccount $serviceAccount `
                     -pavcNuGetPackageName $pavcNuGetPackageName
 
@@ -333,7 +333,7 @@ try
     Download-PAVC -pavcVersion $pavcVersion `
                   -keyVault $keyVault `
                   -keyVaultPavcServiceAccountPatKeyName $keyVaultPavcServiceAccountPatKeyName `
-                  -pavcNnuGetFeed $pavcNnuGetFeed `
+                  -pavcNuGetFeed $pavcNuGetFeed `
                   -serviceAccount $serviceAccount `
                   -pavcNuGetPackageName $pavcNuGetPackageName
 

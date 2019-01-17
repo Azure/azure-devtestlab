@@ -64,7 +64,7 @@
             "description": "The NuGet Version to download.",
             "defaultValue": "v4.9.2"
         },
-        "pavcNnuGetFeed": {
+        "pavcNuGetFeed": {
             "type": "string",
             "displayName": "PAVC NuGet Feed",
             "description": "The PAVC NuGet Feed. i.e. https://xxx.pkgs.visualstudio.com/_packaging/xxx/nuget/v3/index.json",
@@ -120,6 +120,6 @@
         }
     },
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./InstallPAVC.ps1 -tenantId ', parameters('tenantId'), ' -applicationId ', parameters('applicationId'), ' -servicePrincipalPassword ''', parameters('servicePrincipalPassword'), ''' -pavcVersion ', parameters('pavcVersion'), ' -keyVault ', parameters('keyVault'), ' -keyVaultCertPasswordKeyName ', parameters('keyVaultCertPasswordKeyName'), ' -keyVaultCertName ', parameters('keyVaultCertName'), ' -keyVaultPavcServiceAccountPatKeyName ', parameters('keyVaultPavcServiceAccountPatKeyName'), ' -nuGetVersion ', parameters('nuGetVersion'), ' -pavcWorkload ', parameters('pavcWorkload'), ' -pavcServiceLine ''', parameters('pavcServiceLine'), ''' -pavcCertificateNameWildCard ', parameters('pavcCertificateNameWildCard'), ' -pavcEnvironment ', parameters('pavcEnvironment'), ' -pavcCPURateLimit ', parameters('pavcCPURateLimit'), ' -pavcScanStartTime ', parameters('pavcScanStartTime'), ' -pavcNnuGetFeed ', parameters('pavcNnuGetFeed'), ' -serviceAccount ', parameters('serviceAccount'), ' -pavcNuGetPackageName ', parameters('pavcNuGetPackageName'), '\"')]"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./InstallPAVC.ps1 -tenantId ', parameters('tenantId'), ' -applicationId ', parameters('applicationId'), ' -servicePrincipalPassword ''', parameters('servicePrincipalPassword'), ''' -pavcVersion ', parameters('pavcVersion'), ' -keyVault ', parameters('keyVault'), ' -keyVaultCertPasswordKeyName ', parameters('keyVaultCertPasswordKeyName'), ' -keyVaultCertName ', parameters('keyVaultCertName'), ' -keyVaultPavcServiceAccountPatKeyName ', parameters('keyVaultPavcServiceAccountPatKeyName'), ' -nuGetVersion ', parameters('nuGetVersion'), ' -pavcWorkload ', parameters('pavcWorkload'), ' -pavcServiceLine ''', parameters('pavcServiceLine'), ''' -pavcCertificateNameWildCard ', parameters('pavcCertificateNameWildCard'), ' -pavcEnvironment ', parameters('pavcEnvironment'), ' -pavcCPURateLimit ', parameters('pavcCPURateLimit'), ' -pavcScanStartTime ', parameters('pavcScanStartTime'), ' -pavcNuGetFeed ', parameters('pavcNuGetFeed'), ' -serviceAccount ', parameters('serviceAccount'), ' -pavcNuGetPackageName ', parameters('pavcNuGetPackageName'), '\"')]"
     }
 }
