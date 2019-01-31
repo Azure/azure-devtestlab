@@ -1,0 +1,64 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "PowerShell",
+            "request": "launch",
+            "name": "Deploy template",
+            "script": "${workspaceRoot}/Deploy-AzureResourceGroup.ps1",
+            "args": [],
+            "cwd": "${workspaceRoot}",
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "type": "PowerShell",
+            "request": "launch",
+            "name": "DSC for all VMs",
+            "script": "${workspaceRoot}/Scripts/Generate-DSCArchive.ps1",
+            "args": ["-VM *"],
+            "cwd": "${workspaceRoot}",
+            "internalConsoleOptions": "openOnFirstSessionStart"
+        },
+        {
+            "type": "PowerShell",
+            "request": "launch",
+            "name": "DSC for SP VM",
+            "script": "${workspaceRoot}/Scripts/Generate-DSCArchive.ps1",
+            "args": ["-VM SP"],
+            "cwd": "${workspaceRoot}",
+            "internalConsoleOptions": "openOnFirstSessionStart"
+        },
+        {
+            "type": "PowerShell",
+            "request": "launch",
+            "name": "DSC for specific VM",
+            "script": "${workspaceRoot}/Scripts/Generate-DSCArchive.ps1",
+            "args": [ "${command:SpecifyScriptArgs}" ],
+            "cwd": "${workspaceRoot}",
+            "internalConsoleOptions": "openOnFirstSessionStart"
+        },
+        {
+            "type": "PowerShell",
+            "request": "launch",
+            "name": "PowerShell Launch (current file)",
+            "script": "${file}",
+            "args": [],
+            "cwd": "${file}"
+        },
+        {
+            "type": "PowerShell",
+            "request": "launch",
+            "name": "PowerShell Interactive Session",
+            "cwd": "${workspaceRoot}"
+        },
+        {
+            "type": "PowerShell",
+            "request": "launch",
+            "name": "Delete specific VMs",
+            "script": "${workspaceRoot}/Scripts/Delete-VMs.ps1",
+            "args": [ "${command:SpecifyScriptArgs}" ],
+            "cwd": "${workspaceRoot}",
+            "internalConsoleOptions": "openOnFirstSessionStart"
+        }
+    ]
+}
