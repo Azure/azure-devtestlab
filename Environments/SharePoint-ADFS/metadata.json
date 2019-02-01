@@ -1,7 +1,7 @@
 {
   "itemDisplayName": "SharePoint optimized for DevTest labs",
-  "description": "This template deploys SharePoint 2013, 2016 and 2019. Each SharePoint version is independent, user chooses which one to deploy individually and can deploy all simultaneously. A DC is provisioned and configured with ADFS and ADCS, and a unique SQL Server is provisioned for all SharePoint farms. Farms are optimized for running integration tests: minimum configuration to provision quickly, but still viable to cover most scenarios.",
-  "summary": "This template deploys SharePoint 2013, 2016 and 2019. Each SharePoint version is independent, user chooses which one to deploy individually and can deploy all simultaneously.",
+  "description": "This template deploys SharePoint 2013, 2016 and 2019. Each SharePoint version is independent and may or may not be deployed, depending on your needs. A DC is provisioned and configured with ADFS and ADCS, and a unique SQL Server is provisioned for all SharePoint farms. Farms are optimized for running integration tests: minimum configuration to provision quickly, but still viable to cover most scenarios.",
+  "summary": "This template deploys SharePoint 2013, 2016 and 2019. Each SharePoint version is independent and may or may not be deployed, depending on your needs.",
   "githubUsername": "Yvand",
-  "dateUpdated": "2019-01-31"
+  "dateUpdated": "2019-02-01"
 }
