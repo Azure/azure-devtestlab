@@ -1,6 +1,6 @@
-# Azure template for SharePoint 2013 / 2016 / 2019, optimized for DevTest labs
+# Azure template for SharePoint 2019 / 2016 / 2013, optimized for DevTest labs
 
-This template deploys SharePoint 2013, 2016 and 2019. Each SharePoint version is independent and may or may not be deployed, depending on your needs.  
+This template deploys SharePoint 2019, 2016 and 2013. Each SharePoint version is independent and may or may not be deployed, depending on your needs.  
 A DC is provisioned and configured with ADFS and ADCS, and a unique SQL Server is provisioned for all SharePoint farms.  
 SharePoint farms are optimized for running integration tests: they have a minimum configuration to provision quickly, but still viable to cover most scenarios.
 
