@@ -164,7 +164,7 @@
       "metadata": {
         "description": "The base URI where artifacts required by this template are located. When the template is deployed using the accompanying scripts, a private location in the subscription will be used and this value will be automatically generated."
       },
-      "defaultValue": "https://github.com/Yvand/AzureRM-Templates/raw/master/Templates/SharePoint-ADFS-DevTestLabs"
+      "defaultValue": "https://github.com/Azure/azure-devtestlab/raw/master/Environments/SharePoint-ADFS"
     },
     "_artifactsLocationSasToken": {
       "type": "securestring",
@@ -176,7 +176,6 @@
   },
   "variables": {
     "generalSettings": {
-      "dscScriptsFolder": "dsc",
       "vmDCName": "DC",
       "vmSQLName": "SQL",
       "vmSP2013Name": "SP2013",
@@ -257,19 +256,19 @@
       "shutdownResourceName": "[concat('Shutdown-VM-', variables('generalSettings').vmSP2019Name)]"
     },
     "dscConfigureDCVM": {
-      "fileName": "ConfigureDCVM.zip",
+      "scriptFileUri": "[concat(parameters('_artifactsLocation'), '/dsc/ConfigureDCVM.zip', parameters('_artifactsLocationSasToken'))]",
       "script": "ConfigureDCVM.ps1",
       "function": "ConfigureDCVM",
       "forceUpdateTag": "1.0"
     },
     "dscConfigureSQLVM": {
-      "fileName": "ConfigureSQLVM.zip",
+      "scriptFileUri": "[concat(parameters('_artifactsLocation'), '/dsc/ConfigureSQLVM.zip', parameters('_artifactsLocationSasToken'))]",
       "script": "ConfigureSQLVM.ps1",
       "function": "ConfigureSQLVM",
       "forceUpdateTag": "1.0"
     },
     "dscConfigureSPVM": {
-      "fileName": "ConfigureSPVM.zip",
+      "scriptFileUri": "[concat(parameters('_artifactsLocation'), '/dsc/ConfigureSPVM.zip', parameters('_artifactsLocationSasToken'))]",
       "script": "ConfigureSPVM.ps1",
       "function": "ConfigureSPVM",
       "forceUpdateTag": "1.0"
@@ -476,7 +475,7 @@
             "settings": {
               "wmfVersion": "latest",
               "configuration": {
-                "url": "[concat(parameters('_artifactsLocation'), '/', variables('generalSettings').dscScriptsFolder, '/', variables('dscConfigureDCVM').fileName, parameters('_artifactsLocationSasToken'))]",
+                "url": "[variables('dscConfigureDCVM').scriptFileUri]",
                 "script": "[variables('dscConfigureDCVM').script]",
                 "function": "[variables('dscConfigureDCVM').function]"
               },
@@ -605,7 +604,7 @@
         "settings": {
           "wmfVersion": "latest",
           "configuration": {
-            "url": "[concat(parameters('_artifactsLocation'), '/', variables('generalSettings').dscScriptsFolder, '/', variables('dscConfigureSQLVM').fileName, parameters('_artifactsLocationSasToken'))]",
+            "url": "[variables('dscConfigureSQLVM').scriptFileUri]",
             "script": "[variables('dscConfigureSQLVM').script]",
             "function": "[variables('dscConfigureSQLVM').function]"
           },
@@ -739,7 +738,7 @@
         "settings": {
           "wmfVersion": "latest",
           "configuration": {
-            "url": "[concat(parameters('_artifactsLocation'), '/', variables('generalSettings').dscScriptsFolder, '/', variables('dscConfigureSPVM').fileName, parameters('_artifactsLocationSasToken'))]",
+            "url": "[variables('dscConfigureSPVM').scriptFileUri]",
             "script": "[variables('dscConfigureSPVM').script]",
             "function": "[variables('dscConfigureSPVM').function]"
           },
@@ -885,7 +884,7 @@
         "settings": {
           "wmfVersion": "latest",
           "configuration": {
-            "url": "[concat(parameters('_artifactsLocation'), '/', variables('generalSettings').dscScriptsFolder, '/', variables('dscConfigureSPVM').fileName, parameters('_artifactsLocationSasToken'))]",
+            "url": "[variables('dscConfigureSPVM').scriptFileUri]",
             "script": "[variables('dscConfigureSPVM').script]",
             "function": "[variables('dscConfigureSPVM').function]"
           },
@@ -1031,7 +1030,7 @@
         "settings": {
           "wmfVersion": "latest",
           "configuration": {
-            "url": "[concat(parameters('_artifactsLocation'), '/', variables('generalSettings').dscScriptsFolder, '/', variables('dscConfigureSPVM').fileName, parameters('_artifactsLocationSasToken'))]",
+            "url": "[variables('dscConfigureSPVM').scriptFileUri]",
             "script": "[variables('dscConfigureSPVM').script]",
             "function": "[variables('dscConfigureSPVM').function]"
           },
@@ -1075,11 +1074,11 @@
     }
   ],
   "outputs": {
-    "EnvironmentLocation":{
+    "EnvironmentLocation": {
       "type": "string",
       "value": "[parameters('_artifactsLocation')]"
     },
-    "EnvironmentSAS":{
+    "EnvironmentSAS": {
       "type": "string",
       "value": "[parameters('_artifactsLocationSasToken')]"
     }
