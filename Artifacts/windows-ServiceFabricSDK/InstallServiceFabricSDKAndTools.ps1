@@ -73,32 +73,22 @@ function Get-VSSetupInstances
     $null = @(
         if (-not (Get-Module -ListAvailable -Name VSSetup))
         {
-            Update-PowerShellGetModule
-            Install-Module VSSetup -Scope CurrentUser -Force
+            Write-Host "Updating NuGet provider to a version higher than 2.8.5.201."
+            Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
+
+            Write-Host "Installing PowerShellGet module."            
+            Install-Module -Name PowerShellGet -Force
+
+            Write-Host "Installing VSSetup module for the current user."
+            Install-Module -Name VSSetup -Force
         }
+
+        # Make sure the VSSetup module is loaded.
+        Import-Module -Name VSSetup
     )
 
     # Get VS installation information.
     return Get-VSSetupInstance
-}
-
-function Update-PowerShellGetModule
-{
-    $execPolicy = Get-ExecutionPolicy
-
-    try
-    {
-        Set-ExecutionPolicy RemoteSigned
-        Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
-    }
-    catch
-    {
-        throw $Error[0]
-    }
-    finally
-    {
-        Set-ExecutionPolicy $execPolicy
-    }
 }
 
 function Test-VSVersion
@@ -382,6 +372,9 @@ function Enable-ServiceFabricTools
 try
 {
     Write-Host "Starting installation of Service Fabric SDK and Tools for $VSVersion."
+
+    # For this process, we want to be able to execute downloaded scripts.
+    Set-ExecutionPolicy Bypass -Scope Process -Force | Out-Null
 
     # Change the "Local AppData" path to a location where the process can write, or the relevant
     # VS installer components will fail to complete.
