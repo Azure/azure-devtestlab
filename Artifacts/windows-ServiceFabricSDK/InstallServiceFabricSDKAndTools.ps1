@@ -127,7 +127,7 @@ function Test-VSVersion
 
     if (-not $foundDesiredVSVersion)
     {
-        throw "Unable to find specified version: $VSVersion. It must be installed before preceeding."
+        throw "Unable to find specified version: $VSVersion. It must be installed before proceeding."
     }
 }
 
