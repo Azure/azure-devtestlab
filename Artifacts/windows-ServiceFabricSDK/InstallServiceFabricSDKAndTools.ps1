@@ -79,7 +79,7 @@ function Get-VSSetupInstances
             Write-Host "Installing PowerShellGet module."            
             Install-Module -Name PowerShellGet -Force
 
-            Write-Host "Installing VSSetup module for the current user."
+            Write-Host "Installing VSSetup module."
             Install-Module -Name VSSetup -Force
         }
 
