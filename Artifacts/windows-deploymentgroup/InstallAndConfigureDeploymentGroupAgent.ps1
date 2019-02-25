@@ -249,7 +249,7 @@ function Configure-DeploymentGroupAgent
     }
     if(-not [string]::IsNullOrWhiteSpace($deploymentAgentTags))
     {
-        $agentConfigArgs += "--deploymentgrouptags", $deploymentAgentTags
+        $agentConfigArgs += "--adddeploymentgrouptags", "--deploymentgrouptags", $deploymentAgentTags
     }
 
     & .\config.cmd $agentConfigArgs
