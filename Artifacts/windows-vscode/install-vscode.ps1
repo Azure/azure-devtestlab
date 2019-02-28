@@ -72,7 +72,8 @@ function Get-VSCodeSetup
     $fwdUrl = 'http://go.microsoft.com/fwlink/?LinkID=623230'
     $setupUrl = Get-RedirectedUrl -URL $fwdUrl
 
-    Invoke-WebRequest $setupUrl -OutFile $SetupExe
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    Invoke-WebRequest -Uri $setupUrl -OutFile $SetupExe
 }
 
 ###################################################################################################
