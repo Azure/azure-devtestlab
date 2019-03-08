@@ -146,6 +146,42 @@ function Get-DtlLab
     return Get-AzureRmResource -ResourceId "$LabId"
 }
 
+function Get-DtlLabVm
+{
+    [CmdletBinding()]
+    param(
+        [string] $ResourceId
+    )
+
+    $vm = Get-AzureRmResource -ResourceId "$ResourceId"
+    if (-not $vm)
+    {
+        throw "Unable to find VM with resource ID '$ResourceId'."
+    }
+
+    $vmName = $vm.Name
+    if ($vm.ResourceName)
+    {
+        $vmLabName = $vm.ResourceName.Split('/')[0]
+        $vmFullName = $vm.ResourceName
+    }
+    else
+    {
+        $vmLabName = $(if ($vm.ParentResource){ $vm.ParentResource.Split('/')[-1] } else { $null })
+        $vmFullName = $(if ($vmLabName){ "$vmLabName/$vmName" } else { $vmName })
+    }
+    $vmResourceGroupName = $vm.ResourceGroupName
+    $vmResourceType = $vm.ResourceType
+
+    $vmDetails = Get-AzureRmResource -ApiVersion '2018-10-15-preview' -Name $vmFullName -ResourceGroupName $vmResourceGroupName -ResourceType $vmResourceType -ODataQuery '$expand=Properties($expand=Artifacts)'
+    if (-not $vmDetails)
+    {
+        throw "Unable to get details for VM '$vmName' under lab '$vmLabName' and resource group '$vmResourceGroupName'."
+    }
+
+    return $vmDetails
+}
+
 function Get-ExpectedArtifactsCount
 {
     [CmdletBinding()]
@@ -274,7 +310,8 @@ function Test-ArtifactStatus
         $expectedArtifactsCount = Get-ExpectedArtifactsCount -ArmTemplateJson $armTemplateJson
         if ($expectedArtifactsCount -gt 0)
         {
-            $vm = Get-AzureRmResource -ResourceId $ResourceId -ODataQuery '$expand=Properties($expand=Artifacts)'
+            $vm = Get-DtlLabVm -ResourceId $ResourceId
+
             [array]$artifacts = $vm.Properties.artifacts
             [array]$failedArtifacts = $artifacts | ? { $_.status -eq 'Failed' }
             [array]$succeededArtifacts = $artifacts | ? { $_.status -eq 'Succeeded' }
@@ -431,34 +468,10 @@ function Wait-ApplyArtifacts
                 throw "Waited for more than $(ConvertTo-MinutesString $totalWaitMinutes). Failing the task."
             }
 
-            $vm = Get-AzureRmResource -ResourceId $ResourceId
-            if (-not $vm)
-            {
-                throw "Unable to find VM with resource ID '$ResourceId'."
-            }
+            $vm = Get-DtlLabVm -ResourceId $ResourceId
 
-            $vmName = $vm.Name
-            if ($vm.ResourceName)
-            {
-                $vmLabName = $vm.ResourceName.Split('/')[0]
-                $vmFullName = $vm.ResourceName
-            }
-            else
-            {
-                $vmLabName = $(if ($vm.ParentResource){ $vm.ParentResource.Split('/')[-1] } else { $null })
-                $vmFullName = $(if ($vmLabName){ "$vmLabName/$vmName" } else { $vmName })
-            }
-            $vmResourceGroupName = $vm.ResourceGroupName
-            $vmResourceType = $vm.ResourceType
-
-            $vmDetails = Get-AzureRmResource -ApiVersion '2018-10-15-preview' -Name $vmFullName -ResourceGroupName $vmResourceGroupName -ResourceType $vmResourceType -ODataQuery '$expand=Properties($expand=Artifacts)'
-            if (-not $vmDetails)
-            {
-                throw "Unable to get details for VM '$vmName' under lab '$vmLabName' and resource group '$vmResourceGroupName'."
-            }
-
-            $provisioningState = $vmDetails.Properties.provisioningState
-            $continueWaiting = Test-ArtifactsInstalling -Artifacts $vmDetails.Properties.artifacts
+            $provisioningState = $vm.Properties.provisioningState
+            $continueWaiting = Test-ArtifactsInstalling -Artifacts $vm.Properties.artifacts
 
             if ($continueWaiting)
             {
