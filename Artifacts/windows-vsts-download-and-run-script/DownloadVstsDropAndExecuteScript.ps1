@@ -72,6 +72,11 @@ function Get-BuildArtifacts
     # Process all artifacts found.
     foreach ($artifact in $artifacts)
     {
+        if ($artifact.resource.type -notlike "Container") {
+            Write-Host "Skip download of artifact $($artifact.name) as it is not of type 'Container'"
+            continue
+        }
+        
         $artifactName = "$($artifact.name)"
         $artifactZip = "$artifactName.zip"
         Write-Host "Preparing to download artifact $artifactName to file $artifactZip"
