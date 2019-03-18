@@ -1,6 +1,6 @@
-# SharePoint 2013 Farm
+# SharePoint 2019 Farm
 
-You can now readily deploy a three-tier SharePoint Server 2013 farm in Azure. This is designed to help you quickly create an Internet-facing SharePoint farm for dev/test, demonstration, or proof-of-concept purposes.
+You can now readily deploy a three-tier SharePoint Server 2019 farm in Azure. This is designed to help you quickly create an Internet-facing SharePoint farm for dev/test, demonstration, or proof-of-concept purposes.
 
 # DSC Configuration files (.zip files)
 ## Prepare SharePoint Server
