@@ -32,33 +32,33 @@
         "SharePoint Setup User Account Name": {
             "type": "string",
             "metadata": {
-                "description": "The Sharepoint Setup account name"
+                "description": "The SharePoint Setup account name"
             },
             "defaultValue": "sp_setup"
         },
         "SharePoint Setup User Account Password": {
             "type": "securestring",
             "metadata": {
-                "description": "The Sharepoint Setup account password"
+                "description": "The SharePoint Setup account password"
             }
         },
         "SharePoint Farm Account UserName": {
             "type": "string",
             "metadata": {
-                "description": "The Sharepoint Farm account name"
+                "description": "The SharePoint Farm account name"
             },
             "defaultValue": "sp_farm"
         },
         "SharePoint Farm Account Password": {
             "type": "securestring",
             "metadata": {
-                "description": "The Sharepoint Farm account password"
+                "description": "The SharePoint Farm account password"
             }
         },
         "SharePoint Farm Passphrase": {
             "type": "securestring",
             "metadata": {
-                "description": "The Sharepoint Farm Passphrase"
+                "description": "The SharePoint Farm Passphrase"
             }
         },
         "_artifactsLocation": {
