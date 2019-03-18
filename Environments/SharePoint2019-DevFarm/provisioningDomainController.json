@@ -119,7 +119,7 @@
             "settings": {
               "ModulesUrl": "[parameters('adModulesURL')]",
               "SasToken":"[parameters('_artifactsLocationSasToken')]",
-              "wmfVersion": "4.0",
+              "wmfVersion": "5.1",
               "ConfigurationFunction": "[parameters('adConfigurationFunction')]",
               "Properties": {
                 "DomainName": "[parameters('domainName')]",

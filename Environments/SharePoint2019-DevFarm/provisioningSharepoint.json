@@ -119,7 +119,7 @@
         "settings": {
           "ModulesUrl": "[parameters('spPrepareModulesURL')]",
           "SasToken": "[parameters('_artifactsLocationSasToken')]",
-          "wmfVersion": "4.0",
+          "wmfVersion": "5.1",
           "ConfigurationFunction": "[parameters('spPreparationFunction')]",
           "Properties": {
                 "DNSServer": "[parameters('DNSServerAddress')]"
