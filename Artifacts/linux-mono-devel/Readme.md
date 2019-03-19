@@ -6,13 +6,12 @@ Mono is an open source implementation of Microsoft's .NET Framework based on the
 
 ## Supported distros
 
-This artifacts works on the following operating systems:
+This artifact works on the following operating systems:
 
   - Ubuntu: 16.04 - 18.04
   - Debian: 7, 8
   - Centos: 6, 7
   - Fedora: 27, 26
-
 
 ## Troubleshooting
 
