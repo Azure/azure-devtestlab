@@ -13,9 +13,7 @@ Param(
     [string] $certificatePassword
 )
 
-
 ##################################################################################################
-
 #
 # Powershell Configurations
 #
@@ -30,29 +28,7 @@ pushd $PSScriptRoot
 # Ensure that current process can run scripts. 
 Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force 
 
-#
-# Functions used in this script.
-#
-
-function Handle-LastError
-{
-    [CmdletBinding()]
-    param(
-    )
-
-    $message = $error[0].Exception.Message
-    if ($message)
-    {
-        Write-Host -Object "ERROR: $message" -ForegroundColor Red
-    }
-    
-    # IMPORTANT NOTE: Throwing a terminating error (using $ErrorActionPreference = "Stop") still
-    # returns exit code zero from the PowerShell script when using -File. The workaround is to
-    # NOT use -File when calling this script and leverage the try-catch-finally block and return
-    # a non-zero exit code from the catch block.
-    exit -1
-}
-
+##################################################################################################
 #
 # Handle all errors in this script.
 #
@@ -61,11 +37,22 @@ trap
 {
     # NOTE: This trap will handle all errors. There should be no need to use a catch below in this
     #       script, unless you want to ignore a specific error.
-    Handle-LastError
+    $message = $Error[0].Exception.Message
+    if ($message)
+    {
+        Write-Host -Object "`nERROR: $message" -ForegroundColor Red
+    }
+
+    Write-Host "`nThe artifact failed to apply.`n"
+
+    # IMPORTANT NOTE: Throwing a terminating error (using $ErrorActionPreference = "Stop") still
+    # returns exit code zero from the PowerShell script when using -File. The workaround is to
+    # NOT use -File when calling this script and leverage the try-catch-finally block and return
+    # a non-zero exit code from the catch block.
+    exit -1
 }
 
 ###################################################################################################
-
 #
 # Main execution block.
 #
@@ -74,12 +61,12 @@ try
 {
     Write-Host "Installing certificate $certificateName"
 
-    If(-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))
+    if (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))
     {
-        #build up the deploy arguments
+        # Build up the deploy arguments.
         $arguments = "-file `"{0}`"" -f $script:MyInvocation.MyCommand.Path
     
-        # Start the new process
+        # Start the new process.
         Start-Process powershell.exe -Verb runas -ArgumentList $arguments -Wait
     }
     else
@@ -94,13 +81,13 @@ try
         Write-Host "Certificate saved"
         		
         Get-ChildItem -Path $tempFilePath | Import-PfxCertificate -CertStoreLocation Cert:\LocalMachine\My -Exportable -Password $securePassword
-        Write-Host "Certificate $certificateName added to the LocalMachine\My store succesfully"
+        Write-Host "Certificate $certificateName added to the LocalMachine\My store succesfully."
 
         Remove-Item -Path "$tempFilePath" -Force
         Write-Host "Deleted the temp file $tempFilePath"
     }
 
-    Write-Host 'Done'
+    Write-Host "`nThe artifact was applied successfully.`n"
 }
 finally
 {
