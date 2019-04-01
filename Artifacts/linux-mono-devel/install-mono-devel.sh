@@ -42,12 +42,12 @@ if [ -n "$isApt" ]; then
         exit 1
     fi
 
-    sudo apt update 
-    sudo apt install -y $REQ_PACKAGES
+    sudo apt-get update
+    sudo apt-get install -y $REQ_PACKAGES
     sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
     echo "deb https://download.mono-project.com/repo/${ID} ${MONO_REPO} main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
-    sudo apt update
-    sudo apt install -y mono-devel
+    sudo apt-get update
+    sudo apt-get install -y mono-devel
 elif [ -n "$isRpm" ]; then
     # Fedora, CentOS
     sudo rpm --import "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF"
@@ -65,6 +65,9 @@ elif [ -n "$isRpm" ]; then
         dnf install -y mono-devel
     elif [ $ID = "centos" ]; then
         sudo yum install -y mono-devel
+    else
+        echo "RPM-based distribution not supported. ID=${ID}, VERSION=${VERSION}"
+        exit 1
     fi
 fi
 
