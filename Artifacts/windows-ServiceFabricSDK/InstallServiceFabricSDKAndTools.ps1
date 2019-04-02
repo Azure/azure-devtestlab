@@ -4,7 +4,6 @@ param(
 )
 
 ###################################################################################################
-
 #
 # PowerShell configurations
 #
@@ -13,36 +12,46 @@ param(
 #       This is necessary to ensure we capture errors inside the try-catch-finally block.
 $ErrorActionPreference = "Stop"
 
+# Hide any progress bars, due to downloads and installs of remote components.
+$ProgressPreference = "SilentlyContinue"
+
 # Ensure we set the working directory to that of the script.
-pushd $PSScriptRoot
+Push-Location $PSScriptRoot
+
+# Discard any collected errors from a previous execution.
+$Error.Clear()
 
 # Configure strict debugging.
 Set-PSDebug -Strict
 
 ###################################################################################################
-
 #
-# Functions used in this script.
+# Handle all errors in this script.
 #
 
-function Handle-LastError
+trap
 {
-    [CmdletBinding()]
-    param(
-    )
-
-    $message = $error[0].Exception.Message
+    # NOTE: This trap will handle all errors. There should be no need to use a catch below in this
+    #       script, unless you want to ignore a specific error.
+    $message = $Error[0].Exception.Message
     if ($message)
     {
-        Write-Host -Object "ERROR: $message" -ForegroundColor Red
+        Write-Host -Object "`nERROR: $message" -ForegroundColor Red
     }
-    
+
+    Write-Host "`nThe artifact failed to apply.`n"
+
     # IMPORTANT NOTE: Throwing a terminating error (using $ErrorActionPreference = "Stop") still
     # returns exit code zero from the PowerShell script when using -File. The workaround is to
     # NOT use -File when calling this script and leverage the try-catch-finally block and return
     # a non-zero exit code from the catch block.
     exit -1
 }
+
+###################################################################################################
+#
+# Functions used in this script.
+#
 
 function Get-VSVersionNumber
 {
@@ -61,14 +70,22 @@ function Get-VSVersionNumber
 
 function Get-VSSetupInstances
 {
-    [CmdletBinding()]
-    param(
-    )
+    $null = @(
+        if (-not (Get-Module -ListAvailable -Name VSSetup))
+        {
+            Write-Host "Installing PowerShellGet module."            
+            Install-Module -Name PowerShellGet -Force
 
-    if (-not (Get-Module -ListAvailable -Name VSSetup))
-    {
-        Install-Module VSSetup -Scope CurrentUser -Force
-    }
+            Write-Host "Updating NuGet provider to a version higher than 2.8.5.201."
+            Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
+
+            Write-Host "Installing VSSetup module."
+            Install-Module -Name VSSetup -Force
+        }
+
+        # Make sure the VSSetup module is loaded.
+        Import-Module -Name VSSetup
+    )
 
     # Get VS installation information.
     return Get-VSSetupInstance
@@ -110,7 +127,7 @@ function Test-VSVersion
 
     if (-not $foundDesiredVSVersion)
     {
-        throw "Unable to find specified version: $VSVersion. It must be installed before preceeding."
+        throw "Unable to find specified version: $VSVersion. It must be installed before proceeding."
     }
 }
 
@@ -210,10 +227,6 @@ function Invoke-Process
 
 function Install-WebPlatformInstaller
 {
-    [CmdletBinding()]
-    param(
-    )
-
     if (Test-Path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WebPlatformInstaller")
     {
         Write-Host 'Web Platform Installer already installed'
@@ -237,12 +250,42 @@ function Install-WebPlatformInstaller
 
 function Get-WebPlatformInstaller
 {
-    [CmdletBinding()]
-    param(
-    )
-
     $wpiInfo = (ls "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WebPlatformInstaller")[-1].Name
     return Join-Path (Get-ItemProperty -Path "Registry::$wpiInfo" -Name 'InstallPath').InstallPath 'webpicmd.exe'
+}
+
+function Get-VSInsaller
+{
+    $software = 'HKEY_LOCAL_MACHINE\SOFTWARE'
+    $uninstall = 'Microsoft\Windows\CurrentVersion\Uninstall'
+    $winUninstall = "$software\$uninstall"
+    $wowUninstall = "$software\WOW6432Node\$uninstall"
+    $installerGuid = '{6F320B93-EE3C-4826-85E0-ADF79F8D4C61}'
+    $installerExe = 'vs_installer.exe'
+
+    $paths = (
+        "Registry::$winUninstall\$installerGuid",
+        "Registry::$wowUninstall\$installerGuid",
+        "Registry::$winUninstall\*",
+        "Registry::$wowUninstall\*"
+    )
+
+    [string] $vsInstallerExePath = $null
+    foreach ($path in $paths)
+    {
+        $vsInstallerExePath = (Get-ItemProperty -Path "$path" | Where-Object { $_.ModifyPath -match "$installerExe" } | Select-Object -First 1).InstallLocation.Trim('"')
+        if ($vsInstallerExePath)
+        {
+            break
+        }
+    }
+
+    if (-not $vsInstallerExePath)
+    {
+        throw 'Unable to find the Visual Studio Installer. Please verify its installation.'
+    }
+
+    return (Join-Path $vsInstallerExePath $installerExe)
 }
 
 function Get-ServiceFabricSdkProductId
@@ -270,8 +313,8 @@ function Install-ServiceFabricSdk
     $wpiExe = Get-WebPlatformInstaller
     $productId = Get-ServiceFabricSdkProductId -VSVersionNumber $VSVersionNumber
     
-    Invoke-Process -FileName $wpiExe -Arguments "/Offline /Products:$productId /Path:$($env:Temp)\OfflineCache"
-    Invoke-Process -FileName $wpiExe -Arguments "/Install /Products:$productId /AcceptEula /SuppressReboot /SuppressPostFinish /Log:$LogPath /xml:$($env:Temp)\OfflineCache\feeds\latest\webproductlist.xml"
+    Invoke-Process -FileName "$wpiExe" -Arguments "/Offline /Products:$productId /Path:$($env:Temp)\OfflineCache"
+    Invoke-Process -FileName "$wpiExe" -Arguments "/Install /Products:$productId /AcceptEula /SuppressReboot /SuppressPostFinish /Log:$LogPath /xml:$($env:Temp)\OfflineCache\feeds\latest\webproductlist.xml"
 }
 
 function Enable-ServiceFabricTools
@@ -299,9 +342,8 @@ function Enable-ServiceFabricTools
         throw "Visual Studio bootstrapper was not successfully downloaded to $vsBootstrapperExe"
     }
 
-    Write-Host 'Getting Visual Studio Installer path'
-    $vsInstallerExePath = (Get-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\{6F320B93-EE3C-4826-85E0-ADF79F8D4C61}" -Name 'InstallLocation').InstallLocation.Trim('"')
-    $vsInstallExe = Join-Path $vsInstallerExePath  'vs_installer.exe'
+    Write-Host 'Getting Visual Studio Installer executable path'
+    $vsInstallExe = Get-VSInsaller
     Write-Host "Visual Studio Installer is at $vsInstallExe"
 
     # Get VS installation information.
@@ -313,63 +355,54 @@ function Enable-ServiceFabricTools
         {
             # We must do an update to restore the channel used for modifying the Visual Studio Instance.
             Write-Host 'Updating Visual Studio instance'
-            Invoke-Process -FileName $vsBootstrapperExe -Arguments "update --installPath `"$($_.InstallationPath)`" --quiet --wait" -ValidExitCodes 1
+            Invoke-Process -FileName "$vsBootstrapperExe" -Arguments "update --installPath `"$($_.InstallationPath)`" --quiet --wait" -ValidExitCodes 1
          
             # Modify the Visual Studio instance with Service Fabric SDK components.
             Write-Host "Enabling Service Fabric Tools component for installation $($_.InstallationPath)"
-            Invoke-Process -FileName $vsInstallExe -Arguments "modify --installPath `"$($_.InstallationPath)`" --add Microsoft.VisualStudio.Workload.Azure --add Microsoft.VisualStudio.Component.Azure.ServiceFabric.Tools --quiet --norestart --wait" -ValidExitCodes 1
+            Invoke-Process -FileName "$vsInstallExe" -Arguments "modify --installPath `"$($_.InstallationPath)`" --add Microsoft.VisualStudio.Workload.Azure --add Microsoft.VisualStudio.Component.Azure.ServiceFabric.Tools --quiet --norestart --wait" -ValidExitCodes 1
         }
     }
 }
 
 ###################################################################################################
-
-#
-# Handle all errors in this script.
-#
-
-trap
-{
-    # NOTE: This trap will handle all errors. There should be no need to use a catch below in this
-    #       script, unless you want to ignore a specific error.
-    Handle-LastError
-}
-
-###################################################################################################
-
 #
 # Main execution block.
 #
 
 try
 {
-    # Change the "Locall AppData" path to a location where the process can write, or the relevant
-    # VS installer components will fail to complete.
-    reg add "hku\.default\software\microsoft\windows\currentversion\explorer\user shell folders" /v "Local AppData" /t REG_EXPAND_SZ /d "$($env:Temp)\AppData\Local" /f
+    Write-Host "Starting installation of Service Fabric SDK and Tools for $VSVersion."
 
-    Write-Host "Validating version specified: $VSVersion"
+    # For this process, we want to be able to execute downloaded scripts.
+    Set-ExecutionPolicy Bypass -Scope Process -Force | Out-Null
+
+    # Change the "Local AppData" path to a location where the process can write, or the relevant
+    # VS installer components will fail to complete.
+    reg add "hku\.default\software\microsoft\windows\currentversion\explorer\user shell folders" /v "Local AppData" /t REG_EXPAND_SZ /d "$($env:Temp)\AppData\Local" /f | Out-Null
+
+    Write-Host "Validating version specified: $VSVersion."
     Test-VSVersion -VSVersion $VSVersion
 
-    Write-Host "Fetching $VSVersion details"
+    Write-Host "Fetching $VSVersion details."
     $vsVersionNumber = Get-VSVersionNumber -VSVersion $VSVersion
 
-    Write-Host 'Looking for Web Platform Installer'
+    Write-Host 'Preparing Web Platform Installer.'
     Install-WebPlatformInstaller
 
-    Write-Host 'Installing Service Fabric SDK'
+    Write-Host 'Installing Service Fabric SDK.'
     Install-ServiceFabricSdk -VSVersionNumber $vsVersionNumber
 
     if ($vsVersionNumber -ge 15)
     {
-        Write-Host 'Enabling Service Fabric Tools'
+        Write-Host 'Enabling Service Fabric Tools.'
         Enable-ServiceFabricTools -VSVersionNumber $vsVersionNumber
     }
+
+    Write-Host "`nThe artifact was applied successfully.`n"
 }
 finally
 {
-    $exitCode = $LASTEXITCODE
     # Restore system to state prior to execution of this script.
-    reg add "hku\.default\software\microsoft\windows\currentversion\explorer\user shell folders" /v "Local AppData" /t REG_EXPAND_SZ /d %%USERPROFILE%%\AppData\Local /f
-    popd
-    exit $exitCode
+    reg add "hku\.default\software\microsoft\windows\currentversion\explorer\user shell folders" /v "Local AppData" /t REG_EXPAND_SZ /d %%USERPROFILE%%\AppData\Local /f | Out-Null
+    Pop-Location
 }

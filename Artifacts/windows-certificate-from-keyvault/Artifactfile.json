@@ -1,0 +1,47 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+  "title": "Install Certificate from Azure Key Vault",
+  "publisher": "Greg Pakes",
+  "description": "Installs a certificate stored in Azure Key Vault.",
+  "tags": [
+    "Windows",
+    "Certificate",
+    "Key Vault"
+  ],
+  "parameters": {
+    "vaultName": {
+      "type": "string",
+      "displayName": "Vault Name",
+      "description": "Name of the Azure Key Vault"
+    },
+    "secretName": {
+      "type": "string",
+      "displayName": "Secret Name",
+      "description": "Name of the secret within the Azure Key Vault"
+    },
+    "azureServicePrincipalClientId": {
+      "type": "string",
+      "displayName": "Azure Service Principal Client Id",
+      "description": "The client Id of the Service Principal used to access Azure"
+    },
+    "azureServicePrincipalKey": {
+      "type": "securestring",
+      "displayName": "Azure Service Principal Key",
+      "description": "The key of the Azure Service Principal"
+    },
+    "azureServicePrincipalTenantId": {
+      "type": "string",
+      "displayName": "Azure Service Tenant Id",
+      "description": "The tenant Id of the Azure Service Principal"
+    },
+    "certificatePasswordSecretName": {
+      "type": "string",
+      "displayName": "Certificate Password Secret Name",
+      "description": "The name of the secret in the vault that contains the password to the certificate"
+    }
+  },
+  "targetOsType": "Windows",
+  "runCommand": {
+    "commandToExecute": "[concat('powershell.exe -NonInteractive -ExecutionPolicy bypass \"& ./InstallCertificate.ps1 -vaultName ''', parameters('vaultName'), ''' -secretName ''', parameters('secretName'), ''' -azureServicePrincipalClientId ''', parameters('azureServicePrincipalClientId'), ''' -azureServicePrincipalKey ''', parameters('azureServicePrincipalKey'), ''' -certificatePasswordSecretName ''', parameters('certificatePasswordSecretName'), ''' -azureServicePrincipalTenantId ''', parameters('azureServicePrincipalTenantId'), '''\"')]"
+  }
+}

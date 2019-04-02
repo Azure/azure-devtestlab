@@ -1,0 +1,7 @@
+{
+  "itemDisplayName": "Create a new lab with internal support information",
+  "description": "This template creates a lab in Azure DevTest Labs with internal support information.",
+  "summary": "This template creates a lab in Azure DevTest Labs with internal support information.",
+  "githubUsername": "EMaher",
+  "dateUpdated": "2018-08-14"
+}

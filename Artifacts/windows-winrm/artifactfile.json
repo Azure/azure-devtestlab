@@ -6,7 +6,7 @@
     "tags": [
         "Windows"
     ],
-    "iconUri": "https://i.microsoft.com/global/ImageStore/PublishingImages/logos/56x56/windows_symbol_clr_56x56.png",
+    "iconUri": "https://raw.githubusercontent.com/PowerShell/PowerShell/master/assets/Powershell_64.png",
     "targetOsType": "Windows",
     "parameters": {
         "hostName": {

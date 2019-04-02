@@ -66,11 +66,16 @@ function Ensure-Chocolatey
 {
     [CmdletBinding()]
     param(
+        [string] $ChocoExePath
     )
 
-    if (-not (Test-Path "$choco"))
+    if (-not (Test-Path "$ChocoExePath"))
     {
-        Invoke-ExpressionImpl -Expression ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1')) | Out-Null
+        Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+        if ($LastExitCode -eq 3010)
+        {
+            Write-Host 'The recent changes indicate a reboot is necessary. Please reboot at your earliest convenience.'
+        }
     }
 }
 
@@ -91,20 +96,21 @@ function Install-Packages
 {
     [CmdletBinding()]
     param(
+        [string] $ChocoExePath,
         $Packages
     )
 
     $Packages = $Packages.split(',; ', [StringSplitOptions]::RemoveEmptyEntries) -join ' '
     $checkSumFlags = ""
-    if($AllowEmptyChecksums)
+    if ($AllowEmptyChecksums)
     {
         $checkSumFlags = $checkSumFlags + " --allow-empty-checksums "
     }
-    if($IgnoreChecksums)
+    if ($IgnoreChecksums)
     {
         $checkSumFlags = $checkSumFlags + " --ignore-checksums "
     }
-    $expression = "$choco install -y -f --acceptlicense $checkSumFlags --no-progress --stoponfirstfailure $Packages"
+    $expression = "$ChocoExePath install -y -f --acceptlicense $checkSumFlags --no-progress --stoponfirstfailure $Packages"
     Invoke-ExpressionImpl -Expression $expression 
 }
 
@@ -135,7 +141,7 @@ function Invoke-ExpressionImpl
         }
         else
         {
-            throw 'Installation failed. Please see the Chocolatey logs in %ALLUSERSPROFILE%\chocolatey\logs folder for details.'
+            throw "Installation failed ($LastExitCode). Please see the Chocolatey logs in %ALLUSERSPROFILE%\chocolatey\logs folder for details."
         }
     }
 }
@@ -169,10 +175,10 @@ try
     Enable-PSRemoting -Force -SkipNetworkProfileCheck | Out-Null
 
     Write-Host 'Ensuring latest Chocolatey version is installed.'
-    Ensure-Chocolatey
+    Ensure-Chocolatey -ChocoExePath "$choco"
 
-    Write-Host "Preparing to install Chocolatey packages: $Packages with checksum flags: --allow-empty-checksums: ($AllowEmptyChecksums)  --ignore-checksums: ($IgnoreChecksums)"
-    Install-Packages -Packages $Packages
+    Write-Host "Preparing to install Chocolatey packages: $Packages."
+    Install-Packages -ChocoExePath "$choco" -Packages $Packages
 
     Write-Host "`nThe artifact was applied successfully.`n"
 }

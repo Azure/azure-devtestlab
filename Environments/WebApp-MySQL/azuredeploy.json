@@ -22,10 +22,11 @@
         "serverName": "[toLower(concat(variables('resourceNamePrefix'), '-', take(uniqueString(resourceGroup().id), 6), '-db'))]",
         "databaseName": "[concat('db', uniqueString(resourceGroup().id, variables('siteName')))]",
         "databaseVersion": "5.7",
-        "databaseDTU": 100,
-        "databaseSkuName": "MYSQLB100",
+        "databaseDTU": 2,
+        "databaseSkuName": "B_Gen5_2",
         "databaseSkuSizeMB": 51200,
-        "databaseSkuTier": "Basic"
+        "databaseSkuTier": "Basic",
+        "databaseSkuFamily": "Gen5"
     },
     "resources": [
         {
@@ -76,7 +77,7 @@
         {
             "name": "[variables('serverName')]",
             "type": "Microsoft.DBforMySQL/servers",
-            "apiVersion": "2016-02-01-privatepreview",
+            "apiVersion": "2017-12-01-preview",
             "location": "[resourceGroup().location]",
             "kind": "",
             "properties": {
@@ -90,15 +91,16 @@
                 "tier": "[variables('databaseSkuTier')]",
                 "capacity": "[variables('databaseDTU')]",
                 "size": "[variables('databaseSkuSizeMB')]",
-                "family": "SkuFamily"
+                "family": "[variables('databaseSkuFamily')]"
             },
             "resources": [
                 {
                     "name": "[concat(variables('serverName'),'-firewall')]",
                     "type": "firewallrules",
-                    "apiVersion": "2016-02-01-privatepreview",
+                    "apiVersion": "2017-12-01-preview",
                     "location": "[resourceGroup().location]",
                     "dependsOn": [
+                        "[concat('Microsoft.DBforMySQL/servers/', variables('serverName'), '/databases/' , variables('databaseName'))]",
                         "[concat('Microsoft.DBforMySQL/servers/', variables('serverName'))]"
                     ],
                     "properties": {
@@ -109,7 +111,7 @@
                 {
                     "name": "[variables('databaseName')]",
                     "type": "databases",
-                    "apiVersion": "2016-02-01-privatepreview",
+                    "apiVersion": "2017-12-01-preview",
                     "location": "[resourceGroup().location]",
                     "dependsOn": [
                         "[concat('Microsoft.DBforMySQL/servers/', variables('serverName'))]"

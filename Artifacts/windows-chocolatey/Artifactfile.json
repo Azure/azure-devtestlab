@@ -7,7 +7,7 @@
         "Windows",
         "Chocolatey"
     ],
-    "iconUri": "https://github.com/chocolatey/chocolatey/raw/master/docs/logo/chocolateyicon.gif",
+    "iconUri": "https://github.com/chocolatey/choco/raw/master/docs/logo/chocolateyicon.gif",
     "targetOsType": "Windows",
     "parameters": {
         "packages": {

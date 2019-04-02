@@ -141,18 +141,28 @@ function Add-FirewallException
         [string] $Port
     )
 
-    # Delete an exisitng rule
-    netsh advfirewall firewall delete rule name="Windows Remote Management (HTTPS-In)" dir=in protocol=TCP localport=$Port | Out-Null
-    Handle-LastExitCode
+    $ruleName = "Windows Remote Management (HTTPS-In)"
 
-    # Add a new firewall rule
-    netsh advfirewall firewall add rule name="Windows Remote Management (HTTPS-In)" dir=in action=allow protocol=TCP localport=$Port | Out-Null
+    # Determine if the rule already exists.
+    netsh advfirewall firewall show rule name=$ruleName | Out-Null
+    if ($LastExitCode -eq 0)
+    {
+        # Delete the existing rule.
+        netsh advfirewall firewall delete rule name=$ruleName dir=in protocol=TCP localport=$Port | Out-Null
+        Handle-LastExitCode
+    }
+
+    # Add a new firewall rule.
+    netsh advfirewall firewall add rule name=$ruleName dir=in action=allow protocol=TCP localport=$Port | Out-Null
     Handle-LastExitCode
 }
 
 try {
     Write-Output 'Add firewall exception for port 5986.'
     Add-FirewallException -Port 5986
+
+    # Ensure that the service is running and is accepting requests.
+    winrm quickconfig -force
 
     # The default MaxEnvelopeSizekb on Windows Server is 500 Kb which is very less. It needs to be at 8192 Kb.
     # The small envelop size, if not changed, results in the WS-Management service responding with an error that

@@ -1,13 +1,14 @@
 {
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
     "title": "NPM Package",
+    "publisher": "Microsoft",
     "description": "Install NPM packages on Linux using the Node Package Manager.",
     "tags": [
         "NPM",
         "Linux",
         "Packages"
     ],
-    "iconUri": "https://www.npmjs.com/favicon.ico",
+    "iconUri": "https://raw.githubusercontent.com/github/explore/6c6508f34230f0ac0d49e847a326429eefbfc030/topics/npm/npm.png",
     "targetOsType": "Linux",
     "parameters": {
         "installLocation": {
