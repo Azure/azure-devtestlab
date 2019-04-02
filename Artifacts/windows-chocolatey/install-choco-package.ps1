@@ -1,4 +1,4 @@
-##################################################################################################>
+##################################################################################################
 #
 # Parameters to this script file.
 #
@@ -8,6 +8,12 @@ param(
     # Space-, comma- or semicolon-separated list of Chocolatey packages.
     [string] $Packages,
 
+    # Boolean indicating if we should allow empty checksums. Default to true to match previous artifact functionality despite security
+    [bool] $AllowEmptyChecksums = $true,
+
+    # Boolean indicating if we should ignore checksums. Default to false for security
+    [bool] $IgnoreChecksums = $false,
+    
     # Minimum PowerShell version required to execute this script.
     [int] $PSVersionRequired = 3
 )
@@ -95,7 +101,16 @@ function Install-Packages
     )
 
     $Packages = $Packages.split(',; ', [StringSplitOptions]::RemoveEmptyEntries) -join ' '
-    $expression = "$ChocoExePath install -y -f --acceptlicense --allow-empty-checksums --no-progress --stoponfirstfailure $Packages"
+    $checkSumFlags = ""
+    if ($AllowEmptyChecksums)
+    {
+        $checkSumFlags = $checkSumFlags + " --allow-empty-checksums "
+    }
+    if ($IgnoreChecksums)
+    {
+        $checkSumFlags = $checkSumFlags + " --ignore-checksums "
+    }
+    $expression = "$ChocoExePath install -y -f --acceptlicense $checkSumFlags --no-progress --stoponfirstfailure $Packages"
     Invoke-ExpressionImpl -Expression $expression 
 }
 

@@ -14,9 +14,21 @@
             "type": "string",
             "displayName": "Packages",
             "description": "Space-, comma- or semicolon-delimited list of package names to be installed, for example: 7Zip,Fiddler4. A complete list of public packages can be found at https://chocolatey.org/packages."
+        },
+        "allowEmptyChecksums": {
+            "type": "bool",
+            "defaultValue": true,
+            "displayName": "Allow Empty Checksums",
+            "description": "Should packages with empty checksums be allowed to be installed? This defaults to true to avoid breaking the behavior of past versions of this artifact and to ease the use of non https sources such as http/ftp, but allowing empty checksums is not recommended by chocolatey (see https://chocolatey.org/docs/commandsupgrade)"
+        },
+        "ignoreChecksums": {
+            "type": "bool",
+            "defaultValue": false,
+            "displayName": "Ignore Checksums",
+            "description": "Should packages that don't match their checksums be allowed to be installed? Setting this to true is not recommended by chocolatey (see https://github.com/chocolatey/choco/issues/112), but may be necessary if you have a dependency on a community maintained package that does not update its checksum to match a software provider's upgrade in a timely manner."
         }
     },
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./install-choco-package.ps1 -Packages ''', parameters('packages'), '''\"')]"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./install-choco-package.ps1 -Packages ''', parameters('packages'), ''' -AllowEmptyChecksums $', parameters('allowEmptyChecksums'), ' -IgnoreChecksums $', parameters('ignoreChecksums'), '\"')]"
     }
 }
