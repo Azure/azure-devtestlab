@@ -245,7 +245,7 @@
         cADFSRelyingPartyTrust CreateADFSRelyingParty
         {
             Name = $SPTrustedSitesName
-            Identifier = "https://$SPTrustedSitesName.$DomainFQDN"
+            Identifier = "urn:federation:sharepoint"
             ClaimsProviderName = @("Active Directory")
             WsFederationEndpoint = "https://$SPTrustedSitesName.$DomainFQDN/_trust/"
             AdditionalWSFedEndpoint = @("https://*.$DomainFQDN/")
