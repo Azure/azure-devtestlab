@@ -11,6 +11,6 @@
     "iconUri": "https://chocolatey.org/content/packageimages/azure-cli.2.0.61.png",
     "targetOsType": "Windows",
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', 'azurecli', '\"')]"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', 'azure-cli', '\"')]"
     }
 }
