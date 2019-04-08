@@ -204,13 +204,13 @@
   },
   "resources": [
     {
-      "apiVersion": "2017-04-26-preview",
+      "apiVersion": "2018-10-15-preview",
       "type": "Microsoft.DevTestLab/labs",
       "name": "[trim(parameters('newLabName'))]",
       "location": "[resourceGroup().location]",
       "resources": [
         {
-          "apiVersion": "2017-04-26-preview",
+          "apiVersion": "2018-10-15-preview",
           "name": "[variables('labVirtualNetworkName')]",
           "type": "virtualnetworks",
           "dependsOn": [
@@ -218,7 +218,7 @@
           ]
         },
         {
-          "apiVersion": "2017-04-26-preview",
+          "apiVersion": "2018-10-15-preview",
           "name": "LabVmsShutdown",
           "type": "schedules",
           "dependsOn": [
@@ -234,7 +234,7 @@
           }
         },
         {
-          "apiVersion": "2017-04-26-preview",
+          "apiVersion": "2018-10-15-preview",
           "name": "default/MaxVmsAllowedPerUser",
           "type": "policysets/policies",
           "dependsOn": [
@@ -249,7 +249,7 @@
           }
         },
         {
-          "apiVersion": "2017-04-26-preview",
+          "apiVersion": "2018-10-15-preview",
           "name": "default/MaxVmsAllowedPerLab",
           "type": "policysets/policies",
           "dependsOn": [
@@ -264,7 +264,7 @@
           }
         },
         {
-          "apiVersion": "2017-04-26-preview",
+          "apiVersion": "2018-10-15-preview",
           "name": "default/AllowedVmSizesInLab",
           "type": "policysets/policies",
           "dependsOn": [
@@ -279,7 +279,7 @@
           }
         },
         {
-          "apiVersion": "2017-04-26-preview",
+          "apiVersion": "2018-10-15-preview",
           "name": "privaterepo885",
           "type": "artifactsources",
           "dependsOn": [
@@ -298,7 +298,7 @@
       ]
     },
     {
-      "apiVersion": "2017-04-26-preview",
+      "apiVersion": "2018-10-15-preview",
       "type": "Microsoft.DevTestLab/labs/virtualmachines",
       "name": "[concat(parameters('newLabName'), '/', parameters('pilotVMName'))]",
       "location": "[resourceGroup().location]",
@@ -324,7 +324,7 @@
       }
     },
     {
-      "apiVersion": "2017-04-26-preview",
+      "apiVersion": "2018-10-15-preview",
       "name": "[variables('devTemplateResourceName')]",
       "type": "Microsoft.DevTestLab/labs/customimages",
       "dependsOn": [
@@ -341,7 +341,7 @@
       }
     },
     {
-      "apiVersion": "2017-04-26-preview",
+      "apiVersion": "2018-10-15-preview",
       "name": "[variables('testTemplateResourceName')]",
       "type": "Microsoft.DevTestLab/labs/customimages",
       "dependsOn": [
@@ -358,7 +358,7 @@
       }
     },
     {
-      "apiVersion": "2017-04-26-preview",
+      "apiVersion": "2018-10-15-preview",
       "name": "[variables('goldenImageTemplateResourceName')]",
       "type": "Microsoft.DevTestLab/labs/customimages",
       "dependsOn": [
@@ -375,7 +375,7 @@
       }
     },
     {
-      "apiVersion": "2017-04-26-preview",
+      "apiVersion": "2018-10-15-preview",
       "type": "Microsoft.DevTestLab/labs/virtualmachines",
       "name": "[concat(parameters('newLabName'), '/', parameters('devBoxVMName'))]",
       "location": "[resourceGroup().location]",
@@ -396,7 +396,7 @@
       }
     },
     {
-      "apiVersion": "2017-04-26-preview",
+      "apiVersion": "2018-10-15-preview",
       "type": "Microsoft.DevTestLab/labs/virtualmachines",
       "name": "[concat(parameters('newLabName'), '/', parameters('testBoxVMName'))]",
       "location": "[resourceGroup().location]",
@@ -417,7 +417,7 @@
       }
     },
     {
-      "apiVersion": "2017-04-26-preview",
+      "apiVersion": "2018-10-15-preview",
       "type": "Microsoft.DevTestLab/labs/virtualmachines",
       "name": "[concat(parameters('newLabName'), '/', parameters('goldenImageVMName'))]",
       "location": "[resourceGroup().location]",

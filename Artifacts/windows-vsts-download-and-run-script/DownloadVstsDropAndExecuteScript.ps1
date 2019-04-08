@@ -4,7 +4,8 @@ param(
     [string] $buildDefinitionName,
     [string] $vstsProjectUri,
     [string] $pathToScript,
-    [string] $scriptArguments
+    [string] $scriptArguments,
+    [string] $buildDefId
 )
 
 ###################################################################################################
@@ -71,6 +72,11 @@ function Get-BuildArtifacts
     # Process all artifacts found.
     foreach ($artifact in $artifacts)
     {
+        if ($artifact.resource.type -notlike "Container") {
+            Write-Host "Skip download of artifact $($artifact.name) as it is not of type 'Container'"
+            continue
+        }
+        
         $artifactName = "$($artifact.name)"
         $artifactZip = "$artifactName.zip"
         Write-Host "Preparing to download artifact $artifactName to file $artifactZip"
@@ -102,11 +108,20 @@ function Get-BuildDefinitionId
 
     Write-Host "Getting build definition ID from $BuildDefinitionUri"
     $buildDef = Invoke-RestMethod -Uri $BuildDefinitionUri -Headers $Headers -Method Get
-    $buildDefinitionId = $buildDef.value.id
-    if (-not $buildDefinitionId)
+    if (-not $buildDefId)
     {
-        throw "Unable to get the build definition ID from $buildDefinitionUri"
+     $buildDefinitionId = $buildDef.value.id[0]
+     if (-not $buildDefinitionId)
+      {
+          throw "Unable to get the build definition ID from $buildDefinitionUri"
+      }
     }
+    else
+    {
+        $buildDefinitionId = $buildDefId
+    }
+    
+   
 
     return $buildDefinitionId
 }

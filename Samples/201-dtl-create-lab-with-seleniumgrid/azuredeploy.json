@@ -68,13 +68,13 @@
     },
     "resources":[  
         {  
-            "apiVersion":"2017-04-26-preview",
+            "apiVersion":"2018-10-15-preview",
             "type":"Microsoft.DevTestLab/labs",
             "name":"[trim(parameters('labName'))]",
             "location":"[resourceGroup().location]",
             "resources":[  
                 {  
-                    "apiVersion":"2017-04-26-preview",
+                    "apiVersion":"2018-10-15-preview",
                     "name":"[variables('labVirtualNetworkName')]",
                     "type":"virtualnetworks",
                     "dependsOn":[  
@@ -84,7 +84,7 @@
             ]
         },
         {  
-            "apiVersion":"2017-04-26-preview",
+            "apiVersion":"2018-10-15-preview",
             "type":"Microsoft.DevTestLab/labs/virtualmachines",
             "name":"[concat(parameters('labName'), '/', variables('vmNamePrefix'), 'Hub')]",
             "location":"[resourceGroup().location]",
@@ -135,7 +135,7 @@
             }
         },
         {
-            "apiVersion":"2017-04-26-preview",
+            "apiVersion":"2018-10-15-preview",
             "copy": {
                 "name": "nodeCopy",
                 "count": "[parameters('nodeCount')]"

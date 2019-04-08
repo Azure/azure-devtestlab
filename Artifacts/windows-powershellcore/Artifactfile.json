@@ -1,0 +1,32 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "Install PowerShell Core",
+    "description": "Installs PowerShell Core (a.k.a. PowerShell 6) on Windows",
+    "publisher": "PowerShell Magazine",
+    "tags": [
+        "Windows",
+        "PowerShell",
+        "PowerShell Core",
+        "PowerShell 6"
+    ],
+    "iconUri": "https://raw.githubusercontent.com/rchaganti/azure-devtestlab/master/Artifacts/windows-powershellcore/Powershell_black_64.png",
+    "targetOsType": "Windows",
+    "parameters": {
+        "packageUrl": {
+            "type": "string",
+            "displayName": "Package URL",
+            "allowEmpty": false,
+            "description": "The PowerShell core package (MSI) URL from https://github.com/PowerShell/PowerShell/releases, under Assets."
+        },
+        "installCRuntime": {
+            "type": "bool",
+            "displayName": "Install C runtime for Windows OS prior to Windows Server 2016?",
+            "defaultValue": false,
+            "allowEmpty": false,
+            "description": "Installing C runtime is a prerequisite for using PowerShell Remoting over WinRM in PowerShell core."
+        }      
+    },    
+    "runCommand": {
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./Install-PowerShellCore.ps1',' -PackageUrl ', parameters('packageUrl'),' -InstallCRuntime:$', parameters('installCRuntime'), '\"')]"
+    }
+}

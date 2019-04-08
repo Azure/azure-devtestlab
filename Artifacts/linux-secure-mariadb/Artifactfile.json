@@ -1,0 +1,25 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "Secure MariaDB",
+    "publisher": "Stefan Johner",
+    "description": "Secure MariaDB instance on Linux based on mysql_secure_installation",
+    "tags": [
+        "MariaDB",
+        "Linux",
+        "Security",
+        "Database"
+    ],
+    "iconUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/Artifacts/linux-secure-mariadb/mariaDBArtifact.png",
+    "targetOsType": "Linux",
+    "parameters": {
+        "password": {
+            "type": "securestring",
+            "displayName": "Root password",
+            "description": "The new root password which is set for MariaDB instance",
+            "allowEmpty": false
+        }
+    },
+    "runCommand": {
+        "commandToExecute": "[concat('sh linux-secure-mariadb.sh ', '-p ', parameters('password'))]"
+    }
+}

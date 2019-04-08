@@ -1,6 +1,7 @@
 {
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
     "title": "Apt-Get",
+    "publisher": "Microsoft",
     "description": "Install Apt packages on Linux using the apt-get utility. This system is the default package manager installed on Debian and Debian-based distributions such as Ubuntu.",
     "tags": [
         "Packages",

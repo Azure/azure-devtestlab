@@ -1,0 +1,19 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "Mono Runtime",
+    "publisher": "Fernando Aguilar",
+    "targetOsType": "Linux",
+    "description": "Installs Mono runtime on Linux",
+    "tags": [
+        "Mono",
+        "Linux",
+        "Ubuntu",
+        "Fedora",
+        "Debian",
+        "CentOS"
+    ],
+    "iconUri": "https://www.mono-project.com/archived/images/8/8d/Mono-gorilla-aqua.100px.png",
+    "runCommand": {
+        "commandToExecute": "['sh install-mono-devel.sh']"
+    }
+}

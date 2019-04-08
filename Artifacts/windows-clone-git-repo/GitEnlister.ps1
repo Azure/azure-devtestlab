@@ -85,7 +85,6 @@ Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
 # Custom Configurations
 #
 
-$GitStableVersion = "1.9.5.20150320"
 $GitEnlisterFolder = Join-Path $ScriptRoot -ChildPath $("GitEnlister-" + [System.DateTime]::Now.ToString("yyyy-MM-dd-HH-mm-ss"))
 
 # Location of the log files
@@ -272,14 +271,10 @@ function GetGitRepoLeaf
 
 function InstallGit
 {
-    Param(
-        [ValidateNotNullOrEmpty()] $gitVersion
-    )
-
-    WriteLog $("Installing Git version: $gitVersion ...")
+    WriteLog $("Installing Git latest stable version ...")
 
     # install git via chocolatey
-    choco install git --version $gitVersion --force --yes --acceptlicense --verbose | Out-Null 
+    choco install git --force --yes --acceptlicense --verbose | Out-Null 
 
     if ($? -eq $false)
     {
@@ -692,7 +687,7 @@ try
     InstallChocolatey -chocolateyInstallLog $ChocolateyInstallLog
 
     # install the git client
-    $GitInstallFolder = InstallGit -gitVersion $GitStableVersion
+    $GitInstallFolder = InstallGit 
     $GitExeLocation = Join-Path -Path $GitInstallFolder -ChildPath "\bin\git.exe"
 
     # clone the repo

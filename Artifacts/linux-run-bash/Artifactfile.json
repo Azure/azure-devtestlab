@@ -24,6 +24,13 @@
             "displayName": "Script Arguments",
             "description": "Script arguments to pass",
             "allowEmpty": true
+        },
+        "skipDos2Unix": {
+            "type": "bool",
+            "displayName": "Skip dos2unix conversion",
+            "description": "Skip the script conversion from MSDOS to Unix line ending",
+            "allowEmpty": true,
+            "defaultValue": "true"
         }
     },
     "runAzureVMExtension": {
@@ -32,7 +39,8 @@
         "typeHandlerVersion": "2.0",
         "settings": {
             "fileUris": "[parameters('scriptFileUris')]",
-            "commandToExecute": "[concat('sh', ' ', parameters('scriptToRun'), ' ', parameters('scriptArguments'))]"
+            "commandToExecute": "[concat('sh', ' ', parameters('scriptToRun'), ' ', parameters('scriptArguments'))]",
+            "skipDos2Unix": "[parameters('skipDos2Unix')]"
         }
     }
 }

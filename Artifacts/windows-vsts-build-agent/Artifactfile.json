@@ -1,31 +1,31 @@
 {
   "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
-  "title": "VSTS Build Agent",
+  "title": "Azure Pipelines Agent",
   "publisher": "Microsoft",
-  "description": "Downloads and installs the VSTS build agent, registers with the specified Visual Studio Team Services account, and adds the VM to the specified agent pool.",
+  "description": "Downloads and installs the Azure Pipelines agent, registers with the specified Azure DevOps Services account, and adds the VM to the specified agent pool.",
   "tags": [
     "VSTS",
     "Build",
     "CI",
     "Windows"
   ],
-  "iconUri": "https://www.visualstudio.com/favicon.ico",
+  "iconUri": "https://cdn.vsassets.io/content/icons/favicon.ico",
   "targetOsType": "Windows",
   "parameters": {
     "vstsAccount": {
       "type": "string",
-      "displayName": "VSTS Account Name",
-      "description": "The name of the VSTS account to add the build agent to. This is the value in your VSTS URL: e.g. 'myaccount' in https://myaccount.visualstudio.com."
+      "displayName": "Azure DevOps Organization Name",
+      "description": "The name of the Azure DevOps organization to add the agent to. This is the value in your Azure DevOps URL: e.g. 'myorg' in https://dev.azure.com/myorg."
     },
     "vstsPassword": {
       "type": "securestring",
-      "displayName": "VSTS Personal Access Token",
-      "description": "A personal access token with permissions to add build agents. It will only be used to register the agent."
+      "displayName": "Azure DevOps Personal Access Token",
+      "description": "A personal access token with permissions to add agents. It will only be used to register the agent."
     },
     "agentName": {
       "type": "string",
       "displayName": "Agent Name",
-      "description": "The name to give to the agent, as seen by VSTS. If empty, the computer name will be used.",
+      "description": "The name to give to the agent, as seen by Azure Pipelines. If empty, the computer name will be used.",
       "allowEmpty": true
     },
     "agentNameSuffix": {
@@ -42,7 +42,7 @@
     "RunAsAutoLogon": {
       "type": "bool",
       "displayName": "Enable Autologon",
-      "description": "Enable autologon to run the build agent in interactive mode that can sustain machine reboots.<br>Set this to true if the agents will be used to run UI tests.",
+      "description": "Enable autologon to run the agent in interactive mode that can sustain machine reboots.<br>Set this to true if the agents will be used to run UI tests.",
       "defaultValue": false
     },
     "windowsLogonAccount": {

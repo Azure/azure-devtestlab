@@ -59,7 +59,7 @@ function Get-PolicyChanges ($lab)
         return
     }
 
-    $allAvailableImages = Get-AzureRmResource -ResourceType Microsoft.DevTestLab/labs/galleryImages -ResourceName $lab.Name -ResourceGroupName $lab.ResourceGroupName -ApiVersion 2017-04-26-preview
+    $allAvailableImages = Get-AzureRmResource -ResourceType Microsoft.DevTestLab/labs/galleryImages -ResourceName $lab.Name -ResourceGroupName $lab.ResourceGroupName -ApiVersion 2018-10-15-preview
     $finalImages = $existingImages
 
     # loop through the requested images and add them to the finalImages list if they arent already there
@@ -135,12 +135,12 @@ function Set-PolicyChanges ($lab, $policyChanges)
         if($policyChanges.existingPolicy)
         {
             Write-Output "Updating $($lab.Name) Marketplace Images policy"
-            Set-AzureRmResource -ResourceType $resourceType -ResourceName $labResourceName -ResourceGroupName $lab.ResourceGroupName -ApiVersion 2017-04-26-preview -Properties $policyObj -Force
+            Set-AzureRmResource -ResourceType $resourceType -ResourceName $labResourceName -ResourceGroupName $lab.ResourceGroupName -ApiVersion 2018-10-15-preview -Properties $policyObj -Force
         }
         else
         {
             Write-Output "Creating $($lab.Name) Marketplace Images policy"
-            New-AzureRmResource -ResourceType $resourceType -ResourceName $labResourceName -ResourceGroupName $lab.ResourceGroupName -ApiVersion 2017-04-26-preview -Properties $policyObj -Force
+            New-AzureRmResource -ResourceType $resourceType -ResourceName $labResourceName -ResourceGroupName $lab.ResourceGroupName -ApiVersion 2018-10-15-preview -Properties $policyObj -Force
         }
     }
 }

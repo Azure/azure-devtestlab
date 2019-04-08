@@ -13,7 +13,7 @@
     Coming soon / planned work
     ==========================
 
-    - N/A.    
+    - N/A.
 
 ##################################################################################################>
 #
@@ -30,6 +30,7 @@ param(
     [string] $FailOnArtifactError,
     [string] $RetryOnFailure,
     [string] $RetryCount,
+    [string] $DeleteFailedLabVMBeforeRetry,
     [string] $DeleteFailedDeploymentBeforeRetry,
     [string] $AppendRetryNumberToVMName,
     [string] $WaitMinutesForApplyArtifacts
@@ -98,16 +99,16 @@ try
     {
         $RetryCount = '0'
     }
-    
+
     [int] $count = 1 + (ConvertTo-Int -Value $RetryCount)
     for ($i = 1; $i -le $count; $i++)
     {
         Test-InputParameters -TemplateParameterObject $templateParameterObject
-        
+
         try
         {
             $deploymentName = "Dtl$([Guid]::NewGuid().ToString().Replace('-', ''))"
-            
+
             $result = Invoke-AzureDtlTask -DeploymentName $deploymentName -ResourceGroupName $resourceGroupName -TemplateName "$TemplateName" -TemplateParameterObject $templateParameterObject
 
             $resourceId = Get-DeploymentTargetResourceId -DeploymentName $result.DeploymentName -ResourceGroupName $result.ResourceGroupName
@@ -115,7 +116,7 @@ try
             Wait-ApplyArtifacts -ResourceId $resourceId -WaitMinutes $WaitMinutesForApplyArtifacts
 
             Test-ArtifactStatus -ResourceId $resourceId -TemplateName "$TemplateName" -Fail $FailOnArtifactError
-            
+
             break
         }
         catch
@@ -126,8 +127,11 @@ try
             }
             else
             {
-                Write-Host "A deployment failure occured. Retrying deployment (attempt $i of $($count - 1))"
-                Remove-FailedResourcesBeforeRetry -DeploymentName $deploymentName -ResourceGroupName $resourceGroupName -DeleteDeployment $DeleteFailedDeploymentBeforeRetry
+                # Reset $resourceId to ensure we don't mistakenly return a previously invalid value in case of a subsequent retry error.
+                $resourceId = ''
+
+                Write-Host "##vso[task.logissue type=warning;]A deployment failure occured. Retrying deployment (attempt $i of $($count - 1))"
+                Remove-FailedResourcesBeforeRetry -DeploymentName $deploymentName -ResourceGroupName $resourceGroupName -DeleteLabVM $DeleteFailedLabVMBeforeRetry -DeleteDeployment $DeleteFailedDeploymentBeforeRetry
                 $appendSuffix = ConvertTo-Bool -Value $AppendRetryNumberToVMName
                 if ($appendSuffix)
                 {

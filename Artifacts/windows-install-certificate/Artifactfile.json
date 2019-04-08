@@ -1,0 +1,35 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+  "title": "Install Certificate",
+  "publisher": "Ross Bohr",
+  "description": "Installs a certificate in the LocalMachine/My store.",
+  "tags": [
+    "Certificate",
+    "PFX",
+    "CurrentUser",
+    "Windows"
+  ],
+  "iconUri": "https://www.iconninja.com/files/305/837/188/certificate-icon.png",
+  "targetOsType": "Windows",
+  "parameters": {
+    "certificateName": {
+      "type": "string",
+      "displayName": "Certificate Name",
+      "description": "The name of the certificate which must be installed. This property is used to distinguish multiple instances of this artifact.",
+      "defaultValue": "NewCertificate"
+    },
+    "base64cert": {
+      "type": "string",
+      "displayName": "Certificate in Base64",
+      "description": "Base64 encoding of the PFX certificate file. You can use the following PowerShell script to obtain a Base64-encoded representation of a certificate:\",      [ \"System.Convert\" ],       \"ToBase64String(\" [ \"System.IO.File\" ],      \"ReadAllBytes(\"C:\\path\\to\\certificate.pfx\"))"
+    },
+    "certificatePassword": {
+      "type": "securestring",
+      "displayName": "Certificate password",
+      "description": "The password of the certificate. It is only used to install it to the LocalMachine/My store."
+    }
+  },
+  "runCommand": {
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./certificate-install.ps1', ' -certificateName ''', parameters('certificateName'), ''' -base64cert ', parameters('base64cert'), ' -certificatePassword ''', parameters('certificatePassword'), '''\"')]"
+  }
+}

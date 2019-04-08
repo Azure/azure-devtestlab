@@ -161,6 +161,9 @@ try {
     Write-Output 'Add firewall exception for port 5986.'
     Add-FirewallException -Port 5986
 
+    # Ensure that the service is running and is accepting requests.
+    winrm quickconfig -force
+
     # The default MaxEnvelopeSizekb on Windows Server is 500 Kb which is very less. It needs to be at 8192 Kb.
     # The small envelop size, if not changed, results in the WS-Management service responding with an error that
     # the request size exceeded the configured MaxEnvelopeSize quota.

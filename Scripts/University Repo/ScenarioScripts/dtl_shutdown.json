@@ -54,7 +54,7 @@
           }
         },
         {
-          "apiVersion": "2017-04-26-preview",
+          "apiVersion": "2018-10-15-preview",
           "name": "[concat(parameters('newLabName'), '/', 'LabVmAutoStart')]",
           "location": "[resourceGroup().location]",
           "type": "microsoft.devtestlab/labs/schedules",
