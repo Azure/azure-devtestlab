@@ -73,9 +73,6 @@ function Get-VSSetupInstances
     $null = @(
         if (-not (Get-Module -ListAvailable -Name VSSetup))
         {
-            Write-Host "Installing PowerShellGet module."            
-            Install-Module -Name PowerShellGet -Force
-
             Write-Host "Updating NuGet provider to a version higher than 2.8.5.201."
             Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
 
@@ -89,6 +86,20 @@ function Get-VSSetupInstances
 
     # Get VS installation information.
     return Get-VSSetupInstance
+}
+
+function Test-PowerShellVersion
+{
+    [CmdletBinding()]
+    param(
+        [double] $Version
+    )
+
+    $currentVersion = [double] "$($PSVersionTable.PSVersion.Major).$($PSVersionTable.PSVersion.Minor)"
+    if ($currentVersion -lt $Version)
+    {
+        throw "The current version of PowerShell is $currentVersion. Prior to running this artifact, ensure you have PowerShell version $Version or higher installed."
+    }
 }
 
 function Test-VSVersion
@@ -374,6 +385,8 @@ try
     Write-Host "Starting installation of Service Fabric SDK and Tools for $VSVersion."
 
     # For this process, we want to be able to execute downloaded scripts.
+    Write-Host 'Configuring PowerShell session.'
+    Test-PowerShellVersion -Version 5.1
     Set-ExecutionPolicy Bypass -Scope Process -Force | Out-Null
 
     # Change the "Local AppData" path to a location where the process can write, or the relevant

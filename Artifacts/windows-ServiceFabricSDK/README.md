@@ -9,6 +9,7 @@ For Visual Studio 2017, the core 'Microsoft Azure Service Fabric SDK' will be in
 ## Prerequisites
 
 - Visual Studio 2015 or Visual Studio 2017 must be installed on the VM.  See [Visual Studio Downloads](https://www.visualstudio.com/downloads/) for details how to install Visual Studio.
+- PowerShell version 5.1 or newer must be installed on the VM.
 
 ## Parameters
 
