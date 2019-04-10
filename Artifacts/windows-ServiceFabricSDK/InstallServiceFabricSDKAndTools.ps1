@@ -76,6 +76,9 @@ function Get-VSSetupInstances
             Write-Host "Updating NuGet provider to a version higher than 2.8.5.201."
             Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
 
+            Write-Host "Installing PowerShellGet module."            
+            Install-Module -Name PowerShellGet -Force
+
             Write-Host "Installing VSSetup module."
             Install-Module -Name VSSetup -Force
         }
