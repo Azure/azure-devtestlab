@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
   "title": "Service Fabric SDK and Tools",
   "publisher": "Microsoft",
-  "description": "Installs the latest available version of the Microsoft Azure Service Fabric SDK using WebPI. Service Fabric SDK Tools for Visual Studio are also installed. Microsoft Visual Studio 2015 or Microsoft Visual Studio 2017 must already be installed before using this artifact.",
+  "description": "Installs the latest available version of the Microsoft Azure Service Fabric SDK using WebPI. Service Fabric SDK Tools for Visual Studio are also installed. Microsoft Visual Studio 2015 or Microsoft Visual Studio 2017 must already be installed before using this artifact. PowerShell version 5.1 or newer must also be installed.",
   "tags": [
     "Microsoft",
     "Windows",
