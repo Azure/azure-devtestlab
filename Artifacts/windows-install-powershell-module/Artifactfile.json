@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+  "title": "Install PowerShell Module",
+  "publisher": "Ross Bohr",
+  "description": "Installs the specified PowerShell module from the PowerShell gallery. Requires PowerShellGet (https://docs.microsoft.com/en-us/powershell/gallery/installing-psget). PowerShell version 5.1 or newer must also be installed.",
+  "tags": [
+    "PowerShell",
+    "Module",
+    "Install",
+    "Gallery",
+    "Windows"
+  ],
+  "iconUri": "https://www.powershellgallery.com/Content/Images/packageDefaultIcon.png",
+  "targetOsType": "Windows",
+  "parameters": {
+    "moduleName": {
+      "type": "string",
+      "displayName": "PowerShell Module Name",
+      "description": "The name of the PowerShell Module (e.g. \"AzureRM\")"
+    }
+  },
+  "runCommand": {
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./Install-PowerShellModule.ps1', ' -moduleName ''', parameters('moduleName'), '''\"')]"
+  }
+}
