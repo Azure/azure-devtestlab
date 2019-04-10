@@ -46,10 +46,10 @@
       "defaultValue": false
     },
     "windowsLogonAccount": {
-        "type": "string",
-        "displayName": "Account Name",
-        "description": "The Windows logon account which will run the agent.<br>When autologon is enabled, agent runs as a process in the context of the specified user.",
-        "defaultValue": "NT AUTHORITY\\NetworkService"
+      "type": "string",
+      "displayName": "Account Name",
+      "description": "The Windows logon account which will run the agent.<br>When autologon is enabled, agent runs as a process in the context of the specified user.",
+      "defaultValue": "NT AUTHORITY\\NetworkService"
     },
     "windowsLogonPassword": {
       "type": "securestring",
@@ -75,9 +75,20 @@
       "description": "Work directory where job data is stored. Defaults to _work under the root of the agent directory. Work directory is owned by a given agent and should not be shared between multiple agents.",
       "defaultValue": "",
       "allowEmpty": true
+    },
+    "replaceAgent": {
+      "type": "bool",
+      "displayName": "Replace Agent",
+      "description": "Replace the agent in a pool. If another agent is listening by that name, it will start failing with a conflict.",
+      "defaultValue": false
     }
   },
   "runCommand": {
-    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./vsts-agent-install.ps1', ' -vstsAccount ''', parameters('vstsAccount'), ''' -vstsUserPassword ', parameters('vstsPassword'), ' -agentName ''', parameters('agentName'), ''' -agentNameSuffix ''', parameters('agentNameSuffix'), ''' -poolName ''', parameters('poolName'), ''' -runAsAutoLogon $', parameters('runAsAutoLogon') , ' -windowsLogonAccount ''', parameters('windowsLogonAccount'), ''' -windowsLogonPassword ''', parameters('windowsLogonPassword'), ''' -driveLetter ', parameters('driveLetter'), ' -workDirectory ''', parameters('workDirectory'), '''\"')]"
-  }
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./vsts-agent-install.ps1', ' -vstsAccount ''', parameters('vstsAccount'), ''' -vstsUserPassword ', parameters('vstsPassword'), ' -agentName ''', parameters('agentName'), ''' -agentNameSuffix ''', parameters('agentNameSuffix'), ''' -poolName ''', parameters('poolName'), ''' -runAsAutoLogon $', parameters('runAsAutoLogon') , ' -windowsLogonAccount ''', parameters('windowsLogonAccount'), ''' -windowsLogonPassword ''', parameters('windowsLogonPassword'), ''' -driveLetter ', parameters('driveLetter'), ' -workDirectory ''', parameters('workDirectory'), ''' -replaceAgent $', parameters('replaceAgent') , '\"')]"
+  },
+  "postDeployActions": [
+    {
+      "action": "restart"
+    }
+  ]
 }
