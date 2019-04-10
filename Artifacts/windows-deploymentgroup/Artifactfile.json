@@ -3,7 +3,7 @@
     "title": "Azure Pipelines Deployment Group Agent",
     "description": "Downloads the latest deployment agent from Azure DevOps and configures it against the specified deployment group.",
     "publisher": "Microsoft",
-    "iconUri": "https://www.visualstudio.com/favicon.ico",
+    "iconUri": "https://cdn.vsassets.io/content/icons/favicon.ico",
     "targetOsType": "Windows",
     "parameters": {
         "accountUrl": {
