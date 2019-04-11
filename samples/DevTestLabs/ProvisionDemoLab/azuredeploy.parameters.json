@@ -1,0 +1,72 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "newLabName": {
+      "value": "FabrikamDemoLab"
+    },
+    "labVmShutDownTime": {
+      "value": "21:00"
+    },
+    "maxAllowedVmsPerUser": {
+      "value": 10
+    },
+    "maxAllowedVmsPerLab": {
+      "value": 100
+    },
+    "allowedVmSizes": {
+      "value": "\"Standard_DS1_v2\", \"Standard_DS11_v2\""
+    },
+    "artifactRepoFolder": {
+        "value": "AzureConDemo"
+    },
+    "artifactRepoBranch": {
+        "value": "master"
+    },
+    "artifactRepoDisplayName": {
+        "value": "FabrikamPrivateRepo"
+    },
+    "pilotVMName": {
+      "value": "TestBox001"
+    },
+    "VMSize": {
+      "value": "Standard_DS1_v2"
+    },
+    "VMStorageType": {
+      "value": "Premium"
+    },
+    "username": {
+      "value": "demolab"
+    },
+    "password": {
+      "value": "<3DevTestLabs!"
+    },
+    "devBoxTemplateName": {
+      "value": "Fabrikam Dev Box"
+    },
+    "devBoxTemplateDescription": {
+      "value": "Fabrikam Dev box environment"
+    },
+    "testBoxTemplateName": {
+      "value": "Fabrikam Test Box"
+    },
+    "testBoxTemplateDescription": {
+      "value": "Fabrikam Test box environment"
+    },
+    "goldenImageTemplateName": {
+      "value": "Fabrikam Latest Testing Build 0219"
+    },
+    "goldenImageTemplateDescription": {
+      "value": "Latest testing build 100219 from VSO"
+    },
+    "devBoxVMName": {
+      "value": "DevBox001"
+    },
+    "testBoxVMName": {
+      "value": "TestBox002"
+    },
+    "goldenImageVMName": {
+      "value": "TestLatest0219"
+    }
+  }
+}
