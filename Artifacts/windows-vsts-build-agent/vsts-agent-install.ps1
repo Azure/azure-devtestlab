@@ -13,10 +13,27 @@ param(
     [ValidateLength(1, 1)]
     [string] $driveLetter,
     [string] $workDirectory,
-    [boolean] $runAsAutoLogon
+    [boolean] $runAsAutoLogon,
+    [boolean] $replaceAgent = $false
 )
 
 ###################################################################################################
+#
+# PowerShell configurations
+#
+
+# NOTE: Because the $ErrorActionPreference is "Stop", this script will stop on first failure.
+#       This is necessary to ensure we capture errors inside the try-catch-finally block.
+$ErrorActionPreference = "Stop"
+
+# Suppress progress bar output.
+$ProgressPreference = 'SilentlyContinue'
+
+# Ensure we force use of TLS 1.2 for all downloads.
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+# Configure strict debugging.
+Set-PSDebug -Strict
 
 # if the agentName is empty, use %COMPUTERNAME% as the value
 if ([String]::IsNullOrWhiteSpace($agentName))
@@ -30,37 +47,22 @@ if (![String]::IsNullOrWhiteSpace($agentNameSuffix))
     $agentName = $agentName + $agentNameSuffix
 }
 
-#
-# PowerShell configurations
-#
-
-# NOTE: Because the $ErrorActionPreference is "Stop", this script will stop on first failure.
-#       This is necessary to ensure we capture errors inside the try-catch-finally block.
-$ErrorActionPreference = "Stop"
-
-# Ensure we set the working directory to that of the script.
-pushd $PSScriptRoot
-
-# Configure strict debugging.
-Set-PSDebug -Strict
-
 ###################################################################################################
-
 #
-# Functions used in this script.
+# Handle all errors in this script.
 #
 
-function Handle-LastError
+trap
 {
-    [CmdletBinding()]
-    param(
-    )
-
-    $message = $error[0].Exception.Message
+    # NOTE: This trap will handle all errors. There should be no need to use a catch below in this
+    #       script, unless you want to ignore a specific error.
+    $message = $Error[0].Exception.Message
     if ($message)
     {
-        Write-Host -Object "ERROR: $message" -ForegroundColor Red
+        Write-Host -Object "`nERROR: $message" -ForegroundColor Red
     }
+
+    Write-Host "`nThe artifact failed to apply.`n"
 
     # IMPORTANT NOTE: Throwing a terminating error (using $ErrorActionPreference = "Stop") still
     # returns exit code zero from the PowerShell script when using -File. The workaround is to
@@ -68,6 +70,11 @@ function Handle-LastError
     # a non-zero exit code from the catch block.
     exit -1
 }
+
+###################################################################################################
+#
+# Functions used in this script.
+#
 
 function Test-Parameters
 {
@@ -79,12 +86,12 @@ function Test-Parameters
 
     if ($VstsAccount -match "https*://" -or $VstsAccount -match "visualstudio.com")
     {
-        Write-Error "VSTS account '$VstsAccount' should not be the URL, just the account name."
+        throw "VSTS account '$VstsAccount' should not be the URL, just the account name."
     }
 
     if (![string]::IsNullOrWhiteSpace($WorkDirectory) -and !(Test-ValidPath -Path $WorkDirectory))
     {
-        Write-Error "Work directory '$WorkDirectory' is not a valid path."
+        throw "Work directory '$WorkDirectory' is not a valid path."
     }
 }
 
@@ -120,11 +127,11 @@ function Test-AgentExists
 
     if (Test-Path $agentConfigFile)
     {
-        Write-Error "Agent $AgentName is already configured in this machine"
+        throw "Agent $AgentName is already configured in this machine"
     }
 }
 
-function Download-AgentPackage
+function Get-AgentPackage
 {
     [CmdletBinding()]
     param(
@@ -167,7 +174,7 @@ function Download-AgentPackage
                 
             if (++$retries -gt $maxRetries)
             {
-                Write-Error "Failed to download agent due to $exceptionText"
+                throw "Failed to download agent due to $exceptionText"
             }
             
             Start-Sleep -Seconds 1 
@@ -199,7 +206,7 @@ function New-AgentInstallPath
     catch
     {
         $agentInstallPath = $null
-        Write-Error "Failed to create the agent directory at $installPathDir."
+        throw "Failed to create the agent directory at $installPathDir."
     }
     
     return $agentInstallPath
@@ -215,7 +222,7 @@ function Get-AgentInstaller
 
     if (![System.IO.File]::Exists($agentExePath))
     {
-        Write-Error "Agent installer file not found: $agentExePath"
+        throw "Agent installer file not found: $agentExePath"
     }
     
     return $agentExePath
@@ -231,7 +238,6 @@ function Extract-AgentPackage
   
     Add-Type -AssemblyName System.IO.Compression.FileSystem 
     [System.IO.Compression.ZipFile]::ExtractToDirectory("$PackagePath", "$Destination")
-    
 }
 
 function Prep-MachineForAutologon
@@ -242,7 +248,7 @@ function Prep-MachineForAutologon
 
     if ([string]::IsNullOrWhiteSpace($Config.WindowsLogonPassword))
     {
-        Write-Error "Windows logon password was not provided. Please retry by providing a valid windows logon password to enable autologon."
+        throw "Windows logon password was not provided. Please retry by providing a valid windows logon password to enable autologon."
     }
 
     # Create a PS session for the user to trigger the creation of the registry entries required for autologon
@@ -327,7 +333,7 @@ function Install-Agent
     try
     {
         # Set the current directory to the agent dedicated one previously created.
-        pushd -Path $Config.AgentInstallPath
+        Push-Location -Path $Config.AgentInstallPath
 
         if ($Config.RunAsAutoLogon)
         {
@@ -350,50 +356,46 @@ function Install-Agent
         {
             $agentConfigArgs += "--work", $Config.WorkDirectory
         }
+        if ($Config.ReplaceAgent)
+        {
+            $agentConfigArgs += "--replace"
+        }
         & $Config.AgentExePath $agentConfigArgs
         if ($LASTEXITCODE -ne 0)
         {
-            Write-Error "Agent configuration failed with exit code: $LASTEXITCODE"
+            throw "Agent configuration failed with exit code: $LASTEXITCODE"
         }
     }
     finally
     {
-        popd
+        Pop-Location
     }
 }
 
 ###################################################################################################
-
-#
-# Handle all errors in this script.
-#
-
-trap
-{
-    # NOTE: This trap will handle all errors. There should be no need to use a catch below in this
-    #       script, unless you want to ignore a specific error.
-    Handle-LastError
-}
-
-###################################################################################################
-
 #
 # Main execution block.
 #
 
 try
 {
+    # Ensure we set the working directory to that of the script.
+    Push-Location $PSScriptRoot
+
     Write-Host 'Validating parameters'
     Test-Parameters -VstsAccount $vstsAccount -WorkDirectory $workDirectory
 
     Write-Host 'Preparing agent installation location'
     $agentInstallPath = New-AgentInstallPath -DriveLetter $driveLetter -AgentName $agentName
 
-    Write-Host 'Checking for previously configured agent'
-    Test-AgentExists -InstallPath $agentInstallPath -AgentName $agentName
+    if (-not $replaceAgent)
+    {
+        Write-Host 'Checking for previously configured agent'
+        Test-AgentExists -InstallPath $agentInstallPath -AgentName $agentName
+    }
 
     Write-Host 'Downloading agent package'
-    $agentPackagePath = Download-AgentPackage -VstsAccount $vstsAccount -VstsUserPassword $vstsUserPassword
+    $agentPackagePath = Get-AgentPackage -VstsAccount $vstsAccount -VstsUserPassword $vstsUserPassword
 
     Write-Host 'Extracting agent package contents'
     Extract-AgentPackage -PackagePath $agentPackagePath -Destination $agentInstallPath
@@ -409,17 +411,19 @@ try
         AgentInstallPath = $agentInstallPath
         AgentName = $agentName
         PoolName = $poolName
+        ReplaceAgent = $replaceAgent
+        RunAsAutoLogon = $runAsAutoLogon
         ServerUrl = "https://$VstsAccount.visualstudio.com"
         VstsUserPassword = $vstsUserPassword
-        RunAsAutoLogon = $runAsAutoLogon
         WindowsLogonAccount = $windowsLogonAccount
         WindowsLogonPassword = $windowsLogonPassword
         WorkDirectory = $workDirectory
     }
     Install-Agent -Config $config
-    Write-Host 'Done'
+
+    Write-Host "`nThe artifact was applied successfully.`n"
 }
 finally
 {
-    popd
+    Pop-Location
 }
