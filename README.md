@@ -1,35 +1,19 @@
-# Azure DevTest Labs Community
+# Azure Lab Services Community
+
 This is a public, community-contributed repository that contains:
-- **Artifacts for Azure DevTest Labs:** These artifacts can be deployed onto VMs in Azure DevTest Labs in the new Azure portal.
 
-- **Azure Resource Manager Quickstart Templates for Azure DevTest Labs:** These templates help with creation and deployment of resources related to Azure DevTest Labs (e.g. Labs, VMs and VM templates etc).
-- **Open Source Code of Conduct:** This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+- **Artifacts for Azure DevTest Labs:** These [artifacts](https://docs.microsoft.com/en-us/azure/lab-services/devtest-lab-concepts#artifacts) can be deployed onto virtual machines in Azure DevTest Labs via the Azure Portal or through scripts.
 
----
-### Artifacts Authoring:
-- Please see the document ['AUTHORING'](Documentation/AUTHORING.md) in the Documentation folder for details.
+- **Environments for Azure DevTest Labs:** An [environment](https://docs.microsoft.com/en-us/azure/lab-services/devtest-lab-concepts#environment) is a collection of resources defined as ARM templates, which represent the [Public Environment](https://azure.microsoft.com/en-ca/updates/azure-devtest-labs-public-environment-repository-in-labs/) repository in Azure DevTest Labs and can be accessed via the Azure Portal.
 
-Contributions guidelines:
-- Every artifact should be contained in its own **folder** under the **Artifacts** folder.
+- **Samples for both Azure DevTest Labs and Classroom Labs:** These samples vary from Quickstart Templates, to SDK samples and scripts that can be used to facilitate outside-the-box scenarios. They are used to demonstrate how Azure Lab Services can be integrated in automation scenarios.
 
-- The artifact definition file should be named **Artifactfile.json**. The name of the artifact that shows up in Azure DevTest Labs is from the title field in the artifact definition.
+- **Azure Pipelines Tasks for Azure DevTest Labs:** This is the source code used to author Azure Pipelines tasks specifically geared to demonstrate use of Azure DevTest Labs in builds/releases. Refer to [Azure DevTest Labs Tasks](https://marketplace.visualstudio.com/items?itemName=ms-azuredevtestlabs.tasks) for more information and to install.
 
-- All dependencies of the artifact (such as scripts, icons etc) should be included in the artifact folder itself.
+## Contributions
 
-- All references to icons must use SSL, otherwise they will not load in the Azure portal.
+Contributions are encouraged and welcome. Please refer to the respective sections (e.g. Artifacts) for more details on the respective process to follow.
 
-- It is highly recommended that a **Readme.md** file be included to explain how the artifact works and how to troubleshoot any failures.
+## Open Source Code of Conduct
 
-- For authors who create the artifact and take responsibility of maintaining it, it is encouraged to add your name in the "publisher" field while authoring artifacts.   
-
-
----
-### Azure Resource Manager Quickstart Templates
-- The latest, *developer* versions of the Azure Resource Manager Quickstart Templates for Azure DevTest Labs can be found in the ['ARMTemplates'](ARMTemplates) folder of this repo.
-
----
-### Miscellaneous
-
-Some useful scripts, related to Azure DevTest labs can be found in the ['scripts'](../../tree/master/Scripts) folder.
-
-
+This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
