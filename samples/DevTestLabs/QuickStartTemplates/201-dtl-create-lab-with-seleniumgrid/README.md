@@ -1,6 +1,6 @@
 # Deploy a Selenium Grid on Azure DevTestLabs VMs.
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Fazure-devtestlab%2Fmaster%2FSamples%2F201-dtl-create-lab-with-seleniumgrid%2Fazuredeploy.json" target="_blank">
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Fazure-devtestlab%2Fmaster%2Fsamples%2FDevTestLabs%2FQuickStartTemplates%2F201-dtl-create-lab-with-seleniumgrid%2Fazuredeploy.json" target="_blank">
     <img src="http://azuredeploy.net/deploybutton.png"/>
 </a>
 
@@ -20,7 +20,7 @@ Q. Can I deploy different nodes with different capabilities/configurations?<br>
 A. The ARM template at present only supports homogenous configuration. You may however use the selenium-grid artifacts individually to tweak the configuration of each VM. These artifacts can be found on the Azure Portal in the artifacts blade of any DevTest Lab instance.
 
 Q. Can I change the base OS image or the size of the VMs?<br>
-A. The template only exposes inputs related to the configuration of the grid and a few other general inputs. Other Advanced parameters like OS Version (Only Windows OS supported), VM size, VNet configuration etc will have to be modified by editing the template itself.<br>
+A. The template only exposes inputs related to the configuration of the grid and a few other general inputs. Other Advanced parameters like OS Version (Only Windows OS supported), VM size, VNet configuration etc. will have to be modified by editing the template itself.<br>
 
 Q. What OSes are supported?<br>
 A. Only Windows OS is supported as of now.
