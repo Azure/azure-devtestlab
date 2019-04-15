@@ -2,11 +2,23 @@
 
 Collection of build/release tasks to interact with [Azure DevTest Labs](https://azure.microsoft.com/en-us/services/devtest-lab/).
 
-# References
+## Contributions
+
+Contributions are encouraged and welcome. However, the team reserves the right to decide which contributions will be included in future releases of the extension.
+
+The process to get changes published requires the team to review, test and package the extension. Submit a pull request to get the process started.
+
+### Submission Requirements
+
+Create a pull request that includes the nature of the change, steps on how to test it and screenshots of your the expected output, where possible, from your own testing.
+
+## How to Test
+
+### References
 
 **tfx** - [TFS Cross Platform Command Line Interface](https://github.com/Microsoft/tfs-cli)
 
-# General Info
+### General Info
 
 To package the extension, run the following command:
 
