@@ -26,7 +26,7 @@ install. For example, all the following would work:
 *options*
 
 Any other valid arguments that the apt-get command accepts. Since these additional parameters allow for relatively infinite permutations
-they will likely be susceptible to failure on the images supplied by the Azure DevTest Labs. Advanced users who wish to push the limiatations
+they will likely be susceptible to failure on the images supplied by the Azure DevTest Labs. Advanced users who wish to push the limitations
 of the extra options parameter will potentially have to experiment with certain switches to see if they work (and correct the state of
 the VM using the linux-bash artifact ahead of time if necessary).
 
@@ -34,7 +34,7 @@ the VM using the linux-bash artifact ahead of time if necessary).
 > cannot be changed).  
 
 > **Note (2):**
-> Each comand line parameter has the pattern '--command values' so we can parse the required spaces. As such, there may be some unforeseen
+> Each command line parameter has the pattern '--command values' so we can parse the required spaces. As such, there may be some unforeseen
 > limitations where double-spaces will be reduced to a single space, and other edge cases that might arise due to its use. If there is a 
 > specific use case that doesn't work within this limitation, there is the linux-bash DevTest artifact that will satisfy your needs.
 

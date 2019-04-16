@@ -6,4 +6,4 @@ This environment template supports to operation modes:
 
 * **Linux** - This mode allows you to deploy a secure 5 node, Single Node Type Service fabric Cluster running Ubuntu 16.04 on Standard_D2 Size VMs with Windows Azure diagnostics turned on.
 
-To create the required certificate information for a Service Fabric Secure Cluster please use the [Create-ClusterCertificate.ps1](https://github.com/Azure/azure-devtestlab/tree/master/Environments/ServiceFabric-LabCluster/Create-ClusterCertificate.ps1)  Powershell script.
+To create the required certificate information for a Service Fabric Secure Cluster please use the [Create-ClusterCertificate.ps1](https://github.com/Azure/azure-devtestlab/tree/master/Environments/ServiceFabric-LabCluster/Create-ClusterCertificate.ps1)  PowerShell script.

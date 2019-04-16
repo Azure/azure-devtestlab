@@ -6,7 +6,7 @@ This is a public, community-contributed repository that contains:
 
 - **Environments for Azure DevTest Labs:** An [environment](https://docs.microsoft.com/en-us/azure/lab-services/devtest-lab-concepts#environment) is a collection of resources defined as ARM templates, which represent the [Public Environment](https://azure.microsoft.com/en-ca/updates/azure-devtest-labs-public-environment-repository-in-labs/) repository in Azure DevTest Labs and can be accessed via the Azure Portal or through scripts.
 
-- **Samples for both Azure DevTest Labs and Classroom Labs:** These samples vary from Quickstart Templates, to SDK samples and scripts that can be used to facilitate outside-the-box scenarios. They are used to demonstrate how Azure Lab Services can be integrated in automation scenarios.
+- **Samples for both Azure DevTest Labs and Classroom Labs:** These samples vary from QuickStart Templates, to SDK samples and scripts that can be used to facilitate outside-the-box scenarios. They are used to demonstrate how Azure Lab Services can be integrated in automation scenarios.
 
 - **Azure Pipelines Tasks for Azure DevTest Labs:** This is the source code used to author Azure Pipelines tasks specifically geared to demonstrate use of Azure DevTest Labs in builds/releases. Refer to [Azure DevTest Labs Tasks](https://marketplace.visualstudio.com/items?itemName=ms-azuredevtestlabs.tasks) for more information and to install.
 
