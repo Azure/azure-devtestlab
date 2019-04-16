@@ -10,7 +10,13 @@ The process to get changes published requires the team to review, test and packa
 
 ### Submission Requirements
 
-Create a pull request that includes the nature of the change, steps on how to test it and screenshots of your the expected output, where possible, from your own testing.
+Create a pull request that includes,
+
+Create a pull request that includes
+* a detailed description of the new contribution or the change,
+* steps on how to test the task and/or changes,
+* screenshots of the expected output, where possible, from your own testing, and
+* updated documentation (i.e. updated top level `README.md`).
 
 ## How to Test
 

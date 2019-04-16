@@ -12,7 +12,7 @@ This is a public, community-contributed repository that contains:
 
 ## Contributions
 
-Contributions are encouraged and welcome. Please refer to the respective sections (e.g. Artifacts) for more details on the respective process to follow.
+Contributions are encouraged and welcome. Please refer to the respective sections (e.g. Artifacts, Environments, Tasks) for more details on the respective process to follow.
 
 ## Open Source Code of Conduct
 

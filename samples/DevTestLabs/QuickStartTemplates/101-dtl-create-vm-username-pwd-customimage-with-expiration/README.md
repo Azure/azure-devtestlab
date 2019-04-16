@@ -10,4 +10,4 @@ This template creates a new virtual machine in a Lab with a expiration date.
 - A new user account is created using the username/password combination on the virtual machine.
 - The user account is added to the local administrators group.
 - A expiration date is set for the VM.
-- VM will be deleted within 24 hrs. of expiration date.
+- VM will be deleted within 24 hours of expiration date.

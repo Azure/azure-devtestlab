@@ -13,4 +13,4 @@
   * On "Settings/Required Permissions" click "Grant Permissions". This should succeed.
 * Next up, we can actually go create a lab account to make SDK calls against. Go to the Lab Services blade and create a new LabAccount.
 * Once that LabAccount has been created, go to "Access Control (IAM)" and add your account as an owner of the lab account.
-* Now you can make set the rest of the options in the `app.config` and start making SDK calls!
+* Now you can set the rest of the options in the `app.config` and start making SDK calls!

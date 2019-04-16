@@ -15,5 +15,5 @@ The process to get changes published requires the team to review the code submis
 Create a pull request that includes
 * a detailed description of the new contribution or the change,
 * steps on how to test the environment and/or changes,
-* screenshots of your the expected output, where possible, from your own testing, and
+* screenshots of the expected output, where possible, from your own testing, and
 * a top level README.md document with details about the environment (for new contributions).
