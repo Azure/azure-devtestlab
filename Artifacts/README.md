@@ -4,7 +4,7 @@ For information about [artifacts](https://docs.microsoft.com/en-us/azure/lab-ser
 
 ## Authoring Artifacts
 
-Refer to the [authoring documentation](AUTHORING.md) for details on what's required to author artifacts.
+Refer to [AUTHORING.md](AUTHORING.md) for details on what's required to author artifacts.
 
 ## Contributions
 
@@ -15,6 +15,7 @@ The process to get changes published requires the team to review the code submis
 ### Submission Requirements
 
 Create a pull request that includes
+* __a single artifact per pull request__,
 * a detailed description of the new contribution or the change,
 * steps on how to test the artifact and/or changes, and
 * screenshots of the expected output, where possible, from your own testing.
