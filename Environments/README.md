@@ -13,6 +13,7 @@ The process to get changes published requires the team to review the code submis
 ### Submission Requirements
 
 Create a pull request that includes
+* __a single environment per pull request__,
 * a detailed description of the new contribution or the change,
 * steps on how to test the environment and/or changes,
 * screenshots of the expected output, where possible, from your own testing, and
