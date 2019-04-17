@@ -4,7 +4,7 @@ For information about [artifacts](https://docs.microsoft.com/en-us/azure/lab-ser
 
 ## Authoring Artifacts
 
-Refer to the [authoring documentation](AUTHORING.md) for details on what's required to author artifacts.
+Refer to [AUTHORING.md](AUTHORING.md) for details on what's required to author artifacts.
 
 ## Contributions
 
