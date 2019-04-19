@@ -7,7 +7,7 @@
         "Windows",
         "Slack"
     ],
-    "iconUri": "https://chocolatey.org/content/packageimages/slack.1.1.0.png",
+    "iconUri": "https://a.slack-edge.com/4a5c4/marketing/img/icons/icon_slack_hash_colored.svg",
     "targetOsType": "Windows",
     "parameters": {
         "installUsername": {
