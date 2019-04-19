@@ -1,0 +1,1 @@
+NOTE: By using the sample templates, you agree to Remote Desktop Gateway’s terms. Click  to read [RD Gateway license terms](https://www.microsoft.com/en-us/licensing/product-licensing/products).
