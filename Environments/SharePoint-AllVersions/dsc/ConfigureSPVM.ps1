@@ -485,18 +485,41 @@ configuration ConfigureSPVM
             DependsOn            = "[SPWebAppAuthentication]ConfigureWebAppAuthentication"
         }
 
-        # Not creating site collection in SharePoint 2019 to avoid exception: https://github.com/PowerShell/SharePointDsc/issues/990
-        if ($SharePointVersion -ne 2019) {
-            SPSite RootTeamSite
+        # Creating site collection in SharePoint 2019 fail: https://github.com/PowerShell/SharePointDsc/issues/990
+        # The workaround is to force a reboot before creating it
+        if ($SharePointVersion -eq "2019") {
+            xScript SetRebootIfFirstTime
             {
-                Url                  = "http://$SPTrustedSitesName/"
-                OwnerAlias           = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
-                SecondaryOwnerAlias  = "i:05.t|$DomainFQDN|$($DomainAdminCreds.UserName)@$DomainFQDN"
-                Name                 = "Blank site"
-                Template             = "STS#1"
+                # If the TestScript returns $false, DSC executes the SetScript to bring the node back to the desired state
+                TestScript = {
+                    return (Test-Path HKLM:\SOFTWARE\SPDSCConfigForceRebootKey\RebootRequested)
+                }
+                SetScript = {
+                    New-Item -Path HKLM:\SOFTWARE\SPDSCConfigForceRebootKey\RebootRequested -Force
+                    $global:DSCMachineStatus = 1
+                }
+                GetScript = { }
                 PsDscRunAsCredential = $SPSetupCredsQualified
-                DependsOn            = "[SPWebApplication]MainWebApp"
+                DependsOn = "[SPWebApplication]MainWebApp"
             }
+
+            xPendingReboot RebootBeforeCreatingSPSite
+            {
+                Name             = "BeforeCreatingSPTrust"
+                SkipCcmClientSDK = $true
+                DependsOn        = "[xScript]SetRebootIfFirstTime"
+            }
+        }
+
+        SPSite RootTeamSite
+        {
+            Url                  = "http://$SPTrustedSitesName/"
+            OwnerAlias           = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
+            SecondaryOwnerAlias  = "i:05.t|$DomainFQDN|$($DomainAdminCreds.UserName)@$DomainFQDN"
+            Name                 = "Blank site"
+            Template             = "STS#1"
+            PsDscRunAsCredential = $SPSetupCredsQualified
+            DependsOn            = "[SPWebApplication]MainWebApp"
         }
     }
 }
