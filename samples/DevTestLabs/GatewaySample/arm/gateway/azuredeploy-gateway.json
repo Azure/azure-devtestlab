@@ -1,0 +1,195 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "resourcePrefix":{
+            "type": "string"
+        },
+        "resourceIndex":{
+            "type": "int"
+        },
+        "adminUsername":{
+            "type": "string"
+        },
+        "adminPassword":{
+            "type": "securestring"
+        },
+        "vnetName": {
+            "type": "string"
+        },
+        "snetName": {
+            "type": "string"
+        },
+        "availabilitySetName": {
+            "type": "string"
+        },
+        "loadBalancerName": {
+            "type": "string"
+        },
+        "loadBalancerBackendAddressPoolName": {
+            "type": "string"
+        },
+        "loadBalancerFrontendIPConfigurationName":{
+            "type": "string"
+        },
+        "keyvaultId": {
+            "type": "string"
+        },
+        "keyvaultSecretSSLUrl": {
+            "type": "string"
+        },
+        "keyvaultSecretSSLThumbprint": {
+            "type": "string"
+        },
+        "keyvaultSecretSignUrl": {
+            "type": "string"
+        },
+        "keyvaultSecretSignThumbprint": {
+            "type": "string"
+        },
+        "tokenFactoryHostname": {
+            "type": "string"
+        },
+        "_artifactsLocation": {
+            "type": "string"
+        },
+        "_artifactsLocationSasToken": {
+            "type": "securestring"
+        }
+    },
+    "variables": {
+        "vmName": "[concat(parameters('resourcePrefix'), '-vm', parameters('resourceIndex'))]",
+        "nicName": "[concat(parameters('resourcePrefix'), '-nic', parameters('resourceIndex'))]",
+        "natName": "[concat('RDP', parameters('resourceIndex'))]"
+    },
+    "resources": [
+        {
+            "name": "[concat(parameters('loadBalancerName'), '/', variables('natName'))]",
+            "type": "Microsoft.Network/loadBalancers/inboundNatRules",
+            "apiVersion": "2015-06-15",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "frontendIPConfiguration": {
+                    "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', parameters('loadBalancerName'), parameters('loadBalancerFrontendIPConfigurationName'))]"
+                },
+                "protocol": "tcp",
+                "frontendPort": "[add(5000, parameters('resourceIndex'))]",
+                "backendPort": 3389,
+                "enableFloatingIP": false
+            }
+        },
+        {
+            "apiVersion": "2015-06-15",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[variables('nicName')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/loadBalancers/inboundNatRules', parameters('loadBalancerName'), variables('natName'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('snetName'))]"
+                            },
+                            "loadBalancerBackendAddressPools": [
+                                {
+                                    "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('loadBalancerName'), parameters('loadBalancerBackendAddressPoolName'))]"
+                                }
+                            ],
+                            "loadBalancerInboundNatRules": [
+                                {
+                                    "id": "[resourceId('Microsoft.Network/loadBalancers/inboundNatRules', parameters('loadBalancerName'), variables('natName'))]"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "apiVersion": "2016-04-30-preview",
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[variables('vmName')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
+            ],
+            "properties": {
+                "availabilitySet": {
+                    "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('availabilitySetName'))]"
+                },
+                "hardwareProfile": {
+                    "vmSize": "Standard_DS2_v2"
+                },
+                "osProfile": {
+                    "computerName": "[variables('vmName')]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]",
+                    "secrets": [
+                        {
+                            "sourceVault": {
+                                "id": "[parameters('keyvaultId')]"
+                            },
+                            "vaultCertificates": [
+                                {
+                                    "certificateUrl": "[parameters('keyvaultSecretSSLUrl')]",
+                                    "certificateStore": "My"
+                                },
+                                {
+                                    "certificateUrl": "[parameters('keyvaultSecretSignUrl')]",
+                                    "certificateStore": "My"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2016-Datacenter",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "createOption": "FromImage"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "apiVersion": "2015-06-15",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(variables('vmName'), '/Initialize')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]"
+            ],
+            "properties": {
+                "publisher": "Microsoft.Compute",
+                "type": "CustomScriptExtension",
+                "typeHandlerVersion": "1.8",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                    "fileUris": [
+                        "[concat(parameters('_artifactsLocation'), '/azuredeploy-gateway.ps1', parameters('_artifactsLocationSasToken'))]",
+                        "[concat(parameters('_artifactsLocation'), '/RDGatewayFedAuth.msi', parameters('_artifactsLocationSasToken'))]"
+                    ],
+                    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -Command \"& { $script = gci -Filter azuredeploy-gateway.ps1 -Recurse | sort -Descending -Property LastWriteTime | select -First 1 -ExpandProperty FullName; . $script -SslCertificateThumbprint ', parameters('keyvaultSecretSSLThumbprint'), ' -SignCertificateThumbprint ', parameters('keyvaultSecretSignThumbprint'), ' -TokenFactoryHostname ', parameters('tokenFactoryHostname'), ' }\"')]"
+                }
+            }
+        }
+    ],
+    "outputs": {
+    }
+  }
