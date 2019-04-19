@@ -7,7 +7,7 @@
         "Windows",
         "Beyond Compare"
     ],
-    "iconUri": "https://chocolatey.org/content/packageimages/beyondcompare.4.2.3.22587.png",
+    "iconUri": "http://www.scootersoftware.com/images/media_BeyondCompareIcon512x512.png",
     "targetOsType": "Windows",
     "runCommand": {
         "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', 'beyondcompare', '\"')]"
