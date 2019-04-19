@@ -2,13 +2,6 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "location": {
-      "type": "string",
-      "defaultValue": "west europe",
-      "metadata": {
-        "description": "Location for all resources."
-      }
-    },
     "provisionSharePoint2013": {
       "type": "string",
       "defaultValue": "No",
@@ -315,7 +308,7 @@
       "apiVersion": "2018-08-01",
       "type": "Microsoft.Network/networkSecurityGroups",
       "name": "[variables('networkSettings').nsgDCVNetName]",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "tags": {
         "displayName": "[variables('networkSettings').nsgDCVNetName]"
       },
@@ -327,7 +320,7 @@
       "apiVersion": "2018-08-01",
       "type": "Microsoft.Network/networkSecurityGroups",
       "name": "[variables('networkSettings').nsgSQLVNetName]",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "tags": {
         "displayName": "[variables('networkSettings').nsgSQLVNetName]"
       },
@@ -339,7 +332,7 @@
       "apiVersion": "2018-08-01",
       "type": "Microsoft.Network/networkSecurityGroups",
       "name": "[variables('networkSettings').nsgSPVNetName]",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "tags": {
         "displayName": "[variables('networkSettings').nsgSPVNetName]"
       },
@@ -365,7 +358,7 @@
     {
       "name": "[variables('networkSettings').vNetPrivateName]",
       "type": "Microsoft.Network/virtualNetworks",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "apiVersion": "2018-08-01",
       "dependsOn": [
         "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSettings').nsgDCVNetName)]",
@@ -416,7 +409,7 @@
       "condition": "[equals(parameters('createPublicIPAndDNS'), 'Yes')]",
       "name": "[variables('vmDC').vmPublicIPName]",
       "type": "Microsoft.Network/publicIPAddresses",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "apiVersion": "2018-08-01",
       "dependsOn": [],
       "tags": {
@@ -432,7 +425,7 @@
     {
       "name": "[variables('vmDC').vmNicName]",
       "type": "Microsoft.Network/networkInterfaces",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "apiVersion": "2018-08-01",
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetPrivateName)]",
@@ -460,7 +453,7 @@
     {
       "name": "[variables('generalSettings').vmDCName]",
       "type": "Microsoft.Compute/virtualMachines",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "apiVersion": "2018-06-01",
       "dependsOn": [
         "[resourceId('Microsoft.Network/networkInterfaces', variables('vmDC').vmNicName)]"
@@ -513,7 +506,7 @@
         {
           "name": "ConfigureDCVM",
           "type": "extensions",
-          "location": "[parameters('location')]",
+          "location": "[resourceGroup().location]",
           "apiVersion": "2018-06-01",
           "dependsOn": [
             "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmDCName)]"
@@ -562,7 +555,7 @@
       "condition": "[equals(parameters('createPublicIPAndDNS'), 'Yes')]",
       "name": "[variables('vmSQL').vmPublicIPName]",
       "type": "Microsoft.Network/publicIPAddresses",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "apiVersion": "2018-08-01",
       "dependsOn": [],
       "tags": {
@@ -578,7 +571,7 @@
     {
       "name": "[variables('vmSQL').vmNicName]",
       "type": "Microsoft.Network/networkInterfaces",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "apiVersion": "2018-08-01",
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetPrivateName)]",
@@ -605,7 +598,7 @@
     {
       "name": "[variables('generalSettings').vmSQLName]",
       "type": "Microsoft.Compute/virtualMachines",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "apiVersion": "2018-06-01",
       "dependsOn": [
         "[resourceId('Microsoft.Network/networkInterfaces', variables('vmSQL').vmNicName)]"
@@ -659,7 +652,7 @@
     {
       "name": "[concat(variables('generalSettings').vmSQLName, '/ConfigureSQLVM')]",
       "type": "Microsoft.Compute/virtualMachines/extensions",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "apiVersion": "2018-06-01",
       "dependsOn": [
         "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmDCName)]",
@@ -712,7 +705,7 @@
       "condition": "[and(equals(parameters('provisionSharePoint2013'), 'Yes'), equals(parameters('createPublicIPAndDNS'), 'Yes'))]",
       "name": "[variables('vmSP2013').vmPublicIPName]",
       "type": "Microsoft.Network/publicIPAddresses",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "apiVersion": "2018-08-01",
       "dependsOn": [],
       "tags": {
@@ -729,7 +722,7 @@
       "condition": "[equals(parameters('provisionSharePoint2013'), 'Yes')]",
       "name": "[variables('vmSP2013').vmNicName]",
       "type": "Microsoft.Network/networkInterfaces",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "apiVersion": "2018-08-01",
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetPrivateName)]",
@@ -757,7 +750,7 @@
       "condition": "[equals(parameters('provisionSharePoint2013'), 'Yes')]",
       "name": "[variables('generalSettings').vmSP2013Name]",
       "type": "Microsoft.Compute/virtualMachines",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "apiVersion": "2018-06-01",
       "dependsOn": [
         "[resourceId('Microsoft.Network/networkInterfaces', variables('vmSP2013').vmNicName)]"
@@ -812,7 +805,7 @@
       "condition": "[equals(parameters('provisionSharePoint2013'), 'Yes')]",
       "name": "[concat(variables('generalSettings').vmSP2013Name, '/ConfigureSPVM')]",
       "type": "Microsoft.Compute/virtualMachines/extensions",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "apiVersion": "2018-06-01",
       "dependsOn": [
         "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmDCName)]",
@@ -877,7 +870,7 @@
       "condition": "[and(equals(parameters('provisionSharePoint2016'), 'Yes'), equals(parameters('createPublicIPAndDNS'), 'Yes'))]",
       "name": "[variables('vmSP2016').vmPublicIPName]",
       "type": "Microsoft.Network/publicIPAddresses",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "apiVersion": "2018-08-01",
       "dependsOn": [],
       "tags": {
@@ -894,7 +887,7 @@
       "condition": "[equals(parameters('provisionSharePoint2016'), 'Yes')]",
       "name": "[variables('vmSP2016').vmNicName]",
       "type": "Microsoft.Network/networkInterfaces",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "apiVersion": "2018-08-01",
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetPrivateName)]",
@@ -922,7 +915,7 @@
       "condition": "[equals(parameters('provisionSharePoint2016'), 'Yes')]",
       "name": "[variables('generalSettings').vmSP2016Name]",
       "type": "Microsoft.Compute/virtualMachines",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "apiVersion": "2018-06-01",
       "dependsOn": [
         "[resourceId('Microsoft.Network/networkInterfaces', variables('vmSP2016').vmNicName)]"
@@ -977,7 +970,7 @@
       "condition": "[equals(parameters('provisionSharePoint2016'), 'Yes')]",
       "name": "[concat(variables('generalSettings').vmSP2016Name, '/ConfigureSPVM')]",
       "type": "Microsoft.Compute/virtualMachines/extensions",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "apiVersion": "2018-06-01",
       "dependsOn": [
         "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmDCName)]",
@@ -1042,7 +1035,7 @@
       "condition": "[and(equals(parameters('provisionSharePoint2019'), 'Yes'), equals(parameters('createPublicIPAndDNS'), 'Yes'))]",
       "name": "[variables('vmSP2019').vmPublicIPName]",
       "type": "Microsoft.Network/publicIPAddresses",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "apiVersion": "2018-08-01",
       "dependsOn": [],
       "tags": {
@@ -1059,7 +1052,7 @@
       "condition": "[equals(parameters('provisionSharePoint2019'), 'Yes')]",
       "name": "[variables('vmSP2019').vmNicName]",
       "type": "Microsoft.Network/networkInterfaces",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "apiVersion": "2018-08-01",
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetPrivateName)]",
@@ -1087,7 +1080,7 @@
       "condition": "[equals(parameters('provisionSharePoint2019'), 'Yes')]",
       "name": "[variables('generalSettings').vmSP2019Name]",
       "type": "Microsoft.Compute/virtualMachines",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "apiVersion": "2018-06-01",
       "dependsOn": [
         "[resourceId('Microsoft.Network/networkInterfaces', variables('vmSP2019').vmNicName)]"
@@ -1142,7 +1135,7 @@
       "condition": "[equals(parameters('provisionSharePoint2019'), 'Yes')]",
       "name": "[concat(variables('generalSettings').vmSP2019Name, '/ConfigureSPVM')]",
       "type": "Microsoft.Compute/virtualMachines/extensions",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "apiVersion": "2018-06-01",
       "dependsOn": [
         "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmDCName)]",
