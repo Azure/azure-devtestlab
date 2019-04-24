@@ -20,12 +20,6 @@ if [ -n "$isApt" ] ; then
 elif [ -n "$isYum" ] ; then
     echo "Using YUM package manager."
 
-    echo "Cleaning everything."
-    rm -r /var/cache/yum -f
-    yum clean all
-    echo "Updating every installed package."
-    yum -y update --disablerepo=rhui-microsoft-azure-rhel7,microsoft-azure-rhel7
-
     echo "Preparing MongoDb installation configuration."
     releasever=7
     cat >/etc/yum.repos.d/mongodb-org-3.0.repo <<-EOF
