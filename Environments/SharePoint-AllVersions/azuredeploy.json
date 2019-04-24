@@ -130,6 +130,15 @@
         "description": "Time zone of the VMs. Type '[TimeZoneInfo]::GetSystemTimeZones().Id' in PowerShell to get the list. Note that 'UTC' works but 'UTC+xx' does NOT work."
       }
     },
+    "vmsAutoShutdownTime": {
+      "type": "string",
+      "defaultValue": "1900",
+      "minLength": 4,
+      "maxLength": 4,
+      "metadata": {
+        "description": "The time at which VMs will be automatically shutdown (24h HHmm format). Set value to '9999' to NOT configure the auto shutdown."
+      }
+    },
     "enableAutomaticUpdates": {
       "type": "string",
       "allowedValues": [
@@ -258,7 +267,7 @@
       "vmOSDiskName": "Disk-SP2013-OS",
       "vmVmSize": "[parameters('vmSPSize')]",
       "vmNicName": "[concat('NIC-', variables('generalSettings').vmSP2013Name, '-0')]",
-      "shutdownResourceName": "[concat('Shutdown-VM-', variables('generalSettings').vmSP2013Name)]",
+      "shutdownResourceName": "[concat('shutdown-computevm-', variables('generalSettings').vmSP2013Name)]",
       "vmPublicIPName": "[concat('PublicIP-', variables('generalSettings').vmSP2013Name)]",
       "vmPublicIPDnsName": "[toLower(replace(concat(resourceGroup().name, '-', variables('generalSettings').vmSP2013Name), '_', '-'))]"
     },
@@ -269,7 +278,7 @@
       "vmOSDiskName": "Disk-SP2016-OS",
       "vmVmSize": "[parameters('vmSPSize')]",
       "vmNicName": "[concat('NIC-', variables('generalSettings').vmSP2016Name, '-0')]",
-      "shutdownResourceName": "[concat('Shutdown-VM-', variables('generalSettings').vmSP2016Name)]",
+      "shutdownResourceName": "[concat('shutdown-computevm-', variables('generalSettings').vmSP2016Name)]",
       "vmPublicIPName": "[concat('PublicIP-', variables('generalSettings').vmSP2016Name)]",
       "vmPublicIPDnsName": "[toLower(replace(concat(resourceGroup().name, '-', variables('generalSettings').vmSP2016Name), '_', '-'))]"
     },
@@ -280,7 +289,7 @@
       "vmOSDiskName": "Disk-SP2019-OS",
       "vmVmSize": "[parameters('vmSPSize')]",
       "vmNicName": "[concat('NIC-', variables('generalSettings').vmSP2019Name, '-0')]",
-      "shutdownResourceName": "[concat('Shutdown-VM-', variables('generalSettings').vmSP2019Name)]",
+      "shutdownResourceName": "[concat('shutdown-computevm-', variables('generalSettings').vmSP2019Name)]",
       "vmPublicIPName": "[concat('PublicIP-', variables('generalSettings').vmSP2019Name)]",
       "vmPublicIPDnsName": "[toLower(replace(concat(resourceGroup().name, '-', variables('generalSettings').vmSP2019Name), '_', '-'))]"
     },
@@ -1194,6 +1203,121 @@
             }
           }
         }
+      }
+    },
+    {
+      "condition": "[not(equals(parameters('vmsAutoShutdownTime'), '9999'))]",
+      "type": "Microsoft.DevTestLab/schedules",
+      "name": "[variables('vmDC').shutdownResourceName]",
+      "apiVersion": "2018-09-15",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmDCName)]"
+      ],
+      "properties": {
+        "status": "Enabled",
+        "taskType": "ComputeVmShutdownTask",
+        "dailyRecurrence": {
+          "time": "[parameters('vmsAutoShutdownTime')]"
+        },
+        "timeZoneId": "[parameters('vmsTimeZone')]",
+        "notificationSettings": {
+          "status": "Disabled",
+          "timeInMinutes": 30
+        },
+        "targetResourceId": "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmDCName)]"
+      }
+    },
+    {
+      "condition": "[not(equals(parameters('vmsAutoShutdownTime'), '9999'))]",
+      "type": "Microsoft.DevTestLab/schedules",
+      "name": "[variables('vmSQL').shutdownResourceName]",
+      "apiVersion": "2018-09-15",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmSQLName)]"
+      ],
+      "properties": {
+        "status": "Enabled",
+        "taskType": "ComputeVmShutdownTask",
+        "dailyRecurrence": {
+          "time": "[parameters('vmsAutoShutdownTime')]"
+        },
+        "timeZoneId": "[parameters('vmsTimeZone')]",
+        "notificationSettings": {
+          "status": "Disabled",
+          "timeInMinutes": 30
+        },
+        "targetResourceId": "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmSQLName)]"
+      }
+    },
+    {
+      "condition": "[and(equals(parameters('provisionSharePoint2013'), 'Yes'), not(equals(parameters('vmsAutoShutdownTime'), '9999')))]",
+      "type": "Microsoft.DevTestLab/schedules",
+      "name": "[variables('vmSP2013').shutdownResourceName]",
+      "apiVersion": "2018-09-15",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmSP2013Name)]"
+      ],
+      "properties": {
+        "status": "Enabled",
+        "taskType": "ComputeVmShutdownTask",
+        "dailyRecurrence": {
+          "time": "[parameters('vmsAutoShutdownTime')]"
+        },
+        "timeZoneId": "[parameters('vmsTimeZone')]",
+        "notificationSettings": {
+          "status": "Disabled",
+          "timeInMinutes": 30
+        },
+        "targetResourceId": "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmSP2013Name)]"
+      }
+    },
+    {
+      "condition": "[and(equals(parameters('provisionSharePoint2016'), 'Yes'), not(equals(parameters('vmsAutoShutdownTime'), '9999')))]",
+      "type": "Microsoft.DevTestLab/schedules",
+      "name": "[variables('vmSP2016').shutdownResourceName]",
+      "apiVersion": "2018-09-15",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmSP2016Name)]"
+      ],
+      "properties": {
+        "status": "Enabled",
+        "taskType": "ComputeVmShutdownTask",
+        "dailyRecurrence": {
+          "time": "[parameters('vmsAutoShutdownTime')]"
+        },
+        "timeZoneId": "[parameters('vmsTimeZone')]",
+        "notificationSettings": {
+          "status": "Disabled",
+          "timeInMinutes": 30
+        },
+        "targetResourceId": "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmSP2016Name)]"
+      }
+    },
+    {
+      "condition": "[and(equals(parameters('provisionSharePoint2019'), 'Yes'), not(equals(parameters('vmsAutoShutdownTime'), '9999')))]",
+      "type": "Microsoft.DevTestLab/schedules",
+      "name": "[variables('vmSP2019').shutdownResourceName]",
+      "apiVersion": "2018-09-15",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmSP2019Name)]"
+      ],
+      "properties": {
+        "status": "Enabled",
+        "taskType": "ComputeVmShutdownTask",
+        "dailyRecurrence": {
+          "time": "[parameters('vmsAutoShutdownTime')]"
+        },
+        "timeZoneId": "[parameters('vmsTimeZone')]",
+        "notificationSettings": {
+          "status": "Disabled",
+          "timeInMinutes": 30
+        },
+        "targetResourceId": "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmSP2019Name)]"
       }
     }
   ],
