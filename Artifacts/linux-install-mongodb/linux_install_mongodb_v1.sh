@@ -40,4 +40,4 @@ EOF
     yum install -y mongodb-org --disablerepo=rhui-microsoft-azure-rhel7,microsoft-azure-rhel7
 fi
 
-echo "Artifact completed successfully."
+echo "The artifact was applied successfully."
