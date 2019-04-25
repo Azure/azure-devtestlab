@@ -2,7 +2,7 @@
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
     "title": "Docker Community Edition",
     "publisher": "Microsoft",
-    "description": "Install Docker Community Edition on Linux",
+    "description": "Install Docker CE on Linux. -- NOTE: Docker CE will not install in RHEL, as RHEL is only supported by Docker EE. Check https://store.docker.com for information on Docker EE.",
     "tags": [
         "Docker",
         "Linux"
