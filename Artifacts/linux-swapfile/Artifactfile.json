@@ -12,9 +12,9 @@
         "size": {
             "type": "string",
             "displayName": "Size",
-            "description": "The size of the swap file. Defaults to bytes, or use the suffixes k, m, or g which correspond to KiB, MiB, and GiB respectively. For example: 5g = 5GiB, 100m = 100MiB.",
+            "description": "The size of the swap file. Defaults to bytes, or use the suffixes K, M, or G which correspond to KiB, MiB, and GiB respectively. For example: 5G = 5 GiB, 100M = 100 MiB.",
             "allowEmpty": false,
-            "defaultValue": "1g"
+            "defaultValue": "1G"
         }
     },
     "runCommand": {
