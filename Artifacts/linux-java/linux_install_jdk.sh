@@ -20,16 +20,11 @@ set -e
 if [ -n "$isApt" ] ; then
     echo "Using APT package manager"
 
-    sudo apt-get -y update
-    
     sudo apt-get -y install default-jdk
     exit 0
 elif [ -n "$isYum" ] ; then
     echo "Using YUM package manager"
 
-    yum -y update
-    yum clean all
-    
     yum install -y java-1.8.0-openjdk
     exit 0
 fi
