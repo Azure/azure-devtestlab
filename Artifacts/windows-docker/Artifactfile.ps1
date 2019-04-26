@@ -28,7 +28,7 @@ function Handle-LastError
     {
         Write-Host -Object "ERROR: $message" -ForegroundColor Red
     }
-    
+
     # IMPORTANT NOTE: Throwing a terminating error (using $ErrorActionPreference = "Stop") still
     # returns exit code zero from the PowerShell script when using -File. The workaround is to
     # NOT use -File when calling this script and leverage the try-catch-finally block and return
@@ -60,7 +60,7 @@ function Validate-Environment
     } else {
         $minVersion = $minVersionServer
     }
-    
+
     if ($curVersion -lt $minVersion) {
 
         throw "OS version must at least Windows 10 ($minVersionClient) or Windows Server 2016 ($minVersionServer)."
@@ -106,7 +106,7 @@ function Get-VMSize
     )
 
     $vmSize = Invoke-RestMethod -Headers @{"Metadata"="true"} -URI "http://169.254.169.254/metadata/instance/compute/vmSize?api-version=2017-04-02&format=text" -Method Get
-    
+
     return $vmSize
 }
 
@@ -120,7 +120,7 @@ function Test-NestedVirtualizationSupport
 
     # CAUTION !!!
     # There's no reliable way other than using the VMSize to identify support for nested virtualization yet!
-    
+
     return [bool] ($vmSize -match "Standard_[D|E]{1}\d{1,2}[s]?_v3")
 }
 
@@ -148,7 +148,7 @@ function Add-LocalAdminUser
         [string] $Description = 'DevTestLab artifact installer',
         [switch] $Overwrite = $true
     )
-    
+
     if ($Overwrite)
     {
         Remove-LocalAdminUser -UserName $UserName
@@ -162,7 +162,7 @@ function Add-LocalAdminUser
 
     $group = [ADSI]"WinNT://$env:ComputerName/Administrators,group"
     $group.add("WinNT://$env:ComputerName/$UserName")
-    
+
     return $user
 }
 
@@ -288,21 +288,18 @@ try
             {
                 Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All -NoRestart
             }
-
-            # use the GA version of docker for windows and disable checksum checks (checksum is always outdated in the nuget package)
-            Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList "docker-for-windows --ignore-checksums"
         }
-        else 
+        else
         {
             # Windows Server 2016
             if ((Get-WindowsFeature -Name Hyper-V | select -ExpandProperty InstallState) -eq "Available")
             {
                 Install-WindowsFeature –Name Hyper-V -IncludeManagementTools | Out-Null
-            }            
-
-            # use the pre version of docker for windows to ensure windows server 2016 support and disable checksum checks (checksum is always outdated in the nuget package)
-            Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList "docker-for-windows --ignore-checksums --pre"
+            }
         }
+
+        # use the GA version of docker for windows and disable checksum checks (checksum is always outdated in the nuget package)
+        Invoke-ChocolateyPackageInstaller -UserName $UserName -Password $Password -PackageList "docker-desktop --ignore-checksums"
 
         $dockerPath = Join-Path $env:programfiles "docker"
 
@@ -312,17 +309,23 @@ try
 
             $kitematicPath = Join-Path $env:programdata "chocolatey\lib\docker-kitematic\tools"
 
-            if ((Test-Path -Path $dockerPath -PathType Container) -and (Test-Path -Path $kitematicPath -PathType Container)) {
+            if (Test-Path -Path $kitematicPath -PathType Container) {
 
-                # redirect default kitematic folder under docker to the chocolatey package folder 
-                New-Item -Path (Join-Path $dockerPath "Kitematic") -ItemType SymbolicLink -Target $kitematicPath | Out-Null
+                $dockerKitematicPath = Join-Path $dockerPath "Kitematic"
+                if (Test-Path -Path $dockerKitematicPath)
+                {
+                    Remove-Item $dockerKitematicPath -Recurse -Force
+                }
+
+                # redirect default kitematic folder under docker to the chocolatey package folder
+                New-Item -Path $dockerKitematicPath -ItemType SymbolicLink -Target $kitematicPath | Out-Null
             }
-            
+
             $dockerGroup = ([ADSI]"WinNT://$env:ComputerName/docker-users,group")
 
             if ($dockerGroup)
             {
-                # grant local users to docker-for-windows
+                # grant local users to docker-desktop
                 ([ADSI]"WinNT://$env:ComputerName").Children | ? { $_.SchemaClassName -eq 'user' } | % { try { $dockerGroup.add($_.Path) } catch {} }
             }
 
@@ -334,7 +337,7 @@ try
             $message = "Could not find Docker installation path '$dockerPath'."
             throw $message
         }
-    }    
+    }
 }
 catch
 {
