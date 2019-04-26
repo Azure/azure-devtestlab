@@ -309,10 +309,16 @@ try
 
             $kitematicPath = Join-Path $env:programdata "chocolatey\lib\docker-kitematic\tools"
 
-            if ((Test-Path -Path $dockerPath -PathType Container) -and (Test-Path -Path $kitematicPath -PathType Container)) {
+            if (Test-Path -Path $kitematicPath -PathType Container) {
+
+                $dockerKitematicPath = Join-Path $dockerPath "Kitematic"
+                if (Test-Path -Path $dockerKitematicPath)
+                {
+                    Remove-Item $dockerKitematicPath
+                }
 
                 # redirect default kitematic folder under docker to the chocolatey package folder
-                New-Item -Path (Join-Path $dockerPath "Kitematic") -ItemType SymbolicLink -Target $kitematicPath | Out-Null
+                New-Item -Path $dockerKitematicPath -ItemType SymbolicLink -Target $kitematicPath | Out-Null
             }
 
             $dockerGroup = ([ADSI]"WinNT://$env:ComputerName/docker-users,group")
