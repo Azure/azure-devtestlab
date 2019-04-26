@@ -314,7 +314,7 @@ try
                 $dockerKitematicPath = Join-Path $dockerPath "Kitematic"
                 if (Test-Path -Path $dockerKitematicPath)
                 {
-                    Remove-Item $dockerKitematicPath
+                    Remove-Item $dockerKitematicPath -Recurse -Force
                 }
 
                 # redirect default kitematic folder under docker to the chocolatey package folder
