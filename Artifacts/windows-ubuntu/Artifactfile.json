@@ -1,0 +1,22 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "Windows Ubuntu",
+    "publisher": "Steve Kurtz",
+    "description": "Installs specified Ubuntu distribution",
+    "tags": [
+        "WSL",
+        "Ubuntu"
+    ],
+    "targetOsType": "Windows",
+    "parameters": {
+            "distro": {
+                "type": "string",
+                "displayName": "Ubuntu Distro",
+                "description": "Specifies the specific distro (e.g., 1804)",
+                "defaultValue": "1804"
+            }
+    },
+    "runCommand": {
+      "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./InstallUbuntu.ps1 -distro ''', parameters('distro'), '''\"')]"
+    }
+}

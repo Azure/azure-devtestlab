@@ -1,6 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
   "title": "Selenium",
+  "publisher": "ALM Rangers",
   "description": "Installs Firefox, Chrome, Selenium Driver for Chrome and IE using the Chocolatey package manager (Firefox already has it)",
   "tags": [
     "Windows",

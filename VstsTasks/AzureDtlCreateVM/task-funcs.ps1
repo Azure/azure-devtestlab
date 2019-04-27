@@ -32,7 +32,7 @@ function ConvertTo-Bool
     param(
         [string] $Value
     )
-    
+
     [bool] $boolValue = $false
 
     $null = [bool]::TryParse($Value, [ref]$boolValue)
@@ -46,7 +46,7 @@ function ConvertTo-Int
     param(
         [string] $Value
     )
-    
+
     [int] $intValue = 0
 
     $null = [int]::TryParse($Value, [ref]$intValue)
@@ -105,12 +105,12 @@ function Get-DeploymentTargetResourceId
         [string] $DeploymentName,
         [string] $ResourceGroupName
     )
-    
+
     [Array] $operations = Get-AzureRmResourceGroupDeploymentOperation -DeploymentName $DeploymentName -ResourceGroupName $ResourceGroupName
 
     foreach ($op in $operations)
     {
-        if ($op.properties.targetResource -ne $null)
+        if ($null -ne $op.properties.targetResource)
         {
             $targetResource = $op.properties.targetResource
             break
@@ -152,7 +152,7 @@ function Get-ExpectedArtifactsCount
     param(
         [string] $ArmTemplateJson
     )
-    
+
     $armTemplateObject = ConvertFrom-Json $ArmTemplateJson
     $vmTemplate = $armTemplateObject.resources | ? { $_.type -eq 'Microsoft.DevTestLab/labs/virtualmachines' } | Select-Object -First 1
 
@@ -207,7 +207,7 @@ function Remove-FailedResourcesBeforeRetry
                 Write-Host "Resource identifier is not available, will not attempt to remove corresponding resouce before retrying."
             }
         }
-    
+
         # Delete the failed deployment.
         if (ConvertTo-Bool -Value $DeleteDeployment)
         {
@@ -240,6 +240,19 @@ function Show-InputParameters
     Write-Host "  DeleteFailedDeploymentBeforeRetry = $DeleteFailedDeploymentBeforeRetry"
     Write-Host "  AppendRetryNumberToVMName = $AppendRetryNumberToVMName"
     Write-Host "  WaitMinutesForApplyArtifacts = $WaitMinutesForApplyArtifacts"
+}
+
+function Test-ArtifactsInstalling
+{
+    [CmdletBinding()]
+    param(
+        [array] $Artifacts
+    )
+
+    [array]$installingArtifacts = $artifacts | ? { $_.status -eq 'Installing' }
+    [array]$pendingArtifacts = $artifacts | ? { $_.status -eq 'Pending' }
+
+    return $installingArtifacts.Count -gt 0 -or $pendingArtifacts.Count -gt 0
 }
 
 function Test-ArtifactStatus
@@ -304,7 +317,7 @@ function Test-ArtifactStatus
                         Write-Host "vmExtensionStatusMessage = $($vmExtensionStatusMessage -replace '\\n','')"
                     }
                 }
-                
+
                 throw 'At least one artifact failed to apply. Review the lab virtual machine artifact results blade for full details.'
             }
         }
@@ -379,7 +392,7 @@ function Test-VirtualMachineName
     {
         throw "Invalid VM name '$Name'. Name must be specified."
     }
-    
+
     if ($Name.Length -gt $MaxNameLength)
     {
         throw "Invalid VM name '$Name'. Name must be between 1 and $MaxNameLength characters."
@@ -405,7 +418,10 @@ function Wait-ApplyArtifacts
     {
         Write-Host "Waiting for a maximum of $(ConvertTo-MinutesString $maxWaitMinutes) for apply artifacts operation to complete."
 
+        $totalWaitMinutes = 0
+        [string] $provisioningState
         $startWait = [DateTime]::Now
+        $continueWaiting = $true
         do {
             $waitspan = New-TimeSpan -Start $startWait -End ([DateTime]::Now)
             $totalWaitMinutes = [Math]::Round($waitspan.TotalMinutes)
@@ -414,9 +430,36 @@ function Wait-ApplyArtifacts
             {
                 throw "Waited for more than $(ConvertTo-MinutesString $totalWaitMinutes). Failing the task."
             }
+
             $vm = Get-AzureRmResource -ResourceId $ResourceId
-            $provisioningState = $vm.Properties.provisioningState
-            $continueWaiting = $provisioningState -eq 'ApplyingArtifacts' -or $provisioningState -eq 'UpgradingVmAgent'
+            if (-not $vm)
+            {
+                throw "Unable to find VM with resource ID '$ResourceId'."
+            }
+
+            $vmName = $vm.Name
+            if ($vm.ResourceName)
+            {
+                $vmLabName = $vm.ResourceName.Split('/')[0]
+                $vmFullName = $vm.ResourceName
+            }
+            else
+            {
+                $vmLabName = $(if ($vm.ParentResource){ $vm.ParentResource.Split('/')[-1] } else { $null })
+                $vmFullName = $(if ($vmLabName){ "$vmLabName/$vmName" } else { $vmName })
+            }
+            $vmResourceGroupName = $vm.ResourceGroupName
+            $vmResourceType = $vm.ResourceType
+
+            $vmDetails = Get-AzureRmResource -ApiVersion '2018-10-15-preview' -Name $vmFullName -ResourceGroupName $vmResourceGroupName -ResourceType $vmResourceType -ODataQuery '$expand=Properties($expand=Artifacts)'
+            if (-not $vmDetails)
+            {
+                throw "Unable to get details for VM '$vmName' under lab '$vmLabName' and resource group '$vmResourceGroupName'."
+            }
+
+            $provisioningState = $vmDetails.Properties.provisioningState
+            $continueWaiting = Test-ArtifactsInstalling -Artifacts $vmDetails.Properties.artifacts
+
             if ($continueWaiting)
             {
                 # The only time we have seen we possibly need to wait is if the ARM deployment completed prematurely,
@@ -426,6 +469,6 @@ function Wait-ApplyArtifacts
             }
         } while ($continueWaiting)
 
-        Write-Host "Waited for a total of $(ConvertTo-MinutesString $totalWaitMinutes)."
+        Write-Host "Waited for a total of $(ConvertTo-MinutesString $totalWaitMinutes). Latest provisioning state is $provisioningState."
     }
 }
