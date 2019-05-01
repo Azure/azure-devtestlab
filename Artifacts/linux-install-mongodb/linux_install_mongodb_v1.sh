@@ -22,16 +22,16 @@ elif [ -n "$isYum" ] ; then
 
     echo "Preparing MongoDb installation configuration."
     releasever=7
-    cat >/etc/yum.repos.d/mongodb-org-3.0.repo <<-EOF
-[mongodb-org-3.0]
+    cat >/etc/yum.repos.d/mongodb.repo <<-EOF
+[MongoDB]
 name=MongoDB Repository
-baseurl=https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/3.0/x86_64/
+baseurl=https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/4.0/x86_64/
 gpgcheck=0
 enabled=1
 EOF
 
     echo "Installing MongoDb."
-    yum install -y mongodb-org --disablerepo=rhui-microsoft-azure-rhel7,microsoft-azure-rhel7
+    yum install -y mongodb-org
 fi
 
 echo "The artifact was applied successfully."
