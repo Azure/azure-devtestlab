@@ -1,0 +1,7 @@
+{
+  "itemDisplayName": "SharePoint 2019 / 2016 / 2013 farms optimized for tests",
+  "description": "This template deploys SharePoint 2019, 2016 and 2013. Each SharePoint version is independent and may or may not be deployed. A DC is provisioned with ADFS and ADCS, and 1 SQL Server is provisioned for all SharePoint farms, which have a small configuration to provision quickly.",
+  "summary": "This template deploys SharePoint 2019, 2016 and 2013. Each SharePoint version is independent and may or may not be deployed.",
+  "githubUsername": "Yvand",
+  "dateUpdated": "2019-05-02"
+}
