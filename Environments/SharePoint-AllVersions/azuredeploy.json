@@ -2,28 +2,6 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "provisionSharePoint2013": {
-      "type": "string",
-      "defaultValue": "No",
-      "allowedValues": [
-        "Yes",
-        "No"
-      ],
-      "metadata": {
-        "description": "Specify if a SharePoint 2013 farm should be provisioned."
-      }
-    },
-    "provisionSharePoint2016": {
-      "type": "string",
-      "defaultValue": "Yes",
-      "allowedValues": [
-        "Yes",
-        "No"
-      ],
-      "metadata": {
-        "description": "Specify if a SharePoint 2016 farm should be provisioned."
-      }
-    },
     "provisionSharePoint2019": {
       "type": "string",
       "defaultValue": "Yes",
@@ -33,6 +11,28 @@
       ],
       "metadata": {
         "description": "Specify if a SharePoint 2019 farm should be provisioned."
+      }
+    },
+    "provisionSharePoint2016": {
+      "type": "string",
+      "defaultValue": "No",
+      "allowedValues": [
+        "Yes",
+        "No"
+      ],
+      "metadata": {
+        "description": "Specify if a SharePoint 2016 farm should be provisioned."
+      }
+    },
+    "provisionSharePoint2013": {
+      "type": "string",
+      "defaultValue": "No",
+      "allowedValues": [
+        "Yes",
+        "No"
+      ],
+      "metadata": {
+        "description": "Specify if a SharePoint 2013 farm should be provisioned."
       }
     },
     "domainFQDN": {
@@ -45,7 +45,6 @@
     },
     "adminUserName": {
       "type": "string",
-      "defaultValue": "yvand",
       "minLength": 1,
       "metadata": {
         "description": "Name of the AD and SharePoint administrator. 'administrator' is not allowed"
@@ -107,7 +106,7 @@
       "type": "string",
       "defaultValue": "Standard_D11_v2",
       "metadata": {
-        "description": "Size of the SQL VM"
+        "description": "Size of the SharePoint VM"
       }
     },
     "vmSPStorageAccountType": {
@@ -138,7 +137,7 @@
       ],
       "defaultValue": "No",
       "metadata": {
-        "description": "Enable automatic Windows uUpdates."
+        "description": "Enable automatic Windows Updates."
       }
     },
     "enableHybridBenefitServerLicenses": {
