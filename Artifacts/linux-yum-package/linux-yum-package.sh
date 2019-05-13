@@ -10,15 +10,16 @@
 #
 
 # Default argument values
-DEFAULT_UPDATE_MODE=0
+DO_GLOBAL_UPDATE=0
 ARGMODE_UPDATE=update
 ARGMODE_PACKAGE=packages
 ARGMODE_OPTIONS=options
 ARGMODE_NONE=none
 REQUIRED_INSTALL_OPTIONS="--assumeyes --quiet"
 REQUIRED_UPDATE_OPTIONS="--assumeyes --quiet"
-USAGE_STRING="Usage:
-linux-yum-package.sh --update (true|false) --packages (package-list) --options (additional-options)
+USAGE_STRING="
+Usage:
+    linux-yum-package.sh --update (true|false) --packages (package-list) --options (additional-options)
 
 update
     Only specify true or false here. Default is false.
@@ -30,24 +31,27 @@ options
     Specify any additional options you want to send to yum. These get injected prior to the install command.
     
 NOTE: The additional options '$REQUIRED_INSTALL_OPTIONS' are always used for both update and install commands executed as a result of this script.
-NOTE: No additional options are sent into the update command, if that option is specified.
+NOTE: No additional options are sent into the update command, if that option is specified."
 
-"
+error() {
+    echo -e "\nERROR: $@\n"
+    echo 'The artifact failed to apply.'
+    exit 1
+}
 
-LOGCMD='logger -i -t AZDEVTST_YUMPKG --'
-which logger
-if [ $? -ne 0 ] ; then
-    LOGCMD='echo [AZDEVTST_YUMPKG] '
+LOGCMD='echo -e'
+LOGERR='error'
+
+$LOGCMD "Preparing to install packages using YUM."
+
+ISYUM=`command -v yum`
+if [ ! -n "ISYUM" ] ; then
+    $LOGERR "Missing required package YUM."
 fi
-
-$LOGCMD "Installing packages. Command line given:"
-$LOGCMD "   $@"
 
 # Check for minimum number of parameters first - must be at minimum 3
 if [ $# -lt 3 ] ; then
-  $LOGCMD "ERROR: This script needs at least 3 command-line arguments, update=, packages=[somepackagename], and options=."
-  $LOGCMD "$USAGE_STRING"
-  exit 1
+    $LOGERR "This script needs at least 3 command-line arguments, update=, packages=[somepackagename], and options=.\n$USAGE_STRING"
 fi  
 
 ARGMODE=$ARGMODE_NONE
@@ -59,7 +63,6 @@ do
     case "$1" in
         "--$ARGMODE_UPDATE")
             ARGMODE=$ARGMODE_UPDATE
-            DO_GLOBAL_UPDATE=$DEFAULT_UPDATE_MODE
             shift
             $LOGCMD "Setting argmode to $ARGMODE. Setting the update mode to default ($DO_GLOBAL_UPDATE), checking for further arguments to set update mode."
             ;;
@@ -86,8 +89,6 @@ do
                     $LOGCMD "Current update-before-install mode is $DO_GLOBAL_UPDATE. Argument recieved is '$1'."
                     if [ "$1" = "true" ] || [ "$1" = "yes" ] ; then
                         DO_GLOBAL_UPDATE=1
-                    else
-                        DO_GLOBAL_UPDATE=0
                     fi
                     $LOGCMD "Set update before install mode to $DO_GLOBAL_UPDATE."
                     shift
@@ -105,9 +106,7 @@ do
                     shift
                     ;;
                 *)
-                    $LOGCMD "ERROR: Got into argument mode '$ARGMODE' somehow, not supported! Argument received is '$1'"
-                    $LOGCMD "$USAGE_STRING"
-                    exit 1
+                    $LOGERR "Got into argument mode '$ARGMODE' somehow, not supported! Argument received is '$1'\n$USAGE_STRING"
                     ;;
             esac
             ;;
@@ -131,3 +130,5 @@ yum $ADDITIONAL_OPTIONS $REQUIRED_INSTALL_OPTIONS install $INSTALL_PACKAGES
 set +e
 
 $LOGCMD "Done installing packages"
+
+$LOGCMD "\nThe artifact was applied successfully."
