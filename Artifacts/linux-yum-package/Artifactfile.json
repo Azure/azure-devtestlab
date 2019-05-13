@@ -20,7 +20,7 @@
         "update": {
             "type": "string",
             "displayName": "Run Update First",
-            "defaultValue": "true",
+            "defaultValue": "false",
             "allowEmpty": false,
             "allowedValues": [
                 "true",
