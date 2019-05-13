@@ -45,7 +45,7 @@ LOGERR='error'
 $LOGCMD "Preparing to install packages using YUM."
 
 ISYUM=`command -v yum`
-if [ ! -n "ISYUM" ] ; then
+if [ ! -n "$ISYUM" ] ; then
     $LOGERR "Missing required package YUM."
 fi
 
