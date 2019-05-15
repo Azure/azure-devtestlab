@@ -1,5 +1,3 @@
-# .\Deploy-AzureResourceGroup.ps1 -ResourceGroupLocation EastUS -Reset
-
 #Requires -Version 3.0
 #Requires -Module AzureRM.Resources
 #Requires -Module Azure.Storage
@@ -233,10 +231,11 @@ else {
 
         $retry = 0
 
+		#Getting function key
         while ($true) {
             try {
 
-                # enforce TLS 1.2 for communication - otherwise both rest method calls will fail
+                #Eforce TLS 1.2 for communication - otherwise both rest method calls will fail
                 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
                 $masterKey = (Invoke-RestMethod -Uri "https://$functionName.scm.azurewebsites.net/api/functions/admin/masterkey" -Headers @{"Authorization" = "Bearer $($token.AccessToken)"}) | select -ExpandProperty masterkey
