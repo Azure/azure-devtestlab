@@ -1,0 +1,481 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "adminUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "Admin username"
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Admin password"
+      }
+    },
+    "instanceCount": {
+      "type": "int",
+      "defaultValue": 1,
+      "minValue": 1,
+      "maxValue": 10,
+      "metadata": {
+        "description": "Number of gateway VMs to provision"
+      }
+    },
+    "alwaysOn": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Keep the API in a warm state to avoid startup delays"
+      }
+    },
+    "tokenLifetime": {
+      "type": "string",
+      "defaultValue": "00:01:00",
+      "minLength": 8,
+      "maxLength": 8
+    },
+    "sslCertificate": {
+      "type": "string",
+      "minLength": 1,
+      "metadata": {
+        "description": "Certificate as Base64 encoded string."
+      }
+    },
+    "sslCertificatePassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Certificate password for installation."
+      }
+    },
+    "sslCertificateThumbprint": {
+      "type": "string",
+      "minLength": 1,
+      "metadata": {
+        "description": "Certificate thumbprint for identification in the local certificate store."
+      }
+    },
+    "signCertificate": {
+      "type": "string",
+      "minLength": 1,
+      "metadata": {
+        "description": "Certificate as Base64 encoded string."
+      }
+    },
+    "signCertificatePassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Certificate password for installation."
+      }
+    },
+    "signCertificateThumbprint": {
+      "type": "string",
+      "minLength": 1,
+      "metadata": {
+        "description": "Certificate thumbprint for identification in the local certificate store."
+      }
+    },
+    "_artifactsLocation": {
+      "type": "string",
+      "metadata": {
+        "description": "The base URI where artifacts required by this template are located.  This includes other templates, PowerShell Scripts and  Remote Desktop Gateway Pluggable Authentication module that supports token authentication."
+      }
+    },
+    "_artifactsLocationSasToken": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The sasToken required to access _artifactsLocation.  When the template is deployed using an Azure Resource Group project in Visual Studio, a sasToken will be automatically generated."
+      },
+      "defaultValue": ""
+    }
+  },
+  "variables": {
+    "resourcePrefix": "[take(concat('rdgw-', uniqueString(resourceGroup().id)),10)]",
+    "asName": "[concat(variables('resourcePrefix'), '-as')]",
+    "aiName": "[concat(variables('resourcePrefix'), '-ai')]",
+    "kvName": "[concat(variables('resourcePrefix'), '-kv')]",
+    "kvSecretSSL": "SSLCertificate",
+    "kvSecretSign": "SignCertificate",
+    "vnetName": "[concat(variables('resourcePrefix'), '-vnet')]",
+    "vnetPrefix": "10.0.0.0/16",
+    "snetName": "Rig",
+    "snetPrefix": "10.0.0.0/24",
+    "pipName": "[concat(variables('resourcePrefix'), '-pip')]",
+    "pipID": "[resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))]",
+    "lbName": "[concat(variables('resourcePrefix'), '-lb')]",
+    "deployGateway": "[concat(deployment().name, '-Gateway')]",
+    "deployFunctionInit": "[concat(deployment().name, '-Function-Init')]",
+    "deployFunctionUpdate": "[concat(deployment().name, '-Function-Update')]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2015-05-01",
+      "type": "microsoft.insights/components",
+      "name": "[variables('aiName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "ApplicationId": "[variables('aiName')]"
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('pipName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "Static",
+        "dnsSettings": {
+          "domainNameLabel": "[variables('resourcePrefix')]"
+        }
+      }
+    },
+    {
+      "name": "[variables('deployFunctionInit')]",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2015-01-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))]",
+        "[resourceId('microsoft.insights/components', variables('aiName'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('_artifactsLocation'), '/azuredeploy-function.json', parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "resourcePrefix": {
+            "value": "[variables('resourcePrefix')]"
+          },
+          "gatewayIp": {
+            "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))).ipAddress]"
+          },
+          "instrumentationKey": {
+            "value": "[reference(resourceId('microsoft.insights/components', variables('aiName'))).InstrumentationKey]"
+          }
+        }
+      }
+    },
+    {
+      "name": "[variables('deployFunctionUpdate')]",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2015-01-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('kvName'), variables('kvSecretSign'))]",
+        "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('kvName'), variables('kvSecretSSL'))]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))]",
+        "[resourceId('microsoft.insights/components', variables('aiName'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('_artifactsLocation'), '/azuredeploy-function.json', parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "resourcePrefix": {
+            "value": "[variables('resourcePrefix')]"
+          },
+          "gatewayIp": {
+            "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))).ipAddress]"
+          },
+          "instrumentationKey": {
+            "value": "[reference(resourceId('microsoft.insights/components', variables('aiName'))).InstrumentationKey]"
+          },
+          "signCertificateUrl": {
+            "value": "[reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('kvName'), variables('kvSecretSign'))).secretUriWithVersion]"
+          },
+          "tokenLifetime": {
+            "value": "[parameters('tokenLifetime')]"
+          }
+        }
+      }
+    },
+    {
+      "name": "[variables('kvName')]",
+      "type": "Microsoft.KeyVault/vaults",
+      "apiVersion": "2015-06-01",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', variables('deployFunctionInit'))]"
+      ],
+      "properties": {
+        "enabledForDeployment": true,
+        "enabledForTemplateDeployment": false,
+        "enabledForVolumeEncryption": false,
+        "tenantId": "[subscription().tenantId]",
+        "sku": {
+          "name": "standard",
+          "family": "A"
+        },
+        "accessPolicies": [
+          {
+            "tenantId": "[reference(resourceId('Microsoft.Resources/deployments', variables('deployFunctionInit'))).outputs.tenantId.value]",
+            "objectId": "[reference(resourceId('Microsoft.Resources/deployments', variables('deployFunctionInit'))).outputs.principalId.value]",
+            "permissions": {
+              "secrets": [
+                "get"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[concat(variables('kvName'), '/', variables('kvSecretSSL'))]",
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2015-06-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('kvName'))]"
+      ],
+      "properties": {
+        "value": "[base64(concat('{ \"data\":\"', parameters('sslCertificate'), '\", \"dataType\":\"pfx\", \"password\":\"', parameters('sslCertificatePassword'), '\" }'))]"
+      }
+    },
+    {
+      "name": "[concat(variables('kvName'), '/', variables('kvSecretSign'))]",
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2015-06-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('kvName'))]"
+      ],
+      "properties": {
+        "value": "[base64(concat('{ \"data\":\"', parameters('signCertificate'), '\", \"dataType\":\"pfx\", \"password\":\"', parameters('signCertificatePassword'), '\" }'))]"
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[variables('vnetName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('vnetPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('snetName')]",
+            "properties": {
+              "addressPrefix": "[variables('snetPrefix')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-06-15",
+      "name": "[variables('lbName')]",
+      "type": "Microsoft.Network/loadBalancers",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))]"
+      ],
+      "properties": {
+        "frontendIPConfigurations": [
+          {
+            "name": "LoadBalancerFrontend",
+            "properties": {
+              "publicIPAddress": {
+                "id": "[variables('pipID')]"
+              }
+            }
+          }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "LoadBalancerBackend"
+          }
+        ],
+        "loadBalancingRules": [
+          {
+            "name": "Balance443",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', variables('lbName'), 'LoadBalancerFrontend')]"
+              },
+              "frontendPort": 443,
+              "backendPort": 443,
+              "enableFloatingIP": false,
+              "idleTimeoutInMinutes": 5,
+              "protocol": "Tcp",
+              "enableDestinationServiceEndpoint": false,
+              "loadDistribution": "SourceIPProtocol",
+              "backendAddressPool": {
+                "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('lbName'), 'LoadBalancerBackend')]"
+              },
+              "probe": {
+                "id": "[resourceId('Microsoft.Network/loadBalancers/probes', variables('lbName'), if(parameters('alwaysOn'), 'HealthCheck', 'Probe443'))]"
+              }
+            }
+          },
+          {
+            "name": "Balance3391",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', variables('lbName'), 'LoadBalancerFrontend')]"
+              },
+              "frontendPort": 443,
+              "backendPort": 443,
+              "enableFloatingIP": false,
+              "idleTimeoutInMinutes": 5,
+              "protocol": "Udp",
+              "enableDestinationServiceEndpoint": false,
+              "loadDistribution": "SourceIPProtocol",
+              "backendAddressPool": {
+                "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('lbName'), 'LoadBalancerBackend')]"
+              },
+              "probe": {
+                "id": "[resourceId('Microsoft.Network/loadBalancers/probes', variables('lbName'), 'Probe3391')]"
+              }
+            }
+          }
+        ],
+        "probes": [
+          {
+            "name": "HealthCheck",
+            "properties": {
+              "protocol": "Http",
+              "port": 80,
+              "requestPath": "/api/health",
+              "intervalInSeconds": 300,
+              "numberOfProbes": 2
+            }
+          },
+          {
+            "name": "Probe443",
+            "properties": {
+              "protocol": "Tcp",
+              "port": 443,
+              "intervalInSeconds": 5,
+              "numberOfProbes": 2
+            }
+          },
+          {
+            "name": "Probe3391",
+            "properties": {
+              "protocol": "Tcp",
+              "port": 3391,
+              "intervalInSeconds": 5,
+              "numberOfProbes": 2
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Compute/availabilitySets",
+      "name": "[variables('asName')]",
+      "apiVersion": "2016-04-30-preview",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "platformFaultDomainCount": 2,
+        "platformUpdateDomainCount": 2,
+        "managed": true
+      }
+    },
+    {
+      "name": "[concat(variables('deployGateway'), copyIndex())]",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2015-01-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('kvName'), variables('kvSecretSign'))]",
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]",
+        "[resourceId('Microsoft.Network/loadBalancers', variables('lbName'))]",
+        "[resourceId('Microsoft.Compute/availabilitySets', variables('asName'))]",
+        "[resourceId('Microsoft.Resources/deployments', variables('deployFunctionUpdate'))]"
+      ],
+      "copy": {
+        "name": "gatewayLoop",
+        "count": "[parameters('instanceCount')]"
+      },
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('_artifactsLocation'), '/azuredeploy-gateway.json', parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "resourcePrefix": {
+            "value": "[variables('resourcePrefix')]"
+          },
+          "resourceIndex": {
+            "value": "[copyIndex()]"
+          },
+          "adminUsername": {
+            "value": "[parameters('adminUsername')]"
+          },
+          "adminPassword": {
+            "value": "[parameters('adminPassword')]"
+          },
+          "vnetName": {
+            "value": "[variables('vnetName')]"
+          },
+          "snetName": {
+            "value": "[variables('snetName')]"
+          },
+          "availabilitySetName": {
+            "value": "[variables('asName')]"
+          },
+          "loadBalancerName": {
+            "value": "[variables('lbName')]"
+          },
+          "loadBalancerBackendAddressPoolName": {
+            "value": "LoadBalancerBackend"
+          },
+          "loadBalancerFrontendIPConfigurationName": {
+            "value": "LoadBalancerFrontend"
+          },
+          "keyvaultId": {
+            "value": "[resourceId('Microsoft.KeyVault/vaults', variables('kvName'))]"
+          },
+          "keyvaultSecretSSLUrl": {
+            "value": "[reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('kvName'), variables('kvSecretSSL'))).secretUriWithVersion]"
+          },
+          "keyvaultSecretSSLThumbprint": {
+            "value": "[parameters('sslCertificateThumbprint')]"
+          },
+          "keyvaultSecretSignUrl": {
+            "value": "[reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('kvName'), variables('kvSecretSign'))).secretUriWithVersion]"
+          },
+          "keyvaultSecretSignThumbprint": {
+            "value": "[parameters('signCertificateThumbprint')]"
+          },
+          "tokenFactoryHostname": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('deployFunctionUpdate'))).outputs.functionHostname.value]"
+          },
+          "_artifactsLocation": {
+            "value": "[parameters('_artifactsLocation')]"
+          },
+          "_artifactsLocationSasToken": {
+            "value": "[parameters('_artifactsLocationSasToken')]"
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "gatewayFQDN": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))).dnsSettings.fqdn]"
+    },
+    "gatewayIP": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))).ipAddress]"
+    },
+    "functionName": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('deployFunctionInit'))).outputs.functionName.value]"
+    },
+    "tenantId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('deployFunctionInit'))).outputs.tenantId.value]"
+    },
+    "principalId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('deployFunctionInit'))).outputs.principalId.value]"
+    }
+  }
+}
