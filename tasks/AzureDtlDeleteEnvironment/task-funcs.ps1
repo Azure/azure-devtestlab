@@ -57,6 +57,6 @@ function Remove-DevTestLabEnvironment {
         }
     }   
     else {
-        throw "Could not find environment '$environmentId' in lab '$($lab.Name)' owned by user '$usr'."
+        Write-Host "Could not find environment '$environmentId' in lab '$($lab.Name)' owned by user '$usr'."
     } 
 }
