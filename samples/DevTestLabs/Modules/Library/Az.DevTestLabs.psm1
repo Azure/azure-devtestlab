@@ -2,12 +2,27 @@
 # We are using strict mode for added safety
 Set-StrictMode -Version Latest
 
-# This is a bit aggressive but simplifies the code tremendously
+# This has become the default for powershell 5+. Leaving it in so that it works the same in previous versions.
 # TODO: test if Scope Process works, but unlikley as each job is in a separate process
 Enable-AzureRmContextAutosave -Scope CurrentUser
 
 # We require a relatively new version of Powershell
 #requires -Version 3.0
+
+# To understand the code below read here: https://docs.microsoft.com/en-us/powershell/azure/migrate-from-azurerm-to-az?view=azps-2.1.0
+# If you have the Az module, we need to enable the AzureRmAliases
+# If you have the AzureRm module, then everything works fine
+$azureRm  = Get-InstalledModule -Name AzureRM
+$az       = Get-InstalledModule -Name Az
+
+if(!$azureRm -and !$az) {
+  Write-Error "You need either Az or AzureRm module installed to use this library"    
+  Exit
+}
+# In theory, having both modules is not supported. In practice it does work. Setting the aliases makes the functions point to the most recent ones in the Az module.
+if($az) {
+  Enable-AzureRmAlias -Scope CurrentUser  
+}
 
 # We want to track usage of library, so adding GUID to user-agent at loading and removig it at unloading
 $libUserAgent = "pid-bd1d84d0-5ddb-4ab9-b951-393e656bb054"
@@ -100,7 +115,7 @@ function GetHeaderWithAuthToken {
 
   return $header
 }
-function Get-AzureRmDtlLab {
+function Get-AzDtlLab {
   [CmdletBinding()]
   param(
     [parameter(Mandatory=$false,ValueFromPipelineByPropertyName = $true, ValueFromPipeline=$true, HelpMessage="Name of the lab(s) to retrieve.  This parameter supports wildcards at the beginning and/or end of the string.")]
@@ -411,7 +426,7 @@ function GetComputeVm($vm) {
 
 #region LAB ACTIONS
 
-function New-AzureRmDtlLab {
+function New-AzDtlLab {
   [CmdletBinding()]
   param(
     [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="Name of the lab to create")]
@@ -507,7 +522,7 @@ function New-AzureRmDtlLab {
   }
 }
 
-function Remove-AzureRmDtlLab {
+function Remove-AzDtlLab {
   [CmdletBinding()]
   param(
     [parameter(Mandatory=$true,HelpMessage="Lab object to remove", ValueFromPipeline=$true)]
@@ -542,7 +557,7 @@ function Remove-AzureRmDtlLab {
 
 #region VM ACTIONS
 
-function Get-AzureRmDtlVm {
+function Get-AzDtlVm {
   [CmdletBinding()]
   param(
     [parameter(Mandatory=$true,HelpMessage="Lab object to remove", ValueFromPipeline=$true)]
@@ -573,7 +588,7 @@ function Get-AzureRmDtlVm {
         $vms = MyGetResource -ResourceType "Microsoft.DevTestLab/labs/virtualMachines" -Name "$LabName/$Name" -ResourceGroupName $ResourceGroupName
         Write-verbose "Vms before status filter are $vms"
         if($vms -and ($Status -ne 'Any')) {
-          return $vms | Where-Object { $Status -eq (Get-AzureRmDtlVmStatus $_)}
+          return $vms | Where-Object { $Status -eq (Get-AzDtlVmStatus $_)}
         } else {
           return $vms
         }
@@ -585,7 +600,7 @@ function Get-AzureRmDtlVm {
   end {}
 }
 
-function Get-AzureRmDtlVmStatus {
+function Get-AzDtlVmStatus {
   [CmdletBinding()]
   param(
     [parameter(Mandatory=$true,HelpMessage="VM to start. Noop if already started.", ValueFromPipeline=$true)]
@@ -625,7 +640,7 @@ function Get-AzureRmDtlVmStatus {
   end {}
 }
 
-function Start-AzureRmDtlVm {
+function Start-AzDtlVm {
   [CmdletBinding()]
   param(
     [parameter(Mandatory=$true,HelpMessage="VM to start. Noop if already started.", ValueFromPipeline=$true)]
@@ -638,7 +653,7 @@ function Start-AzureRmDtlVm {
     try {
       foreach($v in $Vm) {
         Invoke-AzureRmResourceAction -ResourceId $v.ResourceId -Action "start" -Force | Out-Null
-        $v | Get-AzureRmDtlVm
+        $v | Get-AzDtlVm
       }
     } catch {
       Write-Error -ErrorRecord $_ -EA $callerEA
@@ -647,7 +662,7 @@ function Start-AzureRmDtlVm {
   end {}
 }
 
-function Stop-AzureRmDtlVm {
+function Stop-AzDtlVm {
   [CmdletBinding()]
   param(
     [parameter(Mandatory=$true,HelpMessage="VM to stop. Noop if already stopped.", ValueFromPipeline=$true)]
@@ -660,7 +675,7 @@ function Stop-AzureRmDtlVm {
     try {
       foreach($v in $Vm) {
         Invoke-AzureRmResourceAction -ResourceId $v.ResourceId -Action "stop" -Force | Out-Null
-        $v  | Get-AzureRmDtlVm
+        $v  | Get-AzDtlVm
       }
     } catch {
       Write-Error -ErrorRecord $_ -EA $callerEA
@@ -669,7 +684,7 @@ function Stop-AzureRmDtlVm {
   end {}
 }
 
-function Remove-AzureRmDtlVm {
+function Remove-AzDtlVm {
   [CmdletBinding()]
   param(
     [parameter(Mandatory=$true,HelpMessage="VM to stop. Noop if already stopped.", ValueFromPipeline=$true)]
@@ -690,7 +705,7 @@ function Remove-AzureRmDtlVm {
   end {}
 }
 
-function Invoke-AzureRmDtlVmClaim {
+function Invoke-AzDtlVmClaim {
   [CmdletBinding()]
   param(
     [parameter(Mandatory=$true,HelpMessage="VM to stop. Noop if already stopped.", ValueFromPipeline=$true)]
@@ -703,7 +718,7 @@ function Invoke-AzureRmDtlVmClaim {
     try {
       foreach($v in $Vm) {
         Invoke-AzureRmResourceAction -ResourceId $v.ResourceId -Action "claim" -Force | Out-Null
-        $v  | Get-AzureRmDtlVm
+        $v  | Get-AzDtlVm
       }
     } catch {
       Write-Error -ErrorRecord $_ -EA $callerEA
@@ -712,7 +727,7 @@ function Invoke-AzureRmDtlVmClaim {
   end {}
 }
 
-function Invoke-AzureRmDtlVmUnClaim {
+function Invoke-AzDtlVmUnClaim {
   [CmdletBinding()]
   param(
     [parameter(Mandatory=$true,HelpMessage="VM to stop. Noop if already stopped.", ValueFromPipeline=$true)]
@@ -725,7 +740,7 @@ function Invoke-AzureRmDtlVmUnClaim {
     try {
       foreach($v in $Vm) {
         Invoke-AzureRmResourceAction -ResourceId $v.ResourceId -Action "claim" -Force | Out-Null
-        $v  | Get-AzureRmDtlVm
+        $v  | Get-AzDtlVm
       }
     } catch {
       Write-Error -ErrorRecord $_ -EA $callerEA
@@ -734,7 +749,7 @@ function Invoke-AzureRmDtlVmUnClaim {
   end {}
 }
 
-function Set-AzureRmDtlVmShutdown {
+function Set-AzDtlVmShutdown {
   [CmdletBinding()]
   param(
     [parameter(Mandatory=$true,HelpMessage="Vm to apply policy to", ValueFromPipeline=$true)]
@@ -855,7 +870,7 @@ function Set-AzureRmDtlVmShutdown {
 }
 
 #TODO: this returns a OK result resource created, but the UI doesn't show it. To investigate.
-function Set-AzureRmDtlShutdownPolicy {
+function Set-AzDtlShutdownPolicy {
   [CmdletBinding()]
   param(
     [parameter(Mandatory=$true,HelpMessage="Lab to apply policy to", ValueFromPipeline=$true)]
@@ -904,7 +919,7 @@ function Set-AzureRmDtlShutdownPolicy {
         Write-Verbose "Using url $url"
 
         Invoke-WebRequest -Headers $authHeaders -Uri $url -Method 'PUT' -InFile $jsonPath
-        $l  | Get-AzureRmDtlLab
+        $l  | Get-AzDtlLab
       }
     } catch {
       Write-Error -ErrorRecord $_ -EA $callerEA
@@ -913,7 +928,7 @@ function Set-AzureRmDtlShutdownPolicy {
   end {}
 }
 
-function Get-AzureRmDtlVmArtifact {
+function Get-AzDtlVmArtifact {
   [CmdletBinding()]
   param(
     [parameter(Mandatory=$true,HelpMessage="Vm to apply artifact to", ValueFromPipeline=$true)]
@@ -934,7 +949,7 @@ function Get-AzureRmDtlVmArtifact {
   }
   end {}
 }
-function Set-AzureRmDtlVmArtifact {
+function Set-AzDtlVmArtifact {
   [CmdletBinding()]
   param(
     [parameter(Mandatory=$true,HelpMessage="Vm to apply artifact to", ValueFromPipeline=$true)]
@@ -1011,7 +1026,7 @@ function Set-AzureRmDtlVmArtifact {
         Write-debug "Apply:`n $($prop | ConvertTo-Json)`n to $($v.ResourceId)."
         Write-verbose "Using $FullArtifactId on $($v.ResourceId)"
         Invoke-AzureRmResourceAction -Parameters $prop -ResourceId $v.ResourceId -Action "applyArtifacts" -ApiVersion 2016-05-15 -Force | Out-Null
-        $v  | Get-AzureRmDtlVm
+        $v  | Get-AzDtlVm
       }
     } catch {
       Write-Error -ErrorRecord $_ -EA $callerEA
@@ -1020,7 +1035,7 @@ function Set-AzureRmDtlVmArtifact {
   end {}
 }
 
-function Set-AzureRmDtlVmAutoStart {
+function Set-AzDtlVmAutoStart {
   [CmdletBinding()]
   param(
     [parameter(Mandatory=$true,HelpMessage="Vm to apply autostart to", ValueFromPipeline=$true)]
@@ -1038,7 +1053,7 @@ function Set-AzureRmDtlVmAutoStart {
       foreach($v in $Vm) {
         Write-Verbose "Set AutoStart for $($v.ResourceId) to $AutoStartStatus"
         Set-AzureRmResource -ResourceId $v.ResourceId -Tag @{AutoStartOn = $AutoStartStatus} -Force | Out-Null
-        $v  | Get-AzureRmDtlVm
+        $v  | Get-AzDtlVm
       }
     } catch {
       Write-Error -ErrorRecord $_ -EA $callerEA
@@ -1089,7 +1104,7 @@ $templateVmCreation = @"
 
 # TODO: Consider adding parameters Name and ResourceGroupName tied to the pipeline by property
 # to enable easier pipeline for csv files in the form [Name, ResourceGroupName, VMName, ...]
-function New-AzureRmDtlVm {
+function New-AzDtlVm {
   [CmdletBinding()]
   [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPlainTextForPassword", "", Scope="Function")]
   param(
@@ -1364,12 +1379,12 @@ function Get-UnusedRgInSubscription {
 }
 
 function Get-AzureRmDtlNetorkCard { [CmdletBinding()] param($vm)}
-function Get-AzureRmDtlVmDisks { [CmdletBinding()] param($vm)}
+function Get-AzDtlVmDisks { [CmdletBinding()] param($vm)}
 function Import-AzureRmDtlVm { [CmdletBinding()] param($Name, $ResourceGroupName, $ImportParams)}
 #endregion
 
 #region ENVIRONMENT ACTIONS
-function New-AzureRmDtlLabEnvironment{
+function New-AzDtlLabEnvironment{
   [CmdletBinding()]
   param(
     [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Name of Lab to create environment into")]
@@ -1408,7 +1423,7 @@ function New-AzureRmDtlLabEnvironment{
       #Get Lab using Name and ResourceGroupName
 
       if ((-not $Name) -or (-not $ResourceGroupName)) { throw "Missing Name or ResourceGroupName parameters."}
-      $Lab = Get-AzureRmDtlLab -Name $Name -ResourceGroupName $ResourceGroupName -Verbose
+      $Lab = Get-AzDtlLab -Name $Name -ResourceGroupName $ResourceGroupName -Verbose
 
       if (-not $Lab) {throw "Unable to find lab $Name with Resource Group $ResourceGroupName"}
 
@@ -1460,7 +1475,7 @@ function New-AzureRmDtlLabEnvironment{
   }
  }
 
-function Get-AzureRmDtlLabEnvironment{
+function Get-AzDtlLabEnvironment{
   [CmdletBinding()]
   param(
     [parameter(Mandatory=$true, ValueFromPipeline=$true, HelpMessage="Lab object to get environments from.")]
@@ -1473,7 +1488,7 @@ function Get-AzureRmDtlLabEnvironment{
     try{
 
      #Get LabId
-     $labId = Get-AzureRmDtlLab -Name $Lab.Name -ResourceGroupName $Lab.ResourceGroupName
+     $labId = Get-AzDtlLab -Name $Lab.Name -ResourceGroupName $Lab.ResourceGroupName
 
      if (-not $labId) { throw "Unable to find lab $($Lab.Name) with resource group $($Lab.ResourceGroupName)." } 
 
@@ -1500,7 +1515,7 @@ function Get-AzureRmDtlLabEnvironment{
 
 #region LAB PROPERTIES MANIPULATION
 
-function Add-AzureRmDtlLabUser {
+function Add-AzDtlLabUser {
   [CmdletBinding()]
   param(
     [parameter(Mandatory=$true, ValueFromPipeline=$true, HelpMessage="Lab to add users to")]
@@ -1538,7 +1553,7 @@ function Add-AzureRmDtlLabUser {
   end {}
 }
 
-function Add-AzureRmDtlLabArtifactRepository {
+function Add-AzDtlLabArtifactRepository {
   [CmdletBinding()]
   param(
     [parameter(Mandatory=$true, ValueFromPipeline = $true, HelpMessage="Lab to add announcement to.")]
@@ -1663,7 +1678,7 @@ function Add-AzureRmDtlLabArtifactRepository {
   end {}
 }
 
-function Set-AzureRmDtlLabAnnouncement {
+function Set-AzDtlLabAnnouncement {
   [CmdletBinding()]
   param(
     [parameter(Mandatory=$true, ValueFromPipeline = $true, HelpMessage="Lab to add announcement to.")]
@@ -1752,7 +1767,7 @@ function Set-AzureRmDtlLabAnnouncement {
   end {}
 }
 
-function Set-AzureRmDtlLabSupport {
+function Set-AzDtlLabSupport {
   [CmdletBinding()]
   param(
     [parameter(Mandatory=$true, ValueFromPipeline = $true, HelpMessage="Lab to add support message to.")]
@@ -1822,7 +1837,7 @@ function Set-AzureRmDtlLabSupport {
   end {}
 }
 
-function Set-AzureRmDtlLabRdpSettings {
+function Set-AzDtlLabRdpSettings {
   [CmdletBinding()]
   param(
     [parameter(Mandatory=$true, ValueFromPipeline = $true, HelpMessage="Lab to add RDP settings to.")]
@@ -1903,7 +1918,7 @@ function Set-AzureRmDtlLabRdpSettings {
   end {}
 }
 
-function Set-AzureRmDtlLabShutdown {
+function Set-AzDtlLabShutdown {
   [CmdletBinding()]
   param(
     [parameter(Mandatory=$true, ValueFromPipeline = $true, HelpMessage="Lab to operate on.")]
@@ -2054,7 +2069,7 @@ function Set-AzureRmDtlLabShutdown {
   end {}
 }
 
-function Set-AzureRmDtlLabStartup {
+function Set-AzDtlLabStartup {
   [CmdletBinding()]
   param(
     [parameter(Mandatory=$true, ValueFromPipeline = $true, HelpMessage="Lab to operate on.")]
@@ -2147,7 +2162,7 @@ function Set-AzureRmDtlLabStartup {
   end {}
 }
 
-function Get-AzureRmDtlLabSchedule {
+function Get-AzDtlLabSchedule {
   Param(
     [parameter(Mandatory=$true, ValueFromPipeline = $true, HelpMessage="Lab to operate on")]
     [ValidateNotNullOrEmpty()]
@@ -2185,7 +2200,7 @@ function Get-AzureRmDtlLabSchedule {
 function Get-AzureRmDtlNetwork { [CmdletBinding()] param($Name, $ResourceGroupName)}
 function Get-AzureRmDtlLoadBalancers { [CmdletBinding()] param($Name, $ResourceGroupName)}
 function Get-AzureRmDtlCosts { [CmdletBinding()] param($Name, $ResourceGroupName)}
-function Get-AzureRmDtlLabAnnouncement { [CmdletBinding()] param($Name, $ResourceGroupName)}
+function Get-AzDtlLabAnnouncement { [CmdletBinding()] param($Name, $ResourceGroupName)}
 function Get-AzureRmDtlInternalSupport { [CmdletBinding()] param($Name, $ResourceGroupName)}
 function Get-AzureRmDtlRepositories { [CmdletBinding()] param($Name, $ResourceGroupName)}
 function Get-AzureRmDtlMarketplaceImages { [CmdletBinding()] param($Name, $ResourceGroupName)}
@@ -2195,7 +2210,7 @@ function Set-AzureRmDtlMarketplaceImages { [CmdletBinding()] param($Name, $Resou
 #endregion
 
 #region CUSTOM IMAGE MANIPULATION
-function New-AzureRmDtlCustomImageFromVm {
+function New-AzDtlCustomImageFromVm {
   [CmdletBinding()]
   param(
 
@@ -2226,7 +2241,7 @@ function New-AzureRmDtlCustomImageFromVm {
         $ResourceName = $v.ResourceName
         $labName = $ResourceName.SubString(0, $ResourceName.IndexOf('/'))
         Write-Verbose "Creating it in lab $labName"
-        $l = Get-AzureRmDtlLab -Name $LabName -ResourceGroupName $vm.ResourceGroupName
+        $l = Get-AzDtlLab -Name $LabName -ResourceGroupName $vm.ResourceGroupName
 
         $params = @{
           existingLabName = $labName
@@ -2308,7 +2323,7 @@ function New-AzureRmDtlCustomImageFromVm {
 }
 "@ | DeployLab -Lab $l -AsJob $AsJob -Parameters $Params | Out-Null
 
-        $l | Get-AzureRmDtlCustomImage | Where-Object {$_.Name -eq "$ImageName"}
+        $l | Get-AzDtlCustomImage | Where-Object {$_.Name -eq "$ImageName"}
       }
     } catch {
       Write-Error -ErrorRecord $_ -EA $callerEA
@@ -2318,7 +2333,7 @@ function New-AzureRmDtlCustomImageFromVm {
   end {}
 }
 
-function Import-CustomImageFromUri {
+function Import-AzDtlCustomImageFromUri {
   Param(
     [parameter(Mandatory=$true, ValueFromPipeline = $true, HelpMessage="Lab to operate on")]
     [ValidateNotNullOrEmpty()]
@@ -2465,7 +2480,7 @@ function Import-CustomImageFromUri {
 
           # Now that we have created the custom image we can remove the vhd
           Remove-AzureStorageBlob -Context $DestStorageContext -Container 'uploads' -Blob $ImageName | Out-Null
-          $l | Get-AzureRmDtlCustomImage | Where-Object {$_.Name -eq "$ImageName"}
+          $l | Get-AzDtlCustomImage | Where-Object {$_.Name -eq "$ImageName"}
         }
 
         if($AsJob.IsPresent) {
@@ -2482,7 +2497,7 @@ function Import-CustomImageFromUri {
   end {}
 }
 
-function Get-AzureRmDtlCustomImage {
+function Get-AzDtlCustomImage {
   Param(
     [parameter(Mandatory=$true, ValueFromPipeline = $true, HelpMessage="Lab to operate on")]
     [ValidateNotNullOrEmpty()]
@@ -2504,70 +2519,70 @@ function Get-AzureRmDtlCustomImage {
 #endregion
 
 #region EXPORTS
-New-Alias -Name 'Dtl-NewLab'              -Value New-AzureRmDtlLab
-New-Alias -Name 'Dtl-RemoveLab'           -Value Remove-AzureRmDtlLab
-New-Alias -Name 'Dtl-GetLab'              -Value Get-AzureRmDtlLab
-New-Alias -Name 'Dtl-GetVm'               -Value Get-AzureRmDtlVm
-New-Alias -Name 'Dtl-StartVm'             -Value Start-AzureRmDtlVm
-New-Alias -Name 'Dtl-StopVm'              -Value Stop-AzureRmDtlVm
-New-Alias -Name 'Dtl-ClaimVm'             -Value Invoke-AzureRmDtlVmClaim
-New-Alias -Name 'Dtl-UnClaimVm'           -Value Invoke-AzureRmDtlVmUnClaim
-New-Alias -Name 'Dtl-RemoveVm'            -Value Remove-AzureRmDtlVm
-New-Alias -Name 'Dtl-NewVm'               -Value New-AzureRmDtlVm
-New-Alias -Name 'Dtl-AddUser'             -Value Add-AzureRmDtlLabUser
-New-Alias -Name 'Dtl-SetLabAnnouncement'  -Value Set-AzureRmDtlLabAnnouncement
-New-Alias -Name 'Dtl-SetLabSupport'       -Value Set-AzureRmDtlLabSupport
-New-Alias -Name 'Dtl-SetLabRdp'           -Value Set-AzureRmDtlLabRdpSettings
-New-Alias -Name 'Dtl-AddLabRepo'          -Value Add-AzureRmDtlLabArtifactRepository
-New-Alias -Name 'Dtl-ApplyArtifact'       -Value Set-AzureRmDtlVmArtifact
-New-Alias -Name 'Dtl-GetLabSchedule'      -Value Get-AzureRmDtlLabSchedule
-New-Alias -Name 'Dtl-SetLabShutdown'      -Value Set-AzureRmDtlLabShutdown
-New-Alias -Name 'Dtl-SetLabStartup'       -Value Set-AzureRmDtlLabStartup
-New-Alias -Name 'Dtl-SetLabShutPolicy'    -Value Set-AzureRmDtlShutdownPolicy
-New-Alias -Name 'Dtl-SetAutoStart'        -Value Set-AzureRmDtlVmAutoStart
-New-Alias -Name 'Dtl-SetVmShutdown'       -Value Set-AzureRmDtlVmShutdown
-New-Alias -Name 'Dtl-GetVmStatus'         -Value Get-AzureRmDtlVmStatus
-New-Alias -Name 'Dtl-GetVmArtifact'       -Value Get-AzureRmDtlVmArtifact
-New-Alias -Name 'Dtl-ImportCustomImage'   -Value Import-CustomImageFromUri
-New-Alias -Name 'Dtl-GetCustomImage'      -Value Get-AzureRmDtlCustomImage
-New-Alias -Name 'Dtl-NewCustomImage'      -Value New-AzureRmDtlCustomImageFromVm
+New-Alias -Name 'Dtl-NewLab'              -Value New-AzDtlLab
+New-Alias -Name 'Dtl-RemoveLab'           -Value Remove-AzDtlLab
+New-Alias -Name 'Dtl-GetLab'              -Value Get-AzDtlLab
+New-Alias -Name 'Dtl-GetVm'               -Value Get-AzDtlVm
+New-Alias -Name 'Dtl-StartVm'             -Value Start-AzDtlVm
+New-Alias -Name 'Dtl-StopVm'              -Value Stop-AzDtlVm
+New-Alias -Name 'Dtl-ClaimVm'             -Value Invoke-AzDtlVmClaim
+New-Alias -Name 'Dtl-UnClaimVm'           -Value Invoke-AzDtlVmUnClaim
+New-Alias -Name 'Dtl-RemoveVm'            -Value Remove-AzDtlVm
+New-Alias -Name 'Dtl-NewVm'               -Value New-AzDtlVm
+New-Alias -Name 'Dtl-AddUser'             -Value Add-AzDtlLabUser
+New-Alias -Name 'Dtl-SetLabAnnouncement'  -Value Set-AzDtlLabAnnouncement
+New-Alias -Name 'Dtl-SetLabSupport'       -Value Set-AzDtlLabSupport
+New-Alias -Name 'Dtl-SetLabRdp'           -Value Set-AzDtlLabRdpSettings
+New-Alias -Name 'Dtl-AddLabRepo'          -Value Add-AzDtlLabArtifactRepository
+New-Alias -Name 'Dtl-ApplyArtifact'       -Value Set-AzDtlVmArtifact
+New-Alias -Name 'Dtl-GetLabSchedule'      -Value Get-AzDtlLabSchedule
+New-Alias -Name 'Dtl-SetLabShutdown'      -Value Set-AzDtlLabShutdown
+New-Alias -Name 'Dtl-SetLabStartup'       -Value Set-AzDtlLabStartup
+New-Alias -Name 'Dtl-SetLabShutPolicy'    -Value Set-AzDtlShutdownPolicy
+New-Alias -Name 'Dtl-SetAutoStart'        -Value Set-AzDtlVmAutoStart
+New-Alias -Name 'Dtl-SetVmShutdown'       -Value Set-AzDtlVmShutdown
+New-Alias -Name 'Dtl-GetVmStatus'         -Value Get-AzDtlVmStatus
+New-Alias -Name 'Dtl-GetVmArtifact'       -Value Get-AzDtlVmArtifact
+New-Alias -Name 'Dtl-ImportCustomImage'   -Value Import-AzDtlCustomImageFromUri
+New-Alias -Name 'Dtl-GetCustomImage'      -Value Get-AzDtlCustomImage
+New-Alias -Name 'Dtl-NewCustomImage'      -Value New-AzDtlCustomImageFromVm
 
-New-Alias -Name 'Claim-AzureRmDtlVm'      -Value Invoke-AzureRmDtlVmClaim
-New-Alias -Name 'UnClaim-AzureRmDtlVm'    -Value Invoke-AzureRmDtlVmUnClaim
+New-Alias -Name 'Claim-AzureRmDtlVm'      -Value Invoke-AzDtlVmClaim
+New-Alias -Name 'UnClaim-AzureRmDtlVm'    -Value Invoke-AzDtlVmUnClaim
 
-New-Alias -Name 'Dtl-NewEnvironment'      -Value New-AzureRmDtlLabEnvironment
-New-Alias -Name 'Dtl-GetEnvironment'     -Value Get-AzureRmDtlLabEnvironment
+New-Alias -Name 'Dtl-NewEnvironment'      -Value New-AzDtlLabEnvironment
+New-Alias -Name 'Dtl-GetEnvironment'      -Value Get-AzDtlLabEnvironment
 
-Export-ModuleMember -Function New-AzureRmDtlLab,
-                              Remove-AzureRmDtlLab,
-                              Get-AzureRmDtlLab,
-                              Get-AzureRmDtlVm,
-                              Start-AzureRmDtlVm,
-                              Stop-AzureRmDtlVm,
-                              Invoke-AzureRmDtlVmClaim,
-                              Invoke-AzureRmDtlVmUnClaim,
-                              New-AzureRmDtlVm,
+Export-ModuleMember -Function New-AzDtlLab,
+                              Remove-AzDtlLab,
+                              Get-AzDtlLab,
+                              Get-AzDtlVm,
+                              Start-AzDtlVm,
+                              Stop-AzDtlVm,
+                              Invoke-AzDtlVmClaim,
+                              Invoke-AzDtlVmUnClaim,
+                              New-AzDtlVm,
                               Get-UnusedRgInSubscription,
-                              Remove-AzureRmDtlVm,
-                              Add-AzureRmDtlLabUser,
-                              Set-AzureRmDtlLabAnnouncement,
-                              Set-AzureRmDtlLabSupport,
-                              Set-AzureRmDtlLabRdpSettings,
-                              Add-AzureRmDtlLabArtifactRepository,
-                              Set-AzureRmDtlVmArtifact,
-                              Get-AzureRmDtlLabSchedule,
-                              Set-AzureRmDtlLabShutdown,
-                              Set-AzureRmDtlLabStartup,
-                              New-AzureRmDtlLabEnvironment,
-                              Get-AzureRmDtlLabEnvironment,
-                              Set-AzureRmDtlShutdownPolicy,
-                              Set-AzureRmDtlVmAutoStart,
-                              Set-AzureRmDtlVmShutdown,
-                              Get-AzureRmDtlVmStatus,
-                              Get-AzureRmDtlVmArtifact,
-                              Import-CustomImageFromUri,
-                              Get-AzureRmDtlCustomImage,
-                              New-AzureRmDtlCustomImageFromVm
+                              Remove-AzDtlVm,
+                              Add-AzDtlLabUser,
+                              Set-AzDtlLabAnnouncement,
+                              Set-AzDtlLabSupport,
+                              Set-AzDtlLabRdpSettings,
+                              Add-AzDtlLabArtifactRepository,
+                              Set-AzDtlVmArtifact,
+                              Get-AzDtlLabSchedule,
+                              Set-AzDtlLabShutdown,
+                              Set-AzDtlLabStartup,
+                              New-AzDtlLabEnvironment,
+                              Get-AzDtlLabEnvironment,
+                              Set-AzDtlShutdownPolicy,
+                              Set-AzDtlVmAutoStart,
+                              Set-AzDtlVmShutdown,
+                              Get-AzDtlVmStatus,
+                              Get-AzDtlVmArtifact,
+                              Import-AzDtlCustomImageFromUri,
+                              Get-AzDtlCustomImage,
+                              New-AzDtlCustomImageFromVm
 
 Export-ModuleMember -Alias *
 #endregion

@@ -7,12 +7,12 @@ function StringToFile([parameter(ValueFromPipeline=$true)][string] $text) {
   return $tmp.FullName
 }
 
-Import-Module ..\AzureRM.DevTestLab.psm1
+Import-Module ..\Az.DevTestLabs.psm1
 
 $labsData = @'
 Name, ResourceGroupName
-LibLab100, Cyber
-LibLab200, Cyber
+LibLab1033, Cyber
+LibLab2033, Cyber
 '@
 
 $labs = $labsData `

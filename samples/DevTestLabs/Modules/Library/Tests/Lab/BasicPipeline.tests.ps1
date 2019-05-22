@@ -1,4 +1,4 @@
-Import-Module $PSScriptRoot\..\..\AzureRm.DevTestLab.psm1
+Import-Module $PSScriptRoot\..\..\Az.DevTestLabs.psm1
 
 $labs = @(
     [pscustomobject]@{Name='DTL-Library-Test1'; ResourceGroupName='DTL-Library-Test1rg'; Location='westus'},

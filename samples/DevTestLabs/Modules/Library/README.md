@@ -1,8 +1,6 @@
 # Az.DevTestLabs
 
-Az.DevTestLabs is a Powershell module to simplify the management of [Azure DevTest Labs](https://azure.microsoft.com/en-us/services/devtest-lab/).
-
-It provides composable functions to create, query, update and delete labs, VMs, Environments, etc...
+Az.DevTestLabs is a Powershell module to simplify the management of [Azure DevTest Labs](https://azure.microsoft.com/en-us/services/devtest-lab/). It provides composable functions to create, query, update and delete labs, VMs, Environments, etc...
 
 It looks like this ...
 
@@ -16,7 +14,7 @@ Dtl-GetLab -name Test* | Dtl-GetVm | Dtl-StartVm
 2. Copy Az.DevTestLabs.psm1 anywhere on disk
 3. Import the module
 ```powershell
-Import-Module .\AzureRM.DevTestLab.psm1
+Import-Module .\Az.DevTestLabs.psm1
 
 ```
 4. Start hacking !! (i.e. List all the labs in your subscription)
@@ -30,11 +28,7 @@ More complex examples of usage are in the [Scenarios](./Scenarios) folder.
 
 ## Contributing
 
-Please read [CONTRIBUTING.md](./CONTRIBUTING.MD) for details on our code of conduct, and hints on how to code for this repo.
-
-## Versioning
-
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
+Please read [CONTRIBUTING.md](CONTRIBUTING.MD) for details on our code of conduct, and hints on how to code for this repo. 
 
 ## Authors
 
