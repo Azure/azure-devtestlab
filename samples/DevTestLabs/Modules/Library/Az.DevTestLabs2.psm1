@@ -25,6 +25,7 @@ if($azureRm) {
   Write-Warning "You are using the deprecated AzureRM module. For more info, read https://docs.microsoft.com/en-us/powershell/azure/migrate-from-azurerm-to-az"
 }
 if($az -and (-not $azureRm)) {
+  Write-Verbose "Enabling AzureRm Aliases"
   Enable-AzureRmAlias -Scope CurrentUser
 }
 
@@ -188,8 +189,12 @@ function DeployLab {
 
   $sb = {
     param($deploymentName, $Name, $ResourceGroupName, $jsonPath, $Parameters)
-    $deployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $ResourceGroupName -TemplateFile $jsonPath -TemplateParameterObject $Parameters
-    Write-debug "Deployment succeded with deployment of `n$deployment"
+    if($azureRm) {
+      $deployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $ResourceGroupName -TemplateFile $jsonPath -TemplateParameterObject $Parameters
+    } else {
+      $deployment = New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $ResourceGroupName -TemplateFile $jsonPath -TemplateParameterObject $Parameters
+    }
+      Write-debug "Deployment succeded with deployment of `n$deployment"
 
     Get-AzureRmResource -Name $Name -ResourceGroupName $ResourceGroupName -ExpandProperties
   }
@@ -244,8 +249,12 @@ function DeployVm {
 
   $sb = {
     param($deploymentName, $Name, $ResourceGroupName, $jsonPath, $Parameters)
-    $deployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $ResourceGroupName -TemplateFile $jsonPath -TemplateParameterObject $Parameters
-    Write-debug "Deployment succeded with deployment of `n$deployment"
+    if($azureRm) {
+      $deployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $ResourceGroupName -TemplateFile $jsonPath -TemplateParameterObject $Parameters
+    } else {
+      $deployment = New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $ResourceGroupName -TemplateFile $jsonPath -TemplateParameterObject $Parameters
+    }
+      Write-debug "Deployment succeded with deployment of `n$deployment"
 
     Get-AzureRmResource -Name $Name -ResourceGroupName $ResourceGroupName -ExpandProperties
   }
@@ -1288,8 +1297,10 @@ function New-AzDtlVm {
           if($CustomImage -is [string]) {
             $SubscriptionID = (Get-AzureRmContext).Subscription.Id
             $imageId = "/subscriptions/$SubscriptionID/ResourceGroups/$ResourceGroupName/providers/Microsoft.DevTestLab/labs/$Name/customImages/$CustomImage"
+            Write-Verbose "Using custom image (string) $CustomImage with resource id $imageId"
           } elseif($CustomImage.ResourceId) {
             $imageId = $CustomImage.ResourceId
+            Write-Verbose "Using custom image (object) $CustomImage with resource id $imageId"
           } else {
             throw "CustomImage $CustomImage is not a string and not an object with a ResourceId property."
           }
@@ -1317,8 +1328,12 @@ function New-AzDtlVm {
 
         $sb = {
           param($deploymentName, $Name, $ResourceGroupName, $VmName, $jsonPath)
-          $deployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $ResourceGroupName -TemplateFile $jsonPath -existingLabName $Name -newVmName $VmName
-          Write-debug "Deployment succeded with deployment of `n$deployment"
+          if($azureRm) {
+            $deployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $ResourceGroupName -TemplateFile $jsonPath -existingLabName $Name -newVmName $VmName
+          } else {
+            $deployment = New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $ResourceGroupName -TemplateFile $jsonPath -existingLabName $Name -newVmName $VmName
+          }
+            Write-debug "Deployment succeded with deployment of `n$deployment"
 
           Get-AzureRmResource -Name "$Name/$VmName" -ResourceGroupName $ResourceGroupName -ExpandProperties
         }
@@ -2327,7 +2342,7 @@ function New-AzDtlCustomImageFromVm {
 }
 "@ | DeployLab -Lab $l -AsJob $AsJob -Parameters $Params | Out-Null
 
-        $l | Get-AzDtlCustomImage | Where-Object {$_.Name -eq "$ImageName"}
+        $l | Get-AzDtlCustomImage | Where-Object {$_.Name -eq $ImageName}
       }
     } catch {
       Write-Error -ErrorRecord $_ -EA $callerEA

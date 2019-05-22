@@ -9,11 +9,14 @@ function StringToFile([parameter(ValueFromPipeline=$true)][string] $text) {
 
 Import-Module ..\Az.DevTestLabs2.psm1
 
-$labsData = @'
+$lab1 = "Test" + (Get-Random)
+$lab2 = "Test" + (Get-Random)
+
+$labsData = @"
 Name, ResourceGroupName
-LibLab1033, Cyber
-LibLab2033, Cyber
-'@
+$lab1, TestLibrary
+$lab2, TestLibrary
+"@
 
 $labs = $labsData `
         | StringToFile `
@@ -31,7 +34,7 @@ $labs `
   | Dtl-SetLabStartup -StartupTime '21:00' -TimeZoneId 'UTC' -WeekDays @('Monday') `
   | Dtl-AddLabRepo -ArtifactRepoUri 'https://github.com/lucabol/DTLWorkshop.git' `
       -artifactRepoSecurityToken '196ad1f5b5464de4de6d47705bbcab0ce7d323fe' `
-  | Dtl-NewVm -VmName "TestServer" -Size 'Standard_A4_v2' -Claimable -UserName 'bob' -Password 'aPassword341341' `
+  | Dtl-NewVm -VmName ("vm" + (Get-Random)) -Size 'Standard_A4_v2' -Claimable -UserName 'bob' -Password 'aPassword341341' `
       -OsType Windows -Sku '2012-R2-Datacenter' -Publisher 'MicrosoftWindowsServer' -Offer 'WindowsServer' `
       -AsJob `
   | Receive-Job -Wait `
@@ -46,18 +49,18 @@ $labs `
 $labs | Dtl-GetLabSchedule -ScheduleType 'AutoShutdown' | Out-Null
 
 $customImage = $labs[0] `
-  | Dtl-NewVm -VmName "NewTestServer" -Size 'Standard_A4_v2' -Claimable -UserName 'bob' -Password 'aPassword341341' `
+  | Dtl-NewVm -VmName ("cvm" + (Get-Random)) -Size 'Standard_A4_v2' -Claimable -UserName 'bob' -Password 'aPassword341341' `
     -OsType Windows -Sku '2012-R2-Datacenter' -Publisher 'MicrosoftWindowsServer' -Offer 'WindowsServer' `
-  | Dtl-NewCustomImage -ImageName 'TestImage' -ImageDescription 'A Description'
+  | Dtl-NewCustomImage -ImageName ("im" + (Get-Random)) -ImageDescription 'A Description'
 
-$labs[0] | Dtl-NewVm -CustomImage $customImage -VmName 'CustomVm' -Size 'Standard_A4_v2' -OsType Windows | Out-Null
+$labs[0] | Dtl-NewVm -CustomImage $customImage -VmName ('cvm2' + (Get-Random)) -Size 'Standard_A4_v2' -OsType Windows | Out-Null
 
 $labs `
-  | Dtl-NewEnvironment -ArtifactRepositoryDisplayName 'Public Environment Repo' -TemplateName 'WebApp' -EnvironmentInstanceName 'GenericTestEnv' -Verbose `
-  | Dtl-GetEnvironments `
+  | Dtl-NewEnvironment -ArtifactRepositoryDisplayName 'Public Environment Repo' -TemplateName 'WebApp' -EnvironmentInstanceName ("gems" + (Get-Random)) `
+  | Dtl-GetEnvironment `
   | Measure-Object -Property environments `
   | %{if($_.Count -ne 2){Write-Host "Failed to get environments"}}
 
 $labs | Dtl-RemoveLab
 
-Remove-Module AzureRM.DevTestLab -Force
+Remove-Module Az.DevTestLabs2 -Force

@@ -15,7 +15,7 @@ lucabol@microsoft.com, "DevTest Labs User"
 phauge@microsoft.com,  "DevTest Labs User"
 '@
 
-$lab = Dtl-NewLab -Name 'UserLab' -ResourceGroupName 'Cyber'
+$lab = Dtl-NewLab -Name 'UserLab' -ResourceGroupName 'TestLibrary'
 
 $users `
   | StringToFile `
@@ -24,4 +24,4 @@ $users `
 
 $lab | Dtl-RemoveLab
 
-Remove-Module AzureRM.DevTestLab -Force
+Remove-Module Az.DevTestLabs2 -Force

@@ -11,8 +11,8 @@ Import-Module ..\Az.DevTestLabs2.psm1
 
 $labs = @'
 Name, ResourceGroupName
-LibLab1, Cyber
-LibLab2, Cyber
+LibLab1, TestLibrary
+LibLab2, TestLibrary
 '@
 
 $labs `
@@ -35,4 +35,4 @@ $labs `
   | Dtl-GetLab `
   | Dtl-RemoveLab
 
-Remove-Module AzureRM.DevTestLab -Force
+  Remove-Module Az.DevTestLabs2 -Force

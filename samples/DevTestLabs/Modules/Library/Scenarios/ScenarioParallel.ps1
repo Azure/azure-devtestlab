@@ -15,7 +15,7 @@ Vm1, Standard_A4_v2, bob, aPassword341341, Windows, 2012-R2-Datacenter, Microsof
 Vm2, Standard_A4_v2, bob, aPassword341341, Windows, 2012-R2-Datacenter, MicrosoftWindowsServer, WindowsServer
 '@
 
-$lab = Dtl-NewLab -Name 'ParaLab' -ResourceGroupName 'Cyber' -AsJob | Receive-Job -Wait
+$lab = Dtl-NewLab -Name 'ParaLab' -ResourceGroupName 'TestLibrary' -AsJob | Receive-Job -Wait
 
 $vms `
   | StringToFile `
@@ -28,4 +28,4 @@ $vms `
 
 $lab | dtl-getlab | dtl-RemoveLab
 
-Remove-Module AzureRM.DevTestLab -Force
+Remove-Module Az.DevTestLabs2 -Force

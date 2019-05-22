@@ -11,8 +11,8 @@ Import-Module ..\Az.DevTestLabs2.psm1
 
 $vms = @'
 Name, ResourceGroupName, VmName, Size, UserName, Password, OsType, Sku, Publisher, Offer
-MulLab1, Cyber, Vm1, Standard_A4_v2, bob, aPassword341341, Windows, 2012-R2-Datacenter, MicrosoftWindowsServer, WindowsServer
-MulLab2, Cyber, Vm2, Standard_A4_v2, bob, aPassword341341, Windows, 2012-R2-Datacenter, MicrosoftWindowsServer, WindowsServer
+MulLab1, TestLibrary, Vm1, Standard_A4_v2, bob, aPassword341341, Windows, 2012-R2-Datacenter, MicrosoftWindowsServer, WindowsServer
+MulLab2, TestLibrary, Vm2, Standard_A4_v2, bob, aPassword341341, Windows, 2012-R2-Datacenter, MicrosoftWindowsServer, WindowsServer
 '@
 
 # Create labs
@@ -34,4 +34,4 @@ $vms `
 
 $lab | dtl-getlab | dtl-RemoveLab
 
-Remove-Module AzureRM.DevTestLab -Force
+Remove-Module Az.DevTestLabs2 -Force
