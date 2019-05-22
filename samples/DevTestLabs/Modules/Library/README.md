@@ -28,13 +28,13 @@ More complex examples of usage are in the [Scenarios](./Scenarios) folder.
 
 ## Contributing
 
-Please read [CONTRIBUTING.md](CONTRIBUTING.MD) for details on our code of conduct, and hints on how to code for this repo. 
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct, and hints on how to code for this repo. 
 
 ## Authors
 
 * **[Luca Bolognese](https://github.com/lucabol)** - *Initial work*
 * **[Peter Hauge](https://github.com/petehauge)**
-* **[Roger Best](https://github.com/rogbest)**
+* **[Roger Best](https://github.com/rogerbestmsft)**
 
 ## License
 
