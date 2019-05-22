@@ -10,7 +10,7 @@ Dtl-GetLab -name Test* | Dtl-GetVm | Dtl-StartVm
 
 ## Getting Started
 
-1. Make sure you have a recent [Azure Powershell Module](https://docs.microsoft.com/en-us/powershell/azure/install-az-ps?view=azps-2.1.0) installed.
+1. Make sure you have a recent [Azure Powershell Module](https://docs.microsoft.com/en-us/powershell/azure/overview) installed.
 2. Copy Az.DevTestLabs.psm1 anywhere on disk
 3. Import the module
 ```powershell
