@@ -20,13 +20,11 @@ if($azureRm -and $az) {
 }
 
 if($azureRm) {
-  Import-Module AzureRm
   # This is not defaulted in older versions of AzureRM
   Enable-AzureRmContextAutosave -Scope CurrentUser -erroraction silentlycontinue
   Write-Warning "You are using the deprecated AzureRM module. For more info, read https://docs.microsoft.com/en-us/powershell/azure/migrate-from-azurerm-to-az"
 }
 if($az -and (-not $azureRm)) {
-  Import-Module Az
   Enable-AzureRmAlias -Scope CurrentUser
 }
 
