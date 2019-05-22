@@ -11,10 +11,10 @@ Dtl-GetLab -name Test* | Dtl-GetVm | Dtl-StartVm
 ## Getting Started
 
 1. Make sure you have a recent [Azure Powershell Module](https://docs.microsoft.com/en-us/powershell/azure/overview) installed.
-2. Copy Az.DevTestLabs.psm1 anywhere on disk
+2. Copy Az.DevTestLabs2.psm1 anywhere on disk
 3. Import the module
 ```powershell
-Import-Module .\Az.DevTestLabs.psm1
+Import-Module .\Az.DevTestLabs2.psm1
 
 ```
 4. Start hacking !! (i.e. List all the labs in your subscription)

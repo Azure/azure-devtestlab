@@ -7,7 +7,7 @@ function StringToFile([parameter(ValueFromPipeline=$true)][string] $text) {
   return $tmp.FullName
 }
 
-Import-Module ..\Az.DevTestLabs.psm1
+Import-Module ..\Az.DevTestLabs2.psm1
 
 $vms = @'
 Name, ResourceGroupName, VmName, Size, UserName, Password, OsType, Sku, Publisher, Offer

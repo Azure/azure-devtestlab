@@ -2,26 +2,32 @@
 # We are using strict mode for added safety
 Set-StrictMode -Version Latest
 
-# This has become the default for powershell 5+. Leaving it in so that it works the same in previous versions.
-# TODO: test if Scope Process works, but unlikley as each job is in a separate process
-Enable-AzureRmContextAutosave -Scope CurrentUser
-
 # We require a relatively new version of Powershell
 #requires -Version 3.0
 
 # To understand the code below read here: https://docs.microsoft.com/en-us/powershell/azure/migrate-from-azurerm-to-az?view=azps-2.1.0
-# If you have the Az module, we need to enable the AzureRmAliases
+# Having both the Az and AzureRm Module installed is not supported, but it is probably common. The library should work in such case, but warn.
+# Checking for the presence of the Az module, brings it into memory which causes an exception if AzureRm is present installed in the system. So checking for absence of AzureRm instead.
+# If both are absent, then the user will get an error later on when trying to access it.
 # If you have the AzureRm module, then everything works fine
-$azureRm  = Get-InstalledModule -Name AzureRM
-$az       = Get-InstalledModule -Name Az
+# If you have the Az module, we need to enable the AzureRmAliases
 
-if(!$azureRm -and !$az) {
-  Write-Error "You need either Az or AzureRm module installed to use this library"    
-  Exit
+$azureRm  = Get-Module -Name "AzureRM.Profile" -ListAvailable
+$az       = Get-Module -Name "Az.Accounts" -ListAvailable
+
+if($azureRm -and $az) {
+  Write-Warning "You have both Az and AzureRm module installed. That is not officially supported. For more read here: https://docs.microsoft.com/en-us/powershell/azure/migrate-from-azurerm-to-az"
 }
-# In theory, having both modules is not supported. In practice it does work. Setting the aliases makes the functions point to the most recent ones in the Az module.
-if($az) {
-  Enable-AzureRmAlias -Scope CurrentUser  
+
+if($azureRm) {
+  Import-Module AzureRm
+  # This is not defaulted in older versions of AzureRM
+  Enable-AzureRmContextAutosave -Scope CurrentUser -erroraction silentlycontinue
+  Write-Warning "You are using the deprecated AzureRM module. For more info, read https://docs.microsoft.com/en-us/powershell/azure/migrate-from-azurerm-to-az"
+}
+if($az -and (-not $azureRm)) {
+  Import-Module Az
+  Enable-AzureRmAlias -Scope CurrentUser
 }
 
 # We want to track usage of library, so adding GUID to user-agent at loading and removig it at unloading
@@ -1179,7 +1185,7 @@ function New-AzDtlVm {
     [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Name of custom image to use or customImage object", ParameterSetName ='SSHCustom')]
     [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Name of custom image to use or customImage object", ParameterSetName ='PasswordCustom')]
     [ValidateNotNullOrEmpty()]
-    [string]
+    [Object]
     $CustomImage,
 
     [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Name of Sku", ParameterSetName ='SSHGallery')]
@@ -1282,8 +1288,8 @@ function New-AzDtlVm {
 
         if($CustomImage) {
           if($CustomImage -is [string]) {
-          $SubscriptionID = (Get-AzureRmContext).Subscription.Id
-          $imageId = "/subscriptions/$SubscriptionID/ResourceGroups/$ResourceGroupName/providers/Microsoft.DevTestLab/labs/$Name/customImages/$CustomImage"
+            $SubscriptionID = (Get-AzureRmContext).Subscription.Id
+            $imageId = "/subscriptions/$SubscriptionID/ResourceGroups/$ResourceGroupName/providers/Microsoft.DevTestLab/labs/$Name/customImages/$CustomImage"
           } elseif($CustomImage.ResourceId) {
             $imageId = $CustomImage.ResourceId
           } else {
