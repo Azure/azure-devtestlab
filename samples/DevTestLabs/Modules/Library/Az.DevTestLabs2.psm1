@@ -1466,14 +1466,14 @@ function New-AzDtlLabEnvironment{
   process {
     try{
 
-      #Get Lab using Name and ResourceGroupName
+      # Get Lab using Name and ResourceGroupName
 
       if ((-not $Name) -or (-not $ResourceGroupName)) { throw "Missing Name or ResourceGroupName parameters."}
       $Lab = Get-AzDtlLab -Name $Name -ResourceGroupName $ResourceGroupName
 
       if (-not $Lab) {throw "Unable to find lab $Name with Resource Group $ResourceGroupName"}
 
-      #Get User Id
+      # Get User Id
       if (-not $UserId) {
         $UserId = $((Get-AzureRmADUser -UserPrincipalName (Get-AzureRmContext).Account).Id.Guid)
         if (-not $UserId) {throw "Unable to get User Id."}
@@ -2284,7 +2284,7 @@ function New-AzDtlCustomImageFromVm {
   process {
     try {
       foreach($v in $Vm) {
-        $labName = $Vm.ResourceId.Split()[8]
+        $labName = $Vm.ResourceId.Split('/')[8]
         Write-Verbose "Creating it in lab $labName"
         $l = Get-AzDtlLab -Name $LabName -ResourceGroupName $vm.ResourceGroupName
 
