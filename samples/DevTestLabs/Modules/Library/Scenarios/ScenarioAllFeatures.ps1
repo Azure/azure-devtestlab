@@ -7,7 +7,7 @@ function StringToFile([parameter(ValueFromPipeline=$true)][string] $text) {
   return $tmp.FullName
 }
 
-Import-Module ..\Az.DevTestLabs2.psm1
+Import-Module ..\Az.DevTestLabs2.psm1 -Force
 
 $lab1 = "Test" + (Get-Random)
 $lab2 = "Test" + (Get-Random)
@@ -63,4 +63,4 @@ $labs `
 
 $labs | Dtl-RemoveLab
 
-Remove-Module Az.DevTestLabs2 -Force
+Remove-Module Az.DevTestLabs2 -Force -Verbose:$false

@@ -14,7 +14,6 @@ Set-StrictMode -Version Latest
 
 $azureRm  = Get-Module -Name "AzureRM.Profile" -ListAvailable
 $az       = Get-Module -Name "Az.Accounts" -ListAvailable
-$justAz   = $az -and (-not $azureRm)
 
 if($azureRm -and $az) {
   Write-Warning "You have both Az and AzureRm module installed. That is not officially supported. For more read here: https://docs.microsoft.com/en-us/powershell/azure/migrate-from-azurerm-to-az"
@@ -25,7 +24,8 @@ if($azureRm) {
   Enable-AzureRmContextAutosave -Scope CurrentUser -erroraction silentlycontinue
   Write-Warning "You are using the deprecated AzureRM module. For more info, read https://docs.microsoft.com/en-us/powershell/azure/migrate-from-azurerm-to-az"
 }
-if($justAz) {
+if($az -and (-not $azureRm)) {
+  Write-Verbose "Enabling AzureRm Aliases"
   Enable-AzureRmAlias -Scope Local -Verbose:$false
 }
 
@@ -62,46 +62,28 @@ function PrintHashtable {
   return ($hash.Keys | ForEach-Object { "$_ $($hash[$_])" }) -join "|"
 }
 
-# Getting labs that don't exist shouldn't fail, but return empty for composibility
-# Also I am forced to do client side query because when you add -ExpandProperty to Get-AzureRmResource it disables wildcard?????
-# Also I know that treating each case separately is ugly looking, but there are various bugs that might be fixed in Get-AzureRmResource
-# at which point more queries can be moved server side, so leave it as it is for now.
-function MyGetResourceLab {
-  param($Name, $ResourceGroupName)
-
-  $ResourceType = "Microsoft.DevTestLab/labs"
-  if($ResourceGroupName -and (-not $ResourceGroupName.Contains("*"))) { # Proper RG
-    if($Name -and (-not $Name.Contains("*"))) { # Proper RG, Proper Name
-      Get-AzureRmResource -ExpandProperties -resourcetype $ResourceType -ResourceGroupName $ResourceGroupName -Name $Name -EA SilentlyContinue
-    } else { #Proper RG, wild name
-      Get-AzureRmResource -ExpandProperties -resourcetype $ResourceType -ResourceGroupName $ResourceGroupName -EA SilentlyContinue | Where-Object { $_.ResourceId -like "*/labs/$Name"}
-    }
-  } else { # Wild RG forces client side query anyhow
-    Get-AzureRmResource -ExpandProperties -resourcetype $ResourceType -EA SilentlyContinue | Where-Object { $_.ResourceId -like "*/resourcegroups/$ResourceGroupName/*/labs/$Name"}
+function MyGetAzureRmResource {
+  param()
+  if($azureRm) {
+    Get-AzureRmResource @Args
+  } else {
+    Get-AzResource @Args
   }
 }
 
-function MyGetResourceVm {
-  param($Name, $LabName, $ResourceGroupName)
-
-  $ResourceType = "Microsoft.DevTestLab/labs/virtualMachines"
+# Getting labs that don't exist shouldn't fail, but return empty for composibility
+# Also I am forced to do client side query because when you add -ExpandProperty to MyGetAzureRmResource it disables wildcard?????
+function MyGetResource {
+  param($Name, $ResourceGroupName, $ResourceType)
 
   if($ResourceGroupName -and (-not $ResourceGroupName.Contains("*"))) { # Proper RG
-    if($LabName -and (-not $LabName.Contains("*"))) { # Proper RG, Proper LabName
-      if($Name -and (-not $Name.Contains("*"))) { # Proper RG, Proper LabName, Proper Name
-        if($azureRm) {
-          Get-AzureRmResource -ExpandProperties -resourcetype $ResourceType -ResourceGroupName $ResourceGroupName -Name "$LabName/$Name" -EA SilentlyContinue
-        } else { 
-          Get-AzureRmResource -ExpandProperties -resourcetype $ResourceType -ResourceGroupName $ResourceGroupName -EA SilentlyContinue | Where-Object { $_.ResourceId -like "*/labs/$LabName/virtualmachines/$Name"}
-        }
-      } else { # Proper RG, Proper LabName, Improper Name
-        Get-AzureRmResource -ExpandProperties -resourcetype $ResourceType -ResourceGroupName $ResourceGroupName -EA SilentlyContinue | Where-Object { $_.ResourceId -like "*/labs/$LabName/virtualmachines/$Name"}
-      }
-   } else { # Proper RG, Improper LabName
-      Get-AzureRmResource -ExpandProperties -resourcetype $ResourceType -ResourceGroupName $ResourceGroupName -EA SilentlyContinue | Where-Object { $_.ResourceId -like "*/labs/$LabName/virtualmachines/$Name"}
-   }
-  } else { # Improper RG forces client side query anyhow
-    Get-AzureRmResource -ExpandProperties -resourcetype $ResourceType -EA SilentlyContinue | Where-Object { $_.ResourceId -like "*/resourcegroups/$ResourceGroupName/*/labs/$LabName/virtualmachines/$Name"}
+    if($Name -and (-not $Name.Contains("*"))) { # Proper RG, Proper Name
+      MyGetAzureRmResource -ExpandProperties -resourcetype $ResourceType -ResourceGroupName $ResourceGroupName -Name $Name -EA SilentlyContinue
+    } else { #Proper RG, wild name
+      MyGetAzureRmResource -ExpandProperties -resourcetype $ResourceType -ResourceGroupName $ResourceGroupName -EA SilentlyContinue | Where-Object { $_.ResourceName -like $Name}
+    }
+  } else { # Wild RG forces client side query anyhow
+    MyGetAzureRmResource -ExpandProperties -resourcetype $ResourceType -EA SilentlyContinue | Where-Object { $_.ResourceName -like $Name -and $_.ResourceGroupName -like $ResourceGroupName}
   }
 }
 
@@ -164,7 +146,7 @@ function Get-AzDtlLab {
   process {
     try {
       Write-verbose "Retrieving lab $Name"
-      MyGetResourceLab -Name $Name -ResourceGroupName $ResourceGroupName
+      MyGetResource -ResourceType "Microsoft.DevTestLab/labs" -Name $Name -ResourceGroupName $ResourceGroupName
       Write-verbose "Retrieved lab $Name"
     } catch {
       Write-Error -ErrorRecord $_ -EA $callerEA
@@ -206,7 +188,7 @@ function DeployLab {
   Write-Verbose "Using deployment name $deploymentName with params`n $(PrintHashtable $Parameters)"
 
   if(-not $IsNewLab) {
-    $existingLab = Get-AzureRmResource -Name $Name  -ResourceGroupName $ResourceGroupName -ErrorAction SilentlyContinue
+    $existingLab = MyGetAzureRmResource -Name $Name  -ResourceGroupName $ResourceGroupName -ErrorAction SilentlyContinue
 
     if (-not $existingLab) {
         throw "'$Name' Lab already exists. This action is supposed to be performed on an existing lab."
@@ -215,21 +197,21 @@ function DeployLab {
   $jsonPath = StringToFile($arm)
 
   $sb = {
-    param($deploymentName, $Name, $ResourceGroupName, $jsonPath, $Parameters, $justAz)
-
-    if($justAz) {
-      Enable-AzureRmAlias -Scope Local -Verbose:$false
+    param($deploymentName, $Name, $ResourceGroupName, $jsonPath, $Parameters)
+    if($azureRm) {
+      $deployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $ResourceGroupName -TemplateFile $jsonPath -TemplateParameterObject $Parameters
+    } else {
+      $deployment = New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $ResourceGroupName -TemplateFile $jsonPath -TemplateParameterObject $Parameters
     }
-    $deployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $ResourceGroupName -TemplateFile $jsonPath -TemplateParameterObject $Parameters
-    Write-debug "Deployment succeded with deployment of `n$deployment"
+      Write-debug "Deployment succeded with deployment of `n$deployment"
 
-    Get-AzureRmResource -Name $Name -ResourceGroupName $ResourceGroupName -ExpandProperties
+    MyGetAzureRmResource -Name $Name -ResourceGroupName $ResourceGroupName -ExpandProperties
   }
 
   if($AsJob) {
-    Start-Job      -ScriptBlock $sb -ArgumentList $deploymentName, $Name, $ResourceGroupName, $jsonPath, $Parameters, $justAz
+    Start-Job      -ScriptBlock $sb -ArgumentList $deploymentName, $Name, $ResourceGroupName, $jsonPath, $Parameters
   } else {
-    Invoke-Command -ScriptBlock $sb -ArgumentList $deploymentName, $Name, $ResourceGroupName, $jsonPath, $Parameters, $justAz
+    Invoke-Command -ScriptBlock $sb -ArgumentList $deploymentName, $Name, $ResourceGroupName, $jsonPath, $Parameters
   }
 }
 
@@ -254,7 +236,7 @@ function DeployVm {
   )
   Write-debug "DEPLOY ARM TEMPLATE`n$arm`nWITH PARAMS: $(PrintHashtable $Parameters)"
 
-  $Name = $vm.ResourceId.Split('/')[10]
+  $Name = $vm.ResourceName
   $ResourceGroupName = $vm.ResourceGroupName
 
   if ($Name.Length -gt 40) {
@@ -266,7 +248,7 @@ function DeployVm {
   Write-Verbose "Using deployment name $deploymentName with params`n $(PrintHashtable $Parameters)"
 
   if(-not $IsNewVm) {
-    $existingVM = Get-AzureRmResource -Name $Name  -ResourceGroupName $ResourceGroupName -ErrorAction SilentlyContinue
+    $existingVM = MyGetAzureRmResource -Name $Name  -ResourceGroupName $ResourceGroupName -ErrorAction SilentlyContinue
 
     if (-not $existingVM) {
         throw "'$Name' VM already exists. This action is supposed to be performed on an existing lab."
@@ -275,21 +257,21 @@ function DeployVm {
   $jsonPath = StringToFile($arm)
 
   $sb = {
-    param($deploymentName, $Name, $ResourceGroupName, $jsonPath, $Parameters, $justAz)
-
-    if($justAz) {
-      Enable-AzureRmAlias -Scope Local -Verbose:$false
+    param($deploymentName, $Name, $ResourceGroupName, $jsonPath, $Parameters)
+    if($azureRm) {
+      $deployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $ResourceGroupName -TemplateFile $jsonPath -TemplateParameterObject $Parameters
+    } else {
+      $deployment = New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $ResourceGroupName -TemplateFile $jsonPath -TemplateParameterObject $Parameters
     }
-    $deployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $ResourceGroupName -TemplateFile $jsonPath -TemplateParameterObject $Parameters
-    Write-debug "Deployment succeded with deployment of `n$deployment"
+      Write-debug "Deployment succeded with deployment of `n$deployment"
 
-    Get-AzureRmResource -Name $Name -ResourceGroupName $ResourceGroupName -ExpandProperties
+    MyGetAzureRmResource -Name $Name -ResourceGroupName $ResourceGroupName -ExpandProperties
   }
 
   if($AsJob.IsPresent) {
-    Start-Job      -ScriptBlock $sb -ArgumentList $deploymentName, $Name, $ResourceGroupName, $jsonPath, $Parameters, $justAz
+    Start-Job      -ScriptBlock $sb -ArgumentList $deploymentName, $Name, $ResourceGroupName, $jsonPath, $Parameters
   } else {
-    Invoke-Command -ScriptBlock $sb -ArgumentList $deploymentName, $Name, $ResourceGroupName, $jsonPath, $Parameters, $justAz
+    Invoke-Command -ScriptBlock $sb -ArgumentList $deploymentName, $Name, $ResourceGroupName, $jsonPath, $Parameters
   }
 }
 
@@ -460,7 +442,7 @@ function StringToFile([string] $text) {
 }
 
 function GetComputeVm($vm) {
-  return  Get-AzureRmResource -ResourceId $vm.Properties.computeId -ExpandProperties
+  return  MyGetAzureRmResource -ResourceId $vm.Properties.computeId -ExpandProperties
 }
 #endregion
 
@@ -625,7 +607,7 @@ function Get-AzDtlVm {
         # Need to query client side to support wildcard at start of name as well (but this is bad as potentially many vms are involved)
         # Also notice silently continue for errors to return empty set for composibility
         # TODO: is there a cleaver way to make this less expensive? I.E. prequery without -ExpandProperties and then use the result to query again.
-        $vms = MyGetResourceVm -Name "$Name" -LabName $LabName -ResourceGroupName $ResourceGroupName
+        $vms = MyGetResource -ResourceType "Microsoft.DevTestLab/labs/virtualMachines" -Name "$LabName/$Name" -ResourceGroupName $ResourceGroupName
         Write-verbose "Vms before status filter are $vms"
         if($vms -and ($Status -ne 'Any')) {
           return $vms | Where-Object { $Status -eq (Get-AzDtlVmStatus $_)}
@@ -971,7 +953,7 @@ function Set-AzDtlShutdownPolicy {
 function Get-AzDtlVmArtifact {
   [CmdletBinding()]
   param(
-    [parameter(Mandatory=$true,HelpMessage="Vm to get artifact from", ValueFromPipeline=$true)]
+    [parameter(Mandatory=$true,HelpMessage="Vm to apply artifact to", ValueFromPipeline=$true)]
     [ValidateNotNullOrEmpty()]
     $Vm
   )
@@ -981,7 +963,7 @@ function Get-AzDtlVmArtifact {
     throw "There is a AzureRM 6.0 bug breaking this code."
     try {
       foreach($v in $Vm) {
-        return (Get-AzureRmResource -ResourceId $v.ResourceId -ApiVersion 2016-05-15 -ODataQuery '$expand=Properties($expand=Artifacts)').Properties.Artifacts
+        return (MyGetAzureRmResource -ResourceId $v.ResourceId -ApiVersion 2016-05-15 -ODataQuery '$expand=Properties($expand=Artifacts)').Properties.Artifacts
       }
     } catch {
       Write-Error -ErrorRecord $_ -EA $callerEA
@@ -1019,13 +1001,13 @@ function Set-AzDtlVmArtifact {
         $ResourceGroupName = $v.ResourceGroupName
 
         #TODO: is there a better way? It doesn't seem to be in Expanded props of VM ...
-        $DevTestLabName = $v.ResouceId.Split('/')[8]
+        $DevTestLabName = $v.ResourceName.Split('/')[0]
         if(-not $DevTestLabName) {
           throw "VM Name for $v is not in the format 'RGName/VMName. Why?"
         }
 
         # Get internal repo name
-        $repository = Get-AzureRmResource -ResourceGroupName $resourceGroupName `
+        $repository = MyGetAzureRmResource -ResourceGroupName $resourceGroupName `
           -ResourceType 'Microsoft.DevTestLab/labs/artifactsources' `
           -ResourceName $DevTestLabName -ApiVersion 2016-05-15 `
           | Where-Object { $RepositoryName -in ($_.Name, $_.Properties.displayName) } `
@@ -1037,7 +1019,7 @@ function Set-AzDtlVmArtifact {
         Write-verbose "Repository found is $($repository.Name)"
 
         # Get internal artifact name
-        $template = Get-AzureRmResource -ResourceGroupName $ResourceGroupName `
+        $template = MyGetAzureRmResource -ResourceGroupName $ResourceGroupName `
           -ResourceType "Microsoft.DevTestLab/labs/artifactSources/artifacts" `
           -ResourceName "$DevTestLabName/$($repository.Name)" `
           -ApiVersion 2016-05-15 `
@@ -1354,21 +1336,21 @@ function New-AzDtlVm {
         Write-Verbose "Starting deployment $deploymentName of $VmName in $Name"
 
         $sb = {
-          param($deploymentName, $Name, $ResourceGroupName, $VmName, $jsonPath, $justAz)
-
-          if($justAz) {
-            Enable-AzureRmAlias -Scope Local -Verbose:$false
+          param($deploymentName, $Name, $ResourceGroupName, $VmName, $jsonPath)
+          if($azureRm) {
+            $deployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $ResourceGroupName -TemplateFile $jsonPath -existingLabName $Name -newVmName $VmName
+          } else {
+            $deployment = New-AzResourceGroupDeployment -Name $deploymentName -ResourceGroupName $ResourceGroupName -TemplateFile $jsonPath -existingLabName $Name -newVmName $VmName
           }
-          $deployment = New-AzureRmResourceGroupDeployment -Name $deploymentName -ResourceGroupName $ResourceGroupName -TemplateFile $jsonPath -existingLabName $Name -newVmName $VmName
-          Write-debug "Deployment succeded with deployment of `n$deployment"
+            Write-debug "Deployment succeded with deployment of `n$deployment"
 
-          Get-AzureRmResource -Name "$Name/$VmName" -ResourceGroupName $ResourceGroupName -ExpandProperties
+          MyGetAzureRmResource -Name "$Name/$VmName" -ResourceGroupName $ResourceGroupName -ExpandProperties
         }
 
         if($AsJob.IsPresent) {
-          Start-Job      -ScriptBlock $sb -ArgumentList $deploymentName, $Name, $ResourceGroupName, $vmName, $jsonPath, $justAz
+          Start-Job      -ScriptBlock $sb -ArgumentList $deploymentName, $Name, $ResourceGroupName, $vmName, $jsonPath
         } else {
-          Invoke-Command -ScriptBlock $sb -ArgumentList $deploymentName, $Name, $ResourceGroupName, $vmName, $jsonPath, $justAz
+          Invoke-Command -ScriptBlock $sb -ArgumentList $deploymentName, $Name, $ResourceGroupName, $vmName, $jsonPath
         }
       }
     } catch {
@@ -1397,7 +1379,7 @@ function Get-UnusedRgInSubscription {
   #>
 
   $rgs = Get-AzureRmResourceGroup
-  $dtlNames = Get-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs' | Select-Object -ExpandProperty Name
+  $dtlNames = MyGetAzureRmResource -ResourceType 'Microsoft.DevTestLab/labs' | Select-Object -ExpandProperty Name
   $vmNames = Get-AzureRmVM | Select-Object -ExpandProperty Name
 
   $toDelete = @()
@@ -1469,7 +1451,7 @@ function New-AzDtlLabEnvironment{
       #Get Lab using Name and ResourceGroupName
 
       if ((-not $Name) -or (-not $ResourceGroupName)) { throw "Missing Name or ResourceGroupName parameters."}
-      $Lab = Get-AzDtlLab -Name $Name -ResourceGroupName $ResourceGroupName
+      $Lab = Get-AzDtlLab -Name $Name -ResourceGroupName $ResourceGroupName -Verbose
 
       if (-not $Lab) {throw "Unable to find lab $Name with Resource Group $ResourceGroupName"}
 
@@ -1480,7 +1462,7 @@ function New-AzDtlLabEnvironment{
       }
            
       # Get the DevTest lab internal repository identifier
-      $repository = Get-AzureRmResource -ResourceGroupName $Lab.ResourceGroupName `
+      $repository = MyGetAzureRmResource -ResourceGroupName $Lab.ResourceGroupName `
         -ResourceType 'Microsoft.DevTestLab/labs/artifactsources' `
         -ResourceName $Lab.Name `
         -ApiVersion 2016-05-15 `
@@ -1490,7 +1472,7 @@ function New-AzDtlLabEnvironment{
       if (-not $repository) { throw "Unable to find repository $ArtifactRepositoryDisplayName in lab $($Lab.Name)." }
 
       # Get the internal environment template name
-      $template = Get-AzureRmResource -ResourceGroupName $Lab.ResourceGroupName `
+      $template = MyGetAzureRmResource -ResourceGroupName $Lab.ResourceGroupName `
         -ResourceType "Microsoft.DevTestLab/labs/artifactSources/armTemplates" `
         -ResourceName "$($Lab.Name)/$($repository.Name)" `
         -ApiVersion 2016-05-15 `
@@ -1539,7 +1521,7 @@ function Get-AzDtlLabEnvironment{
      if (-not $labId) { throw "Unable to find lab $($Lab.Name) with resource group $($Lab.ResourceGroupName)." } 
 
      #Get all environments
-     $environs = Get-AzureRmResource -ResourceGroupName $Lab.ResourceGroupName `
+     $environs = MyGetAzureRmResource -ResourceGroupName $Lab.ResourceGroupName `
        -ResourceType 'Microsoft.DevTestLab/labs/users/environments' `
        -ResourceName "$($Lab.Name)/@all" `
        -ApiVersion '2016-05-15' 
@@ -2230,7 +2212,7 @@ function Get-AzDtlLabSchedule {
 
         try {
           # Why oh why Silentlycontinue does not work here
-          Get-AzureRmResource -Name $ResourceName -ResourceType "Microsoft.DevTestLab/labs/schedules" -ResourceGroupName $l.ResourceGroupName -ApiVersion 2016-05-15 -ea silentlycontinue
+          MyGetAzureRmResource -Name $ResourceName -ResourceType "Microsoft.DevTestLab/labs/schedules" -ResourceGroupName $l.ResourceGroupName -ApiVersion 2016-05-15 -ea silentlycontinue
         } catch {
           return @() # Do we need compositionality here or should we just let the exception goes through?
         }
@@ -2284,7 +2266,8 @@ function New-AzDtlCustomImageFromVm {
   process {
     try {
       foreach($v in $Vm) {
-        $labName = $Vm.ResourceId.Split()[8]
+        $ResourceName = $v.ResourceName
+        $labName = $ResourceName.SubString(0, $ResourceName.IndexOf('/'))
         Write-Verbose "Creating it in lab $labName"
         $l = Get-AzDtlLab -Name $LabName -ResourceGroupName $vm.ResourceGroupName
 
@@ -2417,11 +2400,8 @@ function Import-AzDtlCustomImageFromUri {
       foreach($l in $Lab) {
 
         $sb = {
-          param($l, $Uri, $ImageOsType, $IsVhdSysPrepped, $ImageName, $ImageDescription, $justAz)
+          param($l, $Uri, $ImageOsType, $IsVhdSysPrepped, $ImageName, $ImageDescription)
 
-          if($justAz) {
-            Enable-AzureRmAlias -Scope Local -Verbose:$false
-          }
           # Get storage account for the lab
           $labRgName= $l.ResourceGroupName
           $sourceLab = $l
@@ -2532,9 +2512,9 @@ function Import-AzDtlCustomImageFromUri {
         }
 
         if($AsJob.IsPresent) {
-          Start-Job      -ScriptBlock $sb -ArgumentList $l, $Uri, $ImageOsType, $IsVhdSysPrepped, $ImageName, $ImageDescription, $justAz
+          Start-Job      -ScriptBlock $sb -ArgumentList $l, $Uri, $ImageOsType, $IsVhdSysPrepped, $ImageName, $ImageDescription
         } else {
-          Invoke-Command -ScriptBlock $sb -ArgumentList $l, $Uri, $ImageOsType, $IsVhdSysPrepped, $ImageName, $ImageDescription, $justAz
+          Invoke-Command -ScriptBlock $sb -ArgumentList $l, $Uri, $ImageOsType, $IsVhdSysPrepped, $ImageName, $ImageDescription
         }
       }
     } catch {
@@ -2555,7 +2535,7 @@ function Get-AzDtlCustomImage {
   process {
     try {
       foreach($l in $Lab) {
-        Get-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs/customImages' -ResourceName $l.Name -ResourceGroupName $l.ResourceGroupName  -ApiVersion '2016-05-15'
+        MyGetAzureRmResource -ResourceType 'Microsoft.DevTestLab/labs/customImages' -ResourceName $l.Name -ResourceGroupName $l.ResourceGroupName  -ApiVersion '2016-05-15'
       }
     } catch {
       Write-Error -ErrorRecord $_ -EA $callerEA
