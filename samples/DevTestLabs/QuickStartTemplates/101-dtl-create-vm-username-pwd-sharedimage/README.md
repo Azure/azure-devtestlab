@@ -4,7 +4,7 @@
     <img src="http://azuredeploy.net/deploybutton.png"/>
 </a>
 
-This deployment template assumes there is already a shared image gallery attached to your lab instance.
+This deployment template assumes there is already a shared image gallery attached to your lab instance using an image from an attached shared image gallery in Azure.
 
 This template creates a new virtual machine in a DevTestLab instance.
 - A new user account is created using the username/password combination specified. 
