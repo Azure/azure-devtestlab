@@ -7,7 +7,7 @@ function StringToFile([parameter(ValueFromPipeline=$true)][string] $text) {
   return $tmp.FullName
 }
 
-Import-Module ..\Az.DevTestLabs2.psm1
+Import-Module ..\Az.DevTestLabs2.psm1 -Force
 
 $users = @'
 UserEmail, Role
@@ -15,7 +15,9 @@ lucabol@microsoft.com, "DevTest Labs User"
 phauge@microsoft.com,  "DevTest Labs User"
 '@
 
-$lab = Dtl-NewLab -Name 'UserLab' -ResourceGroupName 'TestLibrary'
+$labname = "Test" + (Get-Random)
+
+$lab = Dtl-NewLab -Name $labname -ResourceGroupName 'TestLibrary'
 
 $users `
   | StringToFile `

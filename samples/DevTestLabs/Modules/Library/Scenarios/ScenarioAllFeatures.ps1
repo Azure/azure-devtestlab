@@ -1,3 +1,6 @@
+<#
+This hightligths most features in the library, the composibility of the functions and how to run them in parallel.
+#>
 [CmdletBinding()]
 param()
 

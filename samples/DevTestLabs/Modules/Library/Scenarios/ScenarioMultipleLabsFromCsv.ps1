@@ -1,3 +1,6 @@
+<#
+This hightligths how to use a single csv file to create multiple labs with multiple VMs
+#>
 [CmdletBinding()]
 param()
 
@@ -7,16 +10,19 @@ function StringToFile([parameter(ValueFromPipeline=$true)][string] $text) {
   return $tmp.FullName
 }
 
-Import-Module ..\Az.DevTestLabs2.psm1
+Import-Module ..\Az.DevTestLabs2.psm1 -Force
 
-$vms = @'
+$lab1 = "Test" + (Get-Random)
+$lab2 = "Test" + (Get-Random)
+
+$vms = @"
 Name, ResourceGroupName, VmName, Size, UserName, Password, OsType, Sku, Publisher, Offer
-MulLab1, TestLibrary, Vm1, Standard_A4_v2, bob, aPassword341341, Windows, 2012-R2-Datacenter, MicrosoftWindowsServer, WindowsServer
-MulLab2, TestLibrary, Vm2, Standard_A4_v2, bob, aPassword341341, Windows, 2012-R2-Datacenter, MicrosoftWindowsServer, WindowsServer
-'@
+$lab1, TestLibrary, Vm1, Standard_A4_v2, bob, aPassword341341, Windows, 2012-R2-Datacenter, MicrosoftWindowsServer, WindowsServer
+$lab2, TestLibrary, Vm2, Standard_A4_v2, bob, aPassword341341, Windows, 2012-R2-Datacenter, MicrosoftWindowsServer, WindowsServer
+"@
 
 # Create labs
-$lab = $vms `
+$labs = $vms `
   | StringToFile `
   | Import-Csv `
   | Dtl-NewLab -AsJob `
@@ -32,6 +38,6 @@ $vms `
   | Dtl-StopVm `
   | Dtl-RemoveVm
 
-$lab | dtl-getlab | dtl-RemoveLab
+$labs | dtl-getlab | dtl-RemoveLab
 
 Remove-Module Az.DevTestLabs2 -Force

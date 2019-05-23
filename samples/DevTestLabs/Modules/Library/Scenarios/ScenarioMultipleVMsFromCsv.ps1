@@ -1,3 +1,6 @@
+<#
+This hightligths how to use a single csv file to create multiple VMs in a single lab
+#>
 [CmdletBinding()]
 param()
 
@@ -7,7 +10,7 @@ function StringToFile([parameter(ValueFromPipeline=$true)][string] $text) {
   return $tmp.FullName
 }
 
-Import-Module ..\Az.DevTestLabs2.psm1
+Import-Module ..\Az.DevTestLabs2.psm1 -Force
 
 $vms = @'
 VmName, Size, UserName, Password, OsType, Sku, Publisher, Offer
@@ -15,7 +18,9 @@ Vm1, Standard_A4_v2, bob, aPassword341341, Windows, 2012-R2-Datacenter, Microsof
 Vm2, Standard_A4_v2, bob, aPassword341341, Windows, 2012-R2-Datacenter, MicrosoftWindowsServer, WindowsServer
 '@
 
-$lab = Dtl-NewLab -Name 'ParaLab' -ResourceGroupName 'TestLibrary' -AsJob | Receive-Job -Wait
+$labname = "Test" + (Get-Random)
+
+$lab = Dtl-NewLab -Name $labname -ResourceGroupName 'TestLibrary' -AsJob | Receive-Job -Wait
 
 $vms `
   | StringToFile `
