@@ -1,0 +1,57 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "newLabName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the new lab instance to be created"
+      }
+    },
+    "existingSharedGalleryId":{
+      "type":"string",
+      "metadata":{
+        "description": "The resource id of the existing shared image gallery"
+      }
+    }
+  },
+  "variables": {
+    "labVirtualNetworkName": "[concat('Dtl', parameters('newLabName'))]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2018-10-15-preview",
+      "type": "Microsoft.DevTestLab/labs",
+      "name": "[parameters('newLabName')]",
+      "location": "[resourceGroup().location]",
+      "resources": [
+        {
+          "apiVersion": "2018-10-15-preview",
+          "name": "[variables('labVirtualNetworkName')]",
+          "type": "virtualNetworks",
+          "dependsOn": [
+            "[resourceId('Microsoft.DevTestLab/labs', parameters('newLabName'))]"
+          ]
+        },
+        {
+          "apiVersion":"2018-10-15-preview",
+          "name":"myGallery",
+          "type":"sharedGalleries",
+          "properties":{
+            "galleryId":"[parameters('existingSharedGalleryId')]",
+            "allowAllImages": "Enabled"
+          },
+          "dependsOn":[
+            "[resourceId('Microsoft.DevTestLab/labs', parameters('newLabName'))]"
+          ]
+        }
+      ]
+    }
+  ],
+  "outputs": {
+    "labId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.DevTestLab/labs', parameters('newLabName'))]"
+    }
+  }
+}
