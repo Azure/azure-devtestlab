@@ -751,7 +751,7 @@ function Invoke-AzDtlVmUnClaim {
   end {}
 }
 
-function Set-AzDtlVmShutdown {
+function Set-AzDtlVmShutdownSchedule {
   [CmdletBinding()]
   param(
     [parameter(Mandatory=$true,HelpMessage="Vm to apply policy to.", ValueFromPipeline=$true)]
@@ -2549,7 +2549,7 @@ New-Alias -Name 'Dtl-SetLabShutdown'      -Value Set-AzDtlLabShutdown
 New-Alias -Name 'Dtl-SetLabStartup'       -Value Set-AzDtlLabStartup
 New-Alias -Name 'Dtl-SetLabShutPolicy'    -Value Set-AzDtlShutdownPolicy
 New-Alias -Name 'Dtl-SetAutoStart'        -Value Set-AzDtlVmAutoStart
-New-Alias -Name 'Dtl-SetVmShutdown'       -Value Set-AzDtlVmShutdown
+New-Alias -Name 'Dtl-SetVmShutdown'       -Value Set-AzDtlVmShutdownSchedule
 New-Alias -Name 'Dtl-GetVmStatus'         -Value Get-AzDtlVmStatus
 New-Alias -Name 'Dtl-GetVmArtifact'       -Value Get-AzDtlVmArtifact
 New-Alias -Name 'Dtl-ImportCustomImage'   -Value Import-AzDtlCustomImageFromUri
@@ -2586,7 +2586,7 @@ Export-ModuleMember -Function New-AzDtlLab,
                               Get-AzDtlLabEnvironment,
                               Set-AzDtlShutdownPolicy,
                               Set-AzDtlVmAutoStart,
-                              Set-AzDtlVmShutdown,
+                              Set-AzDtlVmShutdownSchedule,
                               Get-AzDtlVmStatus,
                               Get-AzDtlVmArtifact,
                               Import-AzDtlCustomImageFromUri,
