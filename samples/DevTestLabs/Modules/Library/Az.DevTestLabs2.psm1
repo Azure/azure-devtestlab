@@ -474,7 +474,7 @@ function New-AzDtlLab {
     [ValidateNotNullOrEmpty()]
     [string] $Name,
 
-    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="Name of the resource group to create the lab into. It must be an existing one.")]
+    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="Name of the resource group where to create the lab. It must already exist.")]
     [ValidateNotNullOrEmpty()]
     [string] $ResourceGroupName,
 
