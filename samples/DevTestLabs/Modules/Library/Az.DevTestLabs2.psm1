@@ -2076,7 +2076,7 @@ function Set-AzDtlLabShutdown {
   end {}
 }
 
-function Set-AzDtlLabStartup {
+function Set-AzDtlLabStartupSchedule {
   [CmdletBinding()]
   param(
     [parameter(Mandatory=$true, ValueFromPipeline = $true, HelpMessage="Lab to operate on.")]
@@ -2546,7 +2546,7 @@ New-Alias -Name 'Dtl-AddLabRepo'          -Value Add-AzDtlLabArtifactRepository
 New-Alias -Name 'Dtl-ApplyArtifact'       -Value Set-AzDtlVmArtifact
 New-Alias -Name 'Dtl-GetLabSchedule'      -Value Get-AzDtlLabSchedule
 New-Alias -Name 'Dtl-SetLabShutdown'      -Value Set-AzDtlLabShutdown
-New-Alias -Name 'Dtl-SetLabStartup'       -Value Set-AzDtlLabStartup
+New-Alias -Name 'Dtl-SetLabStartup'       -Value Set-AzDtlLabStartupSchedule
 New-Alias -Name 'Dtl-SetLabShutPolicy'    -Value Set-AzDtlShutdownPolicy
 New-Alias -Name 'Dtl-SetAutoStart'        -Value Set-AzDtlVmAutoStart
 New-Alias -Name 'Dtl-SetVmShutdown'       -Value Set-AzDtlVmShutdownSchedule
@@ -2581,7 +2581,7 @@ Export-ModuleMember -Function New-AzDtlLab,
                               Set-AzDtlVmArtifact,
                               Get-AzDtlLabSchedule,
                               Set-AzDtlLabShutdown,
-                              Set-AzDtlLabStartup,
+                              Set-AzDtlLabStartupSchedule,
                               New-AzDtlLabEnvironment,
                               Get-AzDtlLabEnvironment,
                               Set-AzDtlShutdownPolicy,
