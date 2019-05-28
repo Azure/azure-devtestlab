@@ -9,6 +9,10 @@ function StringToFile([parameter(ValueFromPipeline=$true)][string] $text) {
 
 Import-Module ..\Az.DevTestLabs2.psm1 -Force
 
+$rgName = "TeRG" + (Get-Random)
+
+New-AzureRmResourceGroup -Name $rgName -Location 'West Europe' | Out-Null
+
 $users = @'
 UserEmail, Role
 lucabol@microsoft.com, "DevTest Labs User"
@@ -17,7 +21,7 @@ phauge@microsoft.com,  "DevTest Labs User"
 
 $labname = "Test" + (Get-Random)
 
-$lab = Dtl-NewLab -Name $labname -ResourceGroupName 'TestLibrary'
+$lab = Dtl-NewLab -Name $labname -ResourceGroupName $rgName
 
 $users `
   | StringToFile `
@@ -25,5 +29,6 @@ $users `
   | Dtl-AddUser -Lab $lab
 
 $lab | Dtl-RemoveLab
+Remove-AzureRmResourceGroup -Name $rgName | Out-Null
 
 Remove-Module Az.DevTestLabs2 -Force

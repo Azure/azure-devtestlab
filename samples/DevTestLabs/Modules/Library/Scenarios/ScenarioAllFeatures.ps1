@@ -14,11 +14,14 @@ Import-Module ..\Az.DevTestLabs2.psm1 -Force
 
 $lab1 = "Test" + (Get-Random)
 $lab2 = "Test" + (Get-Random)
+$rgName = "TeRG" + (Get-Random)
+
+New-AzureRmResourceGroup -Name $rgName -Location 'West Europe' | Out-Null
 
 $labsData = @"
 Name, ResourceGroupName
-$lab1, TestLibrary
-$lab2, TestLibrary
+$lab1, $rgName
+$lab2, $rgName
 "@
 
 $labs = $labsData `
@@ -67,5 +70,6 @@ $labs `
   | %{if($_.Count -ne 2){Write-Host "Failed to get environments"}}
  #>
 $labs | Dtl-RemoveLab
+Remove-AzureRmResourceGroup -Name $rgName | Out-Null
 
 Remove-Module Az.DevTestLabs2 -Force -Verbose:$false
