@@ -163,9 +163,9 @@ function Get-AzDtlLab {
   begin {. BeginPreamble}
   process {
     try {
-      Write-verbose "Retrieving lab $Name"
+      Write-verbose "Retrieving lab $Name ..."
       MyGetResourceLab -Name $Name -ResourceGroupName $ResourceGroupName
-      Write-verbose "Retrieved lab $Name"
+      Write-verbose "Retrieved lab $Name."
     } catch {
       Write-Error -ErrorRecord $_ -EA $callerEA
     }
@@ -263,7 +263,7 @@ function DeployVm {
   else {
       $deploymentName = "VMDeploy" + $Name.Replace('/', '-')
   }
-  Write-Verbose "Using deployment name $deploymentName with params`n $(PrintHashtable $Parameters)"
+  Write-Verbose "Using deployment name $deploymentName with params`n $(PrintHashtable $Parameters)."
 
   if(-not $IsNewVm) {
     $existingVM = Get-AzureRmResource -Name $Name  -ResourceGroupName $ResourceGroupName -ErrorAction SilentlyContinue
@@ -469,7 +469,7 @@ function GetComputeVm($vm) {
 function New-AzDtlLab {
   [CmdletBinding()]
   param(
-    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="Name of the lab to create")]
+    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="Name of the lab to create.")]
     [ValidateLength(1,50)]
     [ValidateNotNullOrEmpty()]
     [string] $Name,
@@ -478,7 +478,7 @@ function New-AzDtlLab {
     [ValidateNotNullOrEmpty()]
     [string] $ResourceGroupName,
 
-    [parameter(Mandatory=$false,HelpMessage="Run the command in a separate job")]
+    [parameter(Mandatory=$false,HelpMessage="Run the command in a separate job.")]
     [switch] $AsJob = $False
   )
 
@@ -565,11 +565,11 @@ function New-AzDtlLab {
 function Remove-AzDtlLab {
   [CmdletBinding()]
   param(
-    [parameter(Mandatory=$true,HelpMessage="Lab object to remove", ValueFromPipeline=$true)]
+    [parameter(Mandatory=$true,HelpMessage="Lab object to remove.", ValueFromPipeline=$true)]
     [ValidateNotNullOrEmpty()]
     $Lab,
 
-    [parameter(Mandatory=$false,HelpMessage="Run the command in a separate job")]
+    [parameter(Mandatory=$false,HelpMessage="Run the command in a separate job.")]
     [switch] $AsJob = $False
   )
 
@@ -600,16 +600,16 @@ function Remove-AzDtlLab {
 function Get-AzDtlVm {
   [CmdletBinding()]
   param(
-    [parameter(Mandatory=$true,HelpMessage="Lab object to remove", ValueFromPipeline=$true)]
+    [parameter(Mandatory=$true,HelpMessage="Lab object to retrieve VM from.", ValueFromPipeline=$true)]
     [ValidateNotNullOrEmpty()]
     $Lab,
 
-    [parameter(Mandatory=$false,HelpMessage="Name of the vms to retrieve.  This parameter supports wildcards at the beginning and/or end of the string.")]
+    [parameter(Mandatory=$false,HelpMessage="Name of the VMs to retrieve.  This parameter supports wildcards at the beginning and/or end of the string.")]
     [ValidateNotNullOrEmpty()]
     [string]
     $Name = "*",
 
-    [parameter(Mandatory=$false,HelpMessage="Name of the vms to retrieve.  This parameter supports wildcards at the beginning and/or end of the string.")]
+    [parameter(Mandatory=$false,HelpMessage="Status filter for the vms to retrieve.  This parameter supports wildcards at the beginning and/or end of the string.")]
     [ValidateSet('Starting', 'Running', 'Stopping', 'Stopped', 'Deallocating', 'Deallocated', 'Any')]
     [string]
     $Status = 'Any'
@@ -621,12 +621,12 @@ function Get-AzDtlVm {
       foreach($l in $Lab) {
         $ResourceGroupName = $l.ResourceGroupName
         $LabName = $l.Name
-        Write-verbose "Retrieving $Name VMs for lab $LabName in $ResourceGroupName"
+        Write-verbose "Retrieving $Name VMs for lab $LabName in $ResourceGroupName."
         # Need to query client side to support wildcard at start of name as well (but this is bad as potentially many vms are involved)
         # Also notice silently continue for errors to return empty set for composibility
         # TODO: is there a cleaver way to make this less expensive? I.E. prequery without -ExpandProperties and then use the result to query again.
         $vms = MyGetResourceVm -Name "$Name" -LabName $LabName -ResourceGroupName $ResourceGroupName
-        Write-verbose "Vms before status filter are $vms"
+        Write-verbose "Vms before status filter are $vms."
         if($vms -and ($Status -ne 'Any')) {
           return $vms | Where-Object { $Status -eq (Get-AzDtlVmStatus $_)}
         } else {
@@ -643,7 +643,7 @@ function Get-AzDtlVm {
 function Get-AzDtlVmStatus {
   [CmdletBinding()]
   param(
-    [parameter(Mandatory=$true,HelpMessage="VM to start. Noop if already started.", ValueFromPipeline=$true)]
+    [parameter(Mandatory=$true,HelpMessage="VM to get status for.", ValueFromPipeline=$true)]
     [ValidateNotNullOrEmpty()]
     $Vm
   )
@@ -727,7 +727,7 @@ function Stop-AzDtlVm {
 function Remove-AzDtlVm {
   [CmdletBinding()]
   param(
-    [parameter(Mandatory=$true,HelpMessage="VM to stop. Noop if already stopped.", ValueFromPipeline=$true)]
+    [parameter(Mandatory=$true,HelpMessage="VM to remove. Noop if it doesn't exist.", ValueFromPipeline=$true)]
     [ValidateNotNullOrEmpty()]
     $Vm
   )
@@ -748,7 +748,7 @@ function Remove-AzDtlVm {
 function Invoke-AzDtlVmClaim {
   [CmdletBinding()]
   param(
-    [parameter(Mandatory=$true,HelpMessage="VM to stop. Noop if already stopped.", ValueFromPipeline=$true)]
+    [parameter(Mandatory=$true,HelpMessage="VM to claim. Noop if already claimed.", ValueFromPipeline=$true)]
     [ValidateNotNullOrEmpty()]
     $Vm
   )
@@ -770,7 +770,7 @@ function Invoke-AzDtlVmClaim {
 function Invoke-AzDtlVmUnClaim {
   [CmdletBinding()]
   param(
-    [parameter(Mandatory=$true,HelpMessage="VM to stop. Noop if already stopped.", ValueFromPipeline=$true)]
+    [parameter(Mandatory=$true,HelpMessage="VM to unclaimed. Noop if already unclaimed.", ValueFromPipeline=$true)]
     [ValidateNotNullOrEmpty()]
     $Vm
   )
@@ -792,7 +792,7 @@ function Invoke-AzDtlVmUnClaim {
 function Set-AzDtlVmShutdown {
   [CmdletBinding()]
   param(
-    [parameter(Mandatory=$true,HelpMessage="Vm to apply policy to", ValueFromPipeline=$true)]
+    [parameter(Mandatory=$true,HelpMessage="Vm to apply policy to.", ValueFromPipeline=$true)]
     [ValidateNotNullOrEmpty()]
     $Vm,
 
@@ -804,25 +804,25 @@ function Set-AzDtlVmShutdown {
     [ValidateLength(3,40)]
     [string] $TimeZoneId,
 
-    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Which schedule to get")]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Set schedule status.")]
     [ValidateSet('Enabled', 'Disabled')]
     [string] $ScheduleStatus = 'Enabled',
 
-    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Which schedule to get")]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Set this notification status.")]
     [ValidateSet('Enabled', 'Disabled')]
     [string] $NotificationSettings = 'Disabled',
 
-    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Which schedule to get")]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Time in minutes..")]
     [ValidateRange(1, 60)] #TODO: validate this is right??
     [int] $TimeInIMinutes = 15,
 
-    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="An help")]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Url to send notification to.")]
     [string] $ShutdownNotificationUrl = "https://mywebook.com",
 
-    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="An help")]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Email to send notification to.")]
     [string] $EmailRecipient = "someone@somewhere.com",
 
-    [parameter(Mandatory=$false,HelpMessage="Run the command in a separate job")]
+    [parameter(Mandatory=$false,HelpMessage="Run the command in a separate job.")]
     [switch] $AsJob = $False
   )
 
@@ -913,11 +913,11 @@ function Set-AzDtlVmShutdown {
 function Set-AzDtlShutdownPolicy {
   [CmdletBinding()]
   param(
-    [parameter(Mandatory=$true,HelpMessage="Lab to apply policy to", ValueFromPipeline=$true)]
+    [parameter(Mandatory=$true,HelpMessage="Lab to apply policy to.", ValueFromPipeline=$true)]
     [ValidateNotNullOrEmpty()]
     $Lab,
 
-    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Control level")]
+    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Set control level.")]
     [ValidateSet('NoControl', 'FullControl', 'OnlyControlTime')]
     [string]
     $ControlLevel
@@ -971,7 +971,7 @@ function Set-AzDtlShutdownPolicy {
 function Get-AzDtlVmArtifact {
   [CmdletBinding()]
   param(
-    [parameter(Mandatory=$true,HelpMessage="Vm to get artifact from", ValueFromPipeline=$true)]
+    [parameter(Mandatory=$true,HelpMessage="Vm to get artifacts from.", ValueFromPipeline=$true)]
     [ValidateNotNullOrEmpty()]
     $Vm
   )
@@ -992,7 +992,7 @@ function Get-AzDtlVmArtifact {
 function Set-AzDtlVmArtifact {
   [CmdletBinding()]
   param(
-    [parameter(Mandatory=$true,HelpMessage="Vm to apply artifact to", ValueFromPipeline=$true)]
+    [parameter(Mandatory=$true,HelpMessage="Vm to apply artifacts to.", ValueFromPipeline=$true)]
     [ValidateNotNullOrEmpty()]
     $Vm,
 
@@ -1006,7 +1006,7 @@ function Set-AzDtlVmArtifact {
     [string]
     $ArtifactName,
 
-    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true,HelpMessage="Parameters for artifact. An array of hashtable, each one as @{name = xxx; value = yyy}")]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true,HelpMessage="Parameters for artifact. An array of hashtable, each one as @{name = xxx; value = yyy}.")]
     [ValidateNotNullOrEmpty()]
     [array]
     $ArtifactParameters = @()
@@ -1078,11 +1078,11 @@ function Set-AzDtlVmArtifact {
 function Set-AzDtlVmAutoStart {
   [CmdletBinding()]
   param(
-    [parameter(Mandatory=$true,HelpMessage="Vm to apply autostart to", ValueFromPipeline=$true)]
+    [parameter(Mandatory=$true,HelpMessage="Vm to apply autostart to.", ValueFromPipeline=$true)]
     [ValidateNotNullOrEmpty()]
     $Vm,
 
-    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true,HelpMessage="Name of the repository to get artifact from.")]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true,HelpMessage="Set autostart status.")]
     [bool]
     $AutoStartStatus = $true
   )
@@ -1148,33 +1148,33 @@ function New-AzDtlVm {
   [CmdletBinding()]
   [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPlainTextForPassword", "", Scope="Function")]
   param(
-    [parameter(Mandatory=$false, ValueFromPipeline=$true, HelpMessage="Lab object to create Vm into. This is not used if you specify Name/ResourceGroupName")]
+    [parameter(Mandatory=$false, ValueFromPipeline=$true, HelpMessage="Lab object to create Vm into. This is not used if you specify Name/ResourceGroupName.")]
     [ValidateNotNullOrEmpty()]
     $Lab,
 
-    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Name of Lab object to create Vm into")]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Name of Lab object to create Vm into.")]
     [ValidateNotNullOrEmpty()]
     $Name,
 
-    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Name of Resource Group where lab lives")]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Name of Resource Group where lab lives.")]
     [ValidateNotNullOrEmpty()]
     $ResourceGroupName,
 
-    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="Name of VM to create")]
+    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="Name of VM to create.")]
     [ValidateNotNullOrEmpty()]
     [string]
     $VmName,
 
-    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="Size of VM to create")]
+    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="Size of VM to create.")]
     [ValidateNotNullOrEmpty()]
     [string]
     $Size,
 
-    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="This is a claimable VM")]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="This is a claimable VM.")]
     [Switch]
     $Claimable,
 
-    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Public=separate IP Address, Shared=load balancers optimizes IP Addresses, Private=No public IP address")]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Public=separate IP Address, Shared=load balancers optimizes IP Addresses, Private=No public IP address.")]
     [Validateset('Public','Private', 'Shared')]
     [string]
     $IpConfig = 'Shared',
@@ -1186,67 +1186,67 @@ function New-AzDtlVm {
     [string]
     $OsType = 'Windows',
 
-    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Virtual Network id (defaults to id of virtual network name)")]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Virtual Network id (defaults to id of virtual network name).")]
     [ValidateNotNullOrEmpty()]
     [string]
     $LabVirtualNetworkId = "",
 
-    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Virtual Network id (defaults to [VirtualNetworkName]Subnet)")]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Virtual Network id (defaults to [VirtualNetworkName]Subnet).")]
     [ValidateNotNullOrEmpty()]
     [string]
     $LabSubnetName = "",
 
-    [parameter(Mandatory=$true,HelpMessage="User Name", ValueFromPipelineByPropertyName = $true, ParameterSetName ='SSHCustom')]
-    [parameter(Mandatory=$true,HelpMessage="User Name", ValueFromPipelineByPropertyName = $true, ParameterSetName ='SSHGallery')]
-    [parameter(Mandatory=$false,HelpMessage="User Name", ValueFromPipelineByPropertyName = $true, ParameterSetName ='PasswordCustom')]
-    [parameter(Mandatory=$true,HelpMessage="User Name", ValueFromPipelineByPropertyName = $true, ParameterSetName ='PasswordGallery')]
+    [parameter(Mandatory=$true,HelpMessage="User Name.", ValueFromPipelineByPropertyName = $true, ParameterSetName ='SSHCustom')]
+    [parameter(Mandatory=$true,HelpMessage="User Name.", ValueFromPipelineByPropertyName = $true, ParameterSetName ='SSHGallery')]
+    [parameter(Mandatory=$false,HelpMessage="User Name.", ValueFromPipelineByPropertyName = $true, ParameterSetName ='PasswordCustom')]
+    [parameter(Mandatory=$true,HelpMessage="User Name.", ValueFromPipelineByPropertyName = $true, ParameterSetName ='PasswordGallery')]
     [ValidateNotNullOrEmpty()]
     [string]
     $UserName = $null,
 
-    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true,HelpMessage="Password", ParameterSetName ='PasswordCustom')]
-    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Password", ParameterSetName ='PasswordGallery')]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true,HelpMessage="Password.", ParameterSetName ='PasswordCustom')]
+    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Password.", ParameterSetName ='PasswordGallery')]
     [ValidateNotNullOrEmpty()]
     [string] # We should support key vault retrival at some point
     $Password = $null,
 
-    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="SSH Key", ParameterSetName ='SSHCustom')]
-    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="SSH Key", ParameterSetName ='SSHGallery')]
+    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="SSH Key.", ParameterSetName ='SSHCustom')]
+    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="SSH Key.", ParameterSetName ='SSHGallery')]
     [ValidateNotNullOrEmpty()]
     [string]
     $SshKey,
 
-    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Name of custom image to use or customImage object", ParameterSetName ='SSHCustom')]
-    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Name of custom image to use or customImage object", ParameterSetName ='PasswordCustom')]
+    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Name of custom image to use or customImage object.", ParameterSetName ='SSHCustom')]
+    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Name of custom image to use or customImage object.", ParameterSetName ='PasswordCustom')]
     [ValidateNotNullOrEmpty()]
     [Object]
     $CustomImage,
 
-    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Name of Sku", ParameterSetName ='SSHGallery')]
-    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Name of Sku", ParameterSetName ='PasswordGallery')]
+    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Name of Sku.", ParameterSetName ='SSHGallery')]
+    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Name of Sku.", ParameterSetName ='PasswordGallery')]
     [ValidateNotNullOrEmpty()]
     [string]
     $Sku,
 
-    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Publisher name", ParameterSetName ='SSHGallery')]
-    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Publisher name", ParameterSetName ='PasswordGallery')]
+    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Publisher name.", ParameterSetName ='SSHGallery')]
+    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Publisher name.", ParameterSetName ='PasswordGallery')]
     [ValidateNotNullOrEmpty()]
     [string]
     $Publisher, # Is this mandatory?
 
-    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Version", ParameterSetName ='SSHGallery')]
-    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Version", ParameterSetName ='PasswordGallery')]
+    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Version.", ParameterSetName ='SSHGallery')]
+    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Version.", ParameterSetName ='PasswordGallery')]
     [ValidateNotNullOrEmpty()]
     [string]
     $Offer,
 
-    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true,HelpMessage="Version", ParameterSetName ='SSHGallery')]
-    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true,HelpMessage="Version", ParameterSetName ='PasswordGallery')]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true,HelpMessage="Version.", ParameterSetName ='SSHGallery')]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true,HelpMessage="Version.", ParameterSetName ='PasswordGallery')]
     [ValidateNotNullOrEmpty()]
     [string]
     $Version = 'latest',
 
-    [parameter(Mandatory=$false,HelpMessage="Run the command in a separate job")]
+    [parameter(Mandatory=$false,HelpMessage="Run the command in a separate job.")]
     [switch] $AsJob = $False
   )
 
@@ -1259,7 +1259,7 @@ function New-AzDtlVm {
       }
 
       if(($Name -and (-not $ResourceGroupName)) -or ($ResourceGroupName -and (-not $Name))) {
-        throw "You need to speficy both a Name and ResourceName parameter. You can't specify just one of them"
+        throw "You need to speficy both a Name and ResourceName parameter. You can't specify just one of them."
       }
 
       # Name and ResourceGroupName take precedence over the Lab parameter.
@@ -1433,11 +1433,11 @@ function Import-AzureRmDtlVm { [CmdletBinding()] param($Name, $ResourceGroupName
 function New-AzDtlLabEnvironment{
   [CmdletBinding()]
   param(
-    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Name of Lab to create environment into")]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Name of Lab to create environment into.")]
     [ValidateNotNullOrEmpty()]
     $Name,
 
-    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Name of Resource Group where lab lives")]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Name of Resource Group where lab lives.")]
     [ValidateNotNullOrEmpty()]
     $ResourceGroupName,
 
@@ -1471,7 +1471,7 @@ function New-AzDtlLabEnvironment{
       if ((-not $Name) -or (-not $ResourceGroupName)) { throw "Missing Name or ResourceGroupName parameters."}
       $Lab = Get-AzDtlLab -Name $Name -ResourceGroupName $ResourceGroupName
 
-      if (-not $Lab) {throw "Unable to find lab $Name with Resource Group $ResourceGroupName"}
+      if (-not $Lab) {throw "Unable to find lab $Name with Resource Group $ResourceGroupName."}
 
       # Get User Id
       if (-not $UserId) {
@@ -1564,16 +1564,16 @@ function Get-AzDtlLabEnvironment{
 function Add-AzDtlLabUser {
   [CmdletBinding()]
   param(
-    [parameter(Mandatory=$true, ValueFromPipeline=$true, HelpMessage="Lab to add users to")]
+    [parameter(Mandatory=$true, ValueFromPipeline=$true, HelpMessage="Lab to add users to.")]
     [ValidateNotNullOrEmpty()]
     $Lab,
 
-    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="User emails to add")]
+    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="User emails to add.")]
     [ValidateNotNullOrEmpty()]
     [string]
     $UserEmail,
 
-    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Role to add user emails to (defaults to dtl user)")]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Role to add user emails to (defaults to dtl user).")]
     [ValidateNotNullOrEmpty()]
     [string]
     $Role = 'DevTest Labs User'
@@ -1630,7 +1630,7 @@ function Add-AzDtlLabArtifactRepository {
     [ValidateNotNullOrEmpty()]
     [string] $ArtifactRepoSecurityToken,
 
-    [parameter(Mandatory=$false,HelpMessage="Run the command in a separate job")]
+    [parameter(Mandatory=$false,HelpMessage="Run the command in a separate job.")]
     [switch] $AsJob = $False
   )
 
@@ -1743,7 +1743,7 @@ function Set-AzDtlLabAnnouncement {
     [ValidateNotNullOrEmpty()]
     [string] $Expiration = "2100-01-01T17:00:00+00:00",
 
-    [parameter(Mandatory=$false,HelpMessage="Run the command in a separate job")]
+    [parameter(Mandatory=$false,HelpMessage="Run the command in a separate job.")]
     [switch] $AsJob = $False
   )
 
@@ -1898,8 +1898,7 @@ function Set-AzDtlLabRdpSettings {
     [ValidateNotNullOrEmpty()]
     [string] $GatewayUrl,
 
-
-    [parameter(Mandatory=$false,HelpMessage="Run the command in a separate job")]
+    [parameter(Mandatory=$false,HelpMessage="Run the command in a separate job.")]
     [switch] $AsJob = $False
   )
 
@@ -1979,25 +1978,25 @@ function Set-AzDtlLabShutdown {
     [ValidateLength(3,40)]
     [string] $TimeZoneId,
 
-    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Which schedule to get")]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Set schedule status.")]
     [ValidateSet('Enabled', 'Disabled')]
     [string] $ScheduleStatus = 'Enabled',
 
-    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Which schedule to get")]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Set notification setting.")]
     [ValidateSet('Enabled', 'Disabled')]
     [string] $NotificationSettings = 'Disabled',
 
-    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Which schedule to get")]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Minutes.")]
     [ValidateRange(1, 60)] #TODO: validate this is right??
     [int] $TimeInIMinutes = 15,
 
-    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="An help")]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="URL to send notification to.")]
     [string] $ShutdownNotificationUrl = "https://mywebook.com",
 
-    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="An help")]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Email to send notification to.")]
     [string] $EmailRecipient = "someone@somewhere.com",
 
-    [parameter(Mandatory=$false,HelpMessage="Run the command in a separate job")]
+    [parameter(Mandatory=$false,HelpMessage="Run the command in a separate job.")]
     [switch] $AsJob = $False
   )
 
@@ -2130,10 +2129,10 @@ function Set-AzDtlLabStartup {
     [ValidateLength(3,40)]
     [string] $TimeZoneId,
 
-    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Days when to start the VM")]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Days when to start the VM.")]
     [Array] $WeekDays = @('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'),
 
-    [parameter(Mandatory=$false,HelpMessage="Run the command in a separate job")]
+    [parameter(Mandatory=$false,HelpMessage="Run the command in a separate job.")]
     [switch] $AsJob = $False
   )
 
@@ -2210,11 +2209,11 @@ function Set-AzDtlLabStartup {
 
 function Get-AzDtlLabSchedule {
   Param(
-    [parameter(Mandatory=$true, ValueFromPipeline = $true, HelpMessage="Lab to operate on")]
+    [parameter(Mandatory=$true, ValueFromPipeline = $true, HelpMessage="Lab to operate on.")]
     [ValidateNotNullOrEmpty()]
     $Lab,
 
-    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="Which schedule to get")]
+    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="Which schedule to get.")]
     [ValidateSet('AutoStart', 'AutoShutdown')]
     $ScheduleType
   )
@@ -2260,23 +2259,23 @@ function New-AzDtlCustomImageFromVm {
   [CmdletBinding()]
   param(
 
-    [parameter(Mandatory=$true, ValueFromPipeline = $true, HelpMessage="The time (relative to timeZoneId) at which the Lab VMs will be automatically shutdown (E.g. 17:30, 20:00, 09:00).")]
+    [parameter(Mandatory=$true, ValueFromPipeline = $true, HelpMessage="VM to get custom image from.")]
     [ValidateNotNullOrEmpty()]
     $Vm,
 
-    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="The Windows time zone id associated with labVmStartup (E.g. UTC, Pacific Standard Time, Central Europe Standard Time).")]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="State of Windows OS.")]
     [ValidateSet('NonSysprepped', 'SysprepRequested', 'SysprepApplied')]
     [string] $WindowsOsState = 'NonSysprepped',
 
-    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="The Windows time zone id associated with labVmStartup (E.g. UTC, Pacific Standard Time, Central Europe Standard Time).")]
+    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="Name of image.")]
     [ValidateNotNullOrEmpty()]
     [string] $ImageName,
 
-    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="The Windows time zone id associated with labVmStartup (E.g. UTC, Pacific Standard Time, Central Europe Standard Time).")]
+    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="Description of image.")]
     [ValidateNotNullOrEmpty()]
     [string] $ImageDescription,
 
-    [parameter(Mandatory=$false,HelpMessage="Run the command in a separate job")]
+    [parameter(Mandatory=$false,HelpMessage="Run the command in a separate job.")]
     [switch] $AsJob = $False
   )
 
@@ -2380,35 +2379,35 @@ function New-AzDtlCustomImageFromVm {
 
 function Import-AzDtlCustomImageFromUri {
   Param(
-    [parameter(Mandatory=$true, ValueFromPipeline = $true, HelpMessage="Lab to operate on")]
+    [parameter(Mandatory=$true, ValueFromPipeline = $true, HelpMessage="Lab to operate on.")]
     [ValidateNotNullOrEmpty()]
     $Lab,
 
-    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="Uri to get VHD from")]
+    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="Uri to get VHD from.")]
     [ValidateNotNullOrEmpty()]
     [string]
     $Uri,
 
-    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="Uri to get VHD from")]
+    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="Operating system on image.")]
     [ValidateSet('Linux', 'Windows')]
     [string]
     $ImageOsType,
 
-    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Uri to get VHD from")]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Sysprep status.")]
     [bool]
     $IsVhdSysPrepped = $false,
 
-    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="Uri to get VHD from")]
+    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="Name of image.")]
     [ValidateNotNullOrEmpty()]
     [string]
     $ImageName,
 
-    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Uri to get VHD from")]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Description of image.")]
     [ValidateNotNullOrEmpty()]
     [string]
     $ImageDescription = "",
 
-    [parameter(Mandatory=$false,HelpMessage="Run the command in a separate job")]
+    [parameter(Mandatory=$false,HelpMessage="Run the command in a separate job.")]
     [switch] $AsJob = $False
   )
   begin {. BeginPreamble}
@@ -2448,7 +2447,7 @@ function Import-AzDtlCustomImageFromUri {
           }
 
           $copyStatus | Where-Object {$_.Status -ne "Success"} | ForEach-Object {
-            throw "    Error copying image $($_.Source.Segments[$_.Source.Segments.Count - 1]), $($_.StatusDescription)"
+            throw "    Error copying image $($_.Source.Segments[$_.Source.Segments.Count - 1]), $($_.StatusDescription)."
           }
 
           $copyStatus | Where-Object {$_.Status -eq "Success"} | ForEach-Object {
