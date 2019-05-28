@@ -981,39 +981,39 @@ function Set-AzDtlVmArtifact {
         $ResourceGroupName = $v.ResourceGroupName
 
         #TODO: is there a better way? It doesn't seem to be in Expanded props of VM ...
-        $DevTestLabName = $v.ResouceId.Split('/')[8]
-        if(-not $DevTestLabName) {
+        $LabName = $v.ResouceId.Split('/')[8]
+        if(-not $LabName) {
           throw "VM Name for $v is not in the format 'RGName/VMName. Why?"
         }
 
         # Get internal repo name
         $repository = Get-AzureRmResource -ResourceGroupName $resourceGroupName `
           -ResourceType 'Microsoft.DevTestLab/labs/artifactsources' `
-          -ResourceName $DevTestLabName -ApiVersion 2016-05-15 `
+          -ResourceName $LabName -ApiVersion 2016-05-15 `
           | Where-Object { $RepositoryName -in ($_.Name, $_.Properties.displayName) } `
           | Select-Object -First 1
 
         if(-not $repository) {
-          throw "Unable to find repository $RepositoryName in lab $DevTestLabName."
+          throw "Unable to find repository $RepositoryName in lab $LabName."
         }
         Write-verbose "Repository found is $($repository.Name)"
 
         # Get internal artifact name
         $template = Get-AzureRmResource -ResourceGroupName $ResourceGroupName `
           -ResourceType "Microsoft.DevTestLab/labs/artifactSources/artifacts" `
-          -ResourceName "$DevTestLabName/$($repository.Name)" `
+          -ResourceName "$LabName/$($repository.Name)" `
           -ApiVersion 2016-05-15 `
           | Where-Object { $ArtifactName -in ($_.Name, $_.Properties.title) } `
           | Select-Object -First 1
 
         if(-not $template) {
-          throw "Unable to find template $ArtifactName in lab $DevTestLabName."
+          throw "Unable to find template $ArtifactName in lab $LabName."
         }
         Write-verbose "Template artifact found is $($template.Name)"
 
         #TODO: is there a better way to construct this?
         $SubscriptionID = (Get-AzureRmContext).Subscription.Id
-        $FullArtifactId = "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.DevTestLab/labs/$DevTestLabName/artifactSources/$($repository.Name)/artifacts/$($template.Name)"
+        $FullArtifactId = "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.DevTestLab/labs/$LabName/artifactSources/$($repository.Name)/artifacts/$($template.Name)"
         Write-verbose "Using artifact id $FullArtifactId"
 
         $prop = @{
