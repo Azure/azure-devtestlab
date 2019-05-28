@@ -62,6 +62,6 @@ $customImage = $labs[0] `
 $labs[0] | Dtl-NewVm -CustomImage $customImage -VmName ('cvm2' + (Get-Random)) -Size 'Standard_A4_v2' -OsType Windows | Out-Null
 
 $labs | Dtl-RemoveLab
-Remove-AzureRmResourceGroup -Name $rgName | Out-Null
+Remove-AzureRmResourceGroup -Name $rgName -Force | Out-Null
 
 Remove-Module Az.DevTestLabs2 -Force -Verbose:$false

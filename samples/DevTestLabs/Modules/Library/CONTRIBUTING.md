@@ -4,12 +4,13 @@ When contributing to this repository, please first discuss the change you wish t
 email, or any other method with the owners of this repository before making a change. 
 
 ## Code Guidelines
+
 1. Put the `ValueFromPipeline` attribute on the parameter you expect to come from the pipeline.
-1. Return the correct object from your function (i.e. lab, vm or custom image) as to enable pipelining.
-2. Re-query for the resource you are returning from the function as your function might have changed it, so you likely need the latest one.
-3. Use the `begin/process/end` syntax and put `. BeginPreamble` in the `begin` part. This has to do with correct error management. Read the code for details.
-4. Use the `foreach` pattern to enable taking multiple objects from the pipeline
-5. Use the function below as a template on how to write the function
+2. Return the correct object from your function (i.e. lab, vm or custom image) as to enable pipelining.
+3. Re-query for the resource you are returning from the function as your function might have changed it, so you likely need the latest one.
+4. Use the `begin/process/end` syntax and put `. BeginPreamble` in the `begin` part. This has to do with correct error management. Read the code for details.
+5. Use the `foreach` pattern to enable taking multiple objects from the pipeline
+6. Use the function below as a template on how to write the function
 
 ```powershell
 function Invoke-AzDtlVmClaim {
@@ -34,7 +35,8 @@ function Invoke-AzDtlVmClaim {
   end {}
 }
 ```
-6. In the common case you are deploying an ARM template to a lab, use the utility function `DeployLab` as shown below
+
+7. In the common case you are deploying an ARM template to a lab, use the utility function `DeployLab` as shown below
 
 ```powershell
 function New-AzDtlLab {

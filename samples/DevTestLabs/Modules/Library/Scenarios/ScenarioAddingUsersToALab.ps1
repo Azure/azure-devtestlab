@@ -29,6 +29,6 @@ $users `
   | Dtl-AddUser -Lab $lab
 
 $lab | Dtl-RemoveLab
-Remove-AzureRmResourceGroup -Name $rgName | Out-Null
+Remove-AzureRmResourceGroup -Name $rgName -Force | Out-Null
 
 Remove-Module Az.DevTestLabs2 -Force
