@@ -10,6 +10,11 @@ This is a public, community-contributed repository that contains:
 
 - **Azure Pipelines Tasks for Azure DevTest Labs:** This is the source code used to author Azure Pipelines tasks specifically geared to demonstrate use of Azure DevTest Labs in builds/releases. Refer to [Azure DevTest Labs Tasks](https://marketplace.visualstudio.com/items?itemName=ms-azuredevtestlabs.tasks) for more information and to install.
 
+
+## Azure DevTest Labs PowerShell Module
+
+[Az.DevTestLabs](https://github.com/Azure/azure-devtestlab/tree/master/samples/DevTestLabs/Modules/Library), for short, is a PowerShell module to simplify the management of [Azure DevTest Labs](https://azure.microsoft.com/en-us/services/devtest-lab/). It provides composable functions to create, query, update and delete labs, VMs, Custom Images and Environments. The source can be located under [/samples/DevTestLabs/Modules/Library/](https://github.com/Azure/azure-devtestlab/tree/master/samples/DevTestLabs/Modules/Library).
+
 ## Contributions
 
 Contributions are encouraged and welcome. Please refer to the respective sections (e.g. Artifacts, Environments, Tasks) for more details on the respective process to follow.
