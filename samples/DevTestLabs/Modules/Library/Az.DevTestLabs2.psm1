@@ -1378,7 +1378,7 @@ function New-AzDtlVm {
   end {}
 }
 
-## Experimental ...
+## Not strictly DTL related, but often used in a DTL context if unused RGs are left around by broken DTL remove operations.
 function Get-UnusedRgInSubscription {
   [CmdletBinding()]
   param()
