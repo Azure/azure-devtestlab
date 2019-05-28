@@ -1,5 +1,5 @@
 <#
-This hightligths how to use a single csv file to create multiple labs with multiple VMs
+This highlights how to use a single csv file to create multiple labs with multiple VMs
 #>
 [CmdletBinding()]
 param()

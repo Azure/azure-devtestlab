@@ -1,5 +1,5 @@
 <#
-This hightligths most features in the library, the composibility of the functions and how to run them in parallel.
+This highlights most features in the library, the composibility of the functions and how to run them in parallel.
 #>
 [CmdletBinding()]
 param()
@@ -33,7 +33,7 @@ $labs = $labsData `
 $labs `
   | Dtl-AddUser -UserEmail 'lucabol@microsoft.com' `
   | Dtl-SetLabAnnouncement -Title 'I am here' -AnnouncementMarkDown 'yep' `
-  | Dtl-SetLabSupport -SupportMarkdown "### Support me, baby!" `
+  | Dtl-SetLabSupport -SupportMarkdown "### Sample lab announcement header." `
   | Dtl-SetLabRdp -GatewayUrl 'Agtway@adomain.com' -ExperienceLevel 5 `
   | Dtl-SetLabShutdown -ShutdownTime '21:00' -TimeZoneId 'UTC' -ScheduleStatus 'Enabled' -NotificationSettings 'Enabled' `
       -TimeInIMinutes 50 -ShutdownNotificationUrl 'https://blah.com' -EmailRecipient 'blah@lab.com' `
@@ -57,18 +57,10 @@ $labs | Dtl-GetLabSchedule -ScheduleType 'AutoShutdown' | Out-Null
 $customImage = $labs[0] `
   | Dtl-NewVm -VmName ("cvm" + (Get-Random)) -Size 'Standard_A4_v2' -Claimable -UserName 'bob' -Password 'aPassword341341' `
     -OsType Windows -Sku '2012-R2-Datacenter' -Publisher 'MicrosoftWindowsServer' -Offer 'WindowsServer' `
-  | Dtl-NewCustomImage -ImageName ("im" + (Get-Random)) -ImageDescription 'A Description'
+  | Dtl-NewCustomImage -ImageName ("im" + (Get-Random)) -ImageDescription 'Created using Azure DevTest Labs PowerShell library.'
 
 $labs[0] | Dtl-NewVm -CustomImage $customImage -VmName ('cvm2' + (Get-Random)) -Size 'Standard_A4_v2' -OsType Windows | Out-Null
 
-<#
-# Re-enable when finding solution for $UserId = $((Get-AzureRmADUser -UserPrincipalName (Get-AzureRmContext).Account).Id.Guid) returning null in PS Core
-$labs `
-  | Dtl-NewEnvironment -ArtifactRepositoryDisplayName 'Public Environment Repo' -TemplateName 'WebApp' -EnvironmentInstanceName ("gems" + (Get-Random)) `
-  | Dtl-GetEnvironment `
-  | Measure-Object -Property environments `
-  | %{if($_.Count -ne 2){Write-Host "Failed to get environments"}}
- #>
 $labs | Dtl-RemoveLab
 Remove-AzureRmResourceGroup -Name $rgName | Out-Null
 
