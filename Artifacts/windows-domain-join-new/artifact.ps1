@@ -5,7 +5,7 @@ param
     [string] $DomainAdminUsername,
 
     [Parameter(Mandatory = $true)]
-    [string] $DomainAdminPassword,
+    [securestring] $DomainAdminPassword,
 
     [Parameter(Mandatory = $true)]
     [string] $DomainToJoin,
@@ -40,7 +40,7 @@ trap
     {
         Write-Host -Object "ERROR: $message" -ForegroundColor Red
     }
-    
+
     # IMPORTANT NOTE: Throwing a terminating error (using $ErrorActionPreference = "Stop") still
     # returns exit code zero from the PowerShell script when using -File. The workaround is to
     # NOT use -File when calling this script and leverage the try-catch-finally block and return
@@ -54,7 +54,7 @@ trap
 # Functions used in this script.
 #
 
-function Join-Domain 
+function Join-Domain
 {
     [CmdletBinding()]
     param
@@ -72,7 +72,7 @@ function Join-Domain
     else
     {
         $credential = New-Object System.Management.Automation.PSCredential($UserName, $Password)
-        
+
         if ($OUPath)
         {
             [Microsoft.PowerShell.Commands.ComputerChangeInfo]$computerChangeInfo = Add-Computer -DomainName $DomainName -Credential $credential -OUPath $OUPath -Force -PassThru
@@ -81,12 +81,12 @@ function Join-Domain
         {
             [Microsoft.PowerShell.Commands.ComputerChangeInfo]$computerChangeInfo = Add-Computer -DomainName $DomainName -Credential $credential -Force -PassThru
         }
-        
+
         if (-not $computerChangeInfo.HasSucceeded)
         {
             throw "Failed to join computer $($Env:COMPUTERNAME) to domain $DomainName."
         }
-        
+
         Write-Host "Computer $($Env:COMPUTERNAME) successfully joined domain $DomainName."
     }
 }
@@ -104,8 +104,7 @@ try
     }
 
     Write-Host "Attempting to join computer $($Env:COMPUTERNAME) to domain $DomainToJoin."
-    $securePass = ConvertTo-SecureString $DomainAdminPassword -AsPlainText -Force
-    Join-Domain -DomainName $DomainToJoin -User $DomainAdminUsername -Password $securePass -OUPath $OUPath
+    Join-Domain -DomainName $DomainToJoin -User $DomainAdminUsername -Password $DomainAdminPassword -OUPath $OUPath
 
     Write-Host 'Artifact applied successfully.'
 }
