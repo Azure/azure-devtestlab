@@ -21,11 +21,13 @@
     "tokenLifetime": {
       "type": "string",
       "defaultValue": ""
+    },
+    "zipFileLocation":{
+      "type": "string",
+      "defaultValue": "https://github.com/Azure/azure-devtestlab/blob/function-v2/samples/DevTestLabs/GatewaySample/arm/gateway/azure-function.zip?raw=true"
     }
   },
   "variables": {
-    "githubRepoUrl": "https://github.com/Azure/azure-devtestlab.git",
-    "githubBranch": "master",
     "storageName": "[replace(parameters('resourcePrefix'), '-', '')]",
     "hostingplanName": "[concat(parameters('resourcePrefix'), '-hp')]",
     "functionName": "[concat(parameters('resourcePrefix'), '-fu')]",
@@ -100,30 +102,23 @@
             },
             {
               "name": "FUNCTIONS_EXTENSION_VERSION",
-              "value": "~1"
+              "value": "~2"
             },
             {
               "name": "WEBSITE_NODE_DEFAULT_VERSION",
               "value": "6.5.0"
+            },
+            {
+                "name":"WEBSITE_RUN_FROM_PACKAGE",
+                "value":"[parameters('zipFileLocation')]"
+            },
+            {
+                "name": "AzureWebJobsSecretStorageType",
+                "value": "files"
             }
           ]
         }
-      },
-      "resources": [
-        {
-          "apiVersion": "2015-08-01",
-          "name": "web",
-          "type": "sourcecontrols",
-          "dependsOn": [
-            "[resourceId('Microsoft.Web/Sites', variables('functionName'))]"
-          ],
-          "properties": {
-            "RepoUrl": "[variables('githubRepoUrl')]",
-            "branch": "[variables('githubBranch')]",
-            "IsManualIntegration": true
-          }
-        }
-      ]
+      }
     }
   ],
   "outputs": {

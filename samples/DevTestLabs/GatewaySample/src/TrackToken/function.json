@@ -1,0 +1,25 @@
+{
+  "bindings": [
+    {
+      "name": "tokenEntity",
+      "type": "queueTrigger",
+      "direction": "in",
+      "queueName": "track-token",
+      "connection": "AzureWebJobsStorage"
+    },
+    {
+      "type": "table",
+      "name": "tokenTable",
+      "tableName": "tokens",
+      "connection": "AzureWebJobsStorage",
+      "direction": "out"
+    },
+    {
+      "type": "table",
+      "name": "userTable",
+      "tableName": "users",
+      "connection": "AzureWebJobsStorage",
+      "direction": "out"
+    }
+  ]
+}
