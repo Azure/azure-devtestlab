@@ -422,7 +422,21 @@ function StringToFile([string] $text) {
 }
 
 function GetComputeVm($vm) {
-  return  Get-AzureRmResource -ResourceId $vm.Properties.computeId -ExpandProperties
+
+  # Instead of another round-trip to Azure, we parse the Compute ID to get the VM Name & Resource Group
+  if ($vm.Properties.computeId -match "\/subscriptions\/(.*)\/resourceGroups\/(.*)\/providers\/Microsoft\.Compute\/virtualMachines\/(.*)$") {
+    # For successful match, powershell stores the matches in "$Matches" array
+    $vmResourceGroupName = $Matches[2]
+    $vmName = $Matches[3]
+  } else {
+    # Unable to parse the resource Id, so let's do the additional round trip to Azure
+    $vm = Get-AzureRmResource -ResourceId $vm.Properties.computeId
+    $vmResourceGroupName = $vm.ResourceGroupName
+    $vmName = $vm.Name
+  }
+
+  return Get-AzureRmVm -ResourceGroupName $vmResourceGroupName -Name $vmName -Status
+
 }
 #endregion
 
@@ -572,7 +586,7 @@ function Get-AzDtlVm {
     $Name = "*",
 
     [parameter(Mandatory=$false,HelpMessage="Status filter for the vms to retrieve.  This parameter supports wildcards at the beginning and/or end of the string.")]
-    [ValidateSet('Starting', 'Running', 'Stopping', 'Stopped', 'Deallocating', 'Deallocated', 'Any')]
+    [ValidateSet('Starting', 'Running', 'Stopping', 'Stopped', 'Deallocating', 'Deallocated', 'Failed', 'Restarting', 'ApplyingArtifacts', 'UpgradingVmAgent', 'Creating', 'Deleting', 'Any')]
     [string]
     $Status = 'Any'
   )
@@ -586,7 +600,7 @@ function Get-AzDtlVm {
         Write-verbose "Retrieving $Name VMs for lab $LabName in $ResourceGroupName."
         # Need to query client side to support wildcard at start of name as well (but this is bad as potentially many vms are involved)
         # Also notice silently continue for errors to return empty set for composibility
-        # TODO: is there a cleaver way to make this less expensive? I.E. prequery without -ExpandProperties and then use the result to query again.
+        # TODO: is there a clever way to make this less expensive? I.E. prequery without -ExpandProperties and then use the result to query again.
         $vms = MyGetResourceVm -Name "$Name" -LabName $LabName -ResourceGroupName $ResourceGroupName
         Write-verbose "Vms before status filter are $vms."
         if($vms -and ($Status -ne 'Any')) {
@@ -615,25 +629,48 @@ function Get-AzDtlVmStatus {
     try {
       foreach($v in $Vm) {
 
-        if(-not $v.Properties.lastKnownPowerState) {
-          return "Stopped"
+        # If the DTL VM has provisioningState equal to "Succeeded", we need to check the compute VM state
+        if ($v.Properties.provisioningState -eq "Succeeded") {
+            $computeVm = GetComputeVm($v)
+            $computeProvisioningStateObj = $computeVm.Statuses | Where-Object {$_.Code.Contains("ProvisioningState")} | Select Code -First 1
+            if ($computeProvisioningStateObj) {
+                $computeProvisioningState = $computeProvisioningStateObj.Code.Replace("ProvisioningState/", "")
+            }
+            $computePowerStateObj = $computeVm.Statuses | Where-Object {$_.Code.Contains("PowerState")} | Select Code -First 1
+            if ($computePowerStateObj) {
+                $computePowerState = $computePowerStateObj.Code.Replace("PowerState/", "")
+            }
+
+            # if the provisioningstate is updating, there is a state change, check the power state
+            if ($computeProvisioningState -eq "updating") {
+                if ($computePowerState -eq "deallocating") {
+                    return "Deallocating"
+                } elseif ($computePowerState -eq "running") {
+                    return "Restarting"
+                } elseif ($computePowerState -eq "starting") {
+                    return "Starting"
+                } else {
+                    # if there is a provisioning state of 'updating' but no power state, the VM is starting up
+                    return "Starting"
+                }
+            } elseif ($computeProvisioningState -eq "succeeded") {
+                if ($computePowerState -eq "deallocated") {
+                    return "Stopped"
+                } elseif ($computePowerState -eq "running") {
+                    return "Running"
+                } else {
+                    # we got a power state we don't recognize, let's return it
+                    return $computePowerState
+                }
+            } else {
+                # Here we got a compute provisioning state we don't understand, let's return it
+                return $computeProvisioningState
+            }
+
         } else {
-          return $v.Properties.lastKnownPowerState
+            # ApplyingArtifacts, UpgradingVmAgent, Creating, Deleting, Failed
+            return $v.Properties.provisioningState
         }
-
-        # This is how to get it from the compute VM if the above turns out not to work
-<#         $computeVm = GetComputeVm($v)
-        $computeGroup = $computeVm.ResourceGroupName
-        $name = $computeVm.Name
-
-        $compVM = Get-AzureRmVM -ResourceGroupName $computeGroup -name $name -Status
-
-        $statuses = $compVM.Statuses
-        if(-not $statuses) {
-          throw "Can't get status for VM $name in $computeGroup"
-        }
-        return ($statuses | Where Code -Like 'PowerState/*')[0].DisplayStatus
- #>
       }
     } catch {
       Write-Error -ErrorRecord $_ -EA $callerEA
