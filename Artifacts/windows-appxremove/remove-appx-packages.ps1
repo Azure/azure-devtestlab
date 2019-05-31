@@ -49,7 +49,7 @@ try
 {
     if ([Environment]::OSVersion.Version.Major -gt 6) {
         Write-Host "`nRemoving Appx Packages`n"
-        Get-AppxPackage -AllUsers | Remove-AppxPackage -ErrorAction $ProgressPreference
+        Get-AppxPackage -AllUsers | Remove-AppxPackage -ErrorAction SilentlyContinue
         Write-Host "`nDone Removing Appx Packages`n"
     }
     else {
