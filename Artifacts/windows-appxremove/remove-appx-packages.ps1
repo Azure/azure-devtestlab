@@ -45,16 +45,13 @@ trap
 # Main execution block.
 #
 
-try
-{
-    if ([Environment]::OSVersion.Version.Major -gt 6) {
-        Write-Host "`nRemoving Appx Packages`n"
-        Get-AppxPackage -AllUsers | Remove-AppxPackage -ErrorAction SilentlyContinue
-        Write-Host "`nDone Removing Appx Packages`n"
-    }
-    else {
-        Write-Host "`nOS Major version is older than 7. Skipping...`n"
-    }
-
-    Write-Host "`nThe artifact was applied successfully.`n"
+if ([Environment]::OSVersion.Version.Major -gt 6) {
+    Write-Host "`nRemoving Appx Packages`n"
+    Get-AppxPackage -AllUsers | Remove-AppxPackage -ErrorAction SilentlyContinue
+    Write-Host "`nDone Removing Appx Packages`n"
 }
+else {
+    Write-Host "`nOS Major version is older than 7. Skipping...`n"
+}
+
+Write-Host "`nThe artifact was applied successfully.`n"
