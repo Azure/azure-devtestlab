@@ -428,20 +428,25 @@ function StringToFile([string] $text) {
 
 function GetComputeVm($vm) {
 
-  # Instead of another round-trip to Azure, we parse the Compute ID to get the VM Name & Resource Group
-  if ($vm.Properties.computeId -match "\/subscriptions\/(.*)\/resourceGroups\/(.*)\/providers\/Microsoft\.Compute\/virtualMachines\/(.*)$") {
-    # For successful match, powershell stores the matches in "$Matches" array
-    $vmResourceGroupName = $Matches[2]
-    $vmName = $Matches[3]
+  if ($vm.Properties.computeId) {
+    # Instead of another round-trip to Azure, we parse the Compute ID to get the VM Name & Resource Group
+    if ($vm.Properties.computeId -match "\/subscriptions\/(.*)\/resourceGroups\/(.*)\/providers\/Microsoft\.Compute\/virtualMachines\/(.*)$") {
+      # For successful match, powershell stores the matches in "$Matches" array
+      $vmResourceGroupName = $Matches[2]
+      $vmName = $Matches[3]
+    } else {
+      # Unable to parse the resource Id, so let's do the additional round trip to Azure
+      $vm = Get-AzureRmResource -ResourceId $vm.Properties.computeId
+      $vmResourceGroupName = $vm.ResourceGroupName
+      $vmName = $vm.Name
+    }
+
+    return Get-AzureRmVm -ResourceGroupName $vmResourceGroupName -Name $vmName -Status
+  
   } else {
-    # Unable to parse the resource Id, so let's do the additional round trip to Azure
-    $vm = Get-AzureRmResource -ResourceId $vm.Properties.computeId
-    $vmResourceGroupName = $vm.ResourceGroupName
-    $vmName = $vm.Name
+    # In this case, the ComputeId isn't set - this is a busted VM (compute VM was deleted out from under the DTL VM)
+    return $null
   }
-
-  return Get-AzureRmVm -ResourceGroupName $vmResourceGroupName -Name $vmName -Status
-
 }
 #endregion
 
@@ -637,41 +642,50 @@ function Get-AzDtlVmStatus {
         # If the DTL VM has provisioningState equal to "Succeeded", we need to check the compute VM state
         if ($v.Properties.provisioningState -eq "Succeeded") {
             $computeVm = GetComputeVm($v)
-            $computeProvisioningStateObj = $computeVm.Statuses | Where-Object {$_.Code.Contains("ProvisioningState")} | Select Code -First 1
-            if ($computeProvisioningStateObj) {
-                $computeProvisioningState = $computeProvisioningStateObj.Code.Replace("ProvisioningState/", "")
-            }
-            $computePowerStateObj = $computeVm.Statuses | Where-Object {$_.Code.Contains("PowerState")} | Select Code -First 1
-            if ($computePowerStateObj) {
-                $computePowerState = $computePowerStateObj.Code.Replace("PowerState/", "")
-            }
+            if ($computeVm) {
+              $computeProvisioningStateObj = $computeVm.Statuses | Where-Object {$_.Code.Contains("ProvisioningState")} | Select-Object Code -First 1
+              $computeProvisioningState = $null
+              if ($computeProvisioningStateObj) {
+                  $computeProvisioningState = $computeProvisioningStateObj.Code.Replace("ProvisioningState/", "")
+              }
+              $computePowerStateObj = $computeVm.Statuses | Where-Object {$_.Code.Contains("PowerState")} | Select-Object Code -First 1
+              $computePowerState = $null
+              if ($computePowerStateObj) {
+                  $computePowerState = $computePowerStateObj.Code.Replace("PowerState/", "")
+              }
 
-            # if the provisioningstate is updating, there is a state change, check the power state
-            if ($computeProvisioningState -eq "updating") {
+              # if we have a powerstate, we return the pretty string for it.  This should match the DTL UI
+              if ($computePowerState) {
                 if ($computePowerState -eq "deallocating") {
-                    return "Deallocating"
-                } elseif ($computePowerState -eq "running") {
-                    return "Restarting"
-                } elseif ($computePowerState -eq "starting") {
-                    return "Starting"
-                } else {
-                    # if there is a provisioning state of 'updating' but no power state, the VM is starting up
-                    return "Starting"
-                }
-            } elseif ($computeProvisioningState -eq "succeeded") {
-                if ($computePowerState -eq "deallocated") {
-                    return "Stopped"
+                  return "Stopping"
+                } elseif ($computePowerState -eq "deallocated") {
+                    return "Deallocated"
                 } elseif ($computePowerState -eq "running") {
                     return "Running"
+                } elseif ($computePowerState -eq "starting") {
+                    return "Starting"
+                } elseif ($computePowerState -eq "stopped") {
+                    return "Stopped"
+                } elseif ($computePowerState -eq "stopping") {
+                    return "Stopping"
                 } else {
-                    # we got a power state we don't recognize, let's return it
-                    return $computePowerState
+                    # if we have a powerstate we don't recognize, let's return "Updating"
+                    return "Updating"
                 }
+              } else {
+                # No power state, we return the provisioning state
+                if ($computeProvisioningState -eq "updating") {
+                  return "Updating"
+                } elseif ($computeProvisioningState -eq "failed") {
+                  return "Failed"
+                } else {
+                  return $computeProvisioningState
+                }
+              }
             } else {
-                # Here we got a compute provisioning state we don't understand, let's return it
-                return $computeProvisioningState
+              # Compute VM is null, means we have a failed VM
+              return "Corrupted"
             }
-
         } else {
             # ApplyingArtifacts, UpgradingVmAgent, Creating, Deleting, Failed
             return $v.Properties.provisioningState
