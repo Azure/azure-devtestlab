@@ -21,10 +21,18 @@ if($azureRm -and $az) {
 }
 
 if($azureRm) {
+  # We cannot use the Require statement for this as it needs to work on both Az and AzureRm
+  # Note that AzureRM 6.XX uses Azure.Profile 5.X so the check below is correct.
+  # Also you can have multiple modules. It assumes the highest one will be loaded.
+  if(($azureRm | Measure-Object -Property Version -maximum).Maximum -lt '5.0.0') {
+    Write-Error "You need at least version 6.0.0 of the AzureRm module to use this library"
+    Exit
+  }
   # This is not defaulted in older versions of AzureRM
   Enable-AzureRmContextAutosave -Scope CurrentUser -erroraction silentlycontinue
   Write-Warning "You are using the deprecated AzureRM module. For more info, read https://docs.microsoft.com/en-us/powershell/azure/migrate-from-azurerm-to-az"
 }
+
 if($justAz) {
   Enable-AzureRmAlias -Scope Local -Verbose:$false
 }
