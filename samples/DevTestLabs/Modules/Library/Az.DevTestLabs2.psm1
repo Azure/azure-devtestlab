@@ -2,7 +2,7 @@
 # We are using strict mode for added safety
 Set-StrictMode -Version Latest
 
-# We require a relatively new version of Powershell
+# We require a relatively new version of Powershell and AzureRm
 #requires -Version 3.0
 
 # To understand the code below read here: https://docs.microsoft.com/en-us/powershell/azure/migrate-from-azurerm-to-az?view=azps-2.1.0
@@ -21,7 +21,8 @@ if($azureRm -and $az) {
 }
 
 if($azureRm) {
-  # We cannot use the Require statement for this as it needs to work on both Az and AzureRm
+  # We cannot use the Require statement for this as it needs to work on both Az and AzureRm.
+  # Requiring a particular version of AzureRm.Profile wouldn't work if just Az.Accounts is present
   # Note that AzureRM 6.XX uses Azure.Profile 5.X so the check below is correct.
   # Also you can have multiple modules. It assumes the highest one will be loaded.
   if(($azureRm | Measure-Object -Property Version -maximum).Maximum -lt '5.0.0') {
