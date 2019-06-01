@@ -12,7 +12,7 @@ Set-StrictMode -Version Latest
 # If you have the AzureRm module, then everything works fine
 # If you have the Az module, we need to enable the AzureRmAliases
 
-$azureRm  = Get-Module -Name "AzureRM.Profile" -ListAvailable
+$azureRm  = Get-Module -Name "AzureRM" -ListAvailable | Sort-Object Version.Major -Descending | Select-Object -First 1
 $az       = Get-Module -Name "Az.Accounts" -ListAvailable
 $justAz   = $az -and (-not $azureRm)
 
@@ -21,10 +21,15 @@ if($azureRm -and $az) {
 }
 
 if($azureRm) {
-  # This is not defaulted in older versions of AzureRM
-  Enable-AzureRmContextAutosave -Scope CurrentUser -erroraction silentlycontinue
-  Write-Warning "You are using the deprecated AzureRM module. For more info, read https://docs.microsoft.com/en-us/powershell/azure/migrate-from-azurerm-to-az"
+  if ($azureRm.Version.Major -lt 6) {
+    Write-Error "This module does not work correctly with version 5 or lower of AzureRM, please upgrade to a newer version of Azure PowerShell in order to use this module."
+  } else {
+    # This is not defaulted in older versions of AzureRM
+    Enable-AzureRmContextAutosave -Scope CurrentUser -erroraction silentlycontinue
+    Write-Warning "You are using the deprecated AzureRM module. For more info, read https://docs.microsoft.com/en-us/powershell/azure/migrate-from-azurerm-to-az"
+  }
 }
+
 if($justAz) {
   Enable-AzureRmAlias -Scope Local -Verbose:$false
 }
