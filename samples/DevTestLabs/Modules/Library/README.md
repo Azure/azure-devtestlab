@@ -2,11 +2,13 @@
 
 Az.DevTestLabs is a PowerShell module to simplify the management of [Azure DevTest Labs](https://azure.microsoft.com/en-us/services/devtest-lab/). It provides composable functions to create, query, update and delete labs, VMs, Custom Images and Environments.
 
-Here's an example that showcases using the library to start all the VMs in all the labs whose name start with the prefix "Test".
+Here is an example that showcases using the library to start all the VMs in all the labs whose name start with the prefix "Test".
 
 ```powershell
 Dtl-GetLab -name Test* | Dtl-GetVm | Dtl-StartVm
 ```
+
+And [here](HowTo.md) is a step by step tutorial.
 
 ## Getting Started
 
