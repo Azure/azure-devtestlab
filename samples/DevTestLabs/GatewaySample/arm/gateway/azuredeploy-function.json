@@ -24,7 +24,7 @@
     },
     "zipFileLocation":{
       "type": "string",
-      "defaultValue": "https://github.com/Azure/azure-devtestlab/blob/function-v2/samples/DevTestLabs/GatewaySample/arm/gateway/azure-function.zip?raw=true"
+      "defaultValue": "https://github.com/Azure/azure-devtestlab/blob/master/samples/DevTestLabs/GatewaySample/arm/gateway/azure-function.zip?raw=true"
     }
   },
   "variables": {
