@@ -219,25 +219,40 @@ function InvokeRest($Uri, $Method) {
     $fullUri = $Uri + $ApiVersion
     Write-Verbose "$Method : $fullUri"
     $result = Invoke-WebRequest -Headers $authHeaders -Uri $FullUri -Method $Method
-    ($result.Content | ConvertFrom-Json).Value
+    $result.Content | ConvertFrom-Json
 }
 
 function Get-AzLabAccount {
   [CmdletBinding()]
   param(
-    [parameter(Mandatory=$true,HelpMessage="Resource Group Containing the lab account", ValueFromPipeline=$true)]
+    [parameter(Mandatory=$false,HelpMessage="Resource Group Containing the lab account", ValueFromPipeline=$true)]
     [ValidateNotNullOrEmpty()]
-    $ResourceGroupName
+    $ResourceGroupName = '*',
+
+    [parameter(Mandatory=$false,HelpMessage="Name of Lab Account to retrieve", ValueFromPipeline=$true)]
+    [ValidateNotNullOrEmpty()]
+    $LabAccountName = '*'
+
   )
 
   begin {. BeginPreamble}
   process {
     try {
       foreach($rg in $ResourceGroupName) {
-        Write-verbose "Retrieving labs from $ResourceGroupName."
 
-        $Uri = GetLabAccountUri -ResourceGroupName $rg
-        InvokeRest  -Uri $Uri -Method 'Get'
+        if($ResourceGroupName -and (-not $ResourceGroupName.Contains("*"))) { # Proper RG
+          if($LabAccountName -and (-not $LabAccountName.Contains("*"))) { # Proper RG, Proper Name
+            $uri = (GetLabAccountUri -ResourceGroupName $ResourceGroupName) + "/$LabAccountName"
+            InvokeRest  -Uri $uri -Method 'Get'
+          } else { #Proper RG, wild name
+            $uri = GetLabAccountUri -ResourceGroupName $ResourceGroupName
+            (InvokeRest  -Uri $uri -Method 'Get').Value | Where-Object {$_.name -like $LabAccountName}
+          }
+        } else { # Wild RG forces query by subscription
+            $subscriptionId = (Get-AzureRmContext).Subscription.Id
+            $uri = "https://management.azure.com/subscriptions/$SubscriptionId/providers/Microsoft.LabServices/labaccounts"
+            (InvokeRest  -Uri $uri -Method 'Get').Value | Where-Object { ($_.name -like $LabAccountName ) -and ($_.id.Split('/')[4] -like $ResourceGroupName)}
+        }
       }
     } catch {
       Write-Error -ErrorRecord $_ -EA $callerEA
