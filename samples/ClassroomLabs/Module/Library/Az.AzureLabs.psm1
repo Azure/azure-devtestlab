@@ -214,6 +214,10 @@ function GetLabAccountUri($ResourceGroupName) {
     "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.LabServices/labaccounts"
 }
 
+function ConvertToUri($resource) {
+    "https://management.azure.com" + $resource.Id
+}
+
 function InvokeRest($Uri, $Method) {
     $authHeaders = GetHeaderWithAuthToken
     $fullUri = $Uri + $ApiVersion
@@ -278,7 +282,8 @@ function Get-AzLab {
   process {
     try {
       foreach($la in $LabAccount) {
-
+        $uri = (ConvertToUri -resource $la) + "/labs"
+        (InvokeRest -Uri $uri -Method 'Get').Value | Where-Object {$_.Name -like $LabName}
       }
     } catch {
       Write-Error -ErrorRecord $_ -EA $callerEA
