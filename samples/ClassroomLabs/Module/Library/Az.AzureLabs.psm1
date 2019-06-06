@@ -229,7 +229,7 @@ function Get-AzLabAccount {
     [ValidateNotNullOrEmpty()]
     $ResourceGroupName = '*',
 
-    [parameter(Mandatory=$false,HelpMessage="Name of Lab Account to retrieve", ValueFromPipeline=$true)]
+    [parameter(Mandatory=$false,HelpMessage="Name of Lab Account to retrieve (your can use * and ?)")]
     [ValidateNotNullOrEmpty()]
     $LabAccountName = '*'
 
@@ -253,6 +253,32 @@ function Get-AzLabAccount {
             $uri = "https://management.azure.com/subscriptions/$SubscriptionId/providers/Microsoft.LabServices/labaccounts"
             (InvokeRest  -Uri $uri -Method 'Get').Value | Where-Object { ($_.name -like $LabAccountName ) -and ($_.id.Split('/')[4] -like $ResourceGroupName)}
         }
+      }
+    } catch {
+      Write-Error -ErrorRecord $_ -EA $callerEA
+    }
+  }
+  end {}
+}
+
+function Get-AzLab {
+  [CmdletBinding()]
+  param(
+    [parameter(Mandatory=$true,HelpMessage="Lab Account to get labs from", ValueFromPipeline=$true)]
+    [ValidateNotNullOrEmpty()]
+    $LabAccount,
+
+    [parameter(Mandatory=$false,HelpMessage="Name of Lab to retrieve (your can use * and ?)")]
+    [ValidateNotNullOrEmpty()]
+    $LabName = '*'
+
+  )
+
+  begin {. BeginPreamble}
+  process {
+    try {
+      foreach($la in $LabAccount) {
+
       }
     } catch {
       Write-Error -ErrorRecord $_ -EA $callerEA
