@@ -218,11 +218,11 @@ function ConvertToUri($resource) {
     "https://management.azure.com" + $resource.Id
 }
 
-function InvokeRest($Uri, $Method) {
+function InvokeRest($Uri, $Method, $Body) {
     $authHeaders = GetHeaderWithAuthToken
     $fullUri = $Uri + $ApiVersion
     Write-Verbose "$Method : $fullUri"
-    $result = Invoke-WebRequest -Headers $authHeaders -Uri $FullUri -Method $Method
+    $result = Invoke-WebRequest -Uri $FullUri -Method $Method -Headers $authHeaders -Body $Body -SkipHeaderValidation
     $result.Content | ConvertFrom-Json
 }
 
@@ -291,3 +291,38 @@ function Get-AzLab {
   }
   end {}
 }
+
+function New-AzLab {
+    [CmdletBinding()]
+    param(
+      [parameter(Mandatory=$true,HelpMessage="Lab Account to create lab into", ValueFromPipeline=$true)]
+      [ValidateNotNullOrEmpty()]
+      $LabAccount,
+  
+      [parameter(Mandatory=$true,HelpMessage="Name of Lab to create")]
+      [ValidateNotNullOrEmpty()]
+      $LabName
+  
+    )
+  
+    begin {. BeginPreamble}
+    process {
+      try {
+        foreach($la in $LabAccount) {
+            $uri = (ConvertToUri -resource $la) + "/labs/" + $LabName
+
+            InvokeRest -Uri $uri -Method 'Put' -Body (@{
+                location = "West Europe"
+                properties = @{
+                    maxUsersInLab = "5"
+                    usageQuota = "PT1M"
+                    userAccessMode = "Restricted"
+                }
+            } | ConvertTo-Json)
+        }
+      } catch {
+        Write-Error -ErrorRecord $_ -EA $callerEA
+      }
+    }
+    end {}
+  }
