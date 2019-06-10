@@ -207,7 +207,7 @@ function GetHeaderWithAuthToken {
   return $header
 }
 
-$ApiVersion = "?api-version=2018-10-15"
+$ApiVersion = "?api-version=2019-01-01-preview"
 
 function GetLabAccountUri($ResourceGroupName) {
     $subscriptionId = (Get-AzureRmContext).Subscription.Id
@@ -301,8 +301,21 @@ function New-AzLab {
   
       [parameter(Mandatory=$true,HelpMessage="Name of Lab to create")]
       [ValidateNotNullOrEmpty()]
-      $LabName
-  
+      $LabName,
+
+      [parameter(Mandatory=$false,HelpMessage="Maximum number of users in lab (defaults to 5)")]
+      [int]
+      $MaxUsers = 5,
+
+      [parameter(Mandatory=$false,HelpMessage="Quota of hours x users (defaults to 40)")]
+      [int]
+      $UsageQuotaInHours = 40,
+
+      [parameter(Mandatory=$false,HelpMessage="Access mode for the lab (either Restricted or Open)")]
+      [ValidateSet('Restricted', 'Open')]
+      [string]
+      $UserAccessMode = 'Restricted'
+ 
     )
   
     begin {. BeginPreamble}
@@ -312,11 +325,11 @@ function New-AzLab {
             $uri = (ConvertToUri -resource $la) + "/labs/" + $LabName
 
             InvokeRest -Uri $uri -Method 'Put' -Body (@{
-                location = "West Europe"
+                location = $LabAccount.location
                 properties = @{
-                    maxUsersInLab = "5"
-                    usageQuota = "PT1M"
-                    userAccessMode = "Restricted"
+                    maxUsersInLab = $MaxUsers.ToString()
+                    usageQuota = "PT$($UsageQuotaInHours.ToString())H"
+                    userAccessMode = $UserAccessMode
                 }
             } | ConvertTo-Json)
         }
@@ -326,3 +339,7 @@ function New-AzLab {
     }
     end {}
   }
+
+  Export-ModuleMember -Function Get-AzLabAccount,
+                                Get-AzLab,
+                                New-AzLab
