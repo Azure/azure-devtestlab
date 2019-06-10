@@ -226,6 +226,24 @@ function InvokeRest($Uri, $Method, $Body) {
     $result.Content | ConvertFrom-Json
 }
 
+function CheckProvisioning($ResourceToCheck, $delaySec, $retryCount) {
+    $tries = 1;
+    Write-Verbose "$tries : Checking $ResourceToCheck"
+    $id = ConvertToUri -resource $ResourceToCheck
+    $resource = InvokeRest -Uri $id -Method 'Get'
+    while(-not ($resource.properties.provisioningState -eq 'Succeeded')) {
+        Write-Verbose "Retrying $retryCount times every $delaySec."
+        Write-Verbose ("$tries : $id is not Succeeded.")
+        $tries -= 1
+        if($tries -lt 0) {
+            throw ("$retryCount retries of retrieving $id with 'Succeeded' provising state failed")
+        }
+        Start-Sleep -Seconds $delaySec
+        $resource = InvokeRest -Uri $id -Method 'Get'
+    }
+    return $resource
+}
+
 function Get-AzLabAccount {
   [CmdletBinding()]
   param(
@@ -236,7 +254,6 @@ function Get-AzLabAccount {
     [parameter(Mandatory=$false,HelpMessage="Name of Lab Account to retrieve (your can use * and ?)")]
     [ValidateNotNullOrEmpty()]
     $LabAccountName = '*'
-
   )
 
   begin {. BeginPreamble}
@@ -292,6 +309,28 @@ function Get-AzLab {
   end {}
 }
 
+function Remove-AzLab {
+    [CmdletBinding()]
+    param(
+      [parameter(Mandatory=$true,HelpMessage="Lab Account to get labs from", ValueFromPipeline=$true)]
+      [ValidateNotNullOrEmpty()]
+      $Lab 
+    )
+  
+    begin {. BeginPreamble}
+    process {
+      try {
+        foreach($l in $Lab) {
+          $uri = ConvertToUri -resource $l
+          InvokeRest -Uri $uri -Method 'Delete'
+        }
+      } catch {
+        Write-Error -ErrorRecord $_ -EA $callerEA
+      }
+    }
+    end {}
+  }
+  
 function New-AzLab {
     [CmdletBinding()]
     param(
@@ -324,7 +363,7 @@ function New-AzLab {
         foreach($la in $LabAccount) {
             $uri = (ConvertToUri -resource $la) + "/labs/" + $LabName
 
-            InvokeRest -Uri $uri -Method 'Put' -Body (@{
+            $res = InvokeRest -Uri $uri -Method 'Put' -Body (@{
                 location = $LabAccount.location
                 properties = @{
                     maxUsersInLab = $MaxUsers.ToString()
@@ -332,6 +371,51 @@ function New-AzLab {
                     userAccessMode = $UserAccessMode
                 }
             } | ConvertTo-Json)
+            return CheckProvisioning -ResourceToCheck $res -delaySec 2 -retryCount 30       
+        }
+      } catch {
+        Write-Error -ErrorRecord $_ -EA $callerEA
+      }
+    }
+    end {}
+  }
+
+  function Get-AzLabAccountSharedImage {
+    [CmdletBinding()]
+    param(
+      [parameter(Mandatory=$true,HelpMessage="Lab Account to get shared images from", ValueFromPipeline=$true)]
+      [ValidateNotNullOrEmpty()]
+      $LabAccount 
+    )
+  
+    begin {. BeginPreamble}
+    process {
+      try {
+        foreach($la in $LabAccount) {
+          $uri = (ConvertToUri -resource $la) + "/SharedImages"
+          (InvokeRest -Uri $uri -Method 'Get').Value
+        }
+      } catch {
+        Write-Error -ErrorRecord $_ -EA $callerEA
+      }
+    }
+    end {}
+  }
+
+  function Get-AzLabAccountGalleryImage {
+    [CmdletBinding()]
+    param(
+      [parameter(Mandatory=$true,HelpMessage="Lab Account to get shared images from", ValueFromPipeline=$true)]
+      [ValidateNotNullOrEmpty()]
+      $LabAccount 
+    )
+  
+    begin {. BeginPreamble}
+    process {
+      try {
+        foreach($la in $LabAccount) {
+          $uri = (ConvertToUri -resource $la) + "/GalleryImages"
+          (InvokeRest -Uri $uri -Method 'Get').Value
         }
       } catch {
         Write-Error -ErrorRecord $_ -EA $callerEA
@@ -342,4 +426,7 @@ function New-AzLab {
 
   Export-ModuleMember -Function Get-AzLabAccount,
                                 Get-AzLab,
-                                New-AzLab
+                                New-AzLab,
+                                Get-AzLabAccountSharedImage,
+                                Get-AzLabAccountGalleryImage,
+                                Remove-AzLab
