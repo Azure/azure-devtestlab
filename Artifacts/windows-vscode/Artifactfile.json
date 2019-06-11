@@ -2,15 +2,28 @@
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
     "title": "Visual Studio Code",
     "publisher": "rchaganti",
-    "description": "Installs Visual Studio Code",
+    "description": "Installs the latest stable version of Visual Studio Code",
     "tags": [
-        "Windows",
-        "VSCode",
-        "Visual Studio"
+      "Windows",
+      "VSCode",
+      "Visual Studio"
     ],
     "iconUri": "https://github.com/Azure/azure-devtestlab/raw/master/Artifacts/windows-vscode/vscode.png",
     "targetOsType": "Windows",
+    "parameters": {
+      "Version": {
+        "type": "string",
+        "displayName": "Version",
+        "description": "Version of Visual Studio Code to install. Valid values are 32-bit or 64-bit.",
+        "defaultValue": "32-bit",
+        "allowEmpty": false,
+        "allowedValues": [
+          "32-bit",
+          "64-bit"
+        ]
+      }
+    },
     "runCommand": {
-        "commandToExecute": "powershell.exe -ExecutionPolicy bypass \"& ./install-vscode.ps1\""
+      "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./install-vscode.ps1 -Version ', parameters('Version'), '\"')]"
     }
-}
+  }

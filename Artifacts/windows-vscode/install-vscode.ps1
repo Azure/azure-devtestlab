@@ -1,4 +1,10 @@
-﻿###################################################################################################
+﻿[CmdletBinding()]
+param(
+    [ValidateSet("32-bit","64-bit")] 
+    [string] $Version = '32-bit'
+)
+
+###################################################################################################
 #
 # PowerShell configurations
 #
@@ -49,28 +55,40 @@ Function Get-RedirectedUrl
 {
     [CmdletBinding()]
     Param (
-        [String]$URL
+        [String]$Url
     )
  
-    $request = [System.Net.WebRequest]::Create($url)
-    $request.AllowAutoRedirect=$false
-    $response=$request.GetResponse()
+    $request = [System.Net.WebRequest]::Create($Url)
+    $request.AllowAutoRedirect = $false
+    $response = $request.GetResponse()
  
-    If ($response.StatusCode -eq "Found")
+    If ($response.StatusCode -eq 'Found')
     {
-        return $response.GetResponseHeader("Location")
+        return $response.GetResponseHeader('Location')
     }
+
+    return $Url
 }
 
 function Get-VSCodeSetup
 {
     [CmdletBinding()]
     param(
-        [string] $SetupExe
+        [string] $SetupExe,
+
+        [ValidateSet("32-bit","64-bit")] 
+        [string] $Version
     )
 
-    $fwdUrl = 'http://go.microsoft.com/fwlink/?LinkID=623230'
-    $setupUrl = Get-RedirectedUrl -URL $fwdUrl
+    # Assume 32-bit version.
+    $url = 'http://go.microsoft.com/fwlink/?LinkID=623230'
+    # Change to 64-bit version, if requested.
+    if ($Version -eq '64-bit')
+    {
+        $url = 'https://update.code.visualstudio.com/latest/win32-x64-user/stable'
+    }
+
+    $setupUrl = Get-RedirectedUrl -URL $url
 
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     Invoke-WebRequest -Uri $setupUrl -OutFile $SetupExe
@@ -81,7 +99,7 @@ function Get-VSCodeSetup
 # Main execution block.
 #
 
-Write-Host "Preparing to install the latest Visual Studio Code."
+Write-Host "Preparing to install the latest Visual Studio Code ($Version)."
 $setupExe = Join-Path $PSScriptRoot 'vscodesetup.exe'
 $setupLog = Join-Path $PSScriptRoot 'vscodesetup.log'
 $setupInf = Join-Path $PSScriptRoot 'vscode.inf'
@@ -90,10 +108,10 @@ try
 {
     Push-Location $PSScriptRoot
 
-    Write-Host "Downloading the Visual Studio Setup installer."
-    Get-VSCodeSetup -SetupExe "$setupExe"
+    Write-Host "Downloading the Visual Studio Setup ($Version) installer."
+    Get-VSCodeSetup -SetupExe "$setupExe" -Version "$Version"
 
-    Write-Host "Installing Visual Studio Code."
+    Write-Host "Installing Visual Studio Code ($Version)."
     & "$setupExe" /123 /SP- /SUPPRESSMSGBOXES /VERYSILENT /NORESTART /LOG="$setupLog" /LOADINF="$setupInf" /MERGETASKS="!runcode"
 
     Write-Host "`nThe artifact was applied successfully.`n"
