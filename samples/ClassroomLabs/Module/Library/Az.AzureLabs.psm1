@@ -207,7 +207,7 @@ function GetHeaderWithAuthToken {
   return $header
 }
 
-$ApiVersion = "?api-version=2019-01-01-preview"
+$ApiVersion = "api-version=2019-01-01-preview"
 
 function GetLabAccountUri($ResourceGroupName) {
     $subscriptionId = (Get-AzureRmContext).Subscription.Id
@@ -218,30 +218,53 @@ function ConvertToUri($resource) {
     "https://management.azure.com" + $resource.Id
 }
 
-function InvokeRest($Uri, $Method, $Body) {
+function InvokeRest($Uri, $Method, $Body, $params) {
     $authHeaders = GetHeaderWithAuthToken
-    $fullUri = $Uri + $ApiVersion
+    $fullUri = $Uri + '?' + $ApiVersion
+    if($params) { $fullUri += '&' + $params }
+    
     Write-Verbose "$Method : $fullUri"
     $result = Invoke-WebRequest -Uri $FullUri -Method $Method -Headers $authHeaders -Body $Body -SkipHeaderValidation
     $result.Content | ConvertFrom-Json
 }
 
-function CheckProvisioning($ResourceToCheck, $delaySec, $retryCount) {
-    $tries = 1;
-    Write-Verbose "$tries : Checking $ResourceToCheck"
-    $id = ConvertToUri -resource $ResourceToCheck
-    $resource = InvokeRest -Uri $id -Method 'Get'
-    while(-not ($resource.properties.provisioningState -eq 'Succeeded')) {
-        Write-Verbose "Retrying $retryCount times every $delaySec."
-        Write-Verbose ("$tries : $id is not Succeeded.")
-        $tries -= 1
-        if($tries -lt 0) {
-            throw ("$retryCount retries of retrieving $id with 'Succeeded' provising state failed")
+# The WaitXXX functions differ just for the property and value tested.
+# We could use just one parametrized function instead,but left two for name clarity
+# and to leave open option of having differing algos later on. Or maybe I am just lazy.
+function WaitPublishing($uri, $delaySec, $retryCount, $params) {
+    Write-Verbose "Retrying $retryCount times every $delaySec seconds."
+
+    $tries = 0;
+    $res = InvokeRest -Uri $uri -Method 'Get' -params $params
+
+    while(-not ($res.properties.publishingState -eq 'Published')) {
+        Write-Verbose "$tries : PublishingState = $($res.properties.publishingState)"
+        if(-not ($tries -lt $retryCount)) {
+            throw ("$retryCount retries of retrieving $uri with PublishingState = Published failed")
         }
         Start-Sleep -Seconds $delaySec
-        $resource = InvokeRest -Uri $id -Method 'Get'
+        $res = InvokeRest -Uri $uri -Method 'Get' -params $params
+        $tries += 1
     }
-    return $resource
+    return $res
+}
+
+function WaitProvisioning($uri, $delaySec, $retryCount, $params) {
+    Write-Verbose "Retrying $retryCount times every $delaySec seconds."
+
+    $tries = 0;
+    $res = InvokeRest -Uri $uri -Method 'Get' -params $params
+
+    while(-not ($res.properties.provisioningState -eq 'Succeeded')) {
+        Write-Verbose "$tries : ProvisioningState = $($res.properties.provisioningState)"
+        if(-not ($tries -lt $retryCount)) {
+            throw ("$retryCount retries of retrieving $uri with ProvisioningState = Published failed")
+        }
+        Start-Sleep -Seconds $delaySec
+        $res = InvokeRest -Uri $uri -Method 'Get' -params $params
+        $tries += 1
+    }
+    return $res
 }
 
 function Get-AzLabAccount {
@@ -353,7 +376,12 @@ function New-AzLab {
       [parameter(Mandatory=$false,HelpMessage="Access mode for the lab (either Restricted or Open)")]
       [ValidateSet('Restricted', 'Open')]
       [string]
-      $UserAccessMode = 'Restricted'
+      $UserAccessMode = 'Restricted',
+
+      [parameter(mandatory = $false)]
+      [switch]
+      $SharedPasswordEnabled = $false
+  
  
     )
   
@@ -362,22 +390,161 @@ function New-AzLab {
       try {
         foreach($la in $LabAccount) {
             $uri = (ConvertToUri -resource $la) + "/labs/" + $LabName
+            $sharedPassword = if($SharedPasswordEnabled) {"Enabled"} else {"Disabled"}
 
-            $res = InvokeRest -Uri $uri -Method 'Put' -Body (@{
+            InvokeRest -Uri $uri -Method 'Put' -Body (@{
                 location = $LabAccount.location
                 properties = @{
                     maxUsersInLab = $MaxUsers.ToString()
                     usageQuota = "PT$($UsageQuotaInHours.ToString())H"
                     userAccessMode = $UserAccessMode
+                    sharedPasswordEnabled = $sharedPassword
                 }
-            } | ConvertTo-Json)
-            return CheckProvisioning -ResourceToCheck $res -delaySec 2 -retryCount 30       
+            } | ConvertTo-Json) | Out-Null
+            return WaitProvisioning -uri $uri -delaySec 60 -retryCount 120    
         }
       } catch {
         Write-Error -ErrorRecord $_ -EA $callerEA
       }
     }
     end {}
+  }
+
+  # We need this to refresh a lab, labs are not created in the user subscription, so can't just Get-AzResource on the id
+  function Get-AzLabAgain($lab) {
+    $resourceGroupName = $lab.id.Split('/')[4]
+    $labAccountName = $lab.id.Split('/')[8]
+    $labName = $lab.id.Split('/')[10]
+    $labAccount = Get-AzLabAccount -ResourceGroupName $resourceGroupName -LabAccountName $labAccountName
+    return $labAccount | Get-AzLab -LabName $labName
+  }
+
+  function Get-AzLabTemplateVM {
+    param(
+        [parameter(Mandatory=$true,HelpMessage="Lab to create template VM into", ValueFromPipeline=$true)]
+        [ValidateNotNullOrEmpty()]
+        $Lab
+    )
+
+    $uri = (ConvertToUri -resource $lab) + '/EnvironmentSettings/Default'
+    return InvokeRest -Uri $uri -Method 'Get'
+  }
+
+  function New-AzLabTemplateVM {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPlainTextForPassword", "", Scope="Function")]
+    [CmdletBinding()]
+    param(
+      [parameter(Mandatory=$true,HelpMessage="Lab to create template VM into", ValueFromPipeline=$true)]
+      [ValidateNotNullOrEmpty()]
+      $Lab,
+  
+      [parameter(Mandatory=$true,HelpMessage="Shared Image or Gallery image to use")]
+      [ValidateNotNullOrEmpty()]
+      $Image,
+
+      [parameter(Mandatory=$true,HelpMessage="Size for template VM")]
+      [ValidateSet('Small', 'Medium', 'MediumNested', 'Large', 'GPU')]
+      $Size,
+
+      [parameter(Mandatory=$false,HelpMessage="Quota of hours x users (defaults to 40)")]
+      [String]
+      $Title = "A test title",
+
+      [parameter(Mandatory=$false,HelpMessage="Quota of hours x users (defaults to 40)")]
+      [String]
+      $Description = "Template Description",
+
+      [parameter(Mandatory=$true,HelpMessage="User name if shared password is enabled")]
+      [string]
+      $UserName,
+
+
+      [parameter(Mandatory=$true,HelpMessage="Password if shared password is enabled")]
+      [string]
+      $Password,
+
+      [parameter(mandatory = $false)]
+      [switch]
+      $LinuxRdpEnabled = $false  
+    )
+  
+    begin {. BeginPreamble}
+    process {
+      try {
+        foreach($l in $Lab) {
+
+            $sizesHash = @{
+                'Small'         = 'Basic'
+                'Medium'        = 'Standard'
+                'MediumNested'  = 'Virtualization'
+                'Large'         = 'Performance'
+                'GPU'           = 'GPU'
+            }
+            $sizeJson = $sizesHash[$Size]
+
+            $uri = (ConvertToUri -resource $l) + '/EnvironmentSettings/Default'
+
+            $imageType = if($image.id -match '/galleryimages/') {'galleryImageResourceId'} else {'sharedImageResourceId'}
+
+            if($LinuxRdpEnabled) {$linux = 'Enabled'} else {$linux = 'Disabled'}
+
+            $body = @{
+                location = $l.location
+                properties = @{
+                    title = $title
+                    description = $Description
+                    resourceSettings = @{
+                        $imageType = $image.id
+                        size = $sizeJson
+                        referenceVm = @{
+                            userName = $UserName
+                            password = $Password
+                        }
+                    }
+                    LinuxRdpEnabled = $linux
+                }
+            }
+            $jsonBody = $body | ConvertTo-Json -Depth 10
+            Write-Verbose "BODY: $jsonBody"
+            InvokeRest -Uri $uri -Method 'Put' -Body $jsonBody | Out-Null
+            WaitProvisioning -uri $uri -delaySec 60 -retryCount 120 | Out-Null
+
+            return Get-AzLabAgain -lab $l
+        }
+      } catch {
+        Write-Error -ErrorRecord $_ -EA $callerEA
+      }
+    }
+    end {}
+  }
+
+  function Publish-AzLab {
+    param(
+        [parameter(Mandatory=$true,HelpMessage="Lab to create template VM into", ValueFromPipeline=$true)]
+        [ValidateNotNullOrEmpty()]
+        $Lab
+    )
+    begin {. BeginPreamble}
+    process {
+      try {
+        foreach($l in $Lab) {
+          $uri = (ConvertToUri -resource $Lab) + '/EnvironmentSettings/Default'
+
+          $publishUri = $uri + '/publish'
+          $publishBody = @{useExistingImage = $false} | ConvertTo-Json
+          InvokeRest -Uri $publishUri -Method 'Post' -Body $publishBody | Out-Null
+
+          $uriProv = (ConvertToUri -resource $l) + '/EnvironmentSettings/Default'
+          # As a simple scheme, we check every minute for 1.5 hours
+          WaitPublishing -uri $uriProv -delaySec 60 -retryCount 90 -params '$expand=properties(%24expand%3DresourceSettings(%24expand%3DreferenceVm(%24expand%3DvmStateDetails)))' | Out-Null
+
+          return Get-AzLabAgain -lab $lab
+        }
+      } catch {
+        Write-Error -ErrorRecord $_ -EA $callerEA
+      }
+  }
+  end {}
   }
 
   function Get-AzLabAccountSharedImage {
@@ -393,7 +560,7 @@ function New-AzLab {
       try {
         foreach($la in $LabAccount) {
           $uri = (ConvertToUri -resource $la) + "/SharedImages"
-          (InvokeRest -Uri $uri -Method 'Get').Value
+          (InvokeRest -Uri $uri -Method 'Get').Value | Where-Object {$_.properties.isEnabled}
         }
       } catch {
         Write-Error -ErrorRecord $_ -EA $callerEA
@@ -415,7 +582,7 @@ function New-AzLab {
       try {
         foreach($la in $LabAccount) {
           $uri = (ConvertToUri -resource $la) + "/GalleryImages"
-          (InvokeRest -Uri $uri -Method 'Get').Value
+          (InvokeRest -Uri $uri -Method 'Get').Value | Where-Object {$_.properties.isEnabled}
         }
       } catch {
         Write-Error -ErrorRecord $_ -EA $callerEA
@@ -429,4 +596,7 @@ function New-AzLab {
                                 New-AzLab,
                                 Get-AzLabAccountSharedImage,
                                 Get-AzLabAccountGalleryImage,
-                                Remove-AzLab
+                                Remove-AzLab,
+                                New-AzLabTemplateVM,
+                                Get-AzLabTemplateVM,
+                                Publish-AzLab
