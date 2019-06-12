@@ -258,7 +258,7 @@ function WaitProvisioning($uri, $delaySec, $retryCount, $params) {
     while(-not ($res.properties.provisioningState -eq 'Succeeded')) {
         Write-Verbose "$tries : ProvisioningState = $($res.properties.provisioningState)"
         if(-not ($tries -lt $retryCount)) {
-            throw ("$retryCount retries of retrieving $uri with ProvisioningState = Published failed")
+            throw ("$retryCount retries of retrieving $uri with ProvisioningState = Succeeded failed")
         }
         Start-Sleep -Seconds $delaySec
         $res = InvokeRest -Uri $uri -Method 'Get' -params $params
