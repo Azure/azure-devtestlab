@@ -17,6 +17,7 @@ $lab | Send-AzLabUserInvitationEmail -User $user -InvitationText 'Running tests'
 # How do I register a user to the lab, without him clicking on Register link?
 
 $vm = $lab | Get-AzLabVm -ClaimByUser $user
+$stopped = $lab | GetAzLabVm -Status 'Stopped'
 
 $lab | Remove-AzLabuser -User $user
 

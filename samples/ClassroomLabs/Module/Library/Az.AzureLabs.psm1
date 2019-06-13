@@ -714,9 +714,8 @@ function New-AzLab {
         $ClaimByUser = $null,
 
         [parameter(Mandatory=$false,HelpMessage="State of VM to retrieve")]
-        [ValidateSet()]
+        [ValidateSet('Starting', 'Running', 'Stopping', 'Stopped', 'Failed', 'Restarting', 'ApplyingArtifacts', 'UpgradingVmAgent', 'Creating', 'Deleting', 'Corrupted', 'Any')]
         $Status = 'Any'
-
     )
     begin {. BeginPreamble}
     process {
@@ -729,7 +728,30 @@ function New-AzLab {
             $vms = $vms `
               | Where-Object { ($_.properties.isClaimed -eq $true) -and ($_.properties.claimedByUserPrincipalId -eq $ClaimByUser.name)}
           }
+          if($Status -ne 'Any') {
+            $vms = $vms | Where-Object {(Get-AzLabVmStatus -Vm $_) -eq $Status}  
+          }
           return $vms
+        }
+      } catch {
+        Write-Error -ErrorRecord $_ -EA $callerEA
+      }
+  }
+  end {}
+  }
+
+  function Get-AzLabVmStatus {
+    param(
+        [parameter(Mandatory=$true,HelpMessage="Vm to get status for", ValueFromPipeline=$true)]
+        [ValidateNotNullOrEmpty()]
+        $Vm
+
+    )
+    begin {. BeginPreamble}
+    process {
+      try {
+        foreach($v in $vm) {
+          return $v.properties.lastKnownPowerState
         }
       } catch {
         Write-Error -ErrorRecord $_ -EA $callerEA
@@ -791,4 +813,5 @@ function New-AzLab {
                                 Remove-AzLabUser,
                                 Get-AzLabVm,
                                 Register-AzLabUser,
-                                Send-AzLabUserInvitationEmail
+                                Send-AzLabUserInvitationEmail,
+                                Get-AzLabVmStatus
