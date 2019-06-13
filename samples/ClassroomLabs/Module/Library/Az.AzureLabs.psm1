@@ -540,6 +540,12 @@ function New-AzLab {
           # As a simple scheme, we check every minute for 1.5 hours
           WaitPublishing -uri $uriProv -delaySec 60 -retryCount 90 -params '$expand=properties(%24expand%3DresourceSettings(%24expand%3DreferenceVm(%24expand%3DvmStateDetails)))' | Out-Null
 
+          # We need this so that the lab UI shows the home page instead of the 'Done' button
+          $t = $l | Get-AzLabTemplateVM
+          $t.properties.configurationState = 'Completed'
+          $completedBody = $t | ConvertTo-Json -Depth 20
+          InvokeRest -Uri $uri -Method 'Put' -Body $completedBody | Out-Null
+
           return Get-AzLabAgain -lab $l
         }
       } catch {
