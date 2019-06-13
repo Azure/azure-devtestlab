@@ -12,10 +12,11 @@ $lab = $la `
     | Publish-AzLab `
     | Add-AzLabUser -Emails @('lucabol@microsoft.com')
 
-$user = $lab | Get-AzLabUser | Where-Object {$_.properties.Email -like 'lucabol*'}
-$lab | Remove-AzLabuser -User $user
+$user = $lab | Get-AzLabUser -Email 'lucabol*'
 
-# functions I have not implemented yet to add users, etc ...
+$vm = $lab | Get-AzLabVm -ClaimByUser $user
+
+$lab | Remove-AzLabuser -User $user
 
 $lab | Remove-AzLab
 Remove-Module Az.AzureLabs -Force
