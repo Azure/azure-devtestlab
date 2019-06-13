@@ -20,23 +20,23 @@ Describe  'Lab Creation and Deletion' {
             $labs | Select-Object -Property @{N='Name'; E={$_.ResourceGroupName}}, Location | New-AzureRmResourceGroup -Force | Out-Null
 
             # Create the labs
-            $createdLabs = $labs | New-AzureRmDtlLab
+            $createdLabs = $labs | New-AzDtlLab
 
             # Check the number of labs created
             $createdLabs.Count | Should be 2
 
             # Check that the labs really exist
-            $createdLabs | Get-AzureRmDtlLab | Should not be $null
+            $createdLabs | Get-AzDtlLab | Should not be $null
 
         }
 
         It 'DevTest Labs can be deleted with pipeline' {
 
             # Remove Labs using the Lab Object returned from 'get' commandlet
-            $labs | Get-AzureRmDtlLab | Remove-AzureRmDtlLab
+            $labs | Get-AzDtlLab | Remove-AzDtlLab
 
             # Check that the labs are gone
-            ($labs | Get-AzureRmDtlLab -ErrorAction SilentlyContinue).Count | Should be 0
+            ($labs | Get-AzDtlLab -ErrorAction SilentlyContinue).Count | Should be 0
         }
 
         It 'Cleanup of resources' {
@@ -56,38 +56,38 @@ Describe 'VM Management' {
             $labs | Select-Object -Property @{N='Name'; E={$_.ResourceGroupName}}, Location | New-AzureRmResourceGroup -Force | Out-Null
 
             # Create the labs
-            $createdLabs = $labs | New-AzureRmDtlLab
+            $createdLabs = $labs | New-AzDtlLab
 
             # Create VMs in a lab
-            $createdVMs = $vms| Select-Object -Property @{N='Name'; E={$createdLabs[0].Name}}, @{N='ResourceGroupName'; E={$createdLabs[0].ResourceGroupName}}, VmName,Size,Claimable,Username,Password,OsType,Sku,Publisher,Offer | New-AzureRmDtlVm
+            $createdVMs = $vms| Select-Object -Property @{N='Name'; E={$createdLabs[0].Name}}, @{N='ResourceGroupName'; E={$createdLabs[0].ResourceGroupName}}, VmName,Size,Claimable,Username,Password,OsType,Sku,Publisher,Offer | New-AzDtlVm
 
             $createdVMs.Count | Should be 2
 
-            Get-AzureRmDtlVM -Lab $createdLabs[0]  | Measure-Object | Select-Object -Property Count | Should be 2
+            Get-AzDtlVM -Lab $createdLabs[0]  | Measure-Object | Select-Object -ExpandProperty Count | Should be 2
 
-            Get-AzureRmDtlVM -Lab $createdLabs[1]  | Measure-Object | Select-Object -Property Count | Should be 0
+            Get-AzDtlVM -Lab $createdLabs[1]  | Measure-Object | Select-Object -ExpandProperty Count | Should be 0
 
             # Stop VMs
-            $createdVMs | Stop-AzureRmDtlVM | Measure-Object | Select-Object -Property Count | Should be 2
+            $createdVMs | Stop-AzDtlVM | Measure-Object | Select-Object -ExpandProperty Count | Should be 2
 
             # Start VMs
-            $createdVMs | Start-AzureRMDtlVM | Measure-Object | Select-Object -Property Count | Should be 2
+            $createdVMs | Start-AzDtlVM | Measure-Object | Select-Object -ExpandProperty Count | Should be 2
         
         }
 
         It 'DTL VMs can be deleted with pipeline' {
 
-            $createdLabs | Get-AzureRmDtlVM | Remove-AzureRmDtlVm
+            $createdLabs | Get-AzDtlVM | Remove-AzDtlVm
 
-            $createdLabs | Get-AzureRmDtlVM | Measure-Object | Select-Object -Property Count | Should be 0
+            $createdLabs | Get-AzDtlVM | Measure-Object | Select-Object -ExpandProperty Count | Should be 0
         }
 
         It 'Clean up of resources' {
             # Remove Labs using the Lab Object returned from 'get' commandlet
-            $labs | Get-AzureRmDtlLab | Remove-AzureRmDtlLab
+            $labs | Get-AzDtlLab | Remove-AzDtlLab
 
             # Check that the labs are gone
-            ($labs | Get-AzureRmDtlLab -ErrorAction SilentlyContinue).Count | Should be 0
+            ($labs | Get-AzDtlLab -ErrorAction SilentlyContinue).Count | Should be 0
 
             # Clean up the resource groups since we don't need them
             $labs | Select-Object -Property @{N='Name'; E={$_.ResourceGroupName}}, Location | Remove-AzureRmResourceGroup -Force | Out-Null
