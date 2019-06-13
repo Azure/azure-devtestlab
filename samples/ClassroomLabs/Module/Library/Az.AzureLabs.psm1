@@ -538,7 +538,7 @@ function New-AzLab {
           # As a simple scheme, we check every minute for 1.5 hours
           WaitPublishing -uri $uriProv -delaySec 60 -retryCount 90 -params '$expand=properties(%24expand%3DresourceSettings(%24expand%3DreferenceVm(%24expand%3DvmStateDetails)))' | Out-Null
 
-          return Get-AzLabAgain -lab $lab
+          return Get-AzLabAgain -lab $l
         }
       } catch {
         Write-Error -ErrorRecord $_ -EA $callerEA
@@ -591,6 +591,35 @@ function New-AzLab {
     end {}
   }
 
+  function Add-AzLabUser {
+    param(
+        [parameter(Mandatory=$true,HelpMessage="Lab to add users to", ValueFromPipeline=$true)]
+        [ValidateNotNullOrEmpty()]
+        $Lab,
+
+        [parameter(Mandatory=$true,HelpMessage="Users to add to the lab")]
+        [string[]]
+        $User
+
+    )
+    begin {. BeginPreamble}
+    process {
+      try {
+        foreach($l in $Lab) {
+          $uri = (ConvertToUri -resource $Lab) + '/addUsers'
+
+          $body = @{emailAddresses = $User} | ConvertTo-Json
+          InvokeRest -Uri $uri -Method 'Post' -Body $body | Out-Null
+
+          return Get-AzLabAgain -lab $l
+        }
+      } catch {
+        Write-Error -ErrorRecord $_ -EA $callerEA
+      }
+  }
+  end {}
+  }
+  
   Export-ModuleMember -Function Get-AzLabAccount,
                                 Get-AzLab,
                                 New-AzLab,
@@ -599,4 +628,5 @@ function New-AzLab {
                                 Remove-AzLab,
                                 New-AzLabTemplateVM,
                                 Get-AzLabTemplateVM,
-                                Publish-AzLab
+                                Publish-AzLab,
+                                Add-AzLabUser
