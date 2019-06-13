@@ -1,4 +1,6 @@
-#region COMMON FUNCTIONS
+# TODO: make functions that take a user accept multiple users
+# TODO: think of what should add/set functions return
+
 # We are using strict mode for added safety
 Set-StrictMode -Version Latest
 
@@ -56,7 +58,7 @@ function BeginPreamble {
   $ErrorActionPreference = 'Stop'
 }
 
-#TODO: reduce function below to just get ErrorActionPreference
+# TODO: reduce function below to just get ErrorActionPreference
 # Taken from https://gallery.technet.microsoft.com/scriptcenter/Inherit-Preference-82343b9d
 function Get-CallerPreference
 {
@@ -709,7 +711,11 @@ function New-AzLab {
         $Lab,
 
         [parameter(Mandatory=$false,HelpMessage="User this VM belongs to (you can use *,?, etc...)")]
-        $ClaimByUser = $null
+        $ClaimByUser = $null,
+
+        [parameter(Mandatory=$false,HelpMessage="State of VM to retrieve")]
+        [ValidateSet()]
+        $Status = 'Any'
 
     )
     begin {. BeginPreamble}

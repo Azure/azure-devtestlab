@@ -13,6 +13,8 @@ $lab = $la `
     | Add-AzLabUser -Emails @('lucabol@microsoft.com')
 
 $user = $lab | Get-AzLabUser -Email 'lucabol*'
+$lab | Send-AzLabUserInvitationEmail -User $user -InvitationText 'Running tests'
+# How do I register a user to the lab, without him clicking on Register link?
 
 $vm = $lab | Get-AzLabVm -ClaimByUser $user
 
