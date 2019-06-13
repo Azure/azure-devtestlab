@@ -15,12 +15,13 @@ Set-StrictMode -Version Latest
 $azureRm  = Get-Module -Name "AzureRM" -ListAvailable | Sort-Object Version.Major -Descending | Select-Object -First 1
 $az       = Get-Module -Name "Az.Accounts" -ListAvailable
 $justAz   = $az -and (-not $azureRm)
+$justAzureRm = $azureRm -and (-not $az)
 
 if($azureRm -and $az) {
   Write-Warning "You have both Az and AzureRm module installed. That is not officially supported. For more read here: https://docs.microsoft.com/en-us/powershell/azure/migrate-from-azurerm-to-az"
 }
 
-if($azureRm) {
+if($justAzureRm) {
   if ($azureRm.Version.Major -lt 6) {
     Write-Error "This module does not work correctly with version 5 or lower of AzureRM, please upgrade to a newer version of Azure PowerShell in order to use this module."
   } else {
