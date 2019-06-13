@@ -1,7 +1,7 @@
 ﻿[CmdletBinding()]
 param(
     [ValidateSet("32-bit","64-bit")] 
-    [string] $Version = '32-bit'
+    [string] $Architecture = '32-bit'
 )
 
 ###################################################################################################
@@ -77,15 +77,13 @@ function Get-VSCodeSetup
         [string] $SetupExe,
 
         [ValidateSet("32-bit","64-bit")] 
-        [string] $Version
+        [string] $Architecture
     )
 
-    # Assume 32-bit version.
-    $url = 'http://go.microsoft.com/fwlink/?LinkID=623230'
-    # Change to 64-bit version, if requested.
-    if ($Version -eq '64-bit')
+    switch ($Architecture)
     {
-        $url = 'https://update.code.visualstudio.com/latest/win32-x64-user/stable'
+        '32-bit' { $url = 'http://go.microsoft.com/fwlink/?LinkID=623230' }
+        '64-bit' { $url = 'https://update.code.visualstudio.com/latest/win32-x64-user/stable' }
     }
 
     $setupUrl = Get-RedirectedUrl -URL $url
@@ -99,7 +97,7 @@ function Get-VSCodeSetup
 # Main execution block.
 #
 
-Write-Host "Preparing to install the latest Visual Studio Code ($Version)."
+Write-Host "Preparing to install the latest version of Visual Studio Code ($Architecture)."
 $setupExe = Join-Path $PSScriptRoot 'vscodesetup.exe'
 $setupLog = Join-Path $PSScriptRoot 'vscodesetup.log'
 $setupInf = Join-Path $PSScriptRoot 'vscode.inf'
@@ -108,10 +106,10 @@ try
 {
     Push-Location $PSScriptRoot
 
-    Write-Host "Downloading the Visual Studio Setup ($Version) installer."
-    Get-VSCodeSetup -SetupExe "$setupExe" -Version "$Version"
+    Write-Host "Downloading Visual Studio Code ($Architecture) installer."
+    Get-VSCodeSetup -SetupExe "$setupExe" -Architecture "$Architecture"
 
-    Write-Host "Installing Visual Studio Code ($Version)."
+    Write-Host "Installing Visual Studio Code ($Architecture)."
     & "$setupExe" /123 /SP- /SUPPRESSMSGBOXES /VERYSILENT /NORESTART /LOG="$setupLog" /LOADINF="$setupInf" /MERGETASKS="!runcode"
 
     Write-Host "`nThe artifact was applied successfully.`n"
