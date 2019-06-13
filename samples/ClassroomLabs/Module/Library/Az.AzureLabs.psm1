@@ -672,6 +672,36 @@ function New-AzLab {
   end {}
   }
 
+  function Register-AzLabUser {
+    param(
+        [parameter(Mandatory=$true,HelpMessage="Lab to remove users from", ValueFromPipeline=$true)]
+        [ValidateNotNullOrEmpty()]
+        $Lab,
+
+        [parameter(Mandatory=$true,HelpMessage="User to remove")]
+        [ValidateNotNullOrEmpty()]
+        $User
+       
+    )
+    begin {. BeginPreamble}
+    process {
+      try {
+        foreach($l in $Lab) {
+          $userName = $User.name
+          $invitationCode = $lab.properties.invitationCode
+          $body = @{registrationCode = $invitationCode} | ConvertTo-Json
+
+          $uri = "https://management.azure.com/providers/Microsoft.LabServices/users/$userName/register"
+
+          return InvokeRest -Uri $uri -Method 'Post' -Body $body
+        }
+      } catch {
+        Write-Error -ErrorRecord $_ -EA $callerEA
+      }
+  }
+  end {}
+  }
+
   function Get-AzLabVm {
     param(
         [parameter(Mandatory=$true,HelpMessage="Lab to get VMs from", ValueFromPipeline=$true)]
@@ -702,6 +732,45 @@ function New-AzLab {
   end {}
   }
 
+  function Send-AzLabUserInvitationEmail {
+    param(
+        [parameter(Mandatory=$true,HelpMessage="Lab to invite user to", ValueFromPipeline=$true)]
+        [ValidateNotNullOrEmpty()]
+        $Lab,
+
+        [parameter(Mandatory=$true,HelpMessage="User to invite")]
+        [ValidateNotNullOrEmpty()]
+        $User,
+
+        [parameter(Mandatory=$false,HelpMessage="Text of invitation")]
+        [ValidateNotNullOrEmpty()]
+        $InvitationText = "You have been invited to an Azure Lab Services lab!"
+    )
+    begin {. BeginPreamble}
+    process {
+      try {
+        foreach($l in $Lab) {
+          $body = @{
+            emailAddresses = @($User.properties.email)
+            extraMessage = $InvitationText
+          } | ConvertTo-Json
+
+          $uri = (ConvertToUri -resource $l) + '/sendEmail'
+
+          InvokeRest -Uri $uri -Method 'Post' -Body $body | Out-Null
+
+          # We could check the status of the email with $user.properties.registrationLinkEmail = 'sent'
+          # But why bother? As email is by its nature asynchronous ...
+          return Get-AzLabAgain -lab $l
+        }
+      } catch {
+        Write-Error -ErrorRecord $_ -EA $callerEA
+      }
+  }
+  end {}
+  }
+
+
   Export-ModuleMember -Function Get-AzLabAccount,
                                 Get-AzLab,
                                 New-AzLab,
@@ -714,4 +783,6 @@ function New-AzLab {
                                 Add-AzLabUser,
                                 Get-AzLabUser,
                                 Remove-AzLabUser,
-                                Get-AzLabVm                                
+                                Get-AzLabVm,
+                                Register-AzLabUser,
+                                Send-AzLabUserInvitationEmail
