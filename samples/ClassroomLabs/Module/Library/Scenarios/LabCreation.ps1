@@ -9,7 +9,11 @@ $gim = ($la | Get-AzLabAccountGalleryImage)[0] # Pick the first image, also have
 $lab = $la `
     | New-AzLab -LabName GalleryLab4 -MaxUsers 2 -UsageQuotaInHours 31 -UserAccessMode Restricted -SharedPasswordEnabled `
     | New-AzLabTemplateVM -Image $gim -Size Medium -Title "New Gallery" -Description "New Description" -UserName test0000 -Password Test00000000 `
-    | Publish-AzLab
+    | Publish-AzLab `
+    | Add-AzLabUser -Emails @('lucabol@microsoft.com')
+
+$user = $lab | Get-AzLabUser | Where-Object {$_.properties.Email -like 'lucabol*'}
+$lab | Remove-AzLabuser -User $user
 
 # functions I have not implemented yet to add users, etc ...
 

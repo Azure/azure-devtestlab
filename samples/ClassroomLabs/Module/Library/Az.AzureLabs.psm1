@@ -599,7 +599,7 @@ function New-AzLab {
 
         [parameter(Mandatory=$true,HelpMessage="Users to add to the lab")]
         [string[]]
-        $User
+        $Emails
 
     )
     begin {. BeginPreamble}
@@ -608,7 +608,7 @@ function New-AzLab {
         foreach($l in $Lab) {
           $uri = (ConvertToUri -resource $Lab) + '/addUsers'
 
-          $body = @{emailAddresses = $User} | ConvertTo-Json
+          $body = @{emailAddresses = $Emails} | ConvertTo-Json
           InvokeRest -Uri $uri -Method 'Post' -Body $body | Out-Null
 
           return Get-AzLabAgain -lab $l
@@ -632,7 +632,7 @@ function New-AzLab {
         foreach($l in $Lab) {
           $uri = (ConvertToUri -resource $Lab) + '/users'
 
-          return InvokeRest -Uri $uri -Method 'Get'
+          return (InvokeRest -Uri $uri -Method 'Get').Value
         }
       } catch {
         Write-Error -ErrorRecord $_ -EA $callerEA
