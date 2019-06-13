@@ -624,7 +624,11 @@ function New-AzLab {
     param(
         [parameter(Mandatory=$true,HelpMessage="Lab to get users from", ValueFromPipeline=$true)]
         [ValidateNotNullOrEmpty()]
-        $Lab
+        $Lab,
+
+        [parameter(Mandatory=$false,HelpMessage="Email to match users to (you can use '*', '?', etc...)")]
+        [ValidateNotNullOrEmpty()]
+        $Email = '*'       
     )
     begin {. BeginPreamble}
     process {
@@ -632,7 +636,7 @@ function New-AzLab {
         foreach($l in $Lab) {
           $uri = (ConvertToUri -resource $Lab) + '/users'
 
-          return (InvokeRest -Uri $uri -Method 'Get').Value
+          return (InvokeRest -Uri $uri -Method 'Get').Value | Where-Object {$_.properties.email -like $Email}
         }
       } catch {
         Write-Error -ErrorRecord $_ -EA $callerEA
@@ -668,6 +672,36 @@ function New-AzLab {
   end {}
   }
 
+  function Get-AzLabVm {
+    param(
+        [parameter(Mandatory=$true,HelpMessage="Lab to get VMs from", ValueFromPipeline=$true)]
+        [ValidateNotNullOrEmpty()]
+        $Lab,
+
+        [parameter(Mandatory=$false,HelpMessage="User this VM belongs to (you can use *,?, etc...)")]
+        $ClaimByUser = $null
+
+    )
+    begin {. BeginPreamble}
+    process {
+      try {
+        foreach($l in $Lab) {
+          $uri = (ConvertToUri -resource $Lab) + '/environmentsettings/Default/environments'
+
+          $vms = (InvokeRest -Uri $uri -Method 'Get').Value
+          if($ClaimByUser) {
+            $vms = $vms `
+              | Where-Object { ($_.properties.isClaimed -eq $true) -and ($_.properties.claimedByUserPrincipalId -eq $ClaimByUser.name)}
+          }
+          return $vms
+        }
+      } catch {
+        Write-Error -ErrorRecord $_ -EA $callerEA
+      }
+  }
+  end {}
+  }
+
   Export-ModuleMember -Function Get-AzLabAccount,
                                 Get-AzLab,
                                 New-AzLab,
@@ -679,4 +713,5 @@ function New-AzLab {
                                 Publish-AzLab,
                                 Add-AzLabUser,
                                 Get-AzLabUser,
-                                Remove-AzLabUser
+                                Remove-AzLabUser,
+                                Get-AzLabVm                                
