@@ -619,7 +619,55 @@ function New-AzLab {
   }
   end {}
   }
-  
+
+  function Get-AzLabUser {
+    param(
+        [parameter(Mandatory=$true,HelpMessage="Lab to get users from", ValueFromPipeline=$true)]
+        [ValidateNotNullOrEmpty()]
+        $Lab
+    )
+    begin {. BeginPreamble}
+    process {
+      try {
+        foreach($l in $Lab) {
+          $uri = (ConvertToUri -resource $Lab) + '/users'
+
+          return InvokeRest -Uri $uri -Method 'Get'
+        }
+      } catch {
+        Write-Error -ErrorRecord $_ -EA $callerEA
+      }
+  }
+  end {}
+  }
+
+  function Remove-AzLabUser {
+    param(
+        [parameter(Mandatory=$true,HelpMessage="Lab to remove users from", ValueFromPipeline=$true)]
+        [ValidateNotNullOrEmpty()]
+        $Lab,
+
+        [parameter(Mandatory=$true,HelpMessage="User to remove")]
+        [ValidateNotNullOrEmpty()]
+        $User
+       
+    )
+    begin {. BeginPreamble}
+    process {
+      try {
+        foreach($l in $Lab) {
+          $userName = $User.name
+          $uri = (ConvertToUri -resource $Lab) + '/users/' + $userName
+
+          return InvokeRest -Uri $uri -Method 'Delete'
+        }
+      } catch {
+        Write-Error -ErrorRecord $_ -EA $callerEA
+      }
+  }
+  end {}
+  }
+
   Export-ModuleMember -Function Get-AzLabAccount,
                                 Get-AzLab,
                                 New-AzLab,
@@ -629,4 +677,6 @@ function New-AzLab {
                                 New-AzLabTemplateVM,
                                 Get-AzLabTemplateVM,
                                 Publish-AzLab,
-                                Add-AzLabUser
+                                Add-AzLabUser,
+                                Get-AzLabUser,
+                                Remove-AzLabUser
