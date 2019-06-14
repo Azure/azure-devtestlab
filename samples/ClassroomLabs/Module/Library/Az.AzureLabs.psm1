@@ -179,6 +179,44 @@ function Get-CallerPreference
 
 } # function Get-CallerPreference
 
+function PrintHashtable {
+  param($hash)
+
+  return ($hash.Keys | ForEach-Object { "$_ $($hash[$_])" }) -join "|"
+}
+
+# Taken from https://gallery.technet.microsoft.com/scriptcenter/ConvertFrom-ISO8601Duration-704763e0
+function ConvertFrom-ISO8601Duration {
+    
+  [CmdletBinding(SupportsShouldProcess=$false)]
+  [OutputType([System.TimeSpan])]
+
+  param(
+      [Parameter(ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true, Mandatory=$true)]
+      [Alias('ISO8601', 'String')]
+      [string]$Duration
+  )
+
+  $pattern = '^P?T?((?<Years>\d+)Y)?((?<Months>\d+)M)?((?<Weeks>\d+)W)?((?<Days>\d+)D)?(T((?<Hours>\d+)H)?((?<Minutes>\d+)M)?((?<Seconds>\d*(\.)?\d*)S)?)$'
+
+  if($Duration -match $pattern) {
+      Set-StrictMode -Off
+      $dt = [datetime]::MinValue
+      Write-Verbose (PrintHashtable -hash $Matches)
+
+      if ($Matches.Seconds) { $dt = $dt.AddSeconds($Matches.Seconds) }
+      if ($Matches.Minutes) { $dt = $dt.AddMinutes($Matches.Minutes) }
+      if ($Matches.Hours)   { $dt = $dt.AddHours($Matches.Hours) }
+      if ($Matches.Days)    { $dt = $dt.AddDays($Matches.Days) }
+      if ($Matches.Weeks)   { $dt = $dt.AddDays(7*$Matches.Weeks) }
+      if ($Matches.Months)  { $dt = $dt.AddMonths($Matches.Months) }
+      if ($Matches.Years)   { $dt = $dt.AddYears($Matches.Years) }
+      $dt - [datetime]::MinValue
+  } else {
+      Write-Warning 'The provided string does not match the ISO 8601 duration format'
+  }
+}
+
 function Get-AzureRmCachedAccessToken()
 {
   $ErrorActionPreference = 'Stop'
@@ -382,9 +420,7 @@ function New-AzLab {
 
       [parameter(mandatory = $false)]
       [switch]
-      $SharedPasswordEnabled = $false
-  
- 
+      $SharedPasswordEnabled = $false 
     )
   
     begin {. BeginPreamble}
@@ -411,6 +447,57 @@ function New-AzLab {
     }
     end {}
   }
+
+  function Set-AzLab {
+    [CmdletBinding()]
+    param(
+      [parameter(Mandatory=$true,HelpMessage="Lab Account to create lab into", ValueFromPipeline=$true)]
+      [ValidateNotNullOrEmpty()]
+      $Lab,
+
+      [parameter(Mandatory=$false,HelpMessage="Maximum number of users in lab (defaults to 5)")]
+      [int]
+      $MaxUsers = 5,
+
+      [parameter(Mandatory=$false,HelpMessage="Quota of hours x users (defaults to 40)")]
+      [int]
+      $UsageQuotaInHours = 40,
+
+      [parameter(Mandatory=$false,HelpMessage="Access mode for the lab (either Restricted or Open)")]
+      [ValidateSet('Restricted', 'Open')]
+      [string]
+      $UserAccessMode = 'Restricted',
+
+      [parameter(mandatory = $false)]
+      [switch]
+      $SharedPasswordEnabled = $false 
+    )
+  
+    begin {. BeginPreamble}
+    process {
+      try {
+        foreach($l in $Lab) {
+            $ResourceGroupName  = $l.id.split('/')[4]
+            $LabAccountName     = $l.id.split('/')[8]
+            $LabName            = $l.Name
+            $LabAccount         = Get-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName
+
+            $dateTime = ConvertFrom-ISO8601Duration -Duration $l.properties.usageQuota
+            Write-Verbose($dateTime)
+
+            $mu = if($PSBoundParameters.ContainsKey('MaxUsers')) {$MaxUsers} else {$l.properties.maxUsersInLab}
+            $uq = if($PSBoundParameters.ContainsKey('UsageQuotaInHours')) {$UsageQuotaInHours} else {$dateTime.TotalHours}
+            $ua = if($PSBoundParameters.ContainsKey('UserAccessMode')) {$UserAccessMode} else {$l.properties.userAccessMode}
+            $sp = if($PSBoundParameters.ContainsKey('SharedPasswordEnabled')) {$SharedPasswordEnabled} else {$l.properties.sharedPasswordEnabled -eq 'Enabled'}
+           
+            return New-AzLab -LabAccount $LabAccount -LabName $LabName -MaxUsers $mu -UsageQuotaInHours $uq -UserAccessMode $ua -SharedPasswordEnabled:$sp
+        }
+      } catch {
+        Write-Error -ErrorRecord $_ -EA $callerEA
+      }
+    }
+    end {}
+  } 
 
   # We need this to refresh a lab, labs are not created in the user subscription, so can't just Get-AzResource on the id
   function Get-AzLabAgain($lab) {
@@ -820,4 +907,5 @@ function New-AzLab {
                                 Get-AzLabVm,
                                 Register-AzLabUser,
                                 Send-AzLabUserInvitationEmail,
-                                Get-AzLabVmStatus
+                                Get-AzLabVmStatus,
+                                Set-AzLab

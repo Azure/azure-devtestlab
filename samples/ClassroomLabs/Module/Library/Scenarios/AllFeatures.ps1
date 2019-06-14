@@ -10,7 +10,8 @@ $lab = $la `
     | New-AzLab -LabName GalleryLab4 -MaxUsers 2 -UsageQuotaInHours 31 -UserAccessMode Restricted -SharedPasswordEnabled `
     | New-AzLabTemplateVM -Image $gim -Size Medium -Title "New Gallery" -Description "New Description" -UserName test0000 -Password Test00000000 `
     | Publish-AzLab `
-    | Add-AzLabUser -Emails @('lucabol@microsoft.com')
+    | Add-AzLabUser -Emails @('lucabol@microsoft.com') `
+    | Set-AzLab -MaxUsers 3 -UsageQuotaInHours 20
 
 $user = $lab | Get-AzLabUser -Email 'lucabol*'
 $lab | Send-AzLabUserInvitationEmail -User $user -InvitationText 'Running tests'
