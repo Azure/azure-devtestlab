@@ -31,7 +31,7 @@ if($justAzureRm) {
   }
 }
 
-if($justAz -or ($az -and ($azureRm.Version.Major -lt 6)) {
+if($justAz -or ($az -and ($azureRm.Version.Major -lt 6))) {
   Enable-AzureRmAlias -Scope Local -Verbose:$false
 }
 
