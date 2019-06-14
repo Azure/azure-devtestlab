@@ -893,7 +893,7 @@ function New-AzLab {
 
   function Get-AzLabSchedule {
     param(
-        [parameter(Mandatory=$true,HelpMessage="Lab to get users from", ValueFromPipeline=$true)]
+        [parameter(Mandatory=$true,HelpMessage="Lab to get users from.", ValueFromPipeline=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab      
     )
@@ -911,6 +911,66 @@ function New-AzLab {
   }
   end {}
   }
+
+  function New-AzLabSchedule {
+    param(
+        [parameter(Mandatory=$true,HelpMessage="Lab to associate the schedule to.", ValueFromPipeline=$true)]
+        [ValidateNotNullOrEmpty()]
+        $Lab,
+
+        [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Frequency of the class (either Weekly or Daily).")]
+        [ValidateSet('Weekly', 'Daily')]
+        [string] $Frequency = 'Weekly',
+
+        [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Start Date for the class.")]
+        [ValidateNotNullOrEmpty()]
+        [string] $FromDate = (Get-Date).ToString(),
+
+        [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="End Date for the class.")]
+        [ValidateNotNullOrEmpty()]
+        [string] $ToDate = (Get-Date).AddMonths(4).ToString(),
+
+        [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="The time (relative to timeZoneId) at which the Lab VMs will be automatically started (E.g. 17:30, 20:00, 09:00).")]
+        [ValidateLength(4,5)]
+        [string] $StartTime = "08:00",
+
+        [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="The time (relative to timeZoneId) at which the Lab VMs will be automatically shutdown (E.g. 17:30, 20:00, 09:00).")]
+        [ValidateLength(4,5)]
+        [string] $EndTime = "10:00",
+    
+        [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="The Windows time zone id associated with labVmStartup (E.g. UTC, Pacific Standard Time, Central Europe Standard Time).")]
+        [ValidateLength(3,40)]
+        [string] $TimeZoneId = "W. Europe Standard Time",
+    
+        [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Days when to start the VM.")]
+        [Array] $WeekDays = @('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'),
+
+        [parameter(Mandatory=$false, HelpMessage="Notes for the class meeting.")]
+        $Notes = ""
+    )
+    begin {. BeginPreamble}
+    process {
+      try {
+        foreach($l in $Lab) {
+          $uri = (ConvertToUri -resource $Lab) + '/environmentsettings/default/schedules'
+
+          # TODO: ask for algo to generate schedule names
+          $name = 'Default_' + (Get-Random -Minimum 10000 -Maximum 99999)
+          $start = [datetime]::Parse($FromDate)
+          $startdt = [datetime]::New($start.)
+
+          $body = @{
+            enableState = 'Enabled'  
+          } | ConvertTo-Json
+          return (InvokeRest -Uri $uri -Method 'Get').Value
+        }
+      } catch {
+        Write-Error -ErrorRecord $_ -EA $callerEA
+      }
+  }
+  end {}
+  }
+
   Export-ModuleMember -Function Get-AzLabAccount,
                                 Get-AzLab,
                                 New-AzLab,
