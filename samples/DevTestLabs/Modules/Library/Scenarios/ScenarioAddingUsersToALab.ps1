@@ -21,7 +21,7 @@ phauge@microsoft.com,  "DevTest Labs User"
 
 $labname = "Test" + (Get-Random)
 
-$lab = Get-AzDtlLab -Name $labname -ResourceGroupName $rgName
+$lab = New-AzDtlLab -Name $labname -ResourceGroupName $rgName
 
 $users `
   | StringToFile `
