@@ -21,6 +21,5 @@ $vm = $lab | Get-AzLabVm -ClaimByUser $user
 $stopped = $lab | GetAzLabVm -Status 'Stopped'
 
 $lab | Remove-AzLabuser -User $user
-
 $lab | Remove-AzLab
 Remove-Module Az.AzureLabs -Force

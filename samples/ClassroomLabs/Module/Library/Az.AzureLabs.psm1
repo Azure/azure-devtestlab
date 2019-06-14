@@ -451,15 +451,15 @@ function New-AzLab {
   function Set-AzLab {
     [CmdletBinding()]
     param(
-      [parameter(Mandatory=$true,HelpMessage="Lab Account to create lab into", ValueFromPipeline=$true)]
+      [parameter(Mandatory=$true,HelpMessage="Lab to set properties for.", ValueFromPipeline=$true)]
       [ValidateNotNullOrEmpty()]
       $Lab,
 
-      [parameter(Mandatory=$false,HelpMessage="Maximum number of users in lab (defaults to 5)")]
+      [parameter(Mandatory=$false,HelpMessage="Maximum number of users in lab.")]
       [int]
       $MaxUsers = 5,
 
-      [parameter(Mandatory=$false,HelpMessage="Quota of hours x users (defaults to 40)")]
+      [parameter(Mandatory=$false,HelpMessage="Quota of hours x users.")]
       [int]
       $UsageQuotaInHours = 40,
 
@@ -891,7 +891,26 @@ function New-AzLab {
   end {}
   }
 
+  function Get-AzLabSchedule {
+    param(
+        [parameter(Mandatory=$true,HelpMessage="Lab to get users from", ValueFromPipeline=$true)]
+        [ValidateNotNullOrEmpty()]
+        $Lab      
+    )
+    begin {. BeginPreamble}
+    process {
+      try {
+        foreach($l in $Lab) {
+          $uri = (ConvertToUri -resource $Lab) + '/environmentsettings/default/schedules'
 
+          return (InvokeRest -Uri $uri -Method 'Get').Value
+        }
+      } catch {
+        Write-Error -ErrorRecord $_ -EA $callerEA
+      }
+  }
+  end {}
+  }
   Export-ModuleMember -Function Get-AzLabAccount,
                                 Get-AzLab,
                                 New-AzLab,
@@ -908,4 +927,5 @@ function New-AzLab {
                                 Register-AzLabUser,
                                 Send-AzLabUserInvitationEmail,
                                 Get-AzLabVmStatus,
-                                Set-AzLab
+                                Set-AzLab,
+                                Get-AzLabSchedule
