@@ -5,7 +5,7 @@ Az.DevTestLabs is a PowerShell module to simplify the management of [Azure DevTe
 Here is an example that showcases using the library to start all the VMs in all the labs whose name start with the prefix "Test".
 
 ```powershell
-Dtl-GetLab -name Test* | Dtl-GetVm | Dtl-StartVm
+Get-AzDtlLab -name Test* | Get-AzDtlVm | Start-AzDtlVm
 ```
 
 And [here](HowTo.md) is a step by step tutorial.
@@ -23,7 +23,7 @@ Import-Module .\Az.DevTestLabs2.psm1
 4. Start hacking !! (i.e. List all the labs in your subscription)
 
 ```powershell
-Dtl-GetLab
+Get-AzDtlLab
 ```
 
 ## Examples
