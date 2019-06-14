@@ -21,14 +21,14 @@ phauge@microsoft.com,  "DevTest Labs User"
 
 $labname = "Test" + (Get-Random)
 
-$lab = Dtl-NewLab -Name $labname -ResourceGroupName $rgName
+$lab = Get-AzDtlLab -Name $labname -ResourceGroupName $rgName
 
 $users `
   | StringToFile `
   | Import-Csv `
-  | Dtl-AddUser -Lab $lab
+  | Add-AzDtlLabUser -Lab $lab
 
-$lab | Dtl-RemoveLab
+$lab | Remove-AzDtlLab
 Remove-AzureRmResourceGroup -Name $rgName -Force | Out-Null
 
 Remove-Module Az.DevTestLabs2 -Force

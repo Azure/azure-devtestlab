@@ -28,20 +28,20 @@ $lab2, $rgName, Vm2, Standard_A4_v2, bob, aPassword341341, Windows, 2012-R2-Data
 $labs = $vms `
   | StringToFile `
   | Import-Csv `
-  | Dtl-NewLab -AsJob `
+  | New-AzDtlLab -AsJob `
   | Receive-Job -Wait
 
 # Create vms
 $vms `
   | StringToFile `
   | Import-Csv `
-  | Dtl-NewVm -AsJob `
+  | New-AzDtlVm -AsJob `
   | Receive-Job -Wait `
-  | Dtl-StartVm `
-  | Dtl-StopVm `
-  | Dtl-RemoveVm
+  | Start-AzDtlVm `
+  | Stop-AzDtlVm `
+  | Remove-AzDtlVm
 
-$labs | dtl-getlab | dtl-RemoveLab
+$labs | Get-AzDtlLab | Remove-AzDtlLab
 Remove-AzureRmResourceGroup -Name $rgName -Force | Out-Null
 
 Remove-Module Az.DevTestLabs2 -Force

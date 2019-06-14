@@ -24,18 +24,18 @@ Vm2, Standard_A4_v2, bob, aPassword341341, Windows, 2012-R2-Datacenter, Microsof
 
 $labname = "Test" + (Get-Random)
 
-$lab = Dtl-NewLab -Name $labname -ResourceGroupName $rgName -AsJob | Receive-Job -Wait
+$lab = New-AzDtlLab -Name $labname -ResourceGroupName $rgName -AsJob | Receive-Job -Wait
 
 $vms `
   | StringToFile `
   | Import-Csv `
-  | Dtl-NewVm -Lab $lab -AsJob `
+  | New-AzDtlVm -Lab $lab -AsJob `
   | Receive-Job -Wait `
-  | Dtl-StartVm `
-  | Dtl-StopVm `
-  | Dtl-RemoveVm
+  | Start-AzDtlVm `
+  | Stop-AzDtlVm `
+  | Remove-AzDtlVm
 
-$lab | dtl-getlab | dtl-RemoveLab
+$lab | Get-AzDtlLab | Remove-AzDtlLab
 Remove-AzureRmResourceGroup -Name $rgName -Force | Out-Null
 
 Remove-Module Az.DevTestLabs2 -Force
