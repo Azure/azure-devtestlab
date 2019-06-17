@@ -10,20 +10,7 @@
   ],
   "iconUri": "https://github.com/Azure/azure-devtestlab/raw/master/Artifacts/windows-vscode/vscode.png",
   "targetOsType": "Windows",
-  "parameters": {
-    "Architecture": {
-      "type": "string",
-      "displayName": "Architecture",
-      "description": "Architecture of Visual Studio Code to install. Valid values are 32-bit or 64-bit. Defaults to 32-bit for backward compatibility.",
-      "defaultValue": "32-bit",
-      "allowEmpty": false,
-      "allowedValues": [
-        "32-bit",
-        "64-bit"
-      ]
-    }
-  },
   "runCommand": {
-    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./install-vscode.ps1 -Architecture ', parameters('Architecture'), '\"')]"
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./install-vscode.ps1\"')]"
   }
 }
