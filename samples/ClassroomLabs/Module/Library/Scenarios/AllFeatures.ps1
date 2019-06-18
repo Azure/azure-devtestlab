@@ -7,7 +7,7 @@ $la  = Get-AzLabAccount -LabAccountName Hogwarts
 $gim = ($la | Get-AzLabAccountGalleryImage)[0] # Pick the first image, also have a Get-AzLabAccountSharedImage
 
 $lab = $la `
-    | New-AzLab -LabName GalleryLab4 -MaxUsers 2 -UsageQuotaInHours 31 -UserAccessMode Restricted -SharedPasswordEnabled `
+    | New-AzLab -LabName GalleryLab5 -MaxUsers 2 -UsageQuotaInHours 31 -UserAccessMode Restricted -SharedPasswordEnabled `
     | New-AzLabTemplateVM -Image $gim -Size Medium -Title "New Gallery" -Description "New Description" -UserName test0000 -Password Test00000000 `
     | Publish-AzLab `
     | Add-AzLabUser -Emails @('lucabol@microsoft.com') `
@@ -18,7 +18,17 @@ $lab | Send-AzLabUserInvitationEmail -User $user -InvitationText 'Running tests'
 # How do I register a user to the lab, without him clicking on Register link?
 
 $vm = $lab | Get-AzLabVm -ClaimByUser $user
-$stopped = $lab | GetAzLabVm -Status 'Stopped'
+
+$stopped = $lab | Get-AzLabVm -Status 'Stopped'
+if($stopped -ne 2) { throw 'There should be 2 VMs in the lab.'}
+
+$today  = (Get-Date).ToString()
+$end    = (Get-Date).AddMonths(4).ToString()
+
+$lab `
+    | New-AzLabSchedule -Frequency Weekly -FromDate $today -ToDate $end -StartTime '10:00' -EndTime '11:00' -Notes 'A clarroom note.' `
+    | Get-AzLabSchedule `
+    | Remove-AzLabSchedule
 
 $lab | Remove-AzLabuser -User $user
 $lab | Remove-AzLab

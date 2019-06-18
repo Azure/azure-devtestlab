@@ -1,5 +1,5 @@
 # TODO: make functions that take a user accept multiple users
-# TODO: think of what should add/set functions return
+# TODO: think of what should add/set/remove functions return
 
 # We are using strict mode for added safety
 Set-StrictMode -Version Latest
@@ -912,6 +912,27 @@ function New-AzLab {
   end {}
   }
 
+  function Remove-AzLabSchedule {
+    param(
+        [parameter(Mandatory=$true,HelpMessage="Schedule to remove", ValueFromPipeline=$true)]
+        [ValidateNotNullOrEmpty()]
+        $Schedule
+    )
+    begin {. BeginPreamble}
+    process {
+      try {
+        foreach($s in $Schedule) {
+          $uri = ConvertToUri -resource $s
+
+          return InvokeRest -Uri $uri -Method 'Delete'
+        }
+      } catch {
+        Write-Error -ErrorRecord $_ -EA $callerEA
+      }
+  }
+  end {}
+  }
+
   function New-AzLabSchedule {
     param(
         [parameter(Mandatory=$true,HelpMessage="Lab to associate the schedule to.", ValueFromPipeline=$true)]
@@ -919,7 +940,7 @@ function New-AzLab {
         $Lab,
 
         [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Frequency of the class (either Weekly or Daily).")]
-        [ValidateSet('Weekly', 'Daily')]
+        [ValidateSet('Once', 'Weekly')]
         [string] $Frequency = 'Weekly',
 
         [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Start Date for the class.")]
@@ -952,17 +973,75 @@ function New-AzLab {
     process {
       try {
         foreach($l in $Lab) {
-          $uri = (ConvertToUri -resource $Lab) + '/environmentsettings/default/schedules'
-
           # TODO: ask for algo to generate schedule names
           $name = 'Default_' + (Get-Random -Minimum 10000 -Maximum 99999)
-          $start = [datetime]::Parse($FromDate)
-          $startdt = [datetime]::New($start.)
 
-          $body = @{
-            enableState = 'Enabled'  
-          } | ConvertTo-Json
-          return (InvokeRest -Uri $uri -Method 'Get').Value
+          $uri  = (ConvertToUri -resource $Lab) + "/environmentsettings/default/schedules/$name"
+
+          $sdate      = [datetime]::Parse($FromDate)
+          $stime      = [datetime]::Parse($StartTime)
+          $startd     = [datetime]::New($sdate.Year, $sdate.Month, $sdate.Day, $stime.Hour, $stime.Minute, 0)
+          $fullStart  = $startd.ToString('o')
+
+          
+          $etime      = [datetime]::Parse($EndTime)
+          $endd       = [datetime]::New($sdate.Year, $sdate.Month, $sdate.Day, $etime.Hour, $etime.Minute, 0)
+          $fullEnd    = $endd.ToString('o')
+
+          $edate      = [datetime]::Parse($ToDate)
+          $duntil     = [datetime]::New($edate.Year, $edate.Month, $edate.Day, $stime.Hour, $stime.Minute, 0)
+          $fullUntil  = $duntil.ToString('o')
+
+          if($Frequency -eq 'Weekly') {
+            $body = @{
+              properties = @{
+                enableState = 'Enabled'
+                start       = $fullStart
+                end         = $fullEnd
+                recurrencePattern = @{
+                  frequency   = $Frequency
+                  weekDays    = $WeekDays
+                  interval    = 1
+                  until       = $fullUntil
+                }
+                timeZoneId  = $TimeZoneId
+
+                startAction = @{
+                  enableState = "Enabled"
+                  actionType  = "Start"
+                }
+                endAction = @{
+                  enableState = "Enabled"
+                  actionType  = "Stop"
+                }
+                notes = $Notes
+              }
+            } | ConvertTo-Json -depth 10
+          } else {
+            # TODO: Once is weird. Could check parameters more instead of just plucking the ones I need
+            $body = @{
+              properties = @{
+                enableState = 'Enabled'
+                start       = $fullStart
+                end         = $fullEnd
+                timeZoneId  = $TimeZoneId
+                startAction = @{
+                  enableState = "Enabled"
+                  actionType  = "Start"
+                }
+                endAction = @{
+                  enableState = "Enabled"
+                  actionType  = "Stop"
+                }
+                notes = $Notes
+              }
+            } | ConvertTo-Json -depth 10
+          }
+
+          Write-Verbose $body
+
+          InvokeRest -Uri $uri -Method 'Put' -Body $body | Out-Null
+          return $l
         }
       } catch {
         Write-Error -ErrorRecord $_ -EA $callerEA
@@ -988,4 +1067,6 @@ function New-AzLab {
                                 Send-AzLabUserInvitationEmail,
                                 Get-AzLabVmStatus,
                                 Set-AzLab,
-                                Get-AzLabSchedule
+                                Get-AzLabSchedule,
+                                New-AzLabSchedule,
+                                Remove-AzLabSchedule
