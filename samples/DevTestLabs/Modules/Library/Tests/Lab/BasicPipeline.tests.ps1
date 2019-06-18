@@ -68,18 +68,22 @@ Describe 'VM Management' {
             Get-AzDtlVM -Lab $createdLabs[1]  | Measure-Object | Select-Object -ExpandProperty Count | Should be 0
 
             # Stop VMs
-            $createdVMs | Stop-AzDtlVM | Measure-Object | Select-Object -ExpandProperty Count | Should be 2
+            $createdVMs | Stop-AzDtlVM
+            # confirm they are stopped
+            $createdVMs | Get-AzDtlVmStatus -ExtendedStatus | Where-Object {$_ -eq "Stopped"} | Measure-Object | Select-Object -ExpandProperty Count | Should be 2
 
             # Start VMs
-            $createdVMs | Start-AzDtlVM | Measure-Object | Select-Object -ExpandProperty Count | Should be 2
+            $createdVMs | Start-AzDtlVM
+            # confirm they are started
+            $createdVMs | Get-AzDtlVmStatus -ExtendedStatus | Where-Object {$_ -eq "Running"}| Measure-Object | Select-Object -ExpandProperty Count | Should be 2
         
         }
 
         It 'DTL VMs can be deleted with pipeline' {
 
-            $createdLabs | Get-AzDtlVM | Remove-AzDtlVm
+            $labs | Get-AzDtlVM | Remove-AzDtlVm
 
-            $createdLabs | Get-AzDtlVM | Measure-Object | Select-Object -ExpandProperty Count | Should be 0
+            $labs | Get-AzDtlVM | Measure-Object | Select-Object -ExpandProperty Count | Should be 0
         }
 
         It 'Clean up of resources' {
