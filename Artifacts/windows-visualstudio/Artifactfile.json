@@ -13,6 +13,7 @@
       "type": "string",
       "displayName": "Version",
       "description": "The Visual Studio Version",
+      "defaultValue": "2017",
       "allowedValues": [
         "2015",
         "2017"
@@ -22,6 +23,7 @@
       "type": "string",
       "displayName": "SKU",
       "description": "The Visual Studio SKU to install.",
+      "defaultValue": "Enterprise",
       "allowedValues": [
         "Enterprise",
         "Professional"
@@ -29,14 +31,14 @@
     },
     "installerArgs": {
       "type": "string",
-      "defaultValue": "",
-      "allowEmpty": true,
       "displayName": "Optional args passed to VS installer",
-      "description": "Additional arguments to pass when installing VS."
+      "description": "Additional arguments to pass when installing VS.",
+      "defaultValue": "",
+      "allowEmpty": true
     }
   },
   "runCommand": {
-    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./artifact-main.ps1 -version ''', parameters('version'), ''' -sku ''', parameters('sku'), ''' -installerArgs ', '''', parameters('installerArgs'), '''', '\"')]"
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./artifact.ps1 -version ''', parameters('version'), ''' -sku ''', parameters('sku'), ''' -installerArgs ', '''', parameters('installerArgs'), '''', '\"')]"
   },
   "postDeployActions": [
     {
