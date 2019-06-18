@@ -1,7 +1,7 @@
 Import-Module $PSScriptRoot\..\..\Az.DevTestLabs2.psm1
 
 $lab = @(
-    [pscustomobject]@{Name='DTL-Library-Test1'; ResourceGroupName='DTL-Library-Test1rg'; Location='westus'}
+    [pscustomobject]@{Name='DTL-Library-VmStatusTest1'; ResourceGroupName='DTL-Library-VmStatusTest1rg'; Location='westus'}
 )
 
 $vm = @(
