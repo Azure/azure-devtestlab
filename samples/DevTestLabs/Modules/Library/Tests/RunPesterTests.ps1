@@ -51,8 +51,8 @@ else {
             foreach ($job in $jobs){
                 $result = Receive-Job $job -Wait
 
-                if ($result.Result -ne "Passed") {
-                    Write-Error "Pester returned errors for $($result.Describe) - $($result.Context) - $($result.Name)"
+                if ($result.FailedCount -ne 0) {
+                    Write-Error "Pester returned errors for $($result.TestResult.Describe) - $($result.TestResult.Context)"
                 }
             }
             Remove-Job -Job $jobs
@@ -65,8 +65,8 @@ else {
     else {
 
         $result = Invoke-Pester -Script $TestScripts -PassThru
-        if ($result.Result -ne "Passed") {
-            Write-Error "Pester returned errors"
+        if ($result.FailedCount -ne 0) {
+            Write-Error "Pester returned errors for $($result.TestResult.Describe) - $($result.TestResult.Context)"
         }
     }
 }
