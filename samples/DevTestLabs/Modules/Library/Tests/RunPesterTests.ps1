@@ -20,7 +20,7 @@ if ($pesterModule.Version.Major -lt 4 -or $pesterModule.version.Minor -lt 8) {
 
 $invokePesterScriptBlock = {
     param($testScripts)
-    Write-Host "Invoke-Pester -Script $testScripts -PassThru"
+
     Invoke-Pester -Script $testScripts -PassThru
 }
 
@@ -50,8 +50,9 @@ else {
             Write-Output "Waiting for $($jobs.Count) test runner jobs to complete"
             foreach ($job in $jobs){
                 $result = Receive-Job $job -Wait
-                if ($result -and $result.TestResult) {
-                    Write-Output $result.TestResult
+
+                if ($result.Result -ne "Passed") {
+                    Write-Error "Pester returned errors for $($result.Describe) - $($result.Context) - $($result.Name)"
                 }
             }
             Remove-Job -Job $jobs
@@ -62,8 +63,9 @@ else {
         }
     } 
     else {
-        $result = Invoke-Command -Script $invokePesterScriptBlock -ArgumentList (,$TestScripts)
-        if ($result.FailedCount -ne 0) {
+
+        $result = Invoke-Pester -Script $TestScripts -PassThru
+        if ($result.Result -ne "Passed") {
             Write-Error "Pester returned errors"
         }
     }

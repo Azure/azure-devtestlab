@@ -23,7 +23,7 @@ Describe  'DevTest Lab Users' {
 
         New-AzureRmResourceGroup -Name $rgName -Location 'West Europe' | Out-Null
 
-        $lab = Get-AzDtlLab -Name $labname -ResourceGroupName $rgName
+        $lab = New-AzDtlLab -Name $labname -ResourceGroupName $rgName
 
         $users `
           | StringToFile `
