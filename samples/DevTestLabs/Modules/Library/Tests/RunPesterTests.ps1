@@ -62,7 +62,7 @@ else {
         }
     } 
     else {
-        $result = Invoke-Command -Script $invokePesterScriptBlock -ArgumentList $TestScripts
+        $result = Invoke-Command -Script $invokePesterScriptBlock -ArgumentList (,$TestScripts)
         if ($result.FailedCount -ne 0) {
             Write-Error "Pester returned errors"
         }
