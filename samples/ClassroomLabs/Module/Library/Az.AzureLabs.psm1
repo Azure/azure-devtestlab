@@ -240,14 +240,15 @@ function GetHeaderWithAuthToken {
   Write-Debug $authToken
 
   $header = @{
-      'Content-Type' = 'application\json'
+      'Content-Type' = 'application/json'
       "Authorization" = "Bearer " + $authToken
+      "Accept" = "application/json;odata=fullmetadata"
   }
 
   return $header
 }
 
-$ApiVersion = "api-version=2019-01-01-preview"
+$ApiVersion     = 'api-version=2019-01-01-preview'
 
 function GetLabAccountUri($ResourceGroupName) {
     $subscriptionId = (Get-AzureRmContext).Subscription.Id
@@ -260,10 +261,12 @@ function ConvertToUri($resource) {
 
 function InvokeRest($Uri, $Method, $Body, $params) {
     $authHeaders = GetHeaderWithAuthToken
+
     $fullUri = $Uri + '?' + $ApiVersion
+
     if($params) { $fullUri += '&' + $params }
-    
-    Write-Verbose "$Method : $fullUri"
+
+    if($body) { Write-Verbose $body}    
     $result = Invoke-WebRequest -Uri $FullUri -Method $Method -Headers $authHeaders -Body $Body -SkipHeaderValidation
     $result.Content | ConvertFrom-Json
 }
@@ -305,6 +308,59 @@ function WaitProvisioning($uri, $delaySec, $retryCount, $params) {
         $tries += 1
     }
     return $res
+}
+
+function New-AzLabAccount {
+  [CmdletBinding()]
+  param(
+    [parameter(Mandatory=$true,HelpMessage="Resource Group to contain the lab account", ValueFromPipeline=$true)]
+    [ValidateNotNullOrEmpty()]
+    $ResourceGroupName,
+
+    [parameter(Mandatory=$true,HelpMessage="Name of Lab Account to create")]
+    [ValidateNotNullOrEmpty()]
+    $LabAccountName
+  )
+
+  begin {. BeginPreamble}
+  process {
+    try {
+      foreach($rgName in $ResourceGroupName) {
+        $rg = Get-AzureRmResourceGroup -name $rgName
+        $subscriptionId = (Get-AzureRmContext).Subscription.Id
+        $uri = "https://management.azure.com/subscriptions/$subscriptionId/resourcegroups/$rgName/providers/microsoft.labservices/labaccounts/$LabAccountName"
+        $body = @{
+          location = $rg.Location
+        } | ConvertTo-Json -Depth 10
+        return InvokeRest -Uri $uri -Method "Put" -Body $body
+      }
+    } catch {
+      Write-Error -ErrorRecord $_ -EA $callerEA
+    }
+  }
+  end {}
+}
+
+function Remove-AzLabAccount {
+  [CmdletBinding()]
+  param(
+    [parameter(Mandatory=$true,HelpMessage="Lab Account to Remove.", ValueFromPipeline=$true)]
+    [ValidateNotNullOrEmpty()]
+    $LabAccount
+  )
+
+  begin {. BeginPreamble}
+  process {
+    try {
+      foreach($l in $LabAccount) {
+        $uri = ConvertToUri -resource $l
+        return InvokeRest -Uri $uri -Method 'Delete'
+      }
+    } catch {
+      Write-Error -ErrorRecord $_ -EA $callerEA
+    }
+  }
+  end {}
 }
 
 function Get-AzLabAccount {
@@ -488,7 +544,15 @@ function New-AzLab {
             $mu = if($PSBoundParameters.ContainsKey('MaxUsers')) {$MaxUsers} else {$l.properties.maxUsersInLab}
             $uq = if($PSBoundParameters.ContainsKey('UsageQuotaInHours')) {$UsageQuotaInHours} else {$dateTime.TotalHours}
             $ua = if($PSBoundParameters.ContainsKey('UserAccessMode')) {$UserAccessMode} else {$l.properties.userAccessMode}
-            $sp = if($PSBoundParameters.ContainsKey('SharedPasswordEnabled')) {$SharedPasswordEnabled} else {$l.properties.sharedPasswordEnabled -eq 'Enabled'}
+            $sp = if($PSBoundParameters.ContainsKey('SharedPasswordEnabled')) {
+                $SharedPasswordEnabled
+              } else {
+                if(Get-Member -inputobject $l.properties -name "sharedPasswordEnabled" -Membertype Properties) {
+                  $l.properties.sharedPasswordEnabled -eq 'Enabled'
+                } else {
+                  $false
+                }
+              }
            
             return New-AzLab -LabAccount $LabAccount -LabName $LabName -MaxUsers $mu -UsageQuotaInHours $uq -UserAccessMode $ua -SharedPasswordEnabled:$sp
         }
@@ -1069,4 +1133,6 @@ function New-AzLab {
                                 Set-AzLab,
                                 Get-AzLabSchedule,
                                 New-AzLabSchedule,
-                                Remove-AzLabSchedule
+                                Remove-AzLabSchedule,
+                                New-AzLabAccount,
+                                Remove-AzLabAccount

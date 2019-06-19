@@ -3,11 +3,17 @@ param()
 
 Import-Module ..\Az.AzureLabs.psm1 -Force
 
-$la  = Get-AzLabAccount -LabAccountName Hogwarts
+$acName = "Test" + (Get-Random)
+$labName = "Test" + (Get-Random)
+$rgName = "TeRG" + (Get-Random)
+
+New-AzureRmResourceGroup -Name $rgName -Location 'West Europe' | Out-Null
+
+$la  = New-AzLabAccount -ResourceGroupName $rgName -LabAccountName $acName
 $gim = ($la | Get-AzLabAccountGalleryImage)[0] # Pick the first image, also have a Get-AzLabAccountSharedImage
 
 $lab = $la `
-    | New-AzLab -LabName GalleryLab6 -MaxUsers 2 -UsageQuotaInHours 31 -UserAccessMode Restricted -SharedPasswordEnabled `
+    | New-AzLab -LabName $LabName -MaxUsers 2 -UsageQuotaInHours 31 -UserAccessMode Restricted -SharedPasswordEnabled `
     | New-AzLabTemplateVM -Image $gim -Size Medium -Title "New Gallery" -Description "New Description" -UserName test0000 -Password Test00000000 `
     | Publish-AzLab `
     | Add-AzLabUser -Emails @('lucabol@microsoft.com') `
@@ -29,4 +35,7 @@ $lab `
 
 $lab | Remove-AzLabuser -User $user
 $lab | Remove-AzLab
+
+Remove-AzLabAccount -LabAccount $la
+Remove-AzureRmResourceGroup -Name $rgName -Force | Out-Null
 Remove-Module Az.AzureLabs -Force
