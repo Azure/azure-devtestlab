@@ -584,6 +584,22 @@ function New-AzLab {
     return InvokeRest -Uri $uri -Method 'Get'
   }
 
+  function Get-AzLabVmAgain($vm) {
+    $uri = ConvertToUri -resource $vm
+    return InvokeRest -Uri $uri -Method 'Get'
+  }
+
+  function Get-AzLabTemplateVM {
+    param(
+        [parameter(Mandatory=$true,HelpMessage="Lab to create template VM into", ValueFromPipeline=$true)]
+        [ValidateNotNullOrEmpty()]
+        $Lab
+    )
+
+    $uri = (ConvertToUri -resource $lab) + '/EnvironmentSettings/Default'
+    return InvokeRest -Uri $uri -Method 'Get'
+  }
+
   function New-AzLabTemplateVM {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPlainTextForPassword", "", Scope="Function")]
     [CmdletBinding()]
@@ -872,7 +888,7 @@ function New-AzLab {
         $ClaimByUser = $null,
 
         [parameter(Mandatory=$false,HelpMessage="State of VM to retrieve")]
-        [ValidateSet('Starting', 'Running', 'Stopping', 'Stopped', 'Failed', 'Restarting', 'ApplyingArtifacts', 'UpgradingVmAgent', 'Creating', 'Deleting', 'Corrupted', 'Any')]
+        [ValidateSet('Starting', 'Running', 'Stopping', 'Stopped', 'Failed', 'Restarting', 'ApplyingArtifacts', 'UpgradingVmAgent', 'Creating', 'Deleting', 'Corrupted', 'Unknown', 'Any')]
         $Status = 'Any'
     )
     begin {. BeginPreamble}
@@ -884,12 +900,63 @@ function New-AzLab {
           $vms = (InvokeRest -Uri $uri -Method 'Get').Value
           if($ClaimByUser) {
             $vms = $vms `
-              | Where-Object { ($_.properties.isClaimed -eq $true) -and ($_.properties.claimedByUserPrincipalId -eq $ClaimByUser.name)}
+              | Where-Object { ($_.properties.isClaimed) -and ($_.properties.claimedByUserPrincipalId -eq $ClaimByUser.name)}
           }
           if($Status -ne 'Any') {
             $vms = $vms | Where-Object {(Get-AzLabVmStatus -Vm $_) -eq $Status}  
           }
           return $vms
+        }
+      } catch {
+        Write-Error -ErrorRecord $_ -EA $callerEA
+      }
+  }
+  end {}
+  }
+
+  function Get-AzLabForVm {
+    param(
+        [parameter(Mandatory=$true,HelpMessage="Vm to get status for", ValueFromPipeline=$true)]
+        [ValidateNotNullOrEmpty()]
+        $Vm
+
+    )
+    begin {. BeginPreamble}
+    process {
+      try {
+        foreach($v in $vm) {
+          $ResourceGroupName  = $v.id.split('/')[4]
+          $LabAccountName     = $v.id.split('/')[8]
+          $LabName            = $v.id.split('/')[10]
+          $LabAccount         = Get-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName
+          return $LabAccount | Get-AzLab -LabName $LabName       
+        }
+      } catch {
+        Write-Error -ErrorRecord $_ -EA $callerEA
+      }
+  }
+  end {}
+  }
+
+  function Get-AzLabVmUser {
+    param(
+        [parameter(Mandatory=$true,HelpMessage="Vm to get status for", ValueFromPipeline=$true)]
+        [ValidateNotNullOrEmpty()]
+        $Vm
+    )
+    begin {. BeginPreamble}
+    process {
+      try {
+        foreach($v in $vm) {
+          # TODO: inefficient getting lab multiple times, could cache lab, users and other ...
+          # Perhaps this shouldn't be a primitive, but let user build it ...
+          if($v.properties.isClaimed -and $v.properties.claimedByUserPrincipalId) {
+            $users  = $v | Get-AzLabForVm | Get-AzLabUser
+
+            return $users | Where-Object {$_.name -eq $v.properties.claimedByUserPrincipalId}
+          } else {
+            return ''
+          }
         }
       } catch {
         Write-Error -ErrorRecord $_ -EA $callerEA
@@ -909,7 +976,55 @@ function New-AzLab {
     process {
       try {
         foreach($v in $vm) {
-          return $v.properties.lastKnownPowerState
+          if(-not (Get-Member -inputobject $v.properties -name "lastKnownPowerState" -Membertype Properties)) {
+            return 'Unknown'
+          } else {
+            return $v.properties.lastKnownPowerState
+          }
+        }
+      } catch {
+        Write-Error -ErrorRecord $_ -EA $callerEA
+      }
+  }
+  end {}
+  }
+
+  function Start-AzLabVm {
+    param(
+        [parameter(Mandatory=$true,HelpMessage="Vm to start.", ValueFromPipeline=$true)]
+        [ValidateNotNullOrEmpty()]
+        $Vm
+
+    )
+    begin {. BeginPreamble}
+    process {
+      try {
+        foreach($v in $vm) {
+          $uri = (ConvertToUri -resource $v) + '/start'
+          InvokeRest -Uri $uri -Method 'Post' | Out-Null
+          return Get-AzLabVmAgain -vm $v
+        }
+      } catch {
+        Write-Error -ErrorRecord $_ -EA $callerEA
+      }
+  }
+  end {}
+  }
+
+  function Stop-AzLabVm {
+    param(
+        [parameter(Mandatory=$true,HelpMessage="Vm to stop.", ValueFromPipeline=$true)]
+        [ValidateNotNullOrEmpty()]
+        $Vm
+
+    )
+    begin {. BeginPreamble}
+    process {
+      try {
+        foreach($v in $vm) {
+          $uri = (ConvertToUri -resource $v) + '/stop'
+          InvokeRest -Uri $uri -Method 'Post' | Out-Null
+          return Get-AzLabVmAgain -vm $v
         }
       } catch {
         Write-Error -ErrorRecord $_ -EA $callerEA
@@ -1136,4 +1251,8 @@ function New-AzLab {
                                 New-AzLabSchedule,
                                 Remove-AzLabSchedule,
                                 New-AzLabAccount,
-                                Remove-AzLabAccount
+                                Remove-AzLabAccount,
+                                Start-AzLabVm,
+                                Stop-AzLabVm,
+                                Get-AzLabVmUser,
+                                Get-AzLabForVm
