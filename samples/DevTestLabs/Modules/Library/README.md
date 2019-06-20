@@ -1,4 +1,4 @@
-# Az.DevTestLabs
+# Az.DevTestLabs   [![Build status](https://dotnetcst.visualstudio.com/DTL-Library/_apis/build/status/Validate%20the%20DTl%20Library)](https://dotnetcst.visualstudio.com/DTL-Library/_build/latest?definitionId=63)
 
 Az.DevTestLabs is a PowerShell module to simplify the management of [Azure DevTest Labs](https://azure.microsoft.com/en-us/services/devtest-lab/). It provides composable functions to create, query, update and delete labs, VMs, Custom Images and Environments.
 
