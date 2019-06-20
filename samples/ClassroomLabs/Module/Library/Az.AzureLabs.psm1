@@ -1,5 +1,6 @@
 # TODO: make functions that take a user accept multiple users
 # TODO: think of what should add/set/remove functions return
+# TODO: consider polling on the operation returned by the API in the header as less expensive for RP
 
 # We are using strict mode for added safety
 Set-StrictMode -Version Latest
