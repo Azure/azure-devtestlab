@@ -1,8 +1,8 @@
 Import-Module $PSScriptRoot\..\..\Az.DevTestLabs2.psm1
 
 $labs = @(
-    [pscustomobject]@{Name='DTL-Library-Test1'; ResourceGroupName='DTL-Library-Test1rg'; Location='westus'},
-    [pscustomobject]@{Name='DTL-Library-Test2'; ResourceGroupName='DTL-Library-Test2rg'; Location='eastus'}
+    [pscustomobject]@{Name=('DtlLibrary-Lab-' + (Get-Random)); ResourceGroupName=('DtlLibrary-LabRg-' + (Get-Random)); Location='westus'},
+    [pscustomobject]@{Name=('DtlLibrary-Lab-' + (Get-Random)); ResourceGroupName=('DtlLibrary-LabRg-' + (Get-Random)); Location='eastus'}
 )
 
 Describe  'Lab Creation and Deletion' {
@@ -17,11 +17,14 @@ Describe  'Lab Creation and Deletion' {
             # Create the labs
             $createdLabs = $labs | New-AzDtlLab
 
-            # Check the number of labs created
-            $createdLabs.Count | Should be 2
+            # Check the number of labs created and that they were successful
+            $createdLabs.Count | Should -Be 2
+            foreach ($lab in $createdLabs) {
+                $lab.Properties.provisioningState | Should -Be "Succeeded"
+            }
 
             # Check that the labs really exist
-            $createdLabs | Get-AzDtlLab | Should not be $null
+            $createdLabs | Get-AzDtlLab | Should -Not -Be $null
 
         }
 
@@ -31,7 +34,7 @@ Describe  'Lab Creation and Deletion' {
             $labs | Get-AzDtlLab | Remove-AzDtlLab
 
             # Check that the labs are gone
-            ($labs | Get-AzDtlLab -ErrorAction SilentlyContinue).Count | Should be 0
+            ($labs | Get-AzDtlLab -ErrorAction SilentlyContinue).Count | Should -Be 0
         }
 
         It 'Cleanup of resources' {

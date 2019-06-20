@@ -6,8 +6,8 @@ lucabol@microsoft.com, "DevTest Labs User"
 phauge@microsoft.com,  "DevTest Labs User"
 '@
 
-$rgName = "DtlLibraryTestRG" + (Get-Random)
-$labname = "DtlLibraryTest" + (Get-Random)
+$rgName = "DtlLibrary-LabUsersRg" + (Get-Random)
+$labname = "DtlLibrary-LabUsers" + (Get-Random)
 
 function StringToFile([parameter(ValueFromPipeline=$true)][string] $text) {
   $tmp = New-TemporaryFile
