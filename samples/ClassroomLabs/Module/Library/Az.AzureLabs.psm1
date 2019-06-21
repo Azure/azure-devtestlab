@@ -342,6 +342,12 @@ function Enrich {
           } else {
             $resource | Add-Member -MemberType NoteProperty -Name Status -Value 'Unknown' -Force
           }
+
+          if($resource.properties.isClaimed -and $resource.properties.claimedByUserPrincipalId) {
+            $resource | Add-Member -MemberType NoteProperty -Name UserPrincipal -Value $resource.properties.claimedByUserPrincipalId -Force           
+          } else {
+            $resource | Add-Member -MemberType NoteProperty -Name UserPrincipal -Value '' -Force           
+          }
         }
       }
       return $resource
@@ -977,32 +983,6 @@ function New-AzLab {
   end {}
   }
 
-  # Implementing Get-AzLabVmUser is very slow as you need to get the lab for the vm, retrieve all users
-  # and get the one with name = claimedByUserPrincipalId. Instead give users the principal so they
-  # can cache things as they see fit for their scenario.
-  function Get-AzLabVmUserPrincipal {
-    param(
-        [parameter(Mandatory=$true,HelpMessage="Vm to get status for", ValueFromPipeline=$true)]
-        [ValidateNotNullOrEmpty()]
-        $Vm
-    )
-    begin {. BeginPreamble}
-    process {
-      try {
-        foreach($v in $vm) {
-          if($v.properties.isClaimed -and $v.properties.claimedByUserPrincipalId) {
-            return $v.properties.claimedByUserPrincipalId
-          } else {
-            return ''
-          } 
-        }
-      } catch {
-        Write-Error -ErrorRecord $_ -EA $callerEA
-      }
-  }
-  end {}
-  }
-
   function Start-AzLabVm {
     param(
         [parameter(Mandatory=$true,HelpMessage="Vm to start.", ValueFromPipeline=$true)]
@@ -1267,5 +1247,4 @@ function New-AzLab {
                                 Remove-AzLabAccount,
                                 Start-AzLabVm,
                                 Stop-AzLabVm,
-                                Get-AzLabVmUserPrincipal,
                                 Get-AzLabForVm

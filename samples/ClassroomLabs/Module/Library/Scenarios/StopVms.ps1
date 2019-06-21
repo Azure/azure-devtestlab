@@ -15,7 +15,7 @@ if($vms) {
     $users  = @{}
     $labs | Get-AzLabUser | ForEach-Object {$users[$_.name] = $_.properties.email}
     
-    $email   = @{N = 'Email';  E = { $users.item(($_ | Get-AzLabVmUserPrincipal))} }
+    $email   = @{N = 'Email';  E = { $users.item($_.UserPrincipal)} }
 
     $vms `
         | Select-Object -Property ResourceGroupName, LabName, $email  `
