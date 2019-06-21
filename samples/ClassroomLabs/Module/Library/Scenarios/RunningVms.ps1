@@ -1,7 +1,5 @@
 <#
 Prints out a report of all running VMs and asks confirmation to stop them.
-NOTE: this could be made faster by changing the implementation of Get-AzLabVmUser
-      or avoiding calling it.
 #>
 [CmdletBinding()]
 param()
@@ -9,11 +7,17 @@ param()
 Import-Module ..\Az.AzureLabs.psm1 -Force
 
 Write-Host "Retrieving running VMs in your labs ..."
-$vms = Get-AzLabAccount | Get-AzLab | Get-AzLabVm -Status 'Running'
+$labs   = Get-AzLabAccount | Get-AzLab
+$vms    = $labs | Get-AzLabVm -Status 'Running'
 
 if($vms) {
-    $lab    = @{N = 'Lab'  ; E = {$_.id.Split('/')[10]}}
-    $user   = @{N = 'User';  E = {($_ | Get-AzLabVmUser).properties.email}}
+    Write-Host "Building the username -> email lookup table ..."
+    $users  = @{}
+    $labs | Get-AzLabUser | ForEach-Object {$users[$_.name] = $_.properties.email}
+    
+    $lab    = @{N = 'Lab'  ; E = { $_.id.Split('/')[10]} }
+    $user   = @{N = 'User';  E = { $users.item(($_ | Get-AzLabVmUserPrincipal))} }
+
     $vms `
         | Select-Object -Property $lab, $user  `
         | Sort-Object -Property Lab, User `

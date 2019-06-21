@@ -938,7 +938,10 @@ function New-AzLab {
   end {}
   }
 
-  function Get-AzLabVmUser {
+  # Implementing Get-AzLabVmUser is very slow as you need to get the lab for the vm, retrieve all users
+  # and get the one with name = claimedByUserPrincipalId. Instead give users the principal so they
+  # can cache things as they see fit for their scenario.
+  function Get-AzLabVmUserPrincipal {
     param(
         [parameter(Mandatory=$true,HelpMessage="Vm to get status for", ValueFromPipeline=$true)]
         [ValidateNotNullOrEmpty()]
@@ -948,15 +951,11 @@ function New-AzLab {
     process {
       try {
         foreach($v in $vm) {
-          # TODO: inefficient getting lab multiple times, could cache lab, users and other ...
-          # Perhaps this shouldn't be a primitive, but let user build it ...
           if($v.properties.isClaimed -and $v.properties.claimedByUserPrincipalId) {
-            $users  = $v | Get-AzLabForVm | Get-AzLabUser
-
-            return $users | Where-Object {$_.name -eq $v.properties.claimedByUserPrincipalId}
+            return $v.properties.claimedByUserPrincipalId
           } else {
             return ''
-          }
+          } 
         }
       } catch {
         Write-Error -ErrorRecord $_ -EA $callerEA
@@ -1254,5 +1253,5 @@ function New-AzLab {
                                 Remove-AzLabAccount,
                                 Start-AzLabVm,
                                 Stop-AzLabVm,
-                                Get-AzLabVmUser,
+                                Get-AzLabVmUserPrincipal,
                                 Get-AzLabForVm
