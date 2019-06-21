@@ -1109,7 +1109,7 @@ function New-AzLab {
 
   function New-AzLabSchedule {
     param(
-        [parameter(Mandatory=$true,HelpMessage="Lab to associate the schedule to.", ValueFromPipeline=$true)]
+        [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Lab to associate the schedule to.", ValueFromPipeline=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
 
