@@ -15,12 +15,11 @@ if($vms) {
     $users  = @{}
     $labs | Get-AzLabUser | ForEach-Object {$users[$_.name] = $_.properties.email}
     
-    $lab    = @{N = 'Lab'  ; E = { $_.id.Split('/')[10]} }
-    $user   = @{N = 'User';  E = { $users.item(($_ | Get-AzLabVmUserPrincipal))} }
+    $email   = @{N = 'Email';  E = { $users.item(($_ | Get-AzLabVmUserPrincipal))} }
 
     $vms `
-        | Select-Object -Property $lab, $user  `
-        | Sort-Object -Property Lab, User `
+        | Select-Object -Property ResourceGroupName, LabName, $email  `
+        | Sort-Object -Property ResourceGroupName, LabName, Email `
         | Out-Host
 
     Write-Host 'Whould you like to stop these Vms? (Default is No)'

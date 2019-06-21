@@ -269,7 +269,16 @@ function InvokeRest($Uri, $Method, $Body, $params) {
 
     if($body) { Write-Verbose $body}    
     $result = Invoke-WebRequest -Uri $FullUri -Method $Method -Headers $authHeaders -Body $Body -SkipHeaderValidation
-    $result.Content | ConvertFrom-Json
+    $resObj = $result.Content | ConvertFrom-Json
+    
+    # Happens with Post commands ...
+    if(-not $resObj) { return $resObj}
+
+    if(Get-Member -inputobject $resObj -name "Value" -Membertype Properties){
+      return $resObj.Value | Enrich
+    } else {
+      return $resObj | Enrich
+    }
 }
 
 # The WaitXXX functions differ just for the property and value tested.
@@ -309,6 +318,28 @@ function WaitProvisioning($uri, $delaySec, $retryCount, $params) {
         $tries += 1
     }
     return $res
+}
+
+function Enrich {
+  [CmdletBinding()]
+  param([parameter(Mandatory=$true, ValueFromPipeline=$true)] $resource)
+
+  begin {. BeginPreamble}
+
+  process {
+    foreach($rgName in $ResourceGroupName) {
+      if($resource.id) {
+        $parts = $resource.id.Split('/')
+        $len = $parts.Count
+
+        if($len -ge 4)  { $resource | Add-Member -MemberType NoteProperty -Name ResourceGroupName -Value $parts[4] -Force }
+        if($len -ge 8)  { $resource | Add-Member -MemberType NoteProperty -Name LabAccountName -Value $parts[8] -Force }
+        if($len -ge 10) { $resource | Add-Member -MemberType NoteProperty -Name LabName -Value $parts[10] -Force }
+      }
+      return $resource
+    }
+  }
+  end{}
 }
 
 function New-AzLabAccount {
@@ -387,12 +418,12 @@ function Get-AzLabAccount {
             InvokeRest  -Uri $uri -Method 'Get'
           } else { #Proper RG, wild name
             $uri = GetLabAccountUri -ResourceGroupName $ResourceGroupName
-            (InvokeRest  -Uri $uri -Method 'Get').Value | Where-Object {$_.name -like $LabAccountName}
+            InvokeRest  -Uri $uri -Method 'Get' | Where-Object {$_.name -like $LabAccountName}
           }
         } else { # Wild RG forces query by subscription
             $subscriptionId = (Get-AzureRmContext).Subscription.Id
             $uri = "https://management.azure.com/subscriptions/$SubscriptionId/providers/Microsoft.LabServices/labaccounts"
-            (InvokeRest  -Uri $uri -Method 'Get').Value | Where-Object { ($_.name -like $LabAccountName ) -and ($_.id.Split('/')[4] -like $ResourceGroupName)}
+            InvokeRest  -Uri $uri -Method 'Get' | Where-Object { ($_.name -like $LabAccountName ) -and ($_.id.Split('/')[4] -like $ResourceGroupName)}
         }
       }
     } catch {
@@ -420,7 +451,7 @@ function Get-AzLab {
     try {
       foreach($la in $LabAccount) {
         $uri = (ConvertToUri -resource $la) + "/labs"
-        (InvokeRest -Uri $uri -Method 'Get').Value | Where-Object {$_.Name -like $LabName}
+        InvokeRest -Uri $uri -Method 'Get' | Where-Object {$_.Name -like $LabName}
       }
     } catch {
       Write-Error -ErrorRecord $_ -EA $callerEA
@@ -736,7 +767,7 @@ function New-AzLab {
       try {
         foreach($la in $LabAccount) {
           $uri = (ConvertToUri -resource $la) + "/SharedImages"
-          (InvokeRest -Uri $uri -Method 'Get').Value | Where-Object {$_.properties.isEnabled}
+          InvokeRest -Uri $uri -Method 'Get' | Where-Object {$_.properties.isEnabled}
         }
       } catch {
         Write-Error -ErrorRecord $_ -EA $callerEA
@@ -758,7 +789,7 @@ function New-AzLab {
       try {
         foreach($la in $LabAccount) {
           $uri = (ConvertToUri -resource $la) + "/GalleryImages"
-          (InvokeRest -Uri $uri -Method 'Get').Value | Where-Object {$_.properties.isEnabled}
+          InvokeRest -Uri $uri -Method 'Get' | Where-Object {$_.properties.isEnabled}
         }
       } catch {
         Write-Error -ErrorRecord $_ -EA $callerEA
@@ -812,7 +843,7 @@ function New-AzLab {
         foreach($l in $Lab) {
           $uri = (ConvertToUri -resource $Lab) + '/users'
 
-          return (InvokeRest -Uri $uri -Method 'Get').Value | Where-Object {$_.properties.email -like $Email}
+          return InvokeRest -Uri $uri -Method 'Get' | Where-Object {$_.properties.email -like $Email}
         }
       } catch {
         Write-Error -ErrorRecord $_ -EA $callerEA
@@ -897,7 +928,7 @@ function New-AzLab {
         foreach($l in $Lab) {
           $uri = (ConvertToUri -resource $Lab) + '/environmentsettings/Default/environments'
 
-          $vms = (InvokeRest -Uri $uri -Method 'Get').Value
+          $vms = InvokeRest -Uri $uri -Method 'Get'
           if($ClaimByUser) {
             $vms = $vms `
               | Where-Object { ($_.properties.isClaimed) -and ($_.properties.claimedByUserPrincipalId -eq $ClaimByUser.name)}
@@ -1082,7 +1113,7 @@ function New-AzLab {
         foreach($l in $Lab) {
           $uri = (ConvertToUri -resource $Lab) + '/environmentsettings/default/schedules'
 
-          return (InvokeRest -Uri $uri -Method 'Get').Value
+          return InvokeRest -Uri $uri -Method 'Get'
         }
       } catch {
         Write-Error -ErrorRecord $_ -EA $callerEA
