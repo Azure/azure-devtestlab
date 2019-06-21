@@ -359,11 +359,11 @@ function Enrich {
 function New-AzLabAccount {
   [CmdletBinding()]
   param(
-    [parameter(Mandatory=$true,HelpMessage="Resource Group to contain the lab account", ValueFromPipeline=$true)]
+    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Resource Group to contain the lab account", ValueFromPipeline=$true)]
     [ValidateNotNullOrEmpty()]
     $ResourceGroupName,
 
-    [parameter(Mandatory=$true,HelpMessage="Name of Lab Account to create")]
+    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Name of Lab Account to create")]
     [ValidateNotNullOrEmpty()]
     $LabAccountName
   )
@@ -412,11 +412,11 @@ function Remove-AzLabAccount {
 function Get-AzLabAccount {
   [CmdletBinding()]
   param(
-    [parameter(Mandatory=$false,HelpMessage="Resource Group Containing the lab account", ValueFromPipeline=$true)]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Resource Group Containing the lab account", ValueFromPipeline=$true)]
     [ValidateNotNullOrEmpty()]
     $ResourceGroupName = '*',
 
-    [parameter(Mandatory=$false,HelpMessage="Name of Lab Account to retrieve (your can use * and ?)")]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true ,HelpMessage="Name of Lab Account to retrieve (your can use * and ?)")]
     [ValidateNotNullOrEmpty()]
     $LabAccountName = '*'
   )
@@ -454,7 +454,7 @@ function Get-AzLab {
     [ValidateNotNullOrEmpty()]
     $LabAccount,
 
-    [parameter(Mandatory=$false,HelpMessage="Name of Lab to retrieve (your can use * and ?)")]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Name of Lab to retrieve (your can use * and ?)")]
     [ValidateNotNullOrEmpty()]
     $LabName = '*'
 
@@ -503,24 +503,24 @@ function New-AzLab {
       [ValidateNotNullOrEmpty()]
       $LabAccount,
   
-      [parameter(Mandatory=$true,HelpMessage="Name of Lab to create")]
+      [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="Name of Lab to create")]
       [ValidateNotNullOrEmpty()]
       $LabName,
 
-      [parameter(Mandatory=$false,HelpMessage="Maximum number of users in lab (defaults to 5)")]
+      [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Maximum number of users in lab (defaults to 5)")]
       [int]
       $MaxUsers = 5,
 
-      [parameter(Mandatory=$false,HelpMessage="Quota of hours x users (defaults to 40)")]
+      [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Quota of hours x users (defaults to 40)")]
       [int]
       $UsageQuotaInHours = 40,
 
-      [parameter(Mandatory=$false,HelpMessage="Access mode for the lab (either Restricted or Open)")]
+      [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Access mode for the lab (either Restricted or Open)")]
       [ValidateSet('Restricted', 'Open')]
       [string]
       $UserAccessMode = 'Restricted',
 
-      [parameter(mandatory = $false)]
+      [parameter(mandatory = $false, ValueFromPipelineByPropertyName = $true)]
       [switch]
       $SharedPasswordEnabled = $false 
     )
@@ -557,20 +557,20 @@ function New-AzLab {
       [ValidateNotNullOrEmpty()]
       $Lab,
 
-      [parameter(Mandatory=$false,HelpMessage="Maximum number of users in lab.")]
+      [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Maximum number of users in lab.")]
       [int]
       $MaxUsers = 5,
 
-      [parameter(Mandatory=$false,HelpMessage="Quota of hours x users.")]
+      [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Quota of hours x users.")]
       [int]
       $UsageQuotaInHours = 40,
 
-      [parameter(Mandatory=$false,HelpMessage="Access mode for the lab (either Restricted or Open)")]
+      [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Access mode for the lab (either Restricted or Open)")]
       [ValidateSet('Restricted', 'Open')]
       [string]
       $UserAccessMode = 'Restricted',
 
-      [parameter(mandatory = $false)]
+      [parameter(mandatory = $false, ValueFromPipelineByPropertyName = $true)]
       [switch]
       $SharedPasswordEnabled = $false 
     )
@@ -653,32 +653,32 @@ function New-AzLab {
       [ValidateNotNullOrEmpty()]
       $Lab,
   
-      [parameter(Mandatory=$true,HelpMessage="Shared Image or Gallery image to use")]
+      [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="Shared Image or Gallery image to use")]
       [ValidateNotNullOrEmpty()]
       $Image,
 
-      [parameter(Mandatory=$true,HelpMessage="Size for template VM")]
+      [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="Size for template VM")]
       [ValidateSet('Small', 'Medium', 'MediumNested', 'Large', 'GPU')]
       $Size,
 
-      [parameter(Mandatory=$false,HelpMessage="Quota of hours x users (defaults to 40)")]
+      [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Quota of hours x users (defaults to 40)")]
       [String]
       $Title = "A test title",
 
-      [parameter(Mandatory=$false,HelpMessage="Quota of hours x users (defaults to 40)")]
+      [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Quota of hours x users (defaults to 40)")]
       [String]
       $Description = "Template Description",
 
-      [parameter(Mandatory=$true,HelpMessage="User name if shared password is enabled")]
+      [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="User name if shared password is enabled")]
       [string]
       $UserName,
 
 
-      [parameter(Mandatory=$true,HelpMessage="Password if shared password is enabled")]
+      [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="Password if shared password is enabled")]
       [string]
       $Password,
 
-      [parameter(mandatory = $false)]
+      [parameter(mandatory = $false, ValueFromPipelineByPropertyName = $true)]
       [switch]
       $LinuxRdpEnabled = $false  
     )
@@ -818,7 +818,7 @@ function New-AzLab {
         [ValidateNotNullOrEmpty()]
         $Lab,
 
-        [parameter(Mandatory=$true,HelpMessage="Users to add to the lab")]
+        [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="Users to add to the lab")]
         [string[]]
         $Emails
 
@@ -843,11 +843,11 @@ function New-AzLab {
 
   function Get-AzLabUser {
     param(
-        [parameter(Mandatory=$true,HelpMessage="Lab to get users from", ValueFromPipeline=$true)]
+        [parameter(Mandatory=$true, HelpMessage="Lab to get users from", ValueFromPipeline=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
 
-        [parameter(Mandatory=$false,HelpMessage="Email to match users to (you can use '*', '?', etc...)")]
+        [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Email to match users to (you can use '*', '?', etc...)")]
         [ValidateNotNullOrEmpty()]
         $Email = '*'       
     )
@@ -868,11 +868,11 @@ function New-AzLab {
 
   function Remove-AzLabUser {
     param(
-        [parameter(Mandatory=$true,HelpMessage="Lab to remove users from", ValueFromPipeline=$true)]
+        [parameter(Mandatory=$true, HelpMessage="Lab to remove users from", ValueFromPipeline=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
 
-        [parameter(Mandatory=$true,HelpMessage="User to remove")]
+        [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="User to remove")]
         [ValidateNotNullOrEmpty()]
         $User
        
@@ -899,7 +899,7 @@ function New-AzLab {
         [ValidateNotNullOrEmpty()]
         $Lab,
 
-        [parameter(Mandatory=$true,HelpMessage="User to remove")]
+        [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="User to remove")]
         [ValidateNotNullOrEmpty()]
         $User
        
@@ -929,10 +929,10 @@ function New-AzLab {
         [ValidateNotNullOrEmpty()]
         $Lab,
 
-        [parameter(Mandatory=$false,HelpMessage="User this VM belongs to (you can use *,?, etc...)")]
+        [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="User this VM belongs to (you can use *,?, etc...)")]
         $ClaimByUser = $null,
 
-        [parameter(Mandatory=$false,HelpMessage="State of VM to retrieve")]
+        [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="State of VM to retrieve")]
         [ValidateSet('Starting', 'Running', 'Stopping', 'Stopped', 'Failed', 'Restarting', 'ApplyingArtifacts', 'UpgradingVmAgent', 'Creating', 'Deleting', 'Corrupted', 'Unknown', 'Any')]
         $Status = 'Any'
     )
@@ -1033,11 +1033,11 @@ function New-AzLab {
         [ValidateNotNullOrEmpty()]
         $Lab,
 
-        [parameter(Mandatory=$true,HelpMessage="User to invite")]
+        [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="User to invite")]
         [ValidateNotNullOrEmpty()]
         $User,
 
-        [parameter(Mandatory=$false,HelpMessage="Text of invitation")]
+        [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Text of invitation")]
         [ValidateNotNullOrEmpty()]
         $InvitationText = "You have been invited to an Azure Lab Services lab!"
     )
@@ -1140,7 +1140,7 @@ function New-AzLab {
         [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Days when to start the VM.")]
         [Array] $WeekDays = @('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'),
 
-        [parameter(Mandatory=$false, HelpMessage="Notes for the class meeting.")]
+        [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Notes for the class meeting.")]
         $Notes = ""
     )
     begin {. BeginPreamble}
