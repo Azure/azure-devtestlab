@@ -335,6 +335,14 @@ function Enrich {
         if($len -ge 4)  { $resource | Add-Member -MemberType NoteProperty -Name ResourceGroupName -Value $parts[4] -Force }
         if($len -ge 8)  { $resource | Add-Member -MemberType NoteProperty -Name LabAccountName -Value $parts[8] -Force }
         if($len -ge 10) { $resource | Add-Member -MemberType NoteProperty -Name LabName -Value $parts[10] -Force }
+      
+        if(($len -eq 15) -and ($parts[13] -eq 'Environments')) { # it's a vm
+          if(Get-Member -inputobject $resource.properties -name "lastKnownPowerState" -Membertype Properties) {
+            $resource | Add-Member -MemberType NoteProperty -Name Status -Value $resource.properties.lastKnownPowerState -Force
+          } else {
+            $resource | Add-Member -MemberType NoteProperty -Name Status -Value 'Unknown' -Force
+          }
+        }
       }
       return $resource
     }
@@ -934,7 +942,7 @@ function New-AzLab {
               | Where-Object { ($_.properties.isClaimed) -and ($_.properties.claimedByUserPrincipalId -eq $ClaimByUser.name)}
           }
           if($Status -ne 'Any') {
-            $vms = $vms | Where-Object {(Get-AzLabVmStatus -Vm $_) -eq $Status}  
+            $vms = $vms | Where-Object {$_.Status -eq $Status}  
           }
           return $vms
         }
@@ -987,30 +995,6 @@ function New-AzLab {
           } else {
             return ''
           } 
-        }
-      } catch {
-        Write-Error -ErrorRecord $_ -EA $callerEA
-      }
-  }
-  end {}
-  }
-
-  function Get-AzLabVmStatus {
-    param(
-        [parameter(Mandatory=$true,HelpMessage="Vm to get status for", ValueFromPipeline=$true)]
-        [ValidateNotNullOrEmpty()]
-        $Vm
-
-    )
-    begin {. BeginPreamble}
-    process {
-      try {
-        foreach($v in $vm) {
-          if(-not (Get-Member -inputobject $v.properties -name "lastKnownPowerState" -Membertype Properties)) {
-            return 'Unknown'
-          } else {
-            return $v.properties.lastKnownPowerState
-          }
         }
       } catch {
         Write-Error -ErrorRecord $_ -EA $callerEA
@@ -1275,7 +1259,6 @@ function New-AzLab {
                                 Get-AzLabVm,
                                 Register-AzLabUser,
                                 Send-AzLabUserInvitationEmail,
-                                Get-AzLabVmStatus,
                                 Set-AzLab,
                                 Get-AzLabSchedule,
                                 New-AzLabSchedule,

@@ -3,9 +3,9 @@ param()
 
 Import-Module ..\Az.AzureLabs.psm1 -Force
 
-$acName = "Test" + (Get-Random)
-$labName = "Test" + (Get-Random)
-$rgName = "TeRG" + (Get-Random)
+$acName     = "Test" + (Get-Random)
+$labName    = "Test" + (Get-Random)
+$rgName     = "TeRG" + (Get-Random)
 
 New-AzureRmResourceGroup -Name $rgName -Location 'West Europe' | Out-Null
 
