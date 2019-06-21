@@ -41,10 +41,6 @@ if(-not (Get-AzResourceGroup -ResourceGroupName $rgName -EA SilentlyContinue)) {
 $la  = New-AzLabAccount -ResourceGroupName $rgName -LabAccountName $laName
 Write-Host "$laName lab account created or found."
 
-$img = $la | Get-AzLabAccountGalleryImage | Where-Object {$_.name -like $imgName}
-if(-not $img -or $img.Count -ne 1) {Write-Error "$imgName not a valid image name."}
-Write-Host "Image $imgName found."
-
 $lab = $la | Get-AzLab -LabName $labName
 
 if($lab) {
@@ -53,6 +49,10 @@ if($lab) {
         | Publish-AzLab
     Write-Host "$LabName lab already exist. Republished."
 } else {
+    $img = $la | Get-AzLabAccountGalleryImage | Where-Object {$_.name -like $imgName}
+    if(-not $img -or $img.Count -ne 1) {Write-Error "$imgName not a valid image name."}
+    Write-Host "Image $imgName found."
+    
     $lab = $la `
         | New-AzLab -LabName $LabName -MaxUsers $maxUsers -UsageQuotaInHours $usageQuota -UserAccessMode $usageAMode -SharedPasswordEnabled:$shPsswd `
         | New-AzLabTemplateVM -Image $img -Size $size -Title $title -Description $descr -UserName $userName -Password $password -LinuxRdpEnabled:$linuxRdp `
