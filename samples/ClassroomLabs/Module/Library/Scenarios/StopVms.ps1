@@ -19,7 +19,7 @@ if($vms) {
 
     $vms `
         | Select-Object -Property ResourceGroupName, LabName, $email  `
-        | Sort-Object -Property ResourceGroupName, LabName, Email `
+        | Sort-Object   -Property ResourceGroupName, LabName, Email `
         | Out-Host
 
     Write-Host 'Whould you like to stop these Vms? (Default is No)'
