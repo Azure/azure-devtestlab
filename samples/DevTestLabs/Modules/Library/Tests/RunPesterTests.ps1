@@ -19,8 +19,12 @@ if ($pesterModule.Version.Major -lt 4 -or $pesterModule.version.Minor -lt 8) {
 }
 
 $invokePesterScriptBlock = {
-    param($testScripts)
+    param($testScripts, $PSScriptRoot)
 
+    # In the job, we have to re-import the library for this process
+    Import-Module $PSScriptRoot\..\Az.DevTestLabs2.psm1
+
+    # Run pester for the scripts
     Invoke-Pester -Script $testScripts -PassThru
 }
 
@@ -42,7 +46,7 @@ else {
         $jobs = @()
         
         $TestScripts | ForEach-Object {
-            $jobs += Start-Job -Script $invokePesterScriptBlock -ArgumentList $_
+            $jobs += Start-Job -Script $invokePesterScriptBlock -ArgumentList $_, $PSScriptRoot
         }
 
         if($jobs.Count -ne 0)

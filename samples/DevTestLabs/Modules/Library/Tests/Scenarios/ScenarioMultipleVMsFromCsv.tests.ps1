@@ -33,9 +33,11 @@ Describe  'Scenario Tests' {
         | New-AzDtlVm -Lab $lab -AsJob `
         | Receive-Job -Wait `
         | Start-AzDtlVm `
-        | Stop-AzDtlVm `
-        | Remove-AzDtlVm
+        | Stop-AzDtlVm
+
+        $lab | Get-AzDtlVm | Remove-AzDtlVm
       
+        ($lab | Get-AzDtlVm).Count | Should -Be 0
       }
 
       It 'Clean up resources' {
