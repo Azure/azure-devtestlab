@@ -14,7 +14,7 @@ Set-StrictMode -Version Latest
 
 $azureRm  = Get-Module -Name "AzureRM" -ListAvailable | Sort-Object Version.Major -Descending | Select-Object -First 1
 $az       = Get-Module -Name "Az.Accounts" -ListAvailable
-$justAz   = $az -and (-not $azureRm)
+$justAz   = $az -and -not ($azureRm -and $azureRm.Version.Major -ge 6)
 $justAzureRm = $azureRm -and (-not $az)
 
 if($azureRm -and $az) {
@@ -31,8 +31,9 @@ if($justAzureRm) {
   }
 }
 
-if($justAz -or ($az -and ($azureRm.Version.Major -lt 6))) {
+if($justAz) {
   Enable-AzureRmAlias -Scope Local -Verbose:$false
+  Enable-AzureRmContextAutosave -Scope CurrentUser -erroraction silentlycontinue
 }
 
 # We want to track usage of library, so adding GUID to user-agent at loading and removig it at unloading
@@ -2282,6 +2283,183 @@ function Get-AzDtlLabSchedule {
   end {}
 }
 
+function BuildVmSizeThresholdString {
+  param(
+    [Array] $AllowedVmSizes,
+
+    [parameter(Mandatory=$false)]
+    [Array] $ExistingVmSizes
+  )
+
+    # First strip quotes start/end of the string in case they're present
+    $AllowedVmSizes = $AllowedVmSizes | ForEach-Object {$_ -match '[^\"].+[^\"]'} | ForEach{$Matches[0]}
+
+    # Add the arrays together and remove duplicates
+    if ($ExistingVmSizes) {
+    $vmSizes = ($AllowedVmSizes + $ExistingVmSizes) | Select -Unique
+    } else {
+    $vmSizes = $AllowedVmSizes
+    }
+
+    # Process the incoming allowed sizes, need to convert to the special string
+    $thresholdString = ($vmSizes | ForEach-Object {
+        $finalSize = $_
+        
+        # Add starting & ending string if missing
+        if (-not $_.StartsWith('"')) {
+            $finalSize = '"' + $finalSize
+        }
+        if (-not $_.EndsWith('"')) {
+            $finalSize = $finalSize + '"'
+        }
+
+        # return the final string to the pipeline
+        $finalSize
+        }) -join ","
+
+    return $thresholdString
+}
+
+function Set-AzDtlLabAllowedVmSizePolicy {
+  [CmdletBinding()]
+  param(
+    [parameter(Mandatory=$true, ValueFromPipeline = $true, HelpMessage="Lab to operate on.")]
+    [ValidateNotNullOrEmpty()]
+    $Lab,
+
+    [parameter(Mandatory=$true, ParameterSetName="AllowedVmSizes", HelpMessage="The allowed Virtual Machine Sizes to set in the lab.  For example:  'Standard_A4', 'Standard_DS3_v2'.")]
+    [Array] $AllowedVmSizes,
+
+    [parameter(Mandatory=$true, ParameterSetName="EnableAllSizes", HelpMessage="Turn off the policy and enable ALL VM sizes in the lab")]
+    [switch] $EnableAllSizes = $false,
+
+    [parameter(Mandatory=$false, ParameterSetName="AllowedVmSizes", HelpMessage="Overwrite the existing list instead of merging in new sizes")]
+    [switch] $Overwrite = $False,
+
+    [parameter(Mandatory=$false,HelpMessage="Run the command in a separate job.")]
+    [switch] $AsJob = $False
+  )
+
+  begin {. BeginPreamble}
+  process {
+    try {
+
+        foreach($l in $Lab) {
+
+            if ($EnableAllSizes) {
+                $status = "Disabled"
+                $thresholdString = ""
+            } else {
+                if ($Overwrite) {
+                    $thresholdString = BuildVmSizeThresholdString -AllowedVmSizes $AllowedVmSizes
+                } else {
+                    $thresholdString = BuildVmSizeThresholdString -AllowedVmSizes $AllowedVmSizes -ExistingVmSizes (Get-AzDtlLabAllowedVmSizePolicy -Lab $l).AllowedSizes
+                }
+
+                $status = "Enabled"
+            }
+
+            $params = @{
+                labName = $l.Name
+                threshold = $thresholdString
+                status = $status
+            }
+            Write-verbose "Set AllowedVMSize with $(PrintHashtable $params)"
+@"
+{
+  "`$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "labName": {
+      "type": "string"
+    },
+    "threshold": {
+      "type": "string",
+    },
+    "status": {
+      "type": "string",
+    }
+  },
+
+  "resources": [
+    {
+      "apiVersion": "2018-10-15-preview",
+      "type": "microsoft.devtestlab/labs/policySets/policies",
+      "name": "[concat(parameters('labName'), '/default/AllowedVmSizesInLab')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "status": "[parameters('status')]",
+        "factName": "LabVmSize",
+        "threshold": "[concat('[', parameters('threshold'), ']')]",
+        "evaluatorType": "AllowedValuesPolicy"
+      }
+    }
+  ],
+  "outputs": {
+    "labId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.DevTestLab/labs', parameters('labName'))]"
+    }
+  }
+}
+"@ | DeployLab -Lab $l -AsJob $AsJob -Parameters $Params
+        }
+    } catch {
+      Write-Error -ErrorRecord $_ -EA $callerEA
+    }
+  }
+
+
+  end {}
+}
+
+function Get-AzDtlLabAllowedVmSizePolicy {
+  Param(
+    [parameter(Mandatory=$true, ValueFromPipeline = $true, HelpMessage="Lab to operate on.")]
+    [ValidateNotNullOrEmpty()]
+    $Lab
+  )
+  begin {. BeginPreamble}
+  process {
+    try {
+      foreach($l in $Lab) {
+        try {
+          $policy = (Get-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs/policySets/policies' -ResourceName ($l.Name + "/default") -ResourceGroupName $l.ResourceGroupName -ApiVersion 2018-09-15) | Where-Object {$_.Name -eq 'AllowedVmSizesInLab'}
+          if ($policy) {
+            $threshold = $policy.Properties.threshold
+            # Regular expression to remove [] at beginning and end, then split by commas, then remove the extra quotes
+            # Returns a string array of sizes that are enabled in the lab
+            if ($threshold -match "[^\[].+[^\]]") {
+                $sizes = $Matches[0].Split(',',[System.StringSplitOptions]::RemoveEmptyEntries) | ForEach-Object {$_ -match '[^\"].+[^\"]'} | ForEach{$Matches[0]}
+            } else {
+                $sizes = $null
+            }
+            
+            [pscustomobject] @{
+                Status = $policy.Properties.Status
+                AllowedSizes = $sizes
+            }
+          } else {
+
+            # return an object, status="disabled"
+            [pscustomobject] @{
+                Status = "Disabled"
+                AllowedSizes = $null
+            }
+          }
+
+        } catch {
+          return @() # Do we need compositionality here or should we just let the exception goes through?
+        }
+      }
+    } catch {
+      Write-Error -ErrorRecord $_ -EA $callerEA
+    }
+  }
+
+  end {}
+}
+
 function Get-AzureRmDtlNetwork { [CmdletBinding()] param($Name, $ResourceGroupName)}
 function Get-AzureRmDtlLoadBalancers { [CmdletBinding()] param($Name, $ResourceGroupName)}
 function Get-AzureRmDtlCosts { [CmdletBinding()] param($Name, $ResourceGroupName)}
@@ -2626,6 +2804,8 @@ New-Alias -Name 'Dtl-GetLabSchedule'      -Value Get-AzDtlLabSchedule
 New-Alias -Name 'Dtl-SetLabShutdown'      -Value Set-AzDtlLabShutdown
 New-Alias -Name 'Dtl-SetLabStartup'       -Value Set-AzDtlLabStartupSchedule
 New-Alias -Name 'Dtl-SetLabShutPolicy'    -Value Set-AzDtlShutdownPolicy
+New-Alias -Name 'Dtl-GetLabAllowedVmSizePolicy' -Value Get-AzDtlLabAllowedVmSizePolicy
+New-Alias -Name 'Dtl-SetLabAllowedVmSizePolicy' -Value Set-AzDtlLabAllowedVmSizePolicy
 New-Alias -Name 'Dtl-SetAutoStart'        -Value Set-AzDtlVmAutoStart
 New-Alias -Name 'Dtl-SetVmShutdown'       -Value Set-AzDtlVmShutdownSchedule
 New-Alias -Name 'Dtl-GetVmStatus'         -Value Get-AzDtlVmStatus
@@ -2665,6 +2845,8 @@ Export-ModuleMember -Function New-AzDtlLab,
                               Set-AzDtlShutdownPolicy,
                               Set-AzDtlVmAutoStart,
                               Set-AzDtlVmShutdownSchedule,
+                              Get-AzDtlLabAllowedVmSizePolicy,
+                              Set-AzDtlLabAllowedVmSizePolicy,
                               Get-AzDtlVmStatus,
                               Get-AzDtlVmArtifact,
                               Import-AzDtlCustomImageFromUri,
