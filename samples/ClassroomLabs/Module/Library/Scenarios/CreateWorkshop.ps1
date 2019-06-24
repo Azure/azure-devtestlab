@@ -20,7 +20,7 @@ $usageQuota = 30
 $usageAMode = 'Restricted'
 $shPsswd    = $false
 $size       = 'Medium'
-$title      = 'Advancing Differenciation Workshop'
+$title      = 'Advancing Differentiation Workshop'
 $descr      = 'Bringing it to the 21st Century'
 $userName   = 'test0000'
 $password   = 'Test00000000'
@@ -50,7 +50,7 @@ if($lab) {
     Write-Host "$LabName lab already exist. Republished."
 } else {
     $img = $la | Get-AzLabAccountGalleryImage | Where-Object {$_.name -like $imgName}
-    if(-not $img -or $img.Count -ne 1) {Write-Error "$imgName not a valid image name."}
+    if(-not $img -or $img.Count -ne 1) {Write-Error "$imgName pattern doesn't match just one image."}
     Write-Host "Image $imgName found."
     
     $lab = $la `
@@ -60,12 +60,12 @@ if($lab) {
     Write-Host "$LabName lab doesn't exist. Created it."
 }
 
-$lab | Add-AzLabUser -Emails $emails
+$lab | Add-AzLabUser -Emails $emails | Out-Null
 $users = $lab | Get-AzLabUser
-$users | ForEach-Object { $lab | Send-AzLabUserInvitationEmail -User $_ -InvitationText $invitation}
+$users | ForEach-Object { $lab | Send-AzLabUserInvitationEmail -User $_ -InvitationText $invitation} | Out-Null
 Write-Host "Added Users: $emails."
 
-$schedules | ForEach-Object { $_ | New-AzLabSchedule -Lab $lab}
+$schedules | ForEach-Object { $_ | New-AzLabSchedule -Lab $lab} | Out-Null
 Write-Host "Added all schedules."
 
 Remove-Module Az.AzureLabs -Force
