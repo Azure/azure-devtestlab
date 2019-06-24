@@ -117,12 +117,22 @@ function Get-AzureRmCachedAccessToken()
   $ErrorActionPreference = 'Stop'
   Set-StrictMode -Off
 
-  if(-not (Get-Module AzureRm.Profile)) {
-    Import-Module AzureRm.Profile
+  if ($justAz) {
+    if (-not (Get-Module -Name Az.Resources)) {
+        Import-Module -Name Az.Resources
+    }
+    $azureRmProfileModuleVersion = (Get-Module Az.Resources).Version
+
+  } else {
+      if(-not (Get-Module -Name AzureRm.Profile)) {
+        Import-Module -Name AzureRm.Profile
+      }
+
+      $azureRmProfileModuleVersion = (Get-Module AzureRm.Profile).Version
   }
-  $azureRmProfileModuleVersion = (Get-Module AzureRm.Profile).Version
+
   # refactoring performed in AzureRm.Profile v3.0 or later
-  if($azureRmProfileModuleVersion.Major -ge 3) {
+  if($azureRmProfileModuleVersion.Major -ge 3 -or ($justAz -and $azureRmProfileModuleVersion.Major -ge 1)) {
     $azureRmProfile = [Microsoft.Azure.Commands.Common.Authentication.Abstractions.AzureRmProfileProvider]::Instance.Profile
     if(-not $azureRmProfile.Accounts.Count) {
       Write-Error "Ensure you have logged in before calling this function."
@@ -1419,6 +1429,31 @@ function New-AzDtlVm {
   end {}
 }
 
+function Get-AzDtlVmRdpFileContents {
+  [CmdletBinding()]
+  param(
+    [parameter(Mandatory=$true,HelpMessage="Virtual Machine to get an RDP file from", ValueFromPipeline=$true)]
+    [ValidateNotNullOrEmpty()]
+    $Vm
+  )
+
+  begin {. BeginPreamble}
+  process {
+    try {
+      foreach($v in $Vm) {
+        $rdpFile = Invoke-RestMethod -Method Post `
+                  -Uri "https://management.azure.com$($v.ResourceId)/getRdpFileContents?api-version=2018-09-15" `
+                  -Headers $(GetHeaderWithAuthToken)
+        # Put the contents in the pipeline
+        $rdpFile.contents
+      }
+    } catch {
+      Write-Error -ErrorRecord $_ -EA $callerEA
+    }
+  }
+  end {}
+}
+
 ## Not strictly DTL related, but often used in a DTL context if unused RGs are left around by broken DTL remove operations.
 function Get-UnusedRgInSubscription {
   [CmdletBinding()]
@@ -1468,6 +1503,7 @@ function Get-UnusedRgInSubscription {
 function Get-AzureRmDtlNetorkCard { [CmdletBinding()] param($vm)}
 function Get-AzDtlVmDisks { [CmdletBinding()] param($vm)}
 function Import-AzureRmDtlVm { [CmdletBinding()] param($Name, $ResourceGroupName, $ImportParams)}
+
 #endregion
 
 #region ENVIRONMENT ACTIONS
@@ -2794,6 +2830,7 @@ New-Alias -Name 'Dtl-ClaimVm'             -Value Invoke-AzDtlVmClaim
 New-Alias -Name 'Dtl-UnClaimVm'           -Value Invoke-AzDtlVmUnClaim
 New-Alias -Name 'Dtl-RemoveVm'            -Value Remove-AzDtlVm
 New-Alias -Name 'Dtl-NewVm'               -Value New-AzDtlVm
+New-Alias -Name 'Dtl-GetVmRdpFile'        -Value Get-AzDtlVmRdpFileContents
 New-Alias -Name 'Dtl-AddUser'             -Value Add-AzDtlLabUser
 New-Alias -Name 'Dtl-SetLabAnnouncement'  -Value Set-AzDtlLabAnnouncement
 New-Alias -Name 'Dtl-SetLabSupport'       -Value Set-AzDtlLabSupport
@@ -2837,6 +2874,7 @@ Export-ModuleMember -Function New-AzDtlLab,
                               Set-AzDtlLabRdpSettings,
                               Add-AzDtlLabArtifactRepository,
                               Set-AzDtlVmArtifact,
+                              Get-AzDtlVmRdpFileContents,
                               Get-AzDtlLabSchedule,
                               Set-AzDtlLabShutdown,
                               Set-AzDtlLabStartupSchedule,
