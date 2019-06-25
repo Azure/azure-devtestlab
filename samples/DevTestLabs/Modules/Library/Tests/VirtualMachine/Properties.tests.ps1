@@ -20,10 +20,10 @@ Describe 'Virtual Machine Management' {
             $createdLab = $lab | New-AzDtlLab
 
             # Create a VM in the lab
-            $createdVM = $vm | Select-Object -Property @{N='Name'; E={$createdLab.Name}}, @{N='ResourceGroupName'; E={$createdLab.ResourceGroupName}}, VmName,Size,Claimable,Username,Password,OsType,Sku,Publisher,Offer | New-AzDtlVm
+            $vm | Select-Object -Property @{N='Name'; E={$createdLab.Name}}, @{N='ResourceGroupName'; E={$createdLab.ResourceGroupName}}, VmName,Size,Claimable,Username,Password,OsType,Sku,Publisher,Offer | New-AzDtlVm
 
             # Confirm the VM was created
-            $createdVM.Count | Should -Be 1
+            $lab | Dtl-GetVm | Should -Not -Be $null
         }
 
         It 'Can get the RDP file associated with a VM' {
