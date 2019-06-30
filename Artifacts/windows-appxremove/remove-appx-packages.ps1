@@ -60,7 +60,11 @@ if ([Environment]::OSVersion.Version.Major -gt 6) {
     $allPackageNames = Get-AppxPackage -AllUsers | Select-Object -Expand Name
     $allPackageNames = $allPackageNames | ForEach-Object {"*$_*"}
     ForEach($app in $allPackageNames){
-        Get-AppxPackage -Allusers -Name $app | Remove-AppxPackage -Allusers -ErrorAction SilentlyContinue
+        Try{
+            Get-AppxPackage -Allusers -Name $app | Remove-AppxPackage -Allusers -ErrorAction SilentlyContinue
+        }
+        Catch{
+        }
     }
 
 
