@@ -58,7 +58,7 @@ if ([Environment]::OSVersion.Version.Major -gt 6) {
 
     Write-Host "`nRemoving all apps for all users`n"
     $allPackageNames = Get-AppxPackage -AllUsers | Select-Object -Expand Name
-    $allPackageNames = allPackageNames | ForEach-Object {"*$_*"}
+    $allPackageNames = $allPackageNames | ForEach-Object {"*$_*"}
     ForEach($app in $allPackageNames){
         Get-AppxPackage -Allusers -Name $app | Remove-AppxPackage -Allusers -ErrorAction SilentlyContinue
     }
