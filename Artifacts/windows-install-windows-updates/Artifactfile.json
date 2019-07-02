@@ -1,15 +1,10 @@
 {
   "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
   "title": "Installs the latest Windows Updates",
-  "description": "Installs the latest Windows Updates using the Windows Update PowerShell Module",
+  "description": "Installs the latest patches, security fixes and updates via the Windows Update PowerShell Module",
   "publisher": "Microsoft",
   "tags": [
-    "Microsoft",
-    "Windows",
-    "Updates",
-    "Security",
-    "Fixes",
-    "Patches"
+    "Windows"
   ],
   "targetOsType": "Windows",
   "runCommand": {
