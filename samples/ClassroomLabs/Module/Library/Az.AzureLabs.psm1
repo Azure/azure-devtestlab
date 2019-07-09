@@ -1,6 +1,9 @@
 # TODO: make functions that take a user accept multiple users
 # TODO: think of what should add/set/remove functions return
 # TODO: consider polling on the operation returned by the API in the header as less expensive for RP
+# TODO: create tutorial
+# TODO: consider creating proper PS1 documentation for each function
+# TODO: consider making Start/Stop VM function wait for the operation to have completed
 
 # We are using strict mode for added safety
 Set-StrictMode -Version Latest
@@ -15,25 +18,32 @@ Set-StrictMode -Version Latest
 # If you have the AzureRm module, then everything works fine
 # If you have the Az module, we need to enable the AzureRmAliases
 
-$azureRm  = Get-Module -Name "AzureRM.Profile" -ListAvailable
+$azureRm  = Get-Module -Name "AzureRM" -ListAvailable | Sort-Object Version.Major -Descending | Select-Object -First 1
 $az       = Get-Module -Name "Az.Accounts" -ListAvailable
-$justAz   = $az -and (-not $azureRm)
+$justAz   = $az -and -not ($azureRm -and $azureRm.Version.Major -ge 6)
+$justAzureRm = $azureRm -and (-not $az)
 
 if($azureRm -and $az) {
   Write-Warning "You have both Az and AzureRm module installed. That is not officially supported. For more read here: https://docs.microsoft.com/en-us/powershell/azure/migrate-from-azurerm-to-az"
 }
 
-if($azureRm) {
-  # This is not defaulted in older versions of AzureRM
-  Enable-AzureRmContextAutosave -Scope CurrentUser -erroraction silentlycontinue
-  Write-Warning "You are using the deprecated AzureRM module. For more info, read https://docs.microsoft.com/en-us/powershell/azure/migrate-from-azurerm-to-az"
+if($justAzureRm) {
+  if ($azureRm.Version.Major -lt 6) {
+    Write-Error "This module does not work correctly with version 5 or lower of AzureRM, please upgrade to a newer version of Azure PowerShell in order to use this module."
+  } else {
+    # This is not defaulted in older versions of AzureRM
+    Enable-AzureRmContextAutosave -Scope CurrentUser -erroraction silentlycontinue
+    Write-Warning "You are using the deprecated AzureRM module. For more info, read https://docs.microsoft.com/en-us/powershell/azure/migrate-from-azurerm-to-az"
+  }
 }
+
 if($justAz) {
   Enable-AzureRmAlias -Scope Local -Verbose:$false
+  Enable-AzureRmContextAutosave -Scope CurrentUser -erroraction silentlycontinue
 }
 
 # We want to track usage of library, so adding GUID to user-agent at loading and removig it at unloading
-$libUserAgent = "pid-bd1d84d0-5ddb-4ab9-b951-393e656bb054"
+$libUserAgent = "pid-dec6e7d9-d150-405e-985c-feeecb83e9d5"
 [Microsoft.Azure.Common.Authentication.AzureSession]::ClientFactory.AddUserAgent($libUserAgent)
 
 $MyInvocation.MyCommand.ScriptBlock.Module.OnRemove = {
@@ -327,30 +337,30 @@ function Enrich {
   begin {. BeginPreamble}
 
   process {
-    foreach($rgName in $ResourceGroupName) {
-      if($resource.id) {
-        $parts = $resource.id.Split('/')
+    foreach($rs in $resource) {
+      if($rs.id) {
+        $parts = $rs.id.Split('/')
         $len = $parts.Count
 
-        if($len -ge 4)  { $resource | Add-Member -MemberType NoteProperty -Name ResourceGroupName -Value $parts[4] -Force }
-        if($len -ge 8)  { $resource | Add-Member -MemberType NoteProperty -Name LabAccountName -Value $parts[8] -Force }
-        if($len -ge 10) { $resource | Add-Member -MemberType NoteProperty -Name LabName -Value $parts[10] -Force }
+        if($len -ge 4)  { $rs | Add-Member -MemberType NoteProperty -Name ResourceGroupName -Value $parts[4] -Force }
+        if($len -ge 8)  { $rs | Add-Member -MemberType NoteProperty -Name LabAccountName -Value $parts[8] -Force }
+        if($len -ge 10) { $rs | Add-Member -MemberType NoteProperty -Name LabName -Value $parts[10] -Force }
       
         if(($len -eq 15) -and ($parts[13] -eq 'Environments')) { # it's a vm
-          if(Get-Member -inputobject $resource.properties -name "lastKnownPowerState" -Membertype Properties) {
-            $resource | Add-Member -MemberType NoteProperty -Name Status -Value $resource.properties.lastKnownPowerState -Force
+          if(Get-Member -inputobject $rs.properties -name "lastKnownPowerState" -Membertype Properties) {
+            $rs | Add-Member -MemberType NoteProperty -Name Status -Value $rs.properties.lastKnownPowerState -Force
           } else {
-            $resource | Add-Member -MemberType NoteProperty -Name Status -Value 'Unknown' -Force
+            $rs | Add-Member -MemberType NoteProperty -Name Status -Value 'Unknown' -Force
           }
 
-          if($resource.properties.isClaimed -and $resource.properties.claimedByUserPrincipalId) {
-            $resource | Add-Member -MemberType NoteProperty -Name UserPrincipal -Value $resource.properties.claimedByUserPrincipalId -Force           
+          if($rs.properties.isClaimed -and $rs.properties.claimedByUserPrincipalId) {
+            $rs | Add-Member -MemberType NoteProperty -Name UserPrincipal -Value $rs.properties.claimedByUserPrincipalId -Force           
           } else {
-            $resource | Add-Member -MemberType NoteProperty -Name UserPrincipal -Value '' -Force           
+            $rs | Add-Member -MemberType NoteProperty -Name UserPrincipal -Value '' -Force           
           }
         }
       }
-      return $resource
+      return $rs
     }
   }
   end{}
@@ -378,7 +388,8 @@ function New-AzLabAccount {
         $body = @{
           location = $rg.Location
         } | ConvertTo-Json -Depth 10
-        return InvokeRest -Uri $uri -Method "Put" -Body $body
+        InvokeRest -Uri $uri -Method "Put" -Body $body | Out-Null
+        return WaitProvisioning -uri $uri -delaySec 60 -retryCount 120
       }
     } catch {
       Write-Error -ErrorRecord $_ -EA $callerEA
@@ -672,7 +683,6 @@ function New-AzLab {
       [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="User name if shared password is enabled")]
       [string]
       $UserName,
-
 
       [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="Password if shared password is enabled")]
       [string]
