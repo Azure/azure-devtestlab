@@ -10,3 +10,5 @@
 packages/
 *.suo
 *.csproj.user
+**/obj/*
+**/Properties/PublishProfiles/*
