@@ -26,9 +26,6 @@ $ProgressPreference = "SilentlyContinue"
 # Discard any collected errors from a previous execution.
 $Error.Clear()
 
-# Allow certian operations, like downloading files, to execute.
-Set-ExecutionPolicy Bypass -Scope Process -Force
-
 ###################################################################################################
 #
 # Handle all errors in this script.
