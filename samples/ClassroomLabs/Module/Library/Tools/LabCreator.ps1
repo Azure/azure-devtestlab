@@ -5,6 +5,8 @@ param(
     $CsvConfigFile
 )
 
+Import-Module ../Az.AzureLabs.psm1
+
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
@@ -96,14 +98,8 @@ $schedules  = @(
 )
  #>
         Write-Host "Start creation of $LabName"
-        Write-Host "Using RG Name $ResourceGroupName"
-        if (-not (Get-AzResourceGroup -ResourceGroupName $ResourceGroupName -EA SilentlyContinue)) {
-            New-AzResourceGroup -ResourceGroupName $ResourceGroupName -Location $Location | Out-null
-            Write-Host "$ResourceGroupName resource group didn't exist. Created it."
-        }
 
-        $la = New-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName
-        Write-Host "$LabAccountName lab account created or found."
+        $la = Get-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName
 
         $lab = $la | Get-AzLab -LabName $LabName
 
@@ -137,6 +133,46 @@ $schedules  = @(
     }
 }
 
+# TODO: could parallelize this to make it faster (but not too slow anyhow)
+function New-ResourceGroups {
+    [CmdletBinding()]
+    param(
+        [parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [psobject[]]
+        $ConfigObject
+    )
+
+    $Rgs = $ConfigObject | Select-Object -Property ResourceGroupName, Location -Unique
+    Write-Host "Operating on the following RGs:"
+    Write-Host $Rgs
+    
+    $Rgs | ForEach-Object {
+        if (-not (Get-AzResourceGroup -ResourceGroupName $_.ResourceGroupName -EA SilentlyContinue)) {
+            New-AzResourceGroup -ResourceGroupName $_.ResourceGroupName -Location $_.Location | Out-null
+            Write-Host "$($_.ResourceGroupName) resource group didn't exist. Created it."
+        }
+    }
+}
+
+# TODO: parallelize this one as it takes a few minutes ...
+function New-Accounts {
+    [CmdletBinding()]
+    param(
+        [parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [psobject[]]
+        $ConfigObject
+    )
+
+    $lacs = $ConfigObject | Select-Object -Property ResourceGroupName, LabAccountName -Unique
+    Write-Host "Operating on the following Lab Accounts:"
+    Write-Host $lacs
+    
+    $lacs | ForEach-Object {
+        New-AzLabAccount -ResourceGroupName $_.ResourceGroupName -LabAccountName $_.LabAccountName | Out-Null
+        Write-Host "$($_.LabAccountName) lab account created or found."
+    }
+}
+
 function New-AzLabMultiple {
     [CmdletBinding()]
     param(
@@ -153,13 +189,13 @@ function New-AzLabMultiple {
         
         $modulePath = Join-Path $path '..' 'Az.AzureLabs.psm1'
         Import-Module $modulePath
-        Write-Host $modulePath
-        Write-Host $Input.LabName
         # Really?? It got to be the lines below? Doing a ForEach doesn't work ...
-        $input.movenext()
+        $input.movenext() | Out-Null
         $obj = $input.current[0]
         $obj | New-AzLabSingle
     }
+
+    Write-Host "Starting creation of all labs in parallel. This can take a while. Go get multiple coffees."
 
     $jobs = $ConfigObject | ForEach-Object {
         Start-Job  -InitializationScript $init -ScriptBlock $block -ArgumentList $PSScriptRoot -InputObject $_ -Name $_.LabName
@@ -177,4 +213,8 @@ $labs | ForEach-Object { $_.Emails = $_.Emails.Split(';')
     $_.SharedPassword = [System.Convert]::ToBoolean($_.SharedPassword)
 }
 
+# Needs to create resources in this order, aka parallelize in these three groups, otherwise we get contentions:
+# i.e. different jobs trying to create the same common resource (RG or lab account)
+New-ResourceGroups -ConfigObject $labs
+New-Accounts -ConfigObject $labs
 New-AzLabMultiple -ConfigObject $labs
