@@ -87,16 +87,6 @@ $init = {
             $Schedules
         )
 
-        <#
-$today      = (Get-Date).ToString()
-$tomorrow   = (Get-Date).AddDays(1)
-$end        = (Get-Date).AddMonths(4).ToString()
-
-$schedules  = @(
-    [PSCustomObject]@{Frequency='Weekly';FromDate=$today;ToDate = $end;StartTime='10:00';EndTime='11:00';Notes='Theory'}
-    [PSCustomObject]@{Frequency='Weekly';FromDate=$tomorrow;ToDate = $end;StartTime='11:00';EndTime='12:00';Notes='Practice'}
-)
- #>
         Write-Host "Start creation of $LabName"
 
         $la = Get-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName
@@ -349,6 +339,6 @@ Write-Verbose ($labs | ConvertTo-Json -Depth 10 | Out-String)
 
 # Needs to create resources in this order, aka parallelize in these three groups, otherwise we get contentions:
 # i.e. different jobs trying to create the same common resource (RG or lab account)
-New-ResourceGroups -ConfigObject $labs
-New-Accounts -ConfigObject $labs
-New-AzLabMultiple -ConfigObject $labs
+New-ResourceGroups  -ConfigObject $labs
+New-Accounts        -ConfigObject $labs
+New-AzLabMultiple   -ConfigObject $labs
