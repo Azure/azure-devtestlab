@@ -66,7 +66,7 @@ namespace AzureFunctions
             if (vm.LastKnownPowerState == "Running")
             {
                 var artifactRequest = new ApplyArtifactsRequest(new List<ArtifactInstallProperties> {
-                    new ArtifactInstallProperties($"{labResourceId}/artifactSources/privaterepo719/artifacts/windows-installwindowsupdates")
+                    new ArtifactInstallProperties($"{labResourceId}/artifactSources/public repo/artifacts/windows-install-windows-updates")
                 });
 
                 // We fire off the request to apply artifacts, but we don't wait until it's complete before wrapping up the function

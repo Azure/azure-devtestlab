@@ -162,7 +162,7 @@ if ($sub) {
                     Sort-Object -Property @{Expression={$_.InstallTime.Length -gt 0}; Descending = $true}, InstallTime |
                     Where-Object {
                         $artifactName = ($_.artifactId.Split("/") | Select -Last 1)
-                        $artifactName -ne "windows-installwindowsupdates" -and $artifactName -ne "windows-noop"
+                        $artifactName -ne "windows-install-windows-updates" -and $artifactName -ne "windows-noop"
                     } |
                     ForEach-Object {
                         if ($_.InstallTime) {
@@ -172,7 +172,7 @@ if ($sub) {
                     }) -join "<br/>"
 
                 $latestWindowsUpdateArtifact = $_.Properties.Artifacts |
-                    Where-Object {($_.artifactId.Split("/") | Select -Last 1) -eq "windows-installwindowsupdates"} |
+                    Where-Object {($_.artifactId.Split("/") | Select -Last 1) -eq "windows-install-windows-updates"} |
                     Sort-Object -Property @{Expression="InstallTime"; Descending=$true} |
                     Select -First 1
             }

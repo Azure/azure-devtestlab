@@ -102,7 +102,7 @@ if ($sub) {
             $properties = @{
                 "artifacts" = @(
                     @{
-                        "artifactId" = "/subscriptions/$($Request.Params.SUBSCRIPTIONID)/resourceGroups/$($Request.Params.RESOURCEGROUPNAME)/providers/Microsoft.DevTestLab/labs/$($Request.Params.LABNAME)/artifactSources/privaterepo719/artifacts/windows-installwindowsupdates"
+                        "artifactId" = "/subscriptions/$($Request.Params.SUBSCRIPTIONID)/resourceGroups/$($Request.Params.RESOURCEGROUPNAME)/providers/Microsoft.DevTestLab/labs/$($Request.Params.LABNAME)/artifactSources/public repo/artifacts/windows-install-windows-updates"
                     }
                 )
             }
@@ -121,7 +121,7 @@ if ($sub) {
         }
         else {
             # The VM isn't running, should return a different HTML page warning the user
-            $htmlPageResponse = $htmlPageTemplateResponse.Replace("{IMAGEURL}", "https://raw.githubusercontent.com/petehauge/azure-devtestlab/AzureFunctions/samples/DevTestLabs/AzureFunctions/VirtualMachineNotRunning.png")
+            $htmlPageResponse = $htmlPageTemplateResponse.Replace("{IMAGEURL}", "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/DevTestLabs/AzureFunctions/VirtualMachineNotRunning.png")
         }
     }
     else {

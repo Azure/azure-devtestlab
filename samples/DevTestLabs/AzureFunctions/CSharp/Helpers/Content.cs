@@ -198,13 +198,13 @@ type='button' href='{AZUREFUNCTIONURL_UPDATESUPPORTPAGE}' target='_blank'>Update
             switch (response)
             {
                 case responseType.LabSuccess:
-                    imgUrl = "https://raw.githubusercontent.com/petehauge/azure-devtestlab/AzureFunctions/samples/DevTestLabs/AzureFunctions/LabSuccessfullyUpdated.png";
+                    imgUrl = "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/DevTestLabs/AzureFunctions/LabSuccessfullyUpdated.png";
                     break;
                 case responseType.VirtualMachineSuccess:
-                    imgUrl = "https://raw.githubusercontent.com/petehauge/azure-devtestlab/AzureFunctions/samples/DevTestLabs/AzureFunctions/VirtualMachineSuccess.png";
+                    imgUrl = "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/DevTestLabs/AzureFunctions/VirtualMachineSuccess.png";
                     break;
                 case responseType.VirtualMachineNotRunning:
-                    imgUrl = "https://raw.githubusercontent.com/petehauge/azure-devtestlab/AzureFunctions/samples/DevTestLabs/AzureFunctions/VirtualMachineNotRunning.png";
+                    imgUrl = "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/DevTestLabs/AzureFunctions/VirtualMachineNotRunning.png";
                     break;
                 default:
                     throw new ArgumentException("Invalid value passed to internal GetHtmlResponse method");
