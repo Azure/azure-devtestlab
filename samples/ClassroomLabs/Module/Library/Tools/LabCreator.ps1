@@ -123,7 +123,7 @@ $init = {
     }
 }
 
-# TODO: could parallelize this to make it faster (but not too slow anyhow)
+# No need to parallelize this one as super fast
 function New-ResourceGroups {
     [CmdletBinding()]
     param(
@@ -144,7 +144,6 @@ function New-ResourceGroups {
     }
 }
 
-# TODO: parallelize this one as it takes a few minutes ...
 function New-Accounts {
     [CmdletBinding()]
     param(
@@ -156,11 +155,27 @@ function New-Accounts {
     $lacs = $ConfigObject | Select-Object -Property ResourceGroupName, LabAccountName -Unique
     Write-Host "Operating on the following Lab Accounts:"
     Write-Host $lacs
-    
-    $lacs | ForEach-Object {
-        New-AzLabAccount -ResourceGroupName $_.ResourceGroupName -LabAccountName $_.LabAccountName | Out-Null
-        Write-Host "$($_.LabAccountName) lab account created or found."
+
+    $block = {
+        param($path, $ResourceGroupName, $LabAccountName)
+
+        Set-StrictMode -Version Latest
+        $ErrorActionPreference = 'Stop'
+        
+        $modulePath = Join-Path $path '..' 'Az.AzureLabs.psm1'
+        Import-Module $modulePath
+
+        New-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName | Out-Null
+        Write-Host "$LabAccountName lab account created or found."
     }
+    
+    $jobs = @()
+    $lacs | ForEach-Object {
+        $jobs += Start-Job -ScriptBlock $block -ArgumentList $PSScriptRoot, $_.ResourceGroupName, $_.LabAccountName -Name $_.LabAccountName
+    }
+
+    $hours = 1
+    Wait-JobWithProgress -jobs $jobs -secTimeout (60 * 60 * $hours)
 }
 
 function Show-JobProgress {
