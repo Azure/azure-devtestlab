@@ -1,4 +1,0 @@
-ResourceGroupName,Location,LabAccountName,LabName,ImageName,MaxUsers,UsageQuota,UsageMode,SharedPassword,Size,Title,Descr,UserName,Password,LinuxRdp, Emails,Invitation,Schedules
-TestRG3,westeurope,Test1LA,Test1,CentOS-Based*,2,20,Restricted,false,Small,"A title1","A descr1",test0000,Test00000000,true,"lucabol@microsoft.com;lucabol@microsoft.com", "An inv1"
-TestRG3,westeurope,Test2LA,Test2,CentOS-Based*,2,20,Restricted,false,Small,"A title1","A descr1",test0000,Test00000000,true,"lucabol@microsoft.com;lucabol@microsoft.com", "An inv1"
-TestRG3,westeurope,Test3LA,Test3,CentOS-Based*,2,20,Restricted,false,Small,"A title1","A descr1",test0000,Test00000000,true,"lucabol@microsoft.com;lucabol@microsoft.com", "An inv1"

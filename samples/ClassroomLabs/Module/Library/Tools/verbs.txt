@@ -1,0 +1,148 @@
+Importing function 'Add-AzLabUser'.
+Importing function 'Get-AzLab'.
+Importing function 'Get-AzLabAccount'.
+Importing function 'Get-AzLabAccountGalleryImage'.
+Importing function 'Get-AzLabAccountSharedImage'.
+Importing function 'Get-AzLabForVm'.
+Importing function 'Get-AzLabSchedule'.
+Importing function 'Get-AzLabTemplateVM'.
+Importing function 'Get-AzLabUser'.
+Importing function 'Get-AzLabVm'.
+Importing function 'New-AzLab'.
+Importing function 'New-AzLabAccount'.
+Importing function 'New-AzLabSchedule'.
+Importing function 'New-AzLabTemplateVM'.
+Importing function 'Publish-AzLab'.
+Importing function 'Register-AzLabUser'.
+Importing function 'Remove-AzLab'.
+Importing function 'Remove-AzLabAccount'.
+Importing function 'Remove-AzLabSchedule'.
+Importing function 'Remove-AzLabUser'.
+Importing function 'Send-AzLabUserInvitationEmail'.
+Importing function 'Set-AzLab'.
+Importing function 'Start-AzLabVm'.
+Importing function 'Stop-AzLabVm'.
+
+ResourceGroupName Location   LabAccountName LabName          ImageName     MaxUsers UsageQuota UsageMode  SharedPassword Size
+----------------- --------   -------------- -------          ---------     -------- ---------- ---------  -------------- ----
+hogwarts-rg2      westeurope Muggle         History of Magic CentOS-Based* 2        20         Restricted false          Small
+hogwarts-rg2      westeurope Wizardy        Transfiguration  CentOS-Based* 2        20         Restricted false          Small
+hogwarts-rg2      westeurope Wizardy        Charms           CentOS-Based* 2        20         Restricted false          Small
+
+
+[
+  {
+    "ResourceGroupName": "hogwarts-rg2",
+    "Location": "westeurope",
+    "LabAccountName": "Muggle",
+    "LabName": "History of Magic",
+    "ImageName": "CentOS-Based*",
+    "MaxUsers": "2",
+    "UsageQuota": "20",
+    "UsageMode": "Restricted",
+    "SharedPassword": false,
+    "Size": "Small",
+    "Title": "History of Magic",
+    "Descr": "Those who don't know history ...",
+    "UserName": "test0000",
+    "Password": "Test00000000",
+    "LinuxRdp": true,
+    "Emails": [
+      "lucabol@microsoft.com",
+      "lucabol@microsoft.com"
+    ],
+    "Invitation": "History of Magic",
+    "Schedules": null
+  },
+  {
+    "ResourceGroupName": "hogwarts-rg2",
+    "Location": "westeurope",
+    "LabAccountName": "Wizardy",
+    "LabName": "Transfiguration",
+    "ImageName": "CentOS-Based*",
+    "MaxUsers": "2",
+    "UsageQuota": "20",
+    "UsageMode": "Restricted",
+    "SharedPassword": false,
+    "Size": "Small",
+    "Title": "Transfiguration",
+    "Descr": "Who are you?",
+    "UserName": "test0000",
+    "Password": "Test00000000",
+    "LinuxRdp": true,
+    "Emails": [
+      "lucabol@microsoft.com",
+      "lucabol@microsoft.com"
+    ],
+    "Invitation": "Transfiguration",
+    "Schedules": null
+  },
+  {
+    "ResourceGroupName": "hogwarts-rg2",
+    "Location": "westeurope",
+    "LabAccountName": "Wizardy",
+    "LabName": "Charms",
+    "ImageName": "CentOS-Based*",
+    "MaxUsers": "2",
+    "UsageQuota": "20",
+    "UsageMode": "Restricted",
+    "SharedPassword": false,
+    "Size": "Small",
+    "Title": "Charms",
+    "Descr": "Encanted",
+    "UserName": "test0000",
+    "Password": "Test00000000",
+    "LinuxRdp": true,
+    "Emails": [
+      "lucabol@microsoft.com",
+      "lucabol@microsoft.com"
+    ],
+    "Invitation": "Charms",
+    "Schedules": [
+      {
+        "Frequency": "Weekly",
+        "FromDate": "1/1/2021",
+        "ToDate": "12/12/2021",
+        "StartTime": "10:00",
+        "EndTime": "12:00",
+        "WeekDays": [
+          "Monday",
+          "Friday"
+        ],
+        "TimeZoneId": "W. Europe Standard Time",
+        "Notes": "A recurrent class"
+      },
+      {
+        "Frequency": "Once",
+        "FromDate": "1/1/2021",
+        "ToDate": "12/12/2021",
+        "StartTime": "10:00",
+        "EndTime": "12:00",
+        "WeekDays": "",
+        "TimeZoneId": "W. Europe Standard Time",
+        "Notes": "A workshop"
+      }
+    ]
+  }
+]
+
+11:08:08 AM - Created resource group 'hogwarts-rg2' in location 'westeurope'
+{
+  "location": "westeurope"
+}
+PUT https://management.azure.com/subscriptions/d5e481ac-7346-47dc-9557-f405e1b3dcb0/resourcegroups/hogwarts-rg2/providers/microsoft.labservices/labaccounts/Muggle?api-version=2019-01-01-preview with 32-byte payload
+received 395-byte response of content type application/json
+Retrying 120 times every 60 seconds.
+GET https://management.azure.com/subscriptions/d5e481ac-7346-47dc-9557-f405e1b3dcb0/resourcegroups/hogwarts-rg2/providers/microsoft.labservices/labaccounts/Muggle?api-version=2019-01-01-preview with 0-byte payload
+received 1526-byte response of content type application/json
+0 : ProvisioningState = Creating
+GET https://management.azure.com/subscriptions/d5e481ac-7346-47dc-9557-f405e1b3dcb0/resourcegroups/hogwarts-rg2/providers/microsoft.labservices/labaccounts/Muggle?api-version=2019-01-01-preview with 0-byte payload
+received 1527-byte response of content type application/json
+{
+  "location": "westeurope"
+}
+PUT https://management.azure.com/subscriptions/d5e481ac-7346-47dc-9557-f405e1b3dcb0/resourcegroups/hogwarts-rg2/providers/microsoft.labservices/labaccounts/Wizardy?api-version=2019-01-01-preview with 32-byte payload
+received 397-byte response of content type application/json
+Retrying 120 times every 60 seconds.
+GET https://management.azure.com/subscriptions/d5e481ac-7346-47dc-9557-f405e1b3dcb0/resourcegroups/hogwarts-rg2/providers/microsoft.labservices/labaccounts/Wizardy?api-version=2019-01-01-preview with 0-byte payload
+received 1529-byte response of content type application/json
