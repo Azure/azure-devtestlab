@@ -1,3 +1,5 @@
+# TODO: support shared images
+
 [CmdletBinding()]
 param(
     [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
