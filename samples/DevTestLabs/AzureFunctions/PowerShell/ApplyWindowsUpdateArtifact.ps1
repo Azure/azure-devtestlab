@@ -17,6 +17,7 @@ Write-Host "Function to apply the Windows Update artifact on a VM $($Request.Par
 # ---------------------------------------------------
 # Confirm that we have valid route parameters and ApplicationSettings have been configured
 # ---------------------------------------------------
+# NOTE:  $Request.Params is populated via the Route Configuration in the Azure Function automatically by the functions infrastructure.
 if (-not $Request.Params.SUBSCRIPTIONID) {
     Write-Error "Missing [SUBSCRIPTIONID] in the Rest API URL"
 }
@@ -29,6 +30,7 @@ if (-not $Request.Params.LABNAME) {
 if (-not $Request.Params.VIRTUALMACHINENAME) {
     Write-Error "Missing [VIRTUALMACHINENAME] in the Rest API URL"
 }
+# NOTE:  $env:<appsettingname> is automatically populated via Application Settings (configuration) in the Azure Function
 if (-not $env:ServicePrincipal_AppId) {
     Write-Error "Missing [ServicePrincipal_AppId] in the ApplicationSettings for the Azure Function"
 }

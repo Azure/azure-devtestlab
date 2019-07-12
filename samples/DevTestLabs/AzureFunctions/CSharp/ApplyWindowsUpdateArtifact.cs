@@ -34,43 +34,26 @@ namespace AzureFunctions
 
             // login to the DevTest Labs APIs
             var dtlClient = authenticationHelper.LoginToDevTestLabsAPIs(subscriptionId);
+            var azureClient = authenticationHelper.LoginToAzure(subscriptionId);
+            var devTestLabsHelper = new DevTestLabs(azureClient, dtlClient, log);
 
-            string labResourceId = string.Empty;
-            try
-            {
-                // this call throws an exception if we can't find the lab.  The most likely case 
-                // is that the request contained invalid information (invalid lab name for example)
-                var lab = await dtlClient.Labs.GetAsync(resourceGroupName, labName);
-                labResourceId = lab.Id;
-            }
-            catch (Exception e)
-            {
-                log.LogError($"{e.Message}  Perhaps the ResourceGroupName '{resourceGroupName}' or LabName '{labName}' doesn't exist?");
-                throw;
-            }
+            // Get the lab's resource id (which also confirms the lab exists)
+            string labResourceId = await devTestLabsHelper.GetDevTestLabResourceId(resourceGroupName, labName);
 
-            // Get the virtual machine, let's make sure it's running
-            LabVirtualMachine vm = null;
-            try
-            {
-                // this call throws an exception if we can't find the VM.  Most likely case
-                // is that the request contained invalid info (invalid lab name, or invalid VM name)
-                vm = await dtlClient.VirtualMachines.GetAsync(resourceGroupName, labName, virtualMachineName);
-            }
-            catch (Exception e)
-            {
-                log.LogError($"{e.Message}  Perhaps the ResourceGroupName '{resourceGroupName}' or LabName '{labName}' or VM '{virtualMachineName}' doesn't exist?");
-                throw;
-            }
+            // Get the virtual machine
+            LabVirtualMachine vm = await devTestLabsHelper.GetDevTestLabVirtualMachine(resourceGroupName, labName, virtualMachineName);
 
-            if (vm.LastKnownPowerState == "Running")
+            // Let's make sure the VM is OK to apply artifacts
+
+
+            if (await devTestLabsHelper.IsVirtualMachineReadyForArtifacts(vm))
             {
                 var artifactRequest = new ApplyArtifactsRequest(new List<ArtifactInstallProperties> {
                     new ArtifactInstallProperties($"{labResourceId}/artifactSources/public repo/artifacts/windows-install-windows-updates")
                 });
 
                 // We fire off the request to apply artifacts, but we don't wait until it's complete before wrapping up the function
-                // If we wanted to wait, we would use "dtlClient.VirtualMachines.ApplyArtifactsAsync()"
+                // If we wanted to wait, we would use "dtlClient.VirtualMachines.ApplyArtifactsAsync()" instead
                 dtlClient.VirtualMachines.BeginApplyArtifacts(resourceGroupName, labName, virtualMachineName, artifactRequest);
             }
             else

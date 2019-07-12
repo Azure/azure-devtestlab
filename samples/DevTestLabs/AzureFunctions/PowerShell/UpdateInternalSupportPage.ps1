@@ -17,6 +17,7 @@ Write-Host "Function to update the InternalSupport page in lab $($Request.Params
 # ---------------------------------------------------
 # Confirm that we have valid route parameters and ApplicationSettings have been configured
 # ---------------------------------------------------
+# NOTE:  $Request.Params is populated via the Route Configuration in the Azure Function automatically by the functions infrastructure.
 if (-not $Request.Params.SUBSCRIPTIONID) {
     Write-Error "Missing [SUBSCRIPTIONID] in the Rest API URL"
 }
@@ -26,6 +27,7 @@ if (-not $Request.Params.RESOURCEGROUPNAME) {
 if (-not $Request.Params.LABNAME) {
     Write-Error "Missing [LABNAME] in the Rest API URL"
 }
+# NOTE:  $env:<appsettingname> is automatically populated via Application Settings (configuration) in the Azure Function
 if (-not $env:ServicePrincipal_AppId) {
     Write-Error "Missing [ServicePrincipal_AppId] in the ApplicationSettings for the Azure Function"
 }

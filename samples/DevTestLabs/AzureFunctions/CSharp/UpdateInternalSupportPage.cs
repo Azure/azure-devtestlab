@@ -46,18 +46,13 @@ namespace AzureFunctions
 
             // login to the DevTest Labs APIs
             var dtlClient = authenticationHelper.LoginToDevTestLabsAPIs(subscriptionId);
+            var azureClient = authenticationHelper.LoginToAzure(subscriptionId);
+            var dtlHelper = new DevTestLabs(azureClient, dtlClient, log);
 
-            try
-            {
-                // this call throws an exception if we can't find the lab.  The most likely case 
-                // is that the request contained invalid information (invalid lab name for example)
-                await dtlClient.Labs.GetAsync(resourceGroupName, labName);
-            }
-            catch (Exception e)
-            {
-                log.LogError($"{e.Message}  Perhaps the ResourceGroupName '{resourceGroupName}' or LabName '{labName}' doesn't exist?");
-                throw;
-            }
+            // this call throws an exception if we can't find the lab.  The most likely case 
+            // is that the request contained invalid information (invalid lab name for example)
+            // we use that for validation that the lab really exists
+            await dtlHelper.GetDevTestLabResourceId(resourceGroupName, labName);
 
             // Get the list of virtual machines in a lab including any artifacts that were applied
             var virtualMachines = await dtlClient.VirtualMachines.ListAsync(resourceGroupName, labName, "''&$expand=Properties($expand=Artifacts)");
@@ -88,7 +83,6 @@ namespace AzureFunctions
                 ContentType = "text/html",
                 StatusCode = 200
             };
-
         }
     }
 }

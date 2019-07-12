@@ -120,15 +120,16 @@ type='button' href='{AZUREFUNCTIONURL_UPDATESUPPORTPAGE}' target='_blank'>Update
                 {
                     artifactStatus = string.Join("<br/>", (from a in vm.Artifacts
                                                                // Exclude Windows Update artifact since it's run multiple times, would make the list too long
-                                                           where a.ArtifactTitle != "Installs the latest Windows Updates" &&
+                                                           let artifactName = a.ArtifactId.Split('/').Reverse().First()
+                                                           where artifactName != "windows-install-windows-updates" &&
                                                            // Exclude the No-Op artifact, it's added automatically by DTL when needed
-                                                           a.ArtifactTitle != "No-Op"
+                                                           artifactName != "windows-noop"
                                                            orderby a.InstallTime.HasValue descending, a.InstallTime // we want "skipped" and "pending" artifacts at the end
                                                            select (a.ArtifactTitle + "  (" + (a.InstallTime.HasValue ? a.InstallTime.Value.ToShortDateString() + ", " : "") +
                                                            a.Status + ")")));
 
                     latestWindowsUpdateArtifact = (from a in vm.Artifacts
-                                                   where a.ArtifactTitle == "Installs the latest Windows Updates"
+                                                   where a.ArtifactId.Split('/').Reverse().First() == "windows-install-windows-updates"
                                                    orderby a.InstallTime descending
                                                    select a).FirstOrDefault();
                 }
