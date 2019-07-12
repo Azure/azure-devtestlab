@@ -1,5 +1,5 @@
-# TODO: make functions that take a user accept multiple users
-# TODO: think of what should add/set/remove functions return
+# TODO: consider making functions that take a user accept multiple users
+# TODO: consider (again) of what should add/set/remove functions return
 # TODO: consider polling on the operation returned by the API in the header as less expensive for RP
 # TODO: create tutorial
 # TODO: create Readme for repo
@@ -71,7 +71,7 @@ function BeginPreamble {
   $ErrorActionPreference = 'Stop'
 }
 
-# TODO: reduce function below to just get ErrorActionPreference
+# TODO: consider reducing function below to just get ErrorActionPreference
 # Taken from https://gallery.technet.microsoft.com/scriptcenter/Inherit-Preference-82343b9d
 function Get-CallerPreference
 {
@@ -1204,7 +1204,7 @@ function New-AzLab {
               }
             } | ConvertTo-Json -depth 10
           } else {
-            # TODO: Once is weird. Could check parameters more instead of just plucking the ones I need
+            # TODO: Consider checking parameters more instead of just plucking the ones I need
             $body = @{
               properties = @{
                 enableState = 'Enabled'
