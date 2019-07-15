@@ -2,7 +2,7 @@
 Prints out a report of all VMs.
 #>
 [CmdletBinding()]
-param()
+param($UserEmail = '*')
 
 Import-Module ..\Az.AzureLabs.psm1 -Force
 
@@ -19,6 +19,7 @@ if($vms) {
 
     $vms `
         | Select-Object -Property $email, ResourceGroupName, LabName, Status `
+        | Where-Object { $_.Email -like $UserEmail } `
         | Sort-Object   -Property Email, ResourceGroupName, LabName, Status -Descending `
         | Format-Table  -GroupBy Email -Property ResourceGroupName, LabName, Status `
         | Out-Host
