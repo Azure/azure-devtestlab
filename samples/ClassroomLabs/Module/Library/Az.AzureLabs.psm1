@@ -1,8 +1,6 @@
 # TODO: consider making functions that take a user accept multiple users
 # TODO: consider (again) of what should add/set/remove functions return
 # TODO: consider polling on the operation returned by the API in the header as less expensive for RP
-# TODO: create tutorial
-# TODO: create Readme for repo
 # TODO: consider creating proper PS1 documentation for each function
 # TODO: make Start/Stop VM function wait for the operation to have completed
 # TODO: consider writing testcase to run nightly with reporting on success on readme
