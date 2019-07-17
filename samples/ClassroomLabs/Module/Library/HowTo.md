@@ -79,7 +79,7 @@ $lab = $lab | Publish-AzLab
 
 If later on you need to modify some property of the lab (i.e. change number of users), you can use the `Set-AzLab` function.
 
-If you want reusable functions that do all the steps above in one shot, look at the `CreateWorkshop.ps1`(Scenarios/CreateWorkshop.ps1) script or at the `New-AzLabSingle` function inside the `LabCreator.ps1`(Tools/LabCreator.ps1) script.
+If you want reusable functions that do all the steps above in one shot, look at the `New-AzLabSingle` function inside the [`LabCreator.ps1`](Tools/LabCreator.ps1) script.
 
 ## Modify a lab
 
