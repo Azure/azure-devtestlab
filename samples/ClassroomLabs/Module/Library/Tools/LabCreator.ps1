@@ -343,7 +343,8 @@ $labs = Import-Csv -Path $CsvConfigFile
 
 Write-Verbose ($labs | Format-Table | Out-String)
 
-$labs | ForEach-Object { $_.Emails = ($_.Emails.Split(';')).Trim()
+$labs | ForEach-Object {
+    $_.Emails = ($_.Emails.Split(';')).Trim()
     $_.LinuxRdp = [System.Convert]::ToBoolean($_.LinuxRdp)
     $_.SharedPassword = [System.Convert]::ToBoolean($_.SharedPassword)
     if ($_.Schedules) {

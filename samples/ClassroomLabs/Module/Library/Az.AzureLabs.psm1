@@ -4,8 +4,9 @@
 # TODO: create tutorial
 # TODO: create Readme for repo
 # TODO: consider creating proper PS1 documentation for each function
-# TODO: consider making Start/Stop VM function wait for the operation to have completed
+# TODO: make Start/Stop VM function wait for the operation to have completed
 # TODO: consider writing testcase to run nightly with reporting on success on readme
+# TODO: add nightly test for schedules REST calls
 
 # We are using strict mode for added safety
 Set-StrictMode -Version Latest
