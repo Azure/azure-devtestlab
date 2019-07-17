@@ -1,11 +1,11 @@
-# Az.DevTestLabs Tutorial <!-- omit in TOC -->
+# Az.AzureLabs Tutorial <!-- omit in TOC -->
 
-Az.DevTestLabs is a PowerShell module to simplify the management of [Azure DevTest Labs](https://azure.microsoft.com/en-in/services/devtest-lab/). It provides composable functions to create, query, update and delete labs, VMs, Custom Images and Environments.
+Az.AzureLabs is a PowerShell module to simplify the management of [Azure Lab services](https://azure.microsoft.com/en-in/services/lab-services/). It provides composable functions to create, query, update and delete lab accounts, labs, VMs and Images.
 
 - [Introduction](#introduction)
 - [Import the module](#import-the-module)
 - [Browse all the functions in the library](#browse-all-the-functions-in-the-library)
-- [Create a new lab](#create-a-new-lab)
+- [Publish a new lab](#publish-a-new-lab)
 - [Modify a lab](#modify-a-lab)
 - [Create a VM in the lab](#create-a-vm-in-the-lab)
 - [Use custom images](#use-custom-images)
@@ -15,7 +15,7 @@ Az.DevTestLabs is a PowerShell module to simplify the management of [Azure DevTe
   
 ## Introduction
 
-If you want a quick overview of all the features, see this [scenario file](https://github.com/Azure/azure-devtestlab/blob/master/samples/DevTestLabs/Modules/Library/Scenarios/ScenarioAllFeatures.ps1).
+If you want a quick overview of all the features, see this [scenario file](Scenarios/AllFeatures.ps1).
 
 Many of the code snippets below might take a bit of time (minutes) to execute, especially the ones that create Azure resources.
 
@@ -23,13 +23,13 @@ You can pass the `-verbose` parameter to see some action on your screen, otherwi
 
 ## Import the module
 
-First you need to save the [`Az.DevTestLabs2.psm1`](https://github.com/Azure/azure-devtestlab/blob/master/samples/DevTestLabs/Modules/Library/Az.DevTestLabs2.psm1) file in a directory on disk.
+First you need to save the [`Az.AzureLabs.psm1`](Az.AzureLabs.psm1) file in a directory on disk.
 
 Then you need to open a Powershell console and import the module:
 
 ```powershell
 cd DIRECTORY-WITH-MODULE
-import-module ./Az.DevTestLabs2.psm1
+import-module ./Az.AzureLabs.psm1
 ```
 
 ## Browse all the functions in the library
@@ -37,10 +37,10 @@ import-module ./Az.DevTestLabs2.psm1
 As a quick way to see which DevTestLabs capabilities are supported, type the following command in the console.
 
 ```powershell
-Get-Command -Module Az.DevTestLabs2 | foreach { Get-Alias -Definition $_.name -ea SilentlyContinue }
+Get-Command -Module Az.AzureLabs
 ```
 
-## Create a new lab
+## Publish a new lab
 
 From now on, the tutorial assumes that you are signed in into Azure. If you are not, you can read about it [here](https://docs.microsoft.com/en-us/powershell/azure/authenticate-azureps?view=azps-2.1.0).
 
@@ -50,11 +50,36 @@ First, let's create a new Resource Group to host your lab.
 New-AzureRmResourceGroup -Name DtlPS1 -Location "West Europe"
 ```
 
-Then create a new lab in the resource group.
+Then create a new lab account in the resource group
+
+```powerhsell
+$la = New-AzLabAccount -ResourceGroupName DtlPS1 -LabAccountName TestAzLab
+```
+
+Then create a new lab in the lab account. The parameters should be self-explanatory as they closely resemble the equally named parameters in the Azure Labs UI.
 
 ```powershell
-$lab = Dtl-NewLab -Name MyLab -ResourceGroupName DtlPS1
+$lab = $la | New-AzLab -LabName MyLab -MaxUsers 2 -UsageQuotaInHours 20 -UserAccessMode Restricted -SharedPasswordEnabled
 ```
+
+Once the lab is created, we need to add a template VM to it. A template VM needs an image to be based on. The whole process is exemplified below:
+
+```powershell
+$img = $la | Get-AzLabAccountGalleryImage | Where-Object {$_.name -like 'CentOS-Based*'}
+$lab = $lab | New-AzLabTemplateVM -Image $img -Size 'Small' -Title 'My lab title' -Description 'My descr' -UserName 'Test0000' -Password 'test00000000' -LinuxRdpEnabled
+```
+
+Notice that you can also get the image from a shared gallery, by calling the `Get-AzLabAccountSharedImage` function instead of `Get-AzLabAccountGalleryImage`.
+
+Once all of the above is done, you can finally publish the lab:
+
+```powershell
+$lab = $lab | Publish-AzLab
+```
+
+If later on you need to modify some property of the lab (i.e. change number of users), you can use the `Set-AzLab` function.
+
+If you want reusable functions that do all the steps above in one shot, look at the `CreateWorkshop.ps1`(Scenarios/CreateWorkshop.ps1) script or at the `New-AzLabSingle` function inside the `LabCreator.ps1`(Tools/LabCreator.ps1) script.
 
 ## Modify a lab
 
