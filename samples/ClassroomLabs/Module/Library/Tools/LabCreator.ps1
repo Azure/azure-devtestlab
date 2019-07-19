@@ -1,5 +1,3 @@
-# TODO: support shared images
-
 [CmdletBinding()]
 param(
     [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
@@ -102,8 +100,12 @@ $init = {
             Write-Host "$LabName lab already exist. Republished."
         }
         else {
-            $img = $la | Get-AzLabAccountGalleryImage | Where-Object { $_.name -like $ImageName }
-            if (-not $img -or $img.Count -ne 1) { Write-Error "$ImageName pattern doesn't match just one image." }
+            # Try to load shared image and then gallery image
+            $img = $la | Get-AzLabAccountSharedImage | Where-Object { $_.name -like $ImageName }
+            if(-not $img) {
+                $img = $la | Get-AzLabAccountGalleryImage | Where-Object { $_.name -like $ImageName }
+                if (-not $img -or $img.Count -ne 1) { Write-Error "$ImageName pattern doesn't match just one gallery image." }
+            }
             Write-Host "Image $ImageName found."
     
             $lab = $la `
