@@ -3,7 +3,6 @@
 # TODO: consider creating proper PS1 documentation for each function
 # TODO: consider writing testcase to run nightly with reporting on success on readme
 # TODO: add nightly test for schedules REST calls
-# TODO: add -asjob for long running operations
 
 # We are using strict mode for added safety
 Set-StrictMode -Version Latest
