@@ -1,11 +1,11 @@
-# Az.DevTestLabs
+# Az.DevTestLabs   [![Build status](https://dotnetcst.visualstudio.com/DTL-Library/_apis/build/status/Validate%20the%20DTl%20Library)](https://dotnetcst.visualstudio.com/DTL-Library/_build/latest?definitionId=63)
 
 Az.DevTestLabs is a PowerShell module to simplify the management of [Azure DevTest Labs](https://azure.microsoft.com/en-us/services/devtest-lab/). It provides composable functions to create, query, update and delete labs, VMs, Custom Images and Environments.
 
 Here is an example that showcases using the library to start all the VMs in all the labs whose name start with the prefix "Test".
 
 ```powershell
-Dtl-GetLab -name Test* | Dtl-GetVm | Dtl-StartVm
+Get-AzDtlLab -name Test* | Get-AzDtlVm | Start-AzDtlVm
 ```
 
 And [here](HowTo.md) is a step by step tutorial.
@@ -23,7 +23,7 @@ Import-Module .\Az.DevTestLabs2.psm1
 4. Start hacking !! (i.e. List all the labs in your subscription)
 
 ```powershell
-Dtl-GetLab
+Get-AzDtlLab
 ```
 
 ## Examples

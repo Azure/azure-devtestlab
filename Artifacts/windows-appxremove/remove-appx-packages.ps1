@@ -46,8 +46,28 @@ trap
 #
 
 if ([Environment]::OSVersion.Version.Major -gt 6) {
-    Write-Host "`nRemoving Appx Packages`n"
+    Write-Host "`nRemoving Appx Packages for current user`n"
+
+    Get-AppxPackage | Remove-AppxPackage -ErrorAction SilentlyContinue 
+
+    Write-Host "`nRemoving All users Appx Packages for current user`n"
     Get-AppxPackage -AllUsers | Remove-AppxPackage -ErrorAction SilentlyContinue
+
+    Write-Host "`nRemoving apps from provisioned apps list so they don't reinstall on new users`n"
+    Get-AppxProvisionedPackage -Online  | Remove-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue
+
+    Write-Host "`nRemoving all apps for all users`n"
+    $allPackageNames = Get-AppxPackage -AllUsers | Select-Object -Expand Name
+    $allPackageNames = $allPackageNames | ForEach-Object {"*$_*"}
+    ForEach($app in $allPackageNames){
+        Try{
+            Get-AppxPackage -Allusers -Name $app | Remove-AppxPackage -Allusers -ErrorAction SilentlyContinue
+        }
+        Catch{
+        }
+    }
+
+
     Write-Host "`nDone Removing Appx Packages`n"
 }
 else {

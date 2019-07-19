@@ -14,13 +14,14 @@ Set-StrictMode -Version Latest
 
 $azureRm  = Get-Module -Name "AzureRM" -ListAvailable | Sort-Object Version.Major -Descending | Select-Object -First 1
 $az       = Get-Module -Name "Az.Accounts" -ListAvailable
-$justAz   = $az -and (-not $azureRm)
+$justAz   = $az -and -not ($azureRm -and $azureRm.Version.Major -ge 6)
+$justAzureRm = $azureRm -and (-not $az)
 
 if($azureRm -and $az) {
   Write-Warning "You have both Az and AzureRm module installed. That is not officially supported. For more read here: https://docs.microsoft.com/en-us/powershell/azure/migrate-from-azurerm-to-az"
 }
 
-if($azureRm) {
+if($justAzureRm) {
   if ($azureRm.Version.Major -lt 6) {
     Write-Error "This module does not work correctly with version 5 or lower of AzureRM, please upgrade to a newer version of Azure PowerShell in order to use this module."
   } else {
@@ -32,6 +33,7 @@ if($azureRm) {
 
 if($justAz) {
   Enable-AzureRmAlias -Scope Local -Verbose:$false
+  Enable-AzureRmContextAutosave -Scope CurrentUser -erroraction silentlycontinue
 }
 
 # We want to track usage of library, so adding GUID to user-agent at loading and removig it at unloading
@@ -115,12 +117,22 @@ function Get-AzureRmCachedAccessToken()
   $ErrorActionPreference = 'Stop'
   Set-StrictMode -Off
 
-  if(-not (Get-Module AzureRm.Profile)) {
-    Import-Module AzureRm.Profile
+  if ($justAz) {
+    if (-not (Get-Module -Name Az.Resources)) {
+        Import-Module -Name Az.Resources
+    }
+    $azureRmProfileModuleVersion = (Get-Module Az.Resources).Version
+
+  } else {
+      if(-not (Get-Module -Name AzureRm.Profile)) {
+        Import-Module -Name AzureRm.Profile
+      }
+
+      $azureRmProfileModuleVersion = (Get-Module AzureRm.Profile).Version
   }
-  $azureRmProfileModuleVersion = (Get-Module AzureRm.Profile).Version
+
   # refactoring performed in AzureRm.Profile v3.0 or later
-  if($azureRmProfileModuleVersion.Major -ge 3) {
+  if($azureRmProfileModuleVersion.Major -ge 3 -or ($justAz -and $azureRmProfileModuleVersion.Major -ge 1)) {
     $azureRmProfile = [Microsoft.Azure.Commands.Common.Authentication.Abstractions.AzureRmProfileProvider]::Instance.Profile
     if(-not $azureRmProfile.Accounts.Count) {
       Write-Error "Ensure you have logged in before calling this function."
@@ -582,6 +594,248 @@ function Remove-AzDtlLab {
     }
   }
   end {}
+}
+
+
+function Get-AzDtlLabSharedImageGallery {
+  [CmdletBinding()]
+  param(
+    [parameter(Mandatory=$true, ValueFromPipeline=$true, HelpMessage="Lab to query for Shared Image Gallery")]
+    [ValidateNotNullOrEmpty()]
+    $Lab,
+
+    [parameter(Mandatory=$false,HelpMessage="Also return images")]
+    [switch] $IncludeImages = $false
+  )
+
+  begin {. BeginPreamble}
+  process {
+    try{
+        # Get the shared image gallery
+        $sig = Get-AzureRmResource -ResourceGroupName $Lab.ResourceGroupName -ResourceType 'Microsoft.DevTestLab/labs/sharedGalleries' -ResourceName $Lab.Name -ApiVersion 2018-10-15-preview
+
+            # Get all the images too and return the whole thing - if $sig is null, we don't return anything (no pipeline object)
+            if ($sig) {
+
+            if ($IncludeImages) {
+                # Get the images in the shared image gallery
+                $sigImages = $sig | Get-AzDtlLabSharedImageGalleryImages
+                
+                # Add the images to the shared image gallery object
+                $sig | Add-Member -MemberType NoteProperty -Name "Images" -Value $sigimages
+            }
+                
+            return $sig
+        }
+    } 
+    catch {
+      Write-Error -ErrorRecord $_ -EA $callerEA
+    }
+  } 
+  end {
+  }
+}
+
+function Remove-AzDtlLabSharedImageGallery {
+  [CmdletBinding()]
+  param(
+    [parameter(Mandatory=$true, ValueFromPipeline=$true, HelpMessage="DevTest Labs Shared Image Gallery object to remove from the lab")]
+    [ValidateNotNullOrEmpty()]
+    $SharedImageGallery
+  )
+
+  begin {. BeginPreamble}
+  process {
+    try{
+        Remove-AzureRmResource -ResourceId $SharedImageGallery.ResourceId -ApiVersion 2018-10-15-preview -Force
+    } 
+    catch {
+      Write-Error -ErrorRecord $_ -EA $callerEA
+    }
+  } 
+  end {
+  }
+}
+
+function Set-AzDtlLabSharedImageGallery {
+  [CmdletBinding()]
+  param(
+    [parameter(Mandatory=$true, ValueFromPipeline=$true, HelpMessage="Lab object to set Shared Image Gallery")]
+    [ValidateNotNullOrEmpty()]
+    $Lab,
+
+    [parameter(Mandatory=$true,HelpMessage="The DevTest Labs name for the shared image gallery")]
+    [string] $Name,
+
+    [parameter(Mandatory=$true,HelpMessage="Full ResourceId of the Shared Image Gallery to attach to the lab")]
+    [string] $ResourceId,
+
+    [parameter(Mandatory=$false,HelpMessage="Set to true to allow all images to be used as VM bases, set to false to control image-by-image which ones are allowed")]
+    [bool] $AllowAllImages = $true
+
+  )
+
+  begin {. BeginPreamble}
+  process {
+    try{
+
+        if ($AllowAllImages) {
+            $status = "Enabled"
+        } else {
+            $status = "Disabled"
+        }
+
+
+        $propertiesObject = @{
+            GalleryId = $ResourceId
+            allowAllImages = $status
+        }
+
+        # Add a shared image gallery
+        $result = New-AzureRmResource -Location $Lab.Location `
+                                      -ResourceGroupName $Lab.ResourceGroupName `
+                                      -properties $propertiesObject `
+                                      -ResourceType 'Microsoft.DevTestLab/labs/sharedGalleries' `
+                                      -ResourceName ($Lab.Name + '/' + $Name) `
+                                      -ApiVersion 2018-10-15-preview `
+                                      -Force
+
+        # following the pipeline pattern, return the shared image gallery object on the pipeline
+        return ($Lab | Get-AzDtlLabSharedImageGallery)
+
+    } 
+    catch {
+      Write-Error -ErrorRecord $_ -EA $callerEA
+    }
+  } 
+  end {
+  }
+}
+
+function Get-AzDtlLabSharedImageGalleryImages {
+  [CmdletBinding()]
+  param(
+    [parameter(Mandatory=$true, ValueFromPipeline=$true, HelpMessage="DevTest Labs Shared Image Gallery object to get images")]
+    [ValidateNotNullOrEmpty()]
+    $SharedImageGallery
+  )
+
+  begin {. BeginPreamble}
+  process {
+    try{
+
+        $sigimages = Get-AzureRmResource -ResourceId ($SharedImageGallery.ResourceId + "/sharedimages") `
+                                         -ApiVersion 2018-10-15-preview `
+                                         | ForEach-Object {
+                                            Add-Member -InputObject $_.Properties -MemberType NoteProperty -Name ResourceId -Value $_.ResourceId
+                                            $_.Properties.PSObject.Properties.Remove('uniqueIdentifier')
+                                            # Return properties on the pipeline
+                                            $_.Properties
+                                         }
+
+        return $sigimages
+     
+    } 
+    catch {
+      Write-Error -ErrorRecord $_ -EA $callerEA
+    }
+  } 
+  end {
+  }
+}
+
+function UpdateSharedImageGalleryImage ($SigResourceId, $ImageName, $OsType, $ImageType, $Status) {
+
+    $propertiesObject = @{
+        definitionName = $ImageName
+        enableState = $Status
+        osType = $OsType
+        ImageType = $ImageType
+    }
+
+    Set-AzureRmResource -ResourceId ($SigResourceId + "/sharedImages/" + $ImageName) `
+                        -ApiVersion 2018-10-15-preview `
+                        -Properties $propertiesObject `
+                        -Force | Out-Null
+
+ }
+
+function Set-AzDtlLabSharedImageGalleryImages  {
+  [CmdletBinding()]
+  param(
+    [parameter(Mandatory=$true, ParameterSetName = "Default", ValueFromPipeline=$true, HelpMessage="Shared Image Gallery object with Images property populated")]
+    [parameter(Mandatory=$true, ParameterSetName = "SingleImageChange", ValueFromPipeline=$true, HelpMessage="Shared Image Gallery object")]
+    [ValidateNotNullOrEmpty()]
+    $SharedImageGallery,
+
+    [parameter(Mandatory=$true, ParameterSetName = "SingleImageChange", HelpMessage="Image Name for the image to change the enabled/disabled setting on")]
+    [string] $ImageName,
+
+    [parameter(Mandatory=$true, ParameterSetName = "SingleImageChange", HelpMessage="The type of OS for this particular image")]
+    [ValidateSet('Windows','Linux')]
+    [string] $OsType,
+
+    [parameter(Mandatory=$true, ParameterSetName = "SingleImageChange", HelpMessage="Image Name for the image to change the enabled/disabled setting on")]
+    [string] $ImageType,
+
+    [parameter(Mandatory=$true, ParameterSetName = "SingleImageChange", HelpMessage="Should the image be enabled (true) or disabled (false)")]
+    [bool] $Enabled
+  )
+
+  begin {. BeginPreamble}
+  process {
+    try{
+
+        # If we're specifying a state for a specific image, we assume that the gallery should be
+        # set with the "allowAllImages" property to false - let's fix if needed
+        if ($SharedImageGallery.Properties.allowAllImages -eq "Enabled") {
+
+            $propertiesObject = @{
+                GalleryId = $SharedImageGallery.Properties.galleryId
+                allowAllImages = "Disabled"
+            }
+
+            # Update the SIG using ResourceID
+            $result = Set-AzureRmResource -ResourceId $SharedImageGallery.ResourceId `
+                                          -Properties $propertiesObject `
+                                          -ApiVersion 2018-10-15-preview `
+                                          -Force            
+        }
+
+        if ($ImageName) {
+            # If we're looking at a single image, we handle it directly
+
+            if ($Enabled) {
+                $status = "Enabled"
+            } else {
+                $status = "Disabled"
+            }
+
+            UpdateSharedImageGalleryImage $SharedImageGallery.ResourceId $ImageName $OsType $ImageType $status
+           
+        } else {
+            # First ensure the Images property is correctly set
+            if ($SharedImageGallery.Images) {
+                # Iterate through all the images and set each one
+                foreach ($img in $SharedImageGallery.Images) {
+                    UpdateSharedImageGalleryImage $SharedImageGallery.ResourceId $img.definitionName $img.osType $img.imageType $img.enableState
+                }
+                
+            } else {
+                Write-Error '$SharedImageGallery.Images property must be set or ImageName & Enabled must be set'
+            }
+        }
+
+        # following the pipeline pattern, return the shared image gallery object on the pipeline
+        return $SharedImageGallery
+
+    } 
+    catch {
+      Write-Error -ErrorRecord $_ -EA $callerEA
+    }
+  } 
+  end {
+  }
 }
 
 #endregion
@@ -1417,6 +1671,31 @@ function New-AzDtlVm {
   end {}
 }
 
+function Get-AzDtlVmRdpFileContents {
+  [CmdletBinding()]
+  param(
+    [parameter(Mandatory=$true,HelpMessage="Virtual Machine to get an RDP file from", ValueFromPipeline=$true)]
+    [ValidateNotNullOrEmpty()]
+    $Vm
+  )
+
+  begin {. BeginPreamble}
+  process {
+    try {
+      foreach($v in $Vm) {
+        $rdpFile = Invoke-RestMethod -Method Post `
+                  -Uri "https://management.azure.com$($v.ResourceId)/getRdpFileContents?api-version=2018-09-15" `
+                  -Headers $(GetHeaderWithAuthToken)
+        # Put the contents in the pipeline
+        $rdpFile.contents
+      }
+    } catch {
+      Write-Error -ErrorRecord $_ -EA $callerEA
+    }
+  }
+  end {}
+}
+
 ## Not strictly DTL related, but often used in a DTL context if unused RGs are left around by broken DTL remove operations.
 function Get-UnusedRgInSubscription {
   [CmdletBinding()]
@@ -1466,6 +1745,7 @@ function Get-UnusedRgInSubscription {
 function Get-AzureRmDtlNetorkCard { [CmdletBinding()] param($vm)}
 function Get-AzDtlVmDisks { [CmdletBinding()] param($vm)}
 function Import-AzureRmDtlVm { [CmdletBinding()] param($Name, $ResourceGroupName, $ImportParams)}
+
 #endregion
 
 #region ENVIRONMENT ACTIONS
@@ -2281,6 +2561,183 @@ function Get-AzDtlLabSchedule {
   end {}
 }
 
+function BuildVmSizeThresholdString {
+  param(
+    [Array] $AllowedVmSizes,
+
+    [parameter(Mandatory=$false)]
+    [Array] $ExistingVmSizes
+  )
+
+    # First strip quotes start/end of the string in case they're present
+    $AllowedVmSizes = $AllowedVmSizes | ForEach-Object {$_ -match '[^\"].+[^\"]'} | ForEach{$Matches[0]}
+
+    # Add the arrays together and remove duplicates
+    if ($ExistingVmSizes) {
+    $vmSizes = ($AllowedVmSizes + $ExistingVmSizes) | Select -Unique
+    } else {
+    $vmSizes = $AllowedVmSizes
+    }
+
+    # Process the incoming allowed sizes, need to convert to the special string
+    $thresholdString = ($vmSizes | ForEach-Object {
+        $finalSize = $_
+        
+        # Add starting & ending string if missing
+        if (-not $_.StartsWith('"')) {
+            $finalSize = '"' + $finalSize
+        }
+        if (-not $_.EndsWith('"')) {
+            $finalSize = $finalSize + '"'
+        }
+
+        # return the final string to the pipeline
+        $finalSize
+        }) -join ","
+
+    return $thresholdString
+}
+
+function Set-AzDtlLabAllowedVmSizePolicy {
+  [CmdletBinding()]
+  param(
+    [parameter(Mandatory=$true, ValueFromPipeline = $true, HelpMessage="Lab to operate on.")]
+    [ValidateNotNullOrEmpty()]
+    $Lab,
+
+    [parameter(Mandatory=$true, ParameterSetName="AllowedVmSizes", HelpMessage="The allowed Virtual Machine Sizes to set in the lab.  For example:  'Standard_A4', 'Standard_DS3_v2'.")]
+    [Array] $AllowedVmSizes,
+
+    [parameter(Mandatory=$true, ParameterSetName="EnableAllSizes", HelpMessage="Turn off the policy and enable ALL VM sizes in the lab")]
+    [switch] $EnableAllSizes = $false,
+
+    [parameter(Mandatory=$false, ParameterSetName="AllowedVmSizes", HelpMessage="Overwrite the existing list instead of merging in new sizes")]
+    [switch] $Overwrite = $False,
+
+    [parameter(Mandatory=$false,HelpMessage="Run the command in a separate job.")]
+    [switch] $AsJob = $False
+  )
+
+  begin {. BeginPreamble}
+  process {
+    try {
+
+        foreach($l in $Lab) {
+
+            if ($EnableAllSizes) {
+                $status = "Disabled"
+                $thresholdString = ""
+            } else {
+                if ($Overwrite) {
+                    $thresholdString = BuildVmSizeThresholdString -AllowedVmSizes $AllowedVmSizes
+                } else {
+                    $thresholdString = BuildVmSizeThresholdString -AllowedVmSizes $AllowedVmSizes -ExistingVmSizes (Get-AzDtlLabAllowedVmSizePolicy -Lab $l).AllowedSizes
+                }
+
+                $status = "Enabled"
+            }
+
+            $params = @{
+                labName = $l.Name
+                threshold = $thresholdString
+                status = $status
+            }
+            Write-verbose "Set AllowedVMSize with $(PrintHashtable $params)"
+@"
+{
+  "`$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "labName": {
+      "type": "string"
+    },
+    "threshold": {
+      "type": "string",
+    },
+    "status": {
+      "type": "string",
+    }
+  },
+
+  "resources": [
+    {
+      "apiVersion": "2018-10-15-preview",
+      "type": "microsoft.devtestlab/labs/policySets/policies",
+      "name": "[concat(parameters('labName'), '/default/AllowedVmSizesInLab')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "status": "[parameters('status')]",
+        "factName": "LabVmSize",
+        "threshold": "[concat('[', parameters('threshold'), ']')]",
+        "evaluatorType": "AllowedValuesPolicy"
+      }
+    }
+  ],
+  "outputs": {
+    "labId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.DevTestLab/labs', parameters('labName'))]"
+    }
+  }
+}
+"@ | DeployLab -Lab $l -AsJob $AsJob -Parameters $Params
+        }
+    } catch {
+      Write-Error -ErrorRecord $_ -EA $callerEA
+    }
+  }
+
+
+  end {}
+}
+
+function Get-AzDtlLabAllowedVmSizePolicy {
+  Param(
+    [parameter(Mandatory=$true, ValueFromPipeline = $true, HelpMessage="Lab to operate on.")]
+    [ValidateNotNullOrEmpty()]
+    $Lab
+  )
+  begin {. BeginPreamble}
+  process {
+    try {
+      foreach($l in $Lab) {
+        try {
+          $policy = (Get-AzureRmResource -ResourceType 'Microsoft.DevTestLab/labs/policySets/policies' -ResourceName ($l.Name + "/default") -ResourceGroupName $l.ResourceGroupName -ApiVersion 2018-09-15) | Where-Object {$_.Name -eq 'AllowedVmSizesInLab'}
+          if ($policy) {
+            $threshold = $policy.Properties.threshold
+            # Regular expression to remove [] at beginning and end, then split by commas, then remove the extra quotes
+            # Returns a string array of sizes that are enabled in the lab
+            if ($threshold -match "[^\[].+[^\]]") {
+                $sizes = $Matches[0].Split(',',[System.StringSplitOptions]::RemoveEmptyEntries) | ForEach-Object {$_ -match '[^\"].+[^\"]'} | ForEach{$Matches[0]}
+            } else {
+                $sizes = $null
+            }
+            
+            [pscustomobject] @{
+                Status = $policy.Properties.Status
+                AllowedSizes = $sizes
+            }
+          } else {
+
+            # return an object, status="disabled"
+            [pscustomobject] @{
+                Status = "Disabled"
+                AllowedSizes = $null
+            }
+          }
+
+        } catch {
+          return @() # Do we need compositionality here or should we just let the exception goes through?
+        }
+      }
+    } catch {
+      Write-Error -ErrorRecord $_ -EA $callerEA
+    }
+  }
+
+  end {}
+}
+
 function Get-AzureRmDtlNetwork { [CmdletBinding()] param($Name, $ResourceGroupName)}
 function Get-AzureRmDtlLoadBalancers { [CmdletBinding()] param($Name, $ResourceGroupName)}
 function Get-AzureRmDtlCosts { [CmdletBinding()] param($Name, $ResourceGroupName)}
@@ -2615,6 +3072,7 @@ New-Alias -Name 'Dtl-ClaimVm'             -Value Invoke-AzDtlVmClaim
 New-Alias -Name 'Dtl-UnClaimVm'           -Value Invoke-AzDtlVmUnClaim
 New-Alias -Name 'Dtl-RemoveVm'            -Value Remove-AzDtlVm
 New-Alias -Name 'Dtl-NewVm'               -Value New-AzDtlVm
+New-Alias -Name 'Dtl-GetVmRdpFile'        -Value Get-AzDtlVmRdpFileContents
 New-Alias -Name 'Dtl-AddUser'             -Value Add-AzDtlLabUser
 New-Alias -Name 'Dtl-SetLabAnnouncement'  -Value Set-AzDtlLabAnnouncement
 New-Alias -Name 'Dtl-SetLabSupport'       -Value Set-AzDtlLabSupport
@@ -2625,6 +3083,13 @@ New-Alias -Name 'Dtl-GetLabSchedule'      -Value Get-AzDtlLabSchedule
 New-Alias -Name 'Dtl-SetLabShutdown'      -Value Set-AzDtlLabShutdown
 New-Alias -Name 'Dtl-SetLabStartup'       -Value Set-AzDtlLabStartupSchedule
 New-Alias -Name 'Dtl-SetLabShutPolicy'    -Value Set-AzDtlShutdownPolicy
+New-Alias -Name 'Dtl-GetLabAllowedVmSizePolicy' -Value Get-AzDtlLabAllowedVmSizePolicy
+New-Alias -Name 'Dtl-SetLabAllowedVmSizePolicy' -Value Set-AzDtlLabAllowedVmSizePolicy
+New-Alias -Name 'Dtl-GetSharedImageGallery' -Value Get-AzDtlLabSharedImageGallery
+New-Alias -Name 'Dtl-SetSharedImageGallery' -Value Set-AzDtlLabSharedImageGallery
+New-Alias -Name 'Dtl-RemoveSharedImageGallery' -Value Remove-AzDtlLabSharedImageGallery
+New-Alias -Name 'Dtl-GetSharedImageGalleryImages' -Value Get-AzDtlLabSharedImageGalleryImages
+New-Alias -Name 'Dtl-SetSharedImageGalleryImages' -Value Set-AzDtlLabSharedImageGalleryImages
 New-Alias -Name 'Dtl-SetAutoStart'        -Value Set-AzDtlVmAutoStart
 New-Alias -Name 'Dtl-SetVmShutdown'       -Value Set-AzDtlVmShutdownSchedule
 New-Alias -Name 'Dtl-GetVmStatus'         -Value Get-AzDtlVmStatus
@@ -2656,6 +3121,7 @@ Export-ModuleMember -Function New-AzDtlLab,
                               Set-AzDtlLabRdpSettings,
                               Add-AzDtlLabArtifactRepository,
                               Set-AzDtlVmArtifact,
+                              Get-AzDtlVmRdpFileContents,
                               Get-AzDtlLabSchedule,
                               Set-AzDtlLabShutdown,
                               Set-AzDtlLabStartupSchedule,
@@ -2664,6 +3130,13 @@ Export-ModuleMember -Function New-AzDtlLab,
                               Set-AzDtlShutdownPolicy,
                               Set-AzDtlVmAutoStart,
                               Set-AzDtlVmShutdownSchedule,
+                              Get-AzDtlLabAllowedVmSizePolicy,
+                              Set-AzDtlLabAllowedVmSizePolicy,
+                              Get-AzDtlLabSharedImageGallery,
+                              Set-AzDtlLabSharedImageGallery,
+                              Remove-AzDtlLabSharedImageGallery,
+                              Get-AzDtlLabSharedImageGalleryImages,
+                              Set-AzDtlLabSharedImageGalleryImages,
                               Get-AzDtlVmStatus,
                               Get-AzDtlVmArtifact,
                               Import-AzDtlCustomImageFromUri,

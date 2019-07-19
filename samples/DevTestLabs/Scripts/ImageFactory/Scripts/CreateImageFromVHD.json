@@ -50,6 +50,13 @@
       "metadata": {
         "description": "Details about the custom image being created or updated."
       }
+    },
+    "imageAuthor": {
+      "defaultValue": "",
+      "type": "String",
+      "metadata": {
+         "description": "Name of the author who created the custom image."
+      }
     }
   },
   "variables": {
@@ -71,7 +78,8 @@
           "sysPrep": "[parameters('isVhdSysPrepped')]",
           "osType": "[parameters('imageOsType')]"
         },
-        "description": "[parameters('imageDescription')]"
+        "description": "[parameters('imageDescription')]",
+        "author": "[parameters('imageAuthor')]"
       }
     }
   ],

@@ -1,11 +1,11 @@
 Import-Module $PSScriptRoot\..\..\Az.DevTestLabs2.psm1
 
 $lab = @(
-    [pscustomobject]@{Name='DTL-Library-Test1'; ResourceGroupName='DTL-Library-Test1rg'; Location='westus'}
+    [pscustomobject]@{Name=('DtlLibrary-Vm-' + (Get-Random)); ResourceGroupName=('DtlLibrary-VmRg-' + (Get-Random)); Location='eastus'}
 )
 
 $vm = @(
-    [pscustomobject]@{VmName='WinVm1Status'; Size='Standard_A4_v2'; UserName='bob'; Password='aPassword341341'; OsType='Windows'; Sku='2012-R2-Datacenter'; Publisher='MicrosoftWindowsServer'; Offer='WindowsServer'}
+    [pscustomobject]@{VmName=('Vm-' + (Get-Random)); Size='Standard_A4_v2'; UserName='bob'; Password='aPassword341341'; OsType='Windows'; Sku='2012-R2-Datacenter'; Publisher='MicrosoftWindowsServer'; Offer='WindowsServer'}
 )
 
 Describe  'Virtual Machine Tests' {

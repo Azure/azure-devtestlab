@@ -37,7 +37,7 @@ import-module ./Az.DevTestLabs2.psm1
 As a quick way to see which DevTestLabs capabilities are supported, type the following command in the console.
 
 ```powershell
-Get-Command -Module Az.DevTestLabs2 | foreach { Get-Alias -Definition $_.name -ea SilentlyContinue }
+Get-Command -Module Az.DevTestLabs2 | where-object {$_.Name -like '*AzDtl*'}
 ```
 
 ## Create a new lab
@@ -53,7 +53,7 @@ New-AzureRmResourceGroup -Name DtlPS1 -Location "West Europe"
 Then create a new lab in the resource group.
 
 ```powershell
-$lab = Dtl-NewLab -Name MyLab -ResourceGroupName DtlPS1
+$lab = New-AzDtlLab -Name MyLab -ResourceGroupName DtlPS1
 ```
 
 ## Modify a lab
@@ -70,14 +70,14 @@ Here is an example of one of such chains that sets various parameters for the la
 
 ```powershell
 $lab = $lab `
-  | Dtl-AddUser -UserEmail 'lucabol@microsoft.com' `
-  | Dtl-SetLabAnnouncement -Title 'I am here' -AnnouncementMarkDown 'yep' `
-  | Dtl-SetLabSupport -SupportMarkdown "### Sample lab announcement header." `
-  | Dtl-SetLabRdp -GatewayUrl 'Agtway@adomain.com' -ExperienceLevel 5 `
-  | Dtl-SetLabShutdown -ShutdownTime '21:00' -TimeZoneId 'UTC' -ScheduleStatus 'Enabled' -NotificationSettings 'Enabled' `
+  | Add-AzDtlUser -UserEmail 'lucabol@microsoft.com' `
+  | Set-AzDtlLabAnnouncement -Title 'I am here' -AnnouncementMarkDown 'yep' `
+  | Set-AzDtlLabSupport -SupportMarkdown "### Sample lab announcement header." `
+  | Set-AzDtlLabRdpSettings -GatewayUrl 'Agtway@adomain.com' -ExperienceLevel 5 `
+  | Set-AzDtlLabShutdownPolicy -ShutdownTime '21:00' -TimeZoneId 'UTC' -ScheduleStatus 'Enabled' -NotificationSettings 'Enabled' `
       -TimeInIMinutes 50 -ShutdownNotificationUrl 'https://blah.com' -EmailRecipient 'blah@lab.com' `
-  | Dtl-SetLabStartup -StartupTime '21:00' -TimeZoneId 'UTC' -WeekDays @('Monday') `
-  | Dtl-AddLabRepo -ArtifactRepoUri 'https://github.com/lucabol/DTLWorkshop.git' `
+  | Set-AzDtlLabStartupSchedule -StartupTime '21:00' -TimeZoneId 'UTC' -WeekDays @('Monday') `
+  | Add-AzDtlLabArtifactRepository -ArtifactRepoUri 'https://github.com/lucabol/DTLWorkshop.git' `
       -artifactRepoSecurityToken '196ad1f5b5464de4de6d47705bbcab0ce7d323fe'
 ```
 
@@ -86,30 +86,30 @@ Notice that the return value of the chain is a lab object that you can then use 
 Here is not the place to describe all functions and all parameters. They should be self-explaining if you are familiar with DevTest Labs. Remember that you can always ask for help with:
 
 ```powershell
-get-help Dtl-SetLabShutdown
+get-help Set-AzDtlLabShutdownPolicy
 ```
 
 Or simply type `-` and the `TAB` key to cycle through all of them.
 
 ## Create a VM in the lab
 
-There are many possible ways to create a VM in DevTest Labs. This is reflected by the different parameters that can be passed to the `Dtl-NewVm` function. The system gives you an error you when you pass the wrong set.
+There are many possible ways to create a VM in DevTest Labs. This is reflected by the different parameters that can be passed to the `New-AzDtlVm` function. The system gives you an error you when you pass the wrong set.
 
-`Dtl-NewVm` is an example of a function that changes the object that 'flows through' the pipeline. It takes lab object(s) as input and produces VM object(s) as output.
+`New-AzDtlVm` is an example of a function that changes the object that 'flows through' the pipeline. It takes lab object(s) as input and produces VM object(s) as output.
 
 You can then form chains of functions to operate over the just created VM, as in the following example.
 
 ```powershell
-$lab | Dtl-NewVm -VmName ("vm" + (Get-Random)) -Size 'Standard_A4_v2' -Claimable -UserName 'bob' -Password 'aPassword341341' `
+$lab | New-AzDtlVm -VmName ("vm" + (Get-Random)) -Size 'Standard_A4_v2' -Claimable -UserName 'bob' -Password 'aPassword341341' `
       -OsType Windows -Sku '2012-R2-Datacenter' -Publisher 'MicrosoftWindowsServer' -Offer 'WindowsServer' `
       -AsJob `
   | Receive-Job -Wait `
-  | Dtl-StartVm `
-  | Dtl-ApplyArtifact -RepositoryName 'Public Artifact Repo' -ArtifactName 'windows-7zip' `
-  | Dtl-SetAutoStart `
-  | Dtl-SetVmShutdown -ShutdownTime '20:00' -TimeZoneId 'UTC' `
-  | Dtl-ClaimVm `
-  | Dtl-StopVm
+  | Start-AzDtlVm `
+  | Set-AzDtlVmArtifact -RepositoryName 'Public Artifact Repo' -ArtifactName 'windows-7zip' `
+  | Set-AzDtlVmAutoStart `
+  | Set-AzDtlVmShutdownSchedule -ShutdownTime '20:00' -TimeZoneId 'UTC' `
+  | Invoke-AzDtlVmClaim `
+  | Stop-AzDtlVmStop
 ```
 
 One interesting aspect of the code above is the use of the `-asJob` parameter.
@@ -124,11 +124,11 @@ The library supports the creation and use of custom images, as in the code snipp
 
 ```powershell
 $customImage = $lab `
-  | Dtl-NewVm -VmName ("cvm" + (Get-Random)) -Size 'Standard_A4_v2' -Claimable -UserName 'bob' -Password 'aPassword341341' `
+  | New-AzDtlVm -VmName ("cvm" + (Get-Random)) -Size 'Standard_A4_v2' -Claimable -UserName 'bob' -Password 'aPassword341341' `
     -OsType Windows -Sku '2012-R2-Datacenter' -Publisher 'MicrosoftWindowsServer' -Offer 'WindowsServer' `
-  | Dtl-NewCustomImage -ImageName ("im" + (Get-Random)) -ImageDescription 'Created using Azure DevTest Labs PowerShell library.'
+  | New-AzDtlCustomImageFromVm -ImageName ("im" + (Get-Random)) -ImageDescription 'Created using Azure DevTest Labs PowerShell library.'
 
-$lab | Dtl-NewVm -CustomImage $customImage -VmName ('cvm2' + (Get-Random)) -Size 'Standard_A4_v2' -OsType Windows | Out-Null
+$lab | New-AzDtlVm -CustomImage $customImage -VmName ('cvm2' + (Get-Random)) -Size 'Standard_A4_v2' -OsType Windows | Out-Null
 ```
 
 ## Query for labs and VMs
@@ -138,43 +138,51 @@ The library contains a powerful query system, that allows you to retrieve object
 For example, you can get all the labs in your subscription by:
 
 ```powershell
-Dtl-GetLab
+Get-AzDtlLab
 ```
 
 Or just the labs with certain name and/or resource group names patterns.
 
 ```powershell
-$labs = Dtl-GetLab -ResourceGroupName Dtl* -Name *Lab
+$labs = Get-AzDtlLab -ResourceGroupName Dtl* -Name *Lab
 ```
 
 You can then use the resulting lab(s) as the start of a function chain. For example to get all VMs with names staring with `vm` type:
 
 ```powershell
-$labs | Dtl-GetVM -name vm*
+$labs | Get-AzDtlVm -name vm*
 ```
 
 As a final example, to retrieve all the stopped VMs in all your labs you write:
 
 ```powershell
-Dtl-GetLab | Dtl-GetVm -status Stopped
+Get-AzDtlLab | Get-AzDtlVm -status Stopped
 ```
 
 A note of caution. Try to be as precise as possible in your query. The more you omit parameters or use `*`, the larger the set of VMs we need to retrieve to then apply the query on the client side. In most scenarios, that is not a problem, but if you have very many labs and VMs, it might be.
 
 ## Remove labs and VMs
 
-You can remove labs and vms with the appropriately named `Dtl-RemoveLab` and `Dtl-RemoveVm`.
+You can remove labs and vms with the appropriately named `Remove-AzDtlLab` and `Remove-AzDtlVm`.
 
 As always, they can be applied to multiple labs/vms in a pipeline, allowing you to easily perform batch operations in parallel.
 
 ```powershell
-Dtl-GetLab -Name Test* -ResourceGroupName Test* | Dtl-GetVM | Dtl-RemoveVm -asJob | Receive-Job -Wait
+Get-AzDtlLab -Name Test* -ResourceGroupName Test* | Get-AzDtlVm | Remove-AzDtlVm -asJob | Receive-Job -Wait
 ```
 
 Finally, let's clean up the resource group we created:
 
 ```powershell
 Remove-AzureRmResourceGroup -Name DtlPS1 -Location "West Europe"
+```
+
+## Aliases
+
+The library also contains a set of aliases that you can use instead of the commands above. To see what they are type.
+
+```powershell
+Get-Command -Module Az.DevTestLabs2 | foreach { Get-Alias -Definition $_.name -ea SilentlyContinue }
 ```
 
 ## Give us feedback

@@ -60,7 +60,7 @@ if((gwmi win32_computersystem).partofdomain -eq $true)
     Start-Service 'MSSQLSERVER'
 
 	#Install ADK10
-	$proc = (Start-Process -FilePath "$($env:temp)\RZUpdate.exe" -ArgumentList "ADK10" -Wait -PassThru)
+	$proc = (Start-Process -FilePath "$($env:temp)\RZUpdate.exe" -ArgumentList "ADK10" -PassThru)
 	$proc.WaitForExit()
 
     if((test-path "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots") -eq $false) { exit 2 }
@@ -69,7 +69,7 @@ if((gwmi win32_computersystem).partofdomain -eq $true)
 	if(Test-Path "$($env:temp)\SMSSETUP") { Remove-Item "$($env:temp)\SMSSETUP" -Force -Recurse  }
     
 	#Install Configuration Manager
-	$proc = (Start-Process -FilePath "$($env:temp)\RZUpdate.exe" -ArgumentList "`"Configuration Manager Current Branch (EVAL)`"" -Wait -PassThru)
+	$proc = (Start-Process -FilePath "$($env:temp)\RZUpdate.exe" -ArgumentList "`"Configuration Manager Current Branch (EVAL)`"" -PassThru)
 	$proc.WaitForExit()
 
     if((test-path "HKLM:\SOFTWARE\Microsoft\SMS\COMPONENTS") -eq $false) { exit 3 }
@@ -78,7 +78,7 @@ if((gwmi win32_computersystem).partofdomain -eq $true)
 	if(Test-Path "$($env:temp)\SMSSETUP") { Remove-Item "$($env:temp)\SMSSETUP" -Force -Recurse  }
 	
     #Add Tools
-	$proc = (Start-Process -FilePath "$($env:temp)\RZUpdate.exe" -ArgumentList "`"ConfigMgrTools`";`"Collection Commander`";`"SCCMCliCtr`";`"RuckZuck for Configuration Manager`";`"SCUP`";`"Right Click Tools`"" -Wait -PassThru)
+	$proc = (Start-Process -FilePath "$($env:temp)\RZUpdate.exe" -ArgumentList "`"ConfigMgrTools`";`"Collection Commander`";`"SCCMCliCtr`";`"RuckZuck for Configuration Manager`";`"SCUP`";`"Right Click Tools`"" -PassThru)
 	$proc.WaitForExit()
 	
     #Add Domain Admins as Full Admins
