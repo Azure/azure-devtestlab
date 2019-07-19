@@ -1,4 +1,3 @@
-# TODO: consider making functions that take a user accept multiple users
 # TODO: consider polling on the operation returned by the API in the header as less expensive for RP
 # TODO: consider creating proper PS1 documentation for each function
 # TODO: consider writing testcase to run nightly with reporting on success on readme
@@ -899,7 +898,7 @@ function New-AzLab {
         [ValidateNotNullOrEmpty()]
         $Lab,
 
-        [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="User to remove")]
+        [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="Users to remove")]
         [ValidateNotNullOrEmpty()]
         $User
        
@@ -908,10 +907,12 @@ function New-AzLab {
     process {
       try {
         foreach($l in $Lab) {
-          $userName = $User.name
-          $uri = (ConvertToUri -resource $Lab) + '/users/' + $userName
+          foreach($u in $User) {
+            $userName = $u.name
+            $uri = (ConvertToUri -resource $Lab) + '/users/' + $userName
 
-          return InvokeRest -Uri $uri -Method 'Delete'
+            return InvokeRest -Uri $uri -Method 'Delete'
+          }
         }
       } catch {
         Write-Error -ErrorRecord $_ -EA $callerEA
@@ -1058,11 +1059,11 @@ function New-AzLab {
 
   function Send-AzLabUserInvitationEmail {
     param(
-        [parameter(Mandatory=$true,HelpMessage="Lab to invite user to", ValueFromPipeline=$true)]
+        [parameter(Mandatory=$true,HelpMessage="Lab to invite users to", ValueFromPipeline=$true)]
         [ValidateNotNullOrEmpty()]
         $Lab,
 
-        [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="User to invite")]
+        [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true, HelpMessage="Users to invite")]
         [ValidateNotNullOrEmpty()]
         $User,
 
@@ -1074,18 +1075,20 @@ function New-AzLab {
     process {
       try {
         foreach($l in $Lab) {
-          $body = @{
-            emailAddresses = @($User.properties.email)
-            extraMessage = $InvitationText
-          } | ConvertTo-Json
+          foreach($u in $User) {
+            $body = @{
+              emailAddresses = @($u.properties.email)
+              extraMessage = $InvitationText
+            } | ConvertTo-Json
 
-          $uri = (ConvertToUri -resource $l) + '/sendEmail'
+            $uri = (ConvertToUri -resource $l) + '/sendEmail'
 
-          InvokeRest -Uri $uri -Method 'Post' -Body $body | Out-Null
+            InvokeRest -Uri $uri -Method 'Post' -Body $body | Out-Null
 
-          # We could check the status of the email with $user.properties.registrationLinkEmail = 'sent'
-          # But why bother? As email is by its nature asynchronous ...
-          return Get-AzLabAgain -lab $l
+            # We could check the status of the email with $user.properties.registrationLinkEmail = 'sent'
+            # But why bother? As email is by its nature asynchronous ...
+            return Get-AzLabAgain -lab $l
+          }
         }
       } catch {
         Write-Error -ErrorRecord $_ -EA $callerEA
