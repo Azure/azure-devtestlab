@@ -1,8 +1,6 @@
 # TODO: consider making functions that take a user accept multiple users
-# TODO: consider (again) of what should add/set/remove functions return
 # TODO: consider polling on the operation returned by the API in the header as less expensive for RP
 # TODO: consider creating proper PS1 documentation for each function
-# TODO: make Start/Stop VM function wait for the operation to have completed
 # TODO: consider writing testcase to run nightly with reporting on success on readme
 # TODO: add nightly test for schedules REST calls
 # TODO: add -asjob for long running operations
@@ -332,6 +330,24 @@ function WaitProvisioning($uri, $delaySec, $retryCount, $params) {
     return $res
 }
 
+function WaitStatusChange($uri, $delaySec, $retryCount, $params, $status) {
+  Write-Verbose "Retrying $retryCount times every $delaySec seconds."
+
+  $tries = 0;
+  $res = InvokeRest -Uri $uri -Method 'Get' -params $params
+
+  while(-not ($res.status -eq $status)) {
+      Write-Verbose "$tries : Status = $($res.status)"
+      if(-not ($tries -lt $retryCount)) {
+          throw ("$retryCount retries of retrieving $uri with Status = $status failed")
+      }
+      Start-Sleep -Seconds $delaySec
+      $res = InvokeRest -Uri $uri -Method 'Get' -params $params
+      $tries += 1
+  }
+  return $res
+}
+
 function Enrich {
   [CmdletBinding()]
   param([parameter(Mandatory=$true, ValueFromPipeline=$true)] $resource)
@@ -500,7 +516,7 @@ function Remove-AzLab {
       try {
         foreach($l in $Lab) {
           $uri = ConvertToUri -resource $l
-          InvokeRest -Uri $uri -Method 'Delete'
+          return InvokeRest -Uri $uri -Method 'Delete'
         }
       } catch {
         Write-Error -ErrorRecord $_ -EA $callerEA
@@ -1006,9 +1022,10 @@ function New-AzLab {
     process {
       try {
         foreach($v in $vm) {
-          $uri = (ConvertToUri -resource $v) + '/start'
+          $baseUri = (ConvertToUri -resource $v)
+          $uri = $baseUri + '/start'
           InvokeRest -Uri $uri -Method 'Post' | Out-Null
-          return Get-AzLabVmAgain -vm $v
+          return WaitStatusChange -uri $baseUri -delaySec 15 -retryCount 240 -status 'Running'
         }
       } catch {
         Write-Error -ErrorRecord $_ -EA $callerEA
@@ -1028,9 +1045,10 @@ function New-AzLab {
     process {
       try {
         foreach($v in $vm) {
-          $uri = (ConvertToUri -resource $v) + '/stop'
+          $baseUri = (ConvertToUri -resource $v)
+          $uri = $baseUri + '/stop'
           InvokeRest -Uri $uri -Method 'Post' | Out-Null
-          return Get-AzLabVmAgain -vm $v
+          return WaitStatusChange -uri $baseUri -delaySec 15 -retryCount 240 -status 'Stopped'
         }
       } catch {
         Write-Error -ErrorRecord $_ -EA $callerEA
