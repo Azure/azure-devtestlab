@@ -173,128 +173,14 @@ function New-Accounts {
         Write-Host "$LabAccountName lab account created or found."
     }
     
+    Write-Host "Starting lab accounts creation in parallel. Can take a while."
     $jobs = @()
     $lacs | ForEach-Object {
         $jobs += Start-Job -ScriptBlock $block -ArgumentList $PSScriptRoot, $_.ResourceGroupName, $_.LabAccountName -Name $_.LabAccountName
     }
 
     $hours = 1
-    Wait-JobWithProgress -jobs $jobs -secTimeout (60 * 60 * $hours)
-}
-
-function Show-JobProgress {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory, ValueFromPipeline)]
-        [ValidateNotNullOrEmpty()]
-        [System.Management.Automation.Job[]]
-        $Job
-        ,
-        [Parameter()]
-        [ValidateNotNullOrEmpty()]
-        [scriptblock]
-        $FilterScript
-    )
-  
-    Process {
-        # if you have 'strict' mode on, you can't check for the existence of a property
-        # by using the dot notation, because it triggers a 'property don't exist exception'
-        if (-not ("ChildJobs" -in $job.PSobject.Properties.Name)) {
-            Write-Host "No Childjobs for this job ..."
-            return
-        }
-        $Job.ChildJobs | ForEach-Object {
-            if (-not $_.Progress) {
-                return
-            }
-  
-            $LastProgress = $_.Progress
-            if ($FilterScript) {
-                $LastProgress = $LastProgress | Where-Object -FilterScript $FilterScript
-            }
-  
-            $LastProgress | Group-Object -Property Activity, StatusDescription | ForEach-Object {
-                $_.Group | Select-Object -Last 1
-  
-            } | ForEach-Object {
-                $ProgressParams = @{ }
-                if ($_.Activity -and $_.Activity -ne $null) { $ProgressParams.Add('Activity', $_.Activity) }
-                if ($_.StatusDescription -and $_.StatusDescription -ne $null) { $ProgressParams.Add('Status', $_.StatusDescription) }
-                if ($_.CurrentOperation -and $_.CurrentOperation -ne $null) { $ProgressParams.Add('CurrentOperation', $_.CurrentOperation) }
-                if ($_.ActivityId -and $_.ActivityId -gt -1) { $ProgressParams.Add('Id', $_.ActivityId) }
-                if ($_.ParentActivityId -and $_.ParentActivityId -gt -1) { $ProgressParams.Add('ParentId', $_.ParentActivityId) }
-                if ($_.PercentComplete -and $_.PercentComplete -gt -1) { $ProgressParams.Add('PercentComplete', $_.PercentComplete) }
-                if ($_.SecondsRemaining -and $_.SecondsRemaining -gt -1) { $ProgressParams.Add('SecondsRemaining', $_.SecondsRemaining) }
-  
-                Write-Progress @ProgressParams
-            }
-        }
-    }
-}
-  
-function Wait-JobWithProgress {
-    param(
-        [ValidateNotNullOrEmpty()]
-        $jobs,
-  
-        [Parameter(Mandatory)]
-        [ValidateNotNullOrEmpty()]
-        $secTimeout
-    )
-  
-    Write-Host "Waiting for results at most $secTimeout seconds, or $( [math]::Round($secTimeout / 60,1)) minutes, or $( [math]::Round($secTimeout / 60 / 60,1)) hours ..."
-  
-    if (-not $jobs) {
-        Write-Host "No jobs to wait for"
-        return
-    }
-  
-    # Control how often we show output and print out time passed info
-    # Change here to make it go faster or slower
-    $RetryIntervalSec = 7
-    $MaxPrintInterval = 7
-    $PrintInterval = 1
-  
-    $timer = [Diagnostics.Stopwatch]::StartNew()
-  
-    $runningJobs = $jobs | Where-Object { $_ -and ($_.State -eq "Running") }
-    while (($runningJobs) -and ($timer.Elapsed.TotalSeconds -lt $secTimeout)) {
-  
-        $runningJobs | Receive-job -Keep -ErrorAction Continue                # Show partial results
-        $runningJobs | Wait-Job -Timeout $RetryIntervalSec | Show-JobProgress # Show progress bar
-  
-        if ($PrintInterval -ge $MaxPrintInterval) {
-            $totalSecs = [math]::Round($timer.Elapsed.TotalSeconds, 0)
-            Write-Host "Passed: $totalSecs seconds, or $( [math]::Round($totalSecs / 60,1)) minutes, or $( [math]::Round($totalSecs / 60 / 60,1)) hours ..." -ForegroundColor Yellow
-            $PrintInterval = 1
-        }
-        else {
-            $PrintInterval += 1
-        }
-  
-        $runningJobs = $jobs | Where-Object { $_ -and ($_.State -eq "Running") }
-    }
-  
-    $timer.Stop()
-    $lasted = $timer.Elapsed.TotalSeconds
-  
-    Write-Host ""
-    Write-Host "JOBS STATUS"
-    Write-Host "-------------------"
-    $jobs                                           # Show overall status of all jobs
-    Write-Host ""
-    Write-Host "JOBS OUTPUT"
-    Write-Host "-------------------"
-    $jobs | Receive-Job -ErrorAction Continue       # Show output for all jobs
-  
-    $jobs | Remove-job -Force                       # -Force removes also the ones still running ...
-  
-    if ($lasted -gt $secTimeout) {
-        throw "Jobs did not complete before timeout period. It lasted $lasted secs."
-    }
-    else {
-        Write-Host "Jobs completed before timeout period. It lasted $lasted secs."
-    }
+    $jobs | Wait-Job -Timeout (60 * 60 * $hours) | Receive-Job
 }
   
 function New-AzLabMultiple {
@@ -319,14 +205,14 @@ function New-AzLabMultiple {
         $obj | New-AzLabSingle
     }
 
-    Write-Host "Starting creation of all labs in parallel."
+    Write-Host "Starting creation of all labs in parallel. Can take a while."
 
     $jobs = $ConfigObject | ForEach-Object {
         Start-Job  -InitializationScript $init -ScriptBlock $block -ArgumentList $PSScriptRoot -InputObject $_ -Name $_.LabName
     }
 
     $hours = 2
-    Wait-JobWithProgress -jobs $jobs -secTimeout (60 * 60 * $hours)
+    $jobs | Wait-Job -Timeout (60 * 60 * $hours) | Receive-Job
 }
 
 function Import-Schedules {
