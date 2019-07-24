@@ -1,5 +1,20 @@
 # Change log for AzureRM template SharePoint-ADFS-DevTestLabs
 
+## July 2019 update
+
+* Add the certificate of the domain root authority to the SPTrustedRootAuthority
+* Use DSC resource xWebsite instead of xScript to configure HTTPS binding
+* Update DSC module SharePointDSC to 3.5 with customization to add new resource SPTrustedSecurityTokenIssuer and fix SPTrustedRootAuthority
+* Update DSC module xPSDesiredStateConfiguration to 8.8, wich a customization on resource xRemoteFile to deal with random connection errors while downloading LDAPCP
+* Update xActiveDirectory from 2.23 to 3.0
+* Update NetworkingDsc from 6.3 to 7.3
+* Update ActiveDirectoryCSDsc from 3.1 to 3.3
+* Update CertificateDsc from 4.3 to 4.7
+* Update xDnsServer from 1.11 to 1.13
+* Update ComputerManagementDsc from 6.1 to 6.4
+* Update SqlServerDsc from 12.2 to 13.0
+* Update StorageDsc from 4.4 to 4.7
+
 ## May 2019 update
 
 * Update DSC module SharePointDSC to 3.3
