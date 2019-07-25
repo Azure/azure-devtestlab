@@ -21,7 +21,6 @@ $lab = $la `
 
 $user = $lab | Get-AzLabUser -Email 'lucabol*'
 $lab | Send-AzLabUserInvitationEmail -User $user -InvitationText 'Running tests'
-# How do I register a user to the lab, without him clicking on Register link?
 
 $vm = $lab | Get-AzLabVm -ClaimByUser $user
 
@@ -29,7 +28,7 @@ $today  = (Get-Date).ToString()
 $end    = (Get-Date).AddMonths(4).ToString()
 
 $lab `
-    | New-AzLabSchedule -Frequency Weekly -FromDate $today -ToDate $end -StartTime '10:00' -EndTime '11:00' -Notes 'A clarroom note.' `
+    | New-AzLabSchedule -Frequency Weekly -FromDate $today -ToDate $end -StartTime '10:00' -EndTime '11:00' -Notes 'A classroom note.' `
     | Get-AzLabSchedule `
     | Remove-AzLabSchedule
 
