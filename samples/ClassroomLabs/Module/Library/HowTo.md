@@ -33,7 +33,7 @@ import-module ./Az.AzureLabs.psm1
 
 ## Browse all the functions in the library
 
-As a quick way to see which DevTestLabs capabilities are supported, type the following command in the console.
+As a quick way to see which Azure Lab Services capabilities are supported, type the following command in the console.
 
 ```powershell
 Get-Command -Module Az.AzureLabs
@@ -92,13 +92,13 @@ For example, you can retrieve all the lab accounts in your subscription by the s
 Get-AzLabAccount
 ```
 
-And then, thorough function composition, get all the labs as:
+And then, through function composition, get all the labs as:
 
 ```powershell
 Get-AzLabAccount | Get-AzLab
 ```
 
-Or perhaps just the labs with certain name and/or resource group names patterns.
+Or perhaps just the labs with certain name and/or resource group name patterns.
 
 ```powershell
 $labs = Get-AzLabAccount | Get-AzLab -LabName *Lab
