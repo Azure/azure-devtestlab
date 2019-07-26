@@ -13,7 +13,11 @@ This is a public, community-contributed repository that contains:
 
 ## Azure DevTest Labs PowerShell Module
 
-[Az.DevTestLabs](https://github.com/Azure/azure-devtestlab/tree/master/samples/DevTestLabs/Modules/Library), for short, is a PowerShell module to simplify the management of [Azure DevTest Labs](https://azure.microsoft.com/en-us/services/devtest-lab/). It provides composable functions to create, query, update and delete labs, VMs, Custom Images and Environments. The source can be located under [/samples/DevTestLabs/Modules/Library/](https://github.com/Azure/azure-devtestlab/tree/master/samples/DevTestLabs/Modules/Library).
+[Az.DevTestLabs](https://github.com/Azure/azure-devtestlab/tree/master/samples/DevTestLabs/Modules/Library) is a PowerShell module to simplify the management of [Azure DevTest Labs](https://azure.microsoft.com/en-us/services/devtest-lab/). It provides composable functions to create, query, update and delete labs, VMs, Custom Images and Environments. The source can be located under [/samples/DevTestLabs/Modules/Library/](https://github.com/Azure/azure-devtestlab/tree/master/samples/DevTestLabs/Modules/Library).
+
+## Azure Lab Services PowerShell Module
+
+[Az.LabServices](https://github.com/Azure/azure-devtestlab/tree/master/samples/ClassroomLabs/Modules/Library) is a PowerShell module to simplify the management of [Azure Lab Services](https://azure.microsoft.com/en-us/services/lab-services/). It provides composable functions to create, query, update and delete lab accounts, labs, VMs and Images. The source can be located under [/samples/ClassroomLabs/Modules/Library/](https://github.com/Azure/azure-devtestlab/tree/master/samples/ClassroomLabs/Modules/Library).
 
 ## Contributions
 
