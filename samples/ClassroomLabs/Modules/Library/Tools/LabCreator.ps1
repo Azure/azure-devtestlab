@@ -5,7 +5,7 @@ param(
     $CsvConfigFile
 )
 
-Import-Module ../Az.AzureLabs.psm1
+Import-Module ../Az.LabServices.psm1
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -166,7 +166,7 @@ function New-Accounts {
         Set-StrictMode -Version Latest
         $ErrorActionPreference = 'Stop'
         
-        $modulePath = Join-Path $path '..' 'Az.AzureLabs.psm1'
+        $modulePath = Join-Path $path '..' 'Az.LabServices.psm1'
         Import-Module $modulePath
 
         New-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName | Out-Null
@@ -197,7 +197,7 @@ function New-AzLabMultiple {
         Set-StrictMode -Version Latest
         $ErrorActionPreference = 'Stop'
         
-        $modulePath = Join-Path $path '..' 'Az.AzureLabs.psm1'
+        $modulePath = Join-Path $path '..' 'Az.LabServices.psm1'
         Import-Module $modulePath
         # Really?? It got to be the lines below? Doing a ForEach doesn't work ...
         $input.movenext() | Out-Null

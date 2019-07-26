@@ -1,6 +1,6 @@
-# Az.AzureLabs Tutorial <!-- omit in TOC -->
+# Az.LabServices Tutorial <!-- omit in TOC -->
 
-Az.AzureLabs is a PowerShell module to simplify the management of [Azure Lab services](https://azure.microsoft.com/en-in/services/lab-services/). It provides composable functions to create, query, update and delete lab accounts, labs, VMs and Images.
+Az.LabServices is a PowerShell module to simplify the management of [Azure Lab services](https://azure.microsoft.com/en-in/services/lab-services/). It provides composable functions to create, query, update and delete lab accounts, labs, VMs and Images.
 
 - [Introduction](#introduction)
 - [Import the module](#import-the-module)
@@ -22,13 +22,13 @@ You can pass the `-verbose` parameter to see some action on your screen, otherwi
 
 ## Import the module
 
-First you need to save the [`Az.AzureLabs.psm1`](Az.AzureLabs.psm1) file in a directory on disk.
+First you need to save the [`Az.LabServices.psm1`](Az.LabServices.psm1) file in a directory on disk.
 
 Then you need to open a Powershell console and import the module:
 
 ```powershell
 cd DIRECTORY-WITH-MODULE
-import-module ./Az.AzureLabs.psm1
+import-module ./Az.LabServices.psm1
 ```
 
 ## Browse all the functions in the library
@@ -36,7 +36,7 @@ import-module ./Az.AzureLabs.psm1
 As a quick way to see which Azure Lab Services capabilities are supported, type the following command in the console.
 
 ```powershell
-Get-Command -Module Az.AzureLabs
+Get-Command -Module Az.LabServices
 ```
 
 ## Publish a new lab

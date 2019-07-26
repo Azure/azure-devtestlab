@@ -4,7 +4,7 @@ Prints out a report of all running VMs and asks confirmation to stop them.
 [CmdletBinding()]
 param()
 
-Import-Module ..\Az.AzureLabs.psm1 -Force
+Import-Module ..\Az.LabServices.psm1 -Force
 
 Write-Host "Retrieving running VMs in your labs ..."
 $labs   = Get-AzLabAccount | Get-AzLab
@@ -34,4 +34,4 @@ if($vms) {
     Write-Host "No running VMs in your labs."
 }
 
-Remove-Module Az.AzureLabs -Force
+Remove-Module Az.LabServices -Force

@@ -4,7 +4,7 @@ Prints out a report of all VMs.
 [CmdletBinding()]
 param($UserEmail = '*')
 
-Import-Module ..\Az.AzureLabs.psm1 -Force
+Import-Module ..\Az.LabServices.psm1 -Force
 
 Write-Host "Retrieving VMs in your labs ..."
 $labs   = Get-AzLabAccount | Get-AzLab
@@ -28,4 +28,4 @@ if($vms) {
     Write-Host "No VMs in your labs."
 }
 
-Remove-Module Az.AzureLabs -Force
+Remove-Module Az.LabServices -Force

@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param()
 
-Import-Module ..\Az.AzureLabs.psm1 -Force
+Import-Module ..\Az.LabServices.psm1 -Force
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -68,4 +68,4 @@ Write-Host "Added Users: $emails."
 $schedules | ForEach-Object { $_ | New-AzLabSchedule -Lab $lab} | Out-Null
 Write-Host "Added all schedules."
 
-Remove-Module Az.AzureLabs -Force
+Remove-Module Az.LabServices -Force

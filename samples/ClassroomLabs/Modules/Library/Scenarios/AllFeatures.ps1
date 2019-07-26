@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param()
 
-Import-Module ..\Az.AzureLabs.psm1 -Force
+Import-Module ..\Az.LabServices.psm1 -Force
 
 $acName     = "Test" + (Get-Random)
 $labName    = "Test" + (Get-Random)
@@ -37,4 +37,4 @@ $lab | Remove-AzLab
 
 Remove-AzLabAccount -LabAccount $la
 Remove-AzureRmResourceGroup -Name $rgName -Force | Out-Null
-Remove-Module Az.AzureLabs -Force
+Remove-Module Az.LabServices -Force

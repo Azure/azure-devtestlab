@@ -1,6 +1,6 @@
-# Az.AzureLabs
+# Az.LabServices
 
-Az.AzureLabs is a PowerShell module to simplify the management of [Azure Lab services](https://azure.microsoft.com/en-in/services/lab-services/). It provides composable functions to create, query, update and delete lab accounts, labs, VMs and Images.
+Az.LabServices is a PowerShell module to simplify the management of [Azure Lab services](https://azure.microsoft.com/en-in/services/lab-services/). It provides composable functions to create, query, update and delete lab accounts, labs, VMs and Images.
 
 Here is an example that showcases using the library to stop all the running VMs in all labs.
 
@@ -13,11 +13,11 @@ And [here](HowTo.md) is a step by step tutorial.
 ## Getting Started
 
 1. Make sure you have a recent [Azure PowerShell Module](https://docs.microsoft.com/en-us/powershell/azure/overview) installed.
-2. Copy Az.AzureLabs.psm1 anywhere on disk
+2. Copy Az.LabServices.psm1 anywhere on disk
 3. Import the module
 
 ```powershell
-Import-Module .\Az.AzureLabs.psm1
+Import-Module .\Az.LabServices.psm1
 ```
 
 4. Start hacking !! (i.e. List all the labs in your subscription)
@@ -32,7 +32,7 @@ More complex examples of usage are in the [Scenarios](./Scenarios) folder.
 
 ## Issues
 
-Log issues on the [DevTest Labs Issues page](https://github.com/Azure/azure-devtestlab/issues). Please put [AZ.AZURELABS] in the title for easy scanning.
+Log issues on the [DevTest Labs Issues page](https://github.com/Azure/azure-devtestlab/issues). Please put [AZ.LABSERVICES] in the title for easy scanning.
 
 ## Contributing
 
