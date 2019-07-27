@@ -23,7 +23,7 @@ Describe 'VM Management' {
             # Create VMs in a lab
             $createdVMs = $vms| Select-Object -Property @{N='Name'; E={$createdLabs[0].Name}}, @{N='ResourceGroupName'; E={$createdLabs[0].ResourceGroupName}}, VmName,Size,Claimable,Username,Password,OsType,Sku,Publisher,Offer | New-AzDtlVm
             Write-Host "Created VMs:"
-            $createdVMs | Write-Host
+            $createdVMs | Out-String | Write-Host
             $createdVMs.Count | Should -Be 2
 
             Get-AzDtlVM -Lab $createdLabs[0]  | Measure-Object | Select-Object -ExpandProperty Count | Should -Be 2
@@ -46,13 +46,13 @@ Describe 'VM Management' {
 
             $vms = $labs | Get-AzDtlVM
             Write-Host "VMs before delete"
-            $vms | Write-Host
+            $vms | Out-String | Write-Host
 
             $vms | Remove-AzDtlVm
 
             $vms = $labs | Get-AzDtlVm
             Write-Host "VMs after delete"
-            $vms | Write-Host
+            $vms | Out-String | Write-Host
             $vms | Measure-Object | Select-Object -ExpandProperty Count | Should -Be 0
         }
 
