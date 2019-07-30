@@ -11,7 +11,7 @@ using LSEnvironmentSetting = Microsoft.Azure.Management.LabServices.Models.Envir
 
 namespace SDKSample
 {
-    internal static class GetRdpFilesForLab
+    internal static class GetPublicRdpFilesForLab
     {
         /// <summary>
         /// Gets all of the expanded environments for a given Lab and generates RDP files to connect to them.
