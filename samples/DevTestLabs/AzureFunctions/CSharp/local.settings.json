@@ -1,0 +1,13 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet",
+    "AzureFunctionUrl_ApplyUpdates": "http://localhost:7071/api/subscriptions/{SUBSCRIPTIONID}/resourceGroups/{RESOURCEGROUPNAME}/providers/Microsoft.DevTestLab/labs/{LABNAME}/virtualmachines/{VIRTUALMACHINENAME}",
+    "AzureFunctionUrl_UpdateSupportPage": "http://localhost:7071/api/subscriptions/{SUBSCRIPTIONID}/resourceGroups/{RESOURCEGROUPNAME}/providers/Microsoft.DevTestLab/labs/{LABNAME}",
+    "ServicePrincipal_AppId": "",
+    "ServicePrincipal_Key": "",
+    "ServicePrincipal_Tenant": "",
+    "WindowsUpdateAllowedDays": 7
+  }
+}

@@ -27,7 +27,7 @@
     "ouPath": {
       "type": "string",
       "displayName": "Active Directory (AD) domain OU",
-      "description": "The OU path e.g. OU=Workstations,OU=Machines,DC=corp,DC=contoso,DC=com",
+      "description": "Optional. Only required if you have configured organizational units in your domain; leave blank otherwise. For example, OU=Workstations,OU=Machines,DC=corp,DC=contoso,DC=com. Where 'Workstations' and 'Machines' are 2 organizational units configured in your domain.",
       "allowEmpty": true,
       "defaultValue": ""
     }

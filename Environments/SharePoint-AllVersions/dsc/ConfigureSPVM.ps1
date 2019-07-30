@@ -331,14 +331,14 @@ configuration ConfigureSPVM
             DependsOn            = "[SPFarm]CreateSPFarm"
         }
 
-        # SPDiagnosticLoggingSettings ApplyDiagnosticLogSettings
-        # {
-        #     LogPath              = "C:\ULS"
-        #     LogSpaceInGB         = 20
-        #     IsSingleInstance     = "Yes"
-        #     PsDscRunAsCredential = $SPSetupCredsQualified
-        #     DependsOn            = "[SPFarm]CreateSPFarm"
-        # }
+        SPTrustedRootAuthority TrustRootCA
+        {
+            Name                 = "$DomainFQDN root CA"
+            CertificateFilePath  = "$SetupPath\Certificates\ADFS Signing issuer.cer"
+            Ensure               = "Present"
+            PsDscRunAsCredential = $SPSetupCredsQualified
+            DependsOn            = "[SPFarm]CreateSPFarm"
+        }
 
         SPTrustedIdentityTokenIssuer CreateSPTrust
         {
@@ -442,45 +442,17 @@ configuration ConfigureSPVM
             DependsOn            = "[SPWebApplicationExtension]ExtendWebApp"
         }
 
-        # Cannot use resource xWebsite in xWebAdministration because CertificateThumbprint is not known yet
-        xScript SetHTTPSCertificate
+        xWebsite SetHTTPSCertificate
         {
-            SetScript =
+            Name                 = "SharePoint - 443"
+            BindingInfo          = MSFT_xWebBindingInformation
             {
-                $siteCert = Get-ChildItem -Path "cert:\LocalMachine\My\" -DnsName "*.$using:DomainFQDN"
-
-                $website = Get-WebConfiguration -Filter '/system.applicationHost/sites/site' |
-                    Where-Object -FilterScript {$_.Name -eq "SharePoint - 443"}
-
-                $properties = @{
-                    protocol = "https"
-                    bindingInformation = ":443:"
-                    certificateStoreName = "MY"
-                    certificateHash = $siteCert.Thumbprint
-                }
-
-                Clear-WebConfiguration -Filter "$($website.ItemXPath)/bindings" -Force -ErrorAction Stop
-                Add-WebConfiguration -Filter "$($website.ItemXPath)/bindings" -Value @{
-                    protocol = $properties.protocol
-                    bindingInformation = $properties.bindingInformation
-                    certificateStoreName = $properties.certificateStoreName
-                    certificateHash = $properties.certificateHash
-                } -Force -ErrorAction Stop
-
-                if (!(Get-Item IIS:\SslBindings\*!443)) {
-                    New-Item IIS:\SslBindings\*!443 -value $siteCert
-                }
-
-                <# To implement only when the TestScript will be implemented and will determine that current config must be overwritten
-                # Otherwise, assume the right certificate is already used and binding doesn't need to be recreated
-                if ((Get-Item IIS:\SslBindings\*!443)) {
-                    Remove-Item IIS:\SslBindings\*!443 -Confirm:$false
-                }
-                New-Item IIS:\SslBindings\*!443 -value $siteCert
-                #>
+                Protocol             = "HTTPS"
+                Port                 = 443
+                CertificateStoreName = "My"
+                CertificateSubject   = "$SPTrustedSitesName.$DomainFQDN"
             }
-            GetScript            = { return @{ "Result" = "false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
-            TestScript           = { return $false } # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
+            Ensure               = "Present"
             PsDscRunAsCredential = $DomainAdminCredsQualified
             DependsOn            = "[SPWebAppAuthentication]ConfigureWebAppAuthentication"
         }
@@ -565,9 +537,10 @@ $DomainFQDN = "contoso.local"
 $DCName = "DC"
 $SQLName = "SQL"
 $SQLAlias = "SQLAlias"
+$SharePointVersion = "2019"
 
 $mofPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.77.0.0\DSCWork\ConfigureSPVM.0\ConfigureSPVM"
-ConfigureSPVM -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPAppPoolCreds $SPAppPoolCreds -SPPassphraseCreds $SPPassphraseCreds -DNSServer $DNSServer -DomainFQDN $DomainFQDN -DCName $DCName -SQLName $SQLName -SQLAlias $SQLAlias -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $mofPath
+ConfigureSPVM -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPAppPoolCreds $SPAppPoolCreds -SPPassphraseCreds $SPPassphraseCreds -DNSServer $DNSServer -DomainFQDN $DomainFQDN -DCName $DCName -SQLName $SQLName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $mofPath
 Set-DscLocalConfigurationManager -Path $mofPath
 Start-DscConfiguration -Path $mofPath -Wait -Verbose -Force
 
