@@ -1,4 +1,5 @@
 Import-Module $PSScriptRoot\..\..\Az.DevTestLabs2.psm1
+$VerbosePreference="Continue"
 
 $lab = @(
     [pscustomobject]@{Name=('DtlLibrary-LabPolicy-' + (Get-Random)); ResourceGroupName=('DtlLibrary-LabPolicyRg-' + (Get-Random)); Location='westus'}

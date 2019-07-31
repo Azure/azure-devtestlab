@@ -1,4 +1,5 @@
 Import-Module $PSScriptRoot\..\..\Az.DevTestLabs2.psm1
+$VerbosePreference="Continue"
 
 $users = @'
 UserEmail, Role
