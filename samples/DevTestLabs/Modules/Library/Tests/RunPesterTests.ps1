@@ -36,7 +36,7 @@ else {
 }
 
 Write-Output "Test Script Location: $TestScriptsLocation"
-$TestScripts = Get-ChildItem -Include "*.tests.ps1" -Recurse -Path $TestScriptsLocation
+$TestScripts = Get-ChildItem -Include *.tests.ps1, *.tests.ps1 -Recurse -Path $TestScriptsLocation
 
 if (-not $TestScripts) {
     Write-Error "Unable to find any test scripts.."
