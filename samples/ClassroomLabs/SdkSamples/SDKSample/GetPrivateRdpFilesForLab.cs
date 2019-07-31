@@ -42,16 +42,31 @@ namespace SDKSample
                     .ConfigureAwait(false);
 
                 // Generate RDP files
-                HashSet<string> uniquePublicIPs = new HashSet<string>();
+                Dictionary<string, HashSet<string>> uniquePublicIPs = new Dictionary<string, HashSet<string>>();
 
                 foreach (LSEnvironment env in expandedEnvironments)
                 {
-                    uniquePublicIPs.Add(env.NetworkInterface.RdpAuthority.Split(':')[0]);
+                    string[] rdpAuth = env.NetworkInterface.RdpAuthority.Split(':');
+                    if (!uniquePublicIPs.ContainsKey(rdpAuth[0]))
+                    {
+                        uniquePublicIPs.Add(rdpAuth[0], new HashSet<string>());
+                    }
+                    uniquePublicIPs[rdpAuth[0]].Add(rdpAuth[1]);
                     GenerateRdpFile(env.NetworkInterface.PrivateIpAddress, env.NetworkInterface.Username, rdpFolderPath, env.Name);
                     Console.WriteLine(env.NetworkInterface.RdpAuthority + " " + env.NetworkInterface.PrivateIpAddress);
                 }
 
-                File.WriteAllLines(Path.Combine(rdpFolderPath, "UniqueIPAddresses.txt"), uniquePublicIPs.Select(ip => ip.ToString()));
+                using (StreamWriter writer = new StreamWriter(File.OpenWrite(Path.Combine(rdpFolderPath, "UniqueIPAddresses.txt"))))
+                {
+                    foreach (KeyValuePair<string, HashSet<string>> uniqueIp in uniquePublicIPs)
+                    {
+                        writer.WriteLine(uniqueIp.Key);
+                        foreach (string port in uniqueIp.Value)
+                        {
+                            writer.WriteLine("\t" + port);
+                        }
+                    }
+                }
             }
         }
 
