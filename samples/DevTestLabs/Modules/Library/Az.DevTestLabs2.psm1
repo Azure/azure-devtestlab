@@ -32,7 +32,7 @@ if($justAzureRm) {
 }
 
 if($justAz) {
-  Enable-AzureRmAlias -Scope Local -Verbose:$false
+  Enable-AzureRmAlias -Scope Local
   Enable-AzureRmContextAutosave -Scope CurrentUser -erroraction silentlycontinue
 }
 
@@ -612,21 +612,22 @@ function Get-AzDtlLabSharedImageGallery {
   process {
     try{
         # Get the shared image gallery
+        Write-Verbose "Checking for the shared image gallery resource for lab '$($lab.Name)'"
         $sig = Get-AzureRmResource -ResourceGroupName $Lab.ResourceGroupName -ResourceType 'Microsoft.DevTestLab/labs/sharedGalleries' -ResourceName $Lab.Name -ApiVersion 2018-10-15-preview
 
-            # Get all the images too and return the whole thing - if $sig is null, we don't return anything (no pipeline object)
-            if ($sig) {
+        # Get all the images too and return the whole thing - if $sig is null, we don't return anything (no pipeline object)
+        if ($sig) {
 
-            if ($IncludeImages) {
-                # Get the images in the shared image gallery
-                $sigImages = $sig | Get-AzDtlLabSharedImageGalleryImages
-                
-                # Add the images to the shared image gallery object
-                $sig | Add-Member -MemberType NoteProperty -Name "Images" -Value $sigimages
-            }
-                
-            return $sig
-        }
+          if ($IncludeImages) {
+              # Get the images in the shared image gallery
+              $sigImages = $sig | Get-AzDtlLabSharedImageGalleryImages
+              
+              # Add the images to the shared image gallery object
+              $sig | Add-Member -MemberType NoteProperty -Name "Images" -Value $sigimages
+          }
+            
+        return $sig
+      }
     } 
     catch {
       Write-Error -ErrorRecord $_ -EA $callerEA

@@ -3,6 +3,7 @@ This highlights how to use a single csv file to create multiple VMs in a single 
 #>
 
 Import-Module $PSScriptRoot\..\..\Az.DevTestLabs2.psm1
+$VerbosePreference="Continue"
 
 $rgName = "DtlLibraryTestRG" + (Get-Random)
 $labname = "DtlLibraryTest" + (Get-Random)

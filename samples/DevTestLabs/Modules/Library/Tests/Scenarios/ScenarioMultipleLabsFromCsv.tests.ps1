@@ -3,6 +3,7 @@ This highlights how to use a single csv file to create multiple labs with multip
 #>
 
 Import-Module $PSScriptRoot\..\..\Az.DevTestLabs2.psm1
+$VerbosePreference="Continue"
 
 function StringToFile([parameter(ValueFromPipeline=$true)][string] $text) {
   $tmp = New-TemporaryFile
