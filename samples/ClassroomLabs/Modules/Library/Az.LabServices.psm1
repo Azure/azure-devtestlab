@@ -260,7 +260,7 @@ function InvokeRest($Uri, $Method, $Body, $params) {
     if ($params) { $fullUri += '&' + $params }
 
     if ($body) { Write-Verbose $body }    
-    $result = Invoke-WebRequest -Uri $FullUri -Method $Method -Headers $authHeaders -Body $Body
+    $result = Invoke-WebRequest -Uri $FullUri -Method $Method -Headers $authHeaders -Body $Body -UseBasicParsing
     $resObj = $result.Content | ConvertFrom-Json
     
     # Happens with Post commands ...
