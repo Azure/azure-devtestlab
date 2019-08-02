@@ -875,7 +875,7 @@ function Get-AzDtlVm {
         # Also notice silently continue for errors to return empty set for composibility
         # TODO: is there a clever way to make this less expensive? I.E. prequery without -ExpandProperties and then use the result to query again.
         $vms = MyGetResourceVm -Name "$Name" -LabName $LabName -ResourceGroupName $ResourceGroupName
-        Write-verbose "Vms before status filter are $vms."
+
         if($vms -and ($Status -ne 'Any')) {
           return $vms | Where-Object { $Status -eq (Get-AzDtlVmStatus $_ -ExtendedStatus:$ExtendedStatus)}
         } else {
