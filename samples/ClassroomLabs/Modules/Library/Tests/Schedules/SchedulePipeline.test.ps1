@@ -32,11 +32,11 @@ Describe 'Schedule Management' {
             # Creat RG, Lab Account and lab if not existing
             if(-not (Get-AzResourceGroup -ResourceGroupName $rgName -EA SilentlyContinue)) {
                 New-AzResourceGroup -ResourceGroupName $rgName -Location $rgLocation | Out-null
-                Write-Host "$rgname resource group didn't exist. Created it."
+                Write-Verbose "$rgname resource group didn't exist. Created it."
             }
             
             $la  = New-AzLabAccount -ResourceGroupName $rgName -LabAccountName $laName
-            Write-Host "$laName lab account created or found."
+            Write-Verbose "$laName lab account created or found."
             
             $lab = $la | Get-AzLab -LabName $labName
             
@@ -44,22 +44,24 @@ Describe 'Schedule Management' {
                 $lab = $la `
                     | New-AzLab -LabName $LabName -MaxUsers $maxUsers -UsageQuotaInHours $usageQuota -UserAccessMode $usageAMode -SharedPasswordEnabled:$shPsswd `
                     | Publish-AzLab
-                Write-Host "$LabName lab already exist. Republished."
+                Write-Verbose "$LabName lab already exist. Republished."
             } else {
-                $img = $la | Get-AzLabAccountGalleryImage | Where-Object {$_.name -like $imgName}
-                if(-not $img -or $img.Count -ne 1) {Write-Error "$imgName pattern doesn't match just one image."}
-                Write-Host "Image $imgName found."
+                $imgs = $la | Get-AzLabAccountGalleryImage | Where-Object {$_.name -like $imgName}
+                $imgs | Should -Not -Be $null
+                $imgs.Count | Should -BeGreaterThan 0
+                $img = $imgs[0]
+                Write-Verbose "Image $imgName found."
                 
                 $lab = $la `
                     | New-AzLab -LabName $LabName -MaxUsers $maxUsers -UsageQuotaInHours $usageQuota -UserAccessMode $usageAMode -SharedPasswordEnabled:$shPsswd `
                     | New-AzLabTemplateVM -Image $img -Size $size -Title $title -Description $descr -UserName $userName -Password $password -LinuxRdpEnabled:$linuxRdp `
                     | Publish-AzLab
-                Write-Host "$LabName lab doesn't exist. Created it."
+                Write-Verbose "$LabName lab doesn't exist. Created it."
             }
             
             # Create Schedules
             $schedules | ForEach-Object { $_ | New-AzLabSchedule -Lab $lab} | Out-Null
-            Write-Host "Added all schedules."
+            Write-Verbose "Added all schedules."
 
             # Get Schedules
             $created = $lab | Get-AzLabSchedule
@@ -67,6 +69,8 @@ Describe 'Schedule Management' {
 
             # Remove Schedules
             $created | Remove-AzLabSchedule
+            $existing = $lab | Get-AzLabSchedule
+            $existing | Should -HaveCount 0
 
             # Cleanup
             Remove-AzResourceGroup -ResourceGroupName $rgName -Force
