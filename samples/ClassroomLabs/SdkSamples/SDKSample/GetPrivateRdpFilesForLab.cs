@@ -5,13 +5,14 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
+using System.Reflection.Emit;
 using System.Threading.Tasks;
 using LSEnvironment = Microsoft.Azure.Management.LabServices.Models.Environment;
 using LSEnvironmentSetting = Microsoft.Azure.Management.LabServices.Models.EnvironmentSetting;
 
 namespace SDKSample
 {
-    internal static class GetRdpFilesForLab
+    internal static class GetPrivateRdpFilesForLab
     {
         /// <summary>
         /// Gets all of the expanded environments for a given Lab and generates RDP files to connect to them.
@@ -41,9 +42,30 @@ namespace SDKSample
                     .ConfigureAwait(false);
 
                 // Generate RDP files
+                Dictionary<string, HashSet<string>> uniquePublicIPs = new Dictionary<string, HashSet<string>>();
+
                 foreach (LSEnvironment env in expandedEnvironments)
                 {
-                    GenerateRdpFile(env.NetworkInterface.RdpAuthority, env.NetworkInterface.Username, rdpFolderPath, env.Name);
+                    string[] rdpAuth = env.NetworkInterface.RdpAuthority.Split(':');
+                    if (!uniquePublicIPs.ContainsKey(rdpAuth[0]))
+                    {
+                        uniquePublicIPs.Add(rdpAuth[0], new HashSet<string>());
+                    }
+                    uniquePublicIPs[rdpAuth[0]].Add(rdpAuth[1]);
+                    GenerateRdpFile(env.NetworkInterface.PrivateIpAddress, env.NetworkInterface.Username, rdpFolderPath, env.Name);
+                    Console.WriteLine(env.NetworkInterface.RdpAuthority + " " + env.NetworkInterface.PrivateIpAddress);
+                }
+
+                using (StreamWriter writer = new StreamWriter(File.OpenWrite(Path.Combine(rdpFolderPath, "UniqueIPAddresses.txt"))))
+                {
+                    foreach (KeyValuePair<string, HashSet<string>> uniqueIp in uniquePublicIPs)
+                    {
+                        writer.WriteLine(uniqueIp.Key);
+                        foreach (string port in uniqueIp.Value)
+                        {
+                            writer.WriteLine("\t" + port);
+                        }
+                    }
                 }
             }
         }

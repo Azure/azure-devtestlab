@@ -101,7 +101,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CustomLoginCredentials.cs" />
-    <Compile Include="GetRdpFilesForLab.cs" />
+    <Compile Include="GetPrivateRdpFilesForLab.cs" />
+    <Compile Include="GetPublicRdpFilesForLab.cs" />
     <Compile Include="GetRdpFilesForUser.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
