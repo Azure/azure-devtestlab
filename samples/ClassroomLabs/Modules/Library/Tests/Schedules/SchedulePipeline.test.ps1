@@ -1,4 +1,5 @@
 Import-Module $PSScriptRoot\..\..\Az.LabServices.psm1
+$VerbosePreference="Continue"
 
 $today      = (Get-Date).ToString()
 $tomorrow   = (Get-Date).AddDays(1)
@@ -46,10 +47,11 @@ Describe 'Schedule Management' {
                     | Publish-AzLab
                 Write-Verbose "$LabName lab already exist. Republished."
             } else {
-                $imgs = $la | Get-AzLabAccountGalleryImage | Where-Object {$_.name -like $imgName}
+                $imgs = $la | Get-AzLabAccountGalleryImage
                 $imgs | Should -Not -Be $null
-                $imgs.Count | Should -BeGreaterThan 0
+                # $imgs.Count | Should -BeGreaterThan 0
                 $img = $imgs[0]
+                $img | Should -Not -Be $null
                 Write-Verbose "Image $imgName found."
                 
                 $lab = $la `
