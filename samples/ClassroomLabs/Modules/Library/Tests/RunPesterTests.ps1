@@ -7,7 +7,7 @@ Param(
 )
 
 # Import the module here to make sure we validate up front versions of Azure Powershell
-Import-Module $PSScriptRoot\..\Az.DevTestLabs2.psm1
+Import-Module $PSScriptRoot\..\Az.LabServices.psm1
 
 # Check if we have a newer version of Pester, if not - let's install it
 $pesterModule = Get-Module -ListAvailable | Where-Object {$_.Name -eq "Pester"} | Sort-Object -Descending Version | Select-Object -First 1
@@ -22,7 +22,7 @@ $invokePesterScriptBlock = {
     param($testScripts, $PSScriptRoot)
 
     # In the job, we have to re-import the library for this process
-    Import-Module $PSScriptRoot\..\Az.DevTestLabs2.psm1
+    Import-Module $PSScriptRoot\..\Az.LabServices.psm1
 
     # Run pester for the scripts
     Invoke-Pester -Script $testScripts -PassThru
