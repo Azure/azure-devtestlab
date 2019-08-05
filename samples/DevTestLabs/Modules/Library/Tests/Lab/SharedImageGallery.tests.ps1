@@ -1,4 +1,5 @@
 Import-Module $PSScriptRoot\..\..\Az.DevTestLabs2.psm1
+$VerbosePreference="Continue"
 
 $lab = @(
     [pscustomobject]@{Name=('DtlLibrary-LabPolicy-' + (Get-Random)); ResourceGroupName=('DtlLibrary-LabPolicyRg-' + (Get-Random)); Location='westus'}
@@ -18,6 +19,8 @@ Describe  'Get and Set SharedImageGallery and SharedImageGalleryImages' {
 
             # Create the lab
             $lab | New-AzDtlLab
+
+            $result | Out-String | Write-Verbose
         }
 
         It 'Get and Set for Shared Image Gallery' {

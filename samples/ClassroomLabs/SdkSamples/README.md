@@ -7,7 +7,7 @@
   * Set the `Sign-on URL` to https://dtlclient. This doesn't matter at this time.
 * Go to the registered app page for your new app.
   * Copy the "ApplicationID" to your notes. It will be used as the `ClientId` in the `app.config`.
-  * Go to "Settings/Owners" and add both your account as an owner.
+  * Go to "Settings/Owners" and add your account as an owner.
   * Go to "Settings/Redirect URIs" and make sure "https://dtlclient" is on there.
   * Go to "Settings/Required Permissions" and click "Add". Type in "Windows Azure Service Management API" and check all permissions boxes.
   * On "Settings/Required Permissions" click "Grant Permissions". This should succeed.

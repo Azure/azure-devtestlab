@@ -3,6 +3,7 @@ This highlights how to use a single csv file to create multiple VMs in a single 
 #>
 
 Import-Module $PSScriptRoot\..\..\Az.DevTestLabs2.psm1
+$VerbosePreference="Continue"
 
 $rgName = "DtlLibraryTestRG" + (Get-Random)
 $labname = "DtlLibraryTest" + (Get-Random)
@@ -35,16 +36,24 @@ Describe  'Scenario Tests' {
         | Start-AzDtlVm `
         | Stop-AzDtlVm
 
-        $lab | Get-AzDtlVm | Remove-AzDtlVm
+        Write-Verbose "Virtual Machines created:"
+        $actualVMs = $lab | Get-AzDtlVm
+        $actualVMs | Format-Table | Out-String
+
+        Write-Verbose "Removing VMs..."
+        $actualVMs | Remove-AzDtlVm -AsJob | Receive-Job -Wait
+
+        Write-Verbose "Virtual Machines remaining after delete:"
+        $actualVMs = $lab | Get-AzDtlVm
+        $actualVMs | Format-Table | Out-String
       
-        ($lab | Get-AzDtlVm).Count | Should -Be 0
+        $actualVMs.Count | Should -Be 0
       }
 
       It 'Clean up resources' {
 
         Get-AzDtlLab -Name $labname -ResourceGroupName $rgName | Remove-AzDtlLab
         Remove-AzureRmResourceGroup -Name $rgName -Force | Out-Null
-        
       }
     }
 }

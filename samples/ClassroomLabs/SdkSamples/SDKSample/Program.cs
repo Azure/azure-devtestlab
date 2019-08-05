@@ -16,9 +16,9 @@ namespace SDKSample
 
                 switch (args[0])
                 {
-                    case "getAllRdpFilesForLab":
+                    case "getPublicRdpFilesForLab":
                         {
-                            GetRdpFilesForLab.CreateRdpFiles().Wait();
+                            GetPublicRdpFilesForLab.CreateRdpFiles().Wait();
 
                             Console.ForegroundColor = ConsoleColor.Green;
                             Console.WriteLine($"Saved all RDP files!");
@@ -26,7 +26,17 @@ namespace SDKSample
 
                             break;
                         }
-                    case "getAllRdpFilesForUser":
+                    case "getPrivateRdpFilesForLab":
+                        {
+                            GetPrivateRdpFilesForLab.CreateRdpFiles().Wait();
+
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine($"Saved all RDP files!");
+                            Console.ResetColor();
+
+                            break;
+                        }
+                    case "getPublicRdpFilesForUser":
                         {
                             GetRdpFilesForUser.CreateRdpFiles().Wait();
 

@@ -1,4 +1,5 @@
 Import-Module $PSScriptRoot\..\..\Az.DevTestLabs2.psm1
+$VerbosePreference="Continue"
 
 $labs = @(
     [pscustomobject]@{Name=('DtlLibrary-Vm-' + (Get-Random)); ResourceGroupName=('DtlLibrary-VmRg-' + (Get-Random)); Location='westus'},
@@ -22,8 +23,8 @@ Describe 'VM Management' {
 
             # Create VMs in a lab
             $createdVMs = $vms| Select-Object -Property @{N='Name'; E={$createdLabs[0].Name}}, @{N='ResourceGroupName'; E={$createdLabs[0].ResourceGroupName}}, VmName,Size,Claimable,Username,Password,OsType,Sku,Publisher,Offer | New-AzDtlVm
-            Write-Host "Created VMs:"
-            $createdVMs | Out-String | Write-Host
+            Write-Verbose "Created VMs:"
+            $createdVMs | Out-String | Write-Verbose
             $createdVMs.Count | Should -Be 2
 
             Get-AzDtlVM -Lab $createdLabs[0]  | Measure-Object | Select-Object -ExpandProperty Count | Should -Be 2
@@ -45,14 +46,14 @@ Describe 'VM Management' {
         It 'DTL VMs can be deleted with pipeline' {
 
             $vms = $labs | Get-AzDtlVM
-            Write-Host "VMs before delete"
-            $vms | Out-String | Write-Host
+            Write-Verbose "VMs before delete"
+            $vms | Out-String | Write-Verbose
 
             $vms | Remove-AzDtlVm
 
             $vms = $labs | Get-AzDtlVm
-            Write-Host "VMs after delete"
-            $vms | Out-String | Write-Host
+            Write-Verbose "VMs after delete"
+            $vms | Out-String | Write-Verbose
             $vms | Measure-Object | Select-Object -ExpandProperty Count | Should -Be 0
         }
 
