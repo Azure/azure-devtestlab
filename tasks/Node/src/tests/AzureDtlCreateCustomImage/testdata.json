@@ -1,5 +1,0 @@
-{
-    "subscriptionId": "e605a3bc-ee4e-4c7a-9709-1868a28b1d4d",
-    "labId": "/subscriptions/e605a3bc-ee4e-4c7a-9709-1868a28b1d4d/resourcegroups/lv-rg-sandbox/providers/microsoft.devtestlab/labs/lv-lab-sandbox",
-    "armTemplateId": "/subscriptions/e605a3bc-ee4e-4c7a-9709-1868a28b1d4d/resourceGroups/lv-rg-sandbox/providers/Microsoft.DevTestLab/labs/lv-lab-sandbox/artifactSources/privaterepo523/armTemplates/rbest-template"
-}
