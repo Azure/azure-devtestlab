@@ -1,0 +1,12 @@
+/.vs
+/.vscode
+
+**/node_modules
+
+**/authfile.json
+**/.taskkey
+**/*.map
+**/*.vsix
+
+dist
+out

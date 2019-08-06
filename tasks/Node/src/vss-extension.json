@@ -1,0 +1,140 @@
+{
+  "manifestVersion": 1,
+  "id": "dtl-tasks",
+  "version": "0.0.2",
+  "name": "Azure DevTest Labs Tasks (DEV)",
+  "publisher": "ms-azuredevtestlabs-dev",
+  "description": "Collection of Azure Pipelines tasks to interact with Azure DevTest Labs.",
+  "galleryFlags": [],
+  "targets": [
+    {
+      "id": "Microsoft.VisualStudio.Services"
+    }
+  ],
+  "icons": {
+    "default": "images/azure-dtl128.png"
+  },
+  "categories": [
+    "Azure Pipelines"
+  ],
+  "tags": [
+    "azure",
+    "devtest",
+    "dtl",
+    "labs",
+    "pipelines",
+    "tasks"
+  ],
+  "screenshots": [
+    {
+      "path": "screenshots/azure-dtl.png"
+    }
+  ],
+  "content": {
+    "details": {
+      "path": "docs/overview.md"
+    }
+  },
+  "links": {
+    "support": {
+      "uri": "https://social.msdn.microsoft.com/Forums/en-US/home?forum=AzureDevTestLabs"
+    },
+    "learn": {
+      "uri": "https://blogs.msdn.microsoft.com/devtestlab/2016/06/15/azure-devtest-labs-vsts-extension/"
+    }
+  },
+  "branding": {
+    "color": "rgb(34, 34, 34)",
+    "theme": "dark"
+  },
+  "contributions": [
+    {
+      "id": "azure-dtl-task-createCustomImage",
+      "type": "ms.vss-distributed-task.task",
+      "targets": [
+        "ms.vss-distributed-task.tasks"
+      ],
+      "properties": {
+        "name": "tasks/AzureDtlCreateCustomImage"
+      }
+    },
+    {
+      "id": "azure-dtl-task-createEnvironment",
+      "type": "ms.vss-distributed-task.task",
+      "targets": [
+        "ms.vss-distributed-task.tasks"
+      ],
+      "properties": {
+        "name": "tasks/AzureDtlCreateEnvironment"
+      }
+    },
+    {
+      "id": "azure-dtl-task-createvm",
+      "type": "ms.vss-distributed-task.task",
+      "targets": [
+        "ms.vss-distributed-task.tasks"
+      ],
+      "properties": {
+        "name": "tasks/AzureDtlCreateVM"
+      }
+    },
+    {
+      "id": "azure-dtl-task-deleteEnvironment",
+      "type": "ms.vss-distributed-task.task",
+      "targets": [
+        "ms.vss-distributed-task.tasks"
+      ],
+      "properties": {
+        "name": "tasks/AzureDtlDeleteEnvironment"
+      }
+    },
+    {
+      "id": "azure-dtl-task-deleteVm",
+      "type": "ms.vss-distributed-task.task",
+      "targets": [
+        "ms.vss-distributed-task.tasks"
+      ],
+      "properties": {
+        "name": "tasks/AzureDtlDeleteVM"
+      }
+    },
+    {
+      "id": "azure-dtl-task-updateEnvironment",
+      "type": "ms.vss-distributed-task.task",
+      "targets": [
+        "ms.vss-distributed-task.tasks"
+      ],
+      "properties": {
+        "name": "tasks/AzureDtlUpdateEnvironment"
+      }
+    }
+  ],
+  "files": [
+    {
+      "path": "tasks/AzureDtlCreateCustomImage"
+    },
+    {
+      "path": "tasks/AzureDtlCreateEnvironment"
+    },
+    {
+      "path": "tasks/AzureDtlCreateVM"
+    },
+    {
+      "path": "tasks/AzureDtlDeleteEnvironment"
+    },
+    {
+      "path": "tasks/AzureDtlDeleteVM"
+    },
+    {
+      "path": "tasks/AzureDtlUpdateEnvironment"
+    },
+    {
+      "path": "images",
+      "addressable": true
+    },
+    {
+      "path": "screenshots",
+      "addressable": true
+    }
+  ]
+}

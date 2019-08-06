@@ -1,0 +1,127 @@
+{
+    "id": "1FBE9BB7-B97B-4D08-8CB3-E0A776F687AA",
+    "name": "AzureDevTestLabsUpdateEnvironment",
+    "friendlyName": "Azure DevTest Labs Update Environment",
+    "description": "Update an Azure DevTest Labs Environment",
+    "helpMarkDown": "",
+    "author": "Microsoft Corporation",
+    "category": "Deploy",
+    "minimumAgentVersion": "1.95.1",
+    "instanceNameFormat": "Update Azure DevTest Labs Environment",
+    "releaseNotes": "Works with cross-platform agents (Linux, macOS, or Windows)",
+    "preview": true,
+    "demands": [
+        "npm"
+    ],
+    "version": {
+        "Major": 0,
+        "Minor": 0,
+        "Patch": 1
+    },
+    "visibility": [
+        "Build",
+        "Release"
+    ],
+    "groups": [
+        {
+            "name": "advanced",
+            "displayName": "Advanced",
+            "isExpanded": false
+        }
+    ],
+    "inputs": [
+        {
+            "name": "ConnectedServiceName",
+            "type": "connectedService:AzureRM",
+            "label": "Azure RM Subscription",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Azure Resource Manager subscription to configure before running."
+        },
+        {
+            "name": "LabId",
+            "type": "pickList",
+            "label": "Lab Name",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Name of an existing lab in which the lab VM will be created. This is a pick list generated as a result of selecting an **Azure RM Subscription**.",
+            "properties": {
+                "EditableOptions": "True"
+            }
+        },
+        {
+            "name": "EnvironmentId",
+            "type": "pickList",
+            "label": "Environment Name",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Name of an existing environment that will be deleted. This is a pick list generated as a result of selecting an lab.",
+            "properties": {
+                "EditableOptions": "True"
+            }
+        },
+        {
+            "name": "SourceTemplate",
+            "type": "filePath",
+            "label": "Source ARM Template",
+            "required": true,
+            "defaultValue": "",
+            "helpMarkDown": "Path to an ARM template to add to the environment."
+        },
+        {
+            "name": "SourceTemplateParameterFile",
+            "type": "filePath",
+            "label": "Source ARM Parameter File",
+            "required": false,
+            "defaultValue": "",
+            "helpMarkDown": "Path to a ARM template parameters file that provides parameter values for the template."
+        },
+        {
+            "name": "SourceTemplateParameterOverrides",
+            "type": "multiLine",
+            "label": "Source ARM Template Parameters",
+            "defaultValue": "-SampleParameter 'SampleValue'",
+            "required": false,
+            "helpMarkDown": "Set parameter values needed by the template. This will not override the parameter file."
+        },
+        {
+            "name": "ExportEnvironmentTemplate",
+            "type": "boolean",
+            "label": "Export the environment template to a build artifact?",
+            "required": true,
+            "defaultValue": "false",
+            "helpMarkDown": "Export the DevTest Lab update to an ARM template(s) and output as a build artifact.",
+            "groupName": "advanced"
+        },
+        {
+            "name": "ExportEnvironmentTemplateLocation",
+            "type": "string",
+            "label": "Build store location",
+            "required": false,
+            "defaultValue": "$(Build.ArtifactStagingDirectory)/DeployedEnvironment",
+            "helpMarkDown": "The location to store the template.",
+            "groupName": "advanced"
+        }
+    ],
+    "sourceDefinitions": [
+        {
+            "target": "LabId",
+            "endpoint": "https://management.azure.com/subscriptions/$(authKey.SubscriptionId)/resources?$filter=resourceType+EQ+'Microsoft.DevTestLab/labs'&api-version=2015-01-01",
+            "selector": "jsonpath:$.value[*].name",
+            "keySelector": "jsonpath:$.value[*].id",
+            "authKey": "$(ConnectedServiceName)"
+        },
+        {
+            "target": "EnvironmentId",
+            "endpoint": "https://management.azure.com$(LabId)/users/@all/environments?api-version=2017-04-26-preview",
+            "selector": "jsonpath:$.value[*].name",
+            "keySelector": "jsonpath:$.value[*].id",
+            "authKey": "$(ConnectedServiceName)"
+        }
+    ],
+    "execution": {
+        "Node": {
+            "target": "task.js"
+        }
+    }
+}
