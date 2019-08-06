@@ -1,7 +1,5 @@
 # TODO: consider polling on the operation returned by the API in the header as less expensive for RP
 # TODO: consider creating proper PS1 documentation for each function
-# TODO: consider writing testcase to run nightly with reporting on success on readme
-# TODO: add nightly test for schedules REST calls
 
 # We are using strict mode for added safety
 Set-StrictMode -Version Latest
