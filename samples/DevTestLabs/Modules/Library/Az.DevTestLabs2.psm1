@@ -1313,7 +1313,7 @@ function Set-AzDtlVmArtifact {
         $ResourceGroupName = $v.ResourceGroupName
 
         #TODO: is there a better way? It doesn't seem to be in Expanded props of VM ...
-        $LabName = $v.ResouceId.Split('/')[8]
+        $LabName = $v.ResourceId.Split('/')[8]
         if(-not $LabName) {
           throw "VM Name for $v is not in the format 'RGName/VMName. Why?"
         }
