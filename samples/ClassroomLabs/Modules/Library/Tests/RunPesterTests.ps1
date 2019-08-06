@@ -1,8 +1,8 @@
 Param(
-    [Parameter(Mandatory = $false, HelpMessage="The suite of tests to execute")]
+    [Parameter(Mandatory = $false, HelpMessage="The suite of tests to execute, this is done by string matching (StartsWith) on filenames - 'Lab' matches 'Lab.tests.ps1' and 'LabUsers.tests.ps1'")]
     [string] $TestSuite,
 
-    [Parameter(Mandatory = $false, HelpMessage="The suite of tests to execute")]
+    [Parameter(Mandatory = $false, HelpMessage="Run the tests in parallel using jobs, and then summarize the results")]
     [switch] $AsJob = $false
 )
 
@@ -28,15 +28,21 @@ $invokePesterScriptBlock = {
     Invoke-Pester -Script $testScripts -PassThru
 }
 
+# Start searching for scripts from wherever RunPesterTests.ps1 lives
+$TestScriptsLocation = $PSScriptRoot
+Write-Output "Test Script Location: $TestScriptsLocation"
+
+# Filter down to a specific test suite, if one was passed in
 if ($TestSuite) {
-    $TestScriptsLocation = (Join-Path $PSScriptRoot $TestSuite)
+    $TestScripts = Get-ChildItem -Include *.tests.ps1, *.test.ps1 -Recurse -Path $TestScriptsLocation | Where-Object {$_.Name.StartsWith($TestSuite, "CurrentCultureIgnoreCase")}
 }
 else {
-    $TestScriptsLocation = $PSScriptRoot
+    $TestScripts = Get-ChildItem -Include *.tests.ps1, *.test.ps1 -Recurse -Path $TestScriptsLocation
 }
 
-Write-Output "Test Script Location: $TestScriptsLocation"
-$TestScripts = Get-ChildItem -Include *.tests.ps1, *.test.ps1 -Recurse -Path $TestScriptsLocation
+$TestScripts | ForEach-Object {
+    Write-Output "Found Script: $_"
+}
 
 if (-not $TestScripts) {
     Write-Error "Unable to find any test scripts.."
