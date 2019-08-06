@@ -2,7 +2,7 @@
 This highlights how to use a single csv file to create multiple VMs in a single lab
 #>
 
-Import-Module $PSScriptRoot\..\..\Az.DevTestLabs2.psm1
+Import-Module $PSScriptRoot\..\Az.DevTestLabs2.psm1
 $VerbosePreference="Continue"
 
 $rgName = "DtlLibraryTestRG" + (Get-Random)
@@ -41,7 +41,7 @@ Describe  'Scenario Tests' {
         $actualVMs | Format-Table | Out-String
 
         Write-Verbose "Removing VMs..."
-        $actualVMs | Remove-AzDtlVm -AsJob | Receive-Job -Wait
+        $actualVMs | Remove-AzDtlVm
 
         Write-Verbose "Virtual Machines remaining after delete:"
         $actualVMs = $lab | Get-AzDtlVm

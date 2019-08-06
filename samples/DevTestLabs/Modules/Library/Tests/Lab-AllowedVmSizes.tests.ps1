@@ -1,4 +1,4 @@
-Import-Module $PSScriptRoot\..\..\Az.DevTestLabs2.psm1
+Import-Module $PSScriptRoot\..\Az.DevTestLabs2.psm1
 $VerbosePreference="Continue"
 
 $lab = @(
