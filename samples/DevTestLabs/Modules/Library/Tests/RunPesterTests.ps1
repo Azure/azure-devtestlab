@@ -34,14 +34,11 @@ Write-Output "Test Script Location: $TestScriptsLocation"
 
 # Filter down to a specific test suite, if one was passed in
 if ($TestSuite) {
-    $TestScripts = Get-ChildItem -Include *.tests.ps1, *.test.ps1 -Recurse -Path $TestScriptsLocation | Where-Object {$_.Name.StartsWith($TestSuite)}
+    $TestScripts = Get-ChildItem -Include *.tests.ps1, *.test.ps1 -Recurse -Path $TestScriptsLocation | Where-Object {$_.Name.StartsWith($TestSuite, "CurrentCultureIgnoreCase")}
 }
 else {
     $TestScripts = Get-ChildItem -Include *.tests.ps1, *.test.ps1 -Recurse -Path $TestScriptsLocation
 }
-
-Write-Output "Test Script Location: $TestScriptsLocation"
-$TestScripts = Get-ChildItem -Include *.tests.ps1, *.test.ps1 -Recurse -Path $TestScriptsLocation
 
 $TestScripts | ForEach-Object {
     Write-Output "Found Script: $_"
@@ -55,7 +52,7 @@ else {
         $jobs = @()
         
         $TestScripts | ForEach-Object {
-#            $jobs += Start-Job -Script $invokePesterScriptBlock -ArgumentList $_, $PSScriptRoot
+            $jobs += Start-Job -Script $invokePesterScriptBlock -ArgumentList $_, $PSScriptRoot
         }
 
         if($jobs.Count -ne 0)
@@ -77,7 +74,7 @@ else {
     } 
     else {
 
-#        $result = Invoke-Pester -Script $TestScripts -PassThru
+        $result = Invoke-Pester -Script $TestScripts -PassThru
         if ($result.FailedCount -ne 0) {
             Write-Error "Pester returned errors for $($result.TestResult.Describe) - $($result.TestResult.Context)"
         }

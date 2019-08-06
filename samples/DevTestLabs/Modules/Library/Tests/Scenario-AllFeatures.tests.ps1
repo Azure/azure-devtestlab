@@ -1,7 +1,7 @@
 <#
 This highlights most features in the library, the composibility of the functions and how to run them in parallel.
 #>
-Import-Module $PSScriptRoot\..\..\Az.DevTestLabs2.psm1
+Import-Module $PSScriptRoot\..\Az.DevTestLabs2.psm1
 $VerbosePreference="Continue"
 
 function StringToFile([parameter(ValueFromPipeline=$true)][string] $text) {
