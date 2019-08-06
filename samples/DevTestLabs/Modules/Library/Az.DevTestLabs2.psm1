@@ -12,7 +12,7 @@ Set-StrictMode -Version Latest
 # If you have the AzureRm module, then everything works fine
 # If you have the Az module, we need to enable the AzureRmAliases
 
-$azureRm  = Get-Module -Name "AzureRM" -ListAvailable | Sort-Object Version.Major -Descending | Select-Object -First 1
+$azureRm  = Get-InstalledModule -Name "AzureRM"
 $az       = Get-Module -Name "Az.Accounts" -ListAvailable
 $justAz   = $az -and -not ($azureRm -and $azureRm.Version.Major -ge 6)
 $justAzureRm = $azureRm -and (-not $az)
