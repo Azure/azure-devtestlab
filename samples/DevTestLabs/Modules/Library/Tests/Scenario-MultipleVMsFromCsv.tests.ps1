@@ -41,7 +41,7 @@ Describe  'Scenario Tests' {
         $actualVMs | Format-Table | Out-String
 
         Write-Verbose "Removing VMs..."
-        $actualVMs | Remove-AzDtlVm -AsJob | Receive-Job -Wait
+        $actualVMs | Remove-AzDtlVm
 
         Write-Verbose "Virtual Machines remaining after delete:"
         $actualVMs = $lab | Get-AzDtlVm
