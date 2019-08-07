@@ -429,7 +429,7 @@ function Remove-AzLabAccount {
     end { }
 }
 
-function New-AzLabAccountSharedLibrary {
+function New-AzLabAccountSharedGallery {
     [CmdletBinding()]
     param(
         [parameter(Mandatory = $true, HelpMessage = "Lab Account to Remove.", ValueFromPipeline = $true)]
@@ -1341,4 +1341,4 @@ Export-ModuleMember -Function   Get-AzLabAccount,
                                 Start-AzLabVm,
                                 Stop-AzLabVm,
                                 Get-AzLabForVm,
-                                New-AzLabAccountSharedLibrary
+                                New-AzLabAccountSharedGallery
