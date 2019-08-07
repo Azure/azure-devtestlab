@@ -40,14 +40,19 @@ Describe  'Get and Set SharedImageGallery and SharedImageGalleryImages' {
 
             # At this point - already have a SIG set - let's remove it
             $SIG = $lab | Get-AzDtlLabSharedImageGallery
+            Write-Verbose "Existing shared Image Gallery Resource:"
+            $SIG | Out-String | Write-Verbose
+
             $SIG | Remove-AzDtlLabSharedImageGallery
 
             # Try to remove it again - shouldn't error out
             $SIG | Remove-AzDtlLabSharedImageGallery
 
+            Write-Verbose "Set the SIG resource again..."
             # Set the SIG again
             $lab | Set-AzDtlLabSharedImageGallery -Name "EnterpriseImages" -ResourceId $SharedImageGalleryId -AllowAllImages $false | Should -Not -Be $null
             
+            Write-Verbose "Update existing SIG resource with allow images = true"
             # Set the SIG to update the existing SIG with allow images = true
             $lab | Set-AzDtlLabSharedImageGallery -Name "EnterpriseImages" -ResourceId $SharedImageGalleryId -AllowAllImages $true | Should -Not -Be $null
 
