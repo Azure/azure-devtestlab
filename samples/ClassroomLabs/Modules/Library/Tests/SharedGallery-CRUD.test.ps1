@@ -37,7 +37,7 @@ Describe 'Shared Gallery Management' {
             $sg = Get-AzResource -resourceId "/subscriptions/39df6a21-006d-4800-a958-2280925030cb/resourceGroups/SharedImageGalleryRG/providers/Microsoft.Compute/galleries/EnterpriseSharedImages"
             $sg | Should -Not -Be $null
 
-            $la = New-AzLabAccountSharedGallery -SharedGallery $sg
+            $la = $la | New-AzLabAccountSharedGallery -SharedGallery $sg
 
             $imgs = $la | Get-AzLabAccountSharedImage
             $imgs.Count | Should -BeGreaterThan 0
