@@ -1,25 +1,9 @@
 Import-Module $PSScriptRoot\..\Az.LabServices.psm1
 $VerbosePreference="Continue"
 
-$today      = (Get-Date).ToString()
-$tomorrow   = (Get-Date).AddDays(1)
-$end        = (Get-Date).AddMonths(4).ToString()
-
 $rgName     = 'Acme' + (Get-Random)
 $rgLocation = 'West Europe'
-$labName    = 'Advancing Differenciation'
 $laName     = 'Workshops'
-$imgName    = 'CentOS-Based*'
-$maxUsers   = 2
-$usageQuota = 30
-$usageAMode = 'Restricted'
-$shPsswd    = $false
-$size       = 'Medium'
-$title      = 'Advancing Differentiation Workshop'
-$descr      = 'Bringing it to the 21st Century'
-$userName   = 'test0000'
-$password   = 'Test00000000'
-$linuxRdp   = $true
 
 Describe 'Shared Gallery Management' {
     Context 'Pipeline Tests' {
