@@ -1,6 +1,9 @@
+import '../../modules/task-utils/polyfill';
+
 import * as tl from 'azure-pipelines-task-lib/task';
 import * as resutil from '../../modules/task-utils/resourceutil';
 import * as paramutil from '../../modules/task-utils/parameterutil';
+import * as testutil from '../../modules/task-utils/testutil';
 
 import { DevTestLabsClient, DevTestLabsMappers, DevTestLabsModels } from "@azure/arm-devtestlabs";
 import { ResourceManagementClient } from "@azure/arm-resources";
@@ -10,18 +13,17 @@ async function performOperation(client: DevTestLabsClient): Promise<any> {
 
 async function testRun() {
     try {
-        const subscriptionId = '<subscriptionId>';
-        const resourceName = '<resourceName>';
+        const data: any = await testutil.getTestData();
 
-        const client: DevTestLabsClient = await resutil.getDtlClient(subscriptionId, true);
+        const client: DevTestLabsClient = await resutil.getDtlClient(data.subscriptionId, true);
 
         // TODO: add your call below.
         await performOperation(client);
 
-        tl.setResult(tl.TaskResult.Succeeded, `Lab <resourceType> '${resourceName}' was successfully created.`);
+        tl.setResult(tl.TaskResult.Succeeded, `Lab <resourceType> '${data.resourceName}' was successfully created.`);
     }
     catch (error) {
-        console.log(error);
+        tl.debug(error);
         tl.setResult(tl.TaskResult.Failed, error.message);
     }
 }
@@ -41,7 +43,7 @@ async function run() {
         tl.setResult(tl.TaskResult.Succeeded, `Lab <resourceType> '${resourceName}' was successfully created.`);
     }
     catch (error) {
-        console.log(error);
+        tl.debug(error);
         tl.setResult(tl.TaskResult.Failed, error.message);
     }
 }

@@ -40,7 +40,7 @@ async function testRun() {
         tl.setResult(tl.TaskResult.Succeeded, `Lab <resourceType> '${resourceName}' was successfully created.`);
     }
     catch (error) {
-        console.log(error);
+        tl.debug(error);
         tl.setResult(tl.TaskResult.Failed, error.message);
     }
 }
@@ -60,7 +60,7 @@ async function run() {
         tl.setResult(tl.TaskResult.Succeeded, `Lab <resourceType> '${resourceName}' was successfully created.`);
     }
     catch (error) {
-        console.log(error);
+        tl.debug(error);
         tl.setResult(tl.TaskResult.Failed, error.message);
     }
 }

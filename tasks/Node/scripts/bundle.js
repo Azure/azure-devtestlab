@@ -1,14 +1,14 @@
-const webpack = require("webpack");
-const formatWebpackMessages = require("react-dev-utils/formatWebpackMessages");
+const webpack = require('webpack');
+const formatWebpackMessages = require('react-dev-utils/formatWebpackMessages');
 
-const config = require("../webpack.config");
+const config = require('../webpack.config');
 
 // remove this for non PROD builds
-process.env.NODE_ENV = "production";
+process.env.NODE_ENV = 'production';
 
 // Create the production build and print the deployment instructions.
 function bundle() {
-  console.log("Creating an optimized production build...");
+  console.log('Creating an optimized production build...');
 
   let compiler = webpack(config);
   return new Promise((resolve, reject) => {
@@ -33,21 +33,21 @@ function bundle() {
         if (messages.errors.length > 1) {
           messages.errors.length = 1;
         }
-        return reject(new Error(messages.errors.join("\n\n")));
+        return reject(new Error(messages.errors.join('\n\n')));
       }
       if (
         process.env.CI &&
-        (typeof process.env.CI !== "string" ||
-          process.env.CI.toLowerCase() !== "false") &&
+        (typeof process.env.CI !== 'string' ||
+          process.env.CI.toLowerCase() !== 'false') &&
         messages.warnings.length
       ) {
         console.log(
           chalk.yellow(
-            "\nTreating warnings as errors because process.env.CI = true.\n" +
-              "Most CI servers set it automatically.\n"
+            '\nTreating warnings as errors because process.env.CI = true.\n' +
+              'Most CI servers set it automatically.\n'
           )
         );
-        return reject(new Error(messages.warnings.join("\n\n")));
+        return reject(new Error(messages.warnings.join('\n\n')));
       }
 
       const resolveArgs = {

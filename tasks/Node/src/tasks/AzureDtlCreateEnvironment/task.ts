@@ -66,7 +66,7 @@ async function testRun() {
         tl.setResult(tl.TaskResult.Succeeded, `Lab Environment '${data.envName}' was successfully created.`);
     }
     catch (error) {
-        console.log(error);
+        tl.debug(error);
         tl.setResult(tl.TaskResult.Failed, error.message);
     }
 }
@@ -112,7 +112,7 @@ async function run() {
         tl.setResult(tl.TaskResult.Succeeded, `Lab Environment '${envName}' was successfully created.`);
     }
     catch (error) {
-        console.debug(error);
+        tl.debug(error);
         tl.setResult(tl.TaskResult.Failed, error.message);
     }
 }

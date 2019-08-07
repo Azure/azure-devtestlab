@@ -10,20 +10,20 @@
     "@azure/ms-rest-nodeauth": "^2.0.3",
     "@azure/storage-blob": "^10.4.0",
     "azure-pipelines-task-lib": "^2.8.0",
-    "isomorphic-fetch": "^2.2.1"
+    "isomorphic-fetch": "^2.2.1",
+    "minimist": "^1.2.0",
+    "tough-cookie": "^3.0.1"
   },
   "devDependencies": {
     "@types/mocha": "^5.2.7",
     "@types/ncp": "^2.0.1",
     "@types/node": "^10.14.14",
     "@types/q": "^1.5.2",
-    "minimist": "^1.2.0",
     "ncp": "^2.0.0",
     "react-dev-utils": "^9.0.1",
     "rimraf": "^2.6.3",
     "ts-loader": "^6.0.4",
     "typescript": "^3.0.3",
-    "vsts-task-lib": "^2.6.1",
     "webpack": "^4.39.0"
   },
   "scripts": {
@@ -31,9 +31,11 @@
     "bundle": "node scripts/bundle.js",
     "clean": "node scripts/clean.js",
     "clean-dev": "node scripts/clean.js --dev",
+    "clean-submods": "node scripts/clean.js --submods",
     "copy": "node scripts/copy.js",
     "copy-dev": "node scripts/copy.js --dev",
     "init-dev": "npm run clean-dev && npm run build-dev",
+    "init-mods": "npm install && npm run clean-submods",
     "package": "npm run clean && npm run bundle && npm run copy && npm run tfx",
     "test": "echo \"Error: no test specified\" && exit 1",
     "tfx": "tfx extension create --manifest-globs --root dist --output-path dist"
