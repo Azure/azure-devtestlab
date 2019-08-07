@@ -29,7 +29,7 @@ To configure your local environment, after cloning the repo, do the following:
 
    `az login --use-device-code`
 
-   To generate the file, run command.
+   To generate the file, run command:
 
    `az ad sp create-for-rbac --sdk-auth > authfile.json`
 
@@ -47,19 +47,33 @@ After doing the above steps you can just compile the code by calling `tsc` in th
 
 To test any changes locally, do the following:
 
-1. For now, review the corresponding `task.ts` file and change the values in the function `testRun()`.
+1. For now, open the corresponding `task.ts` file, navigate to the function `testRun()`, pay attention to any references to `data`. The values are expected to come from a file called `testdata.json` that you can place in the same folder as `task.ts`.
+
+   Here's a sample `testdata.json` for task `AzureDtlDeleteVm`. Replace any values in angle brackets (e.g. `<subId>`).
+
+   ```JSON
+   {
+     "subscriptionId": "<subId>",
+     "labVmId": "/subscriptions/<subId>/resourcegroups/<rgName>/providers/microsoft.devtestlab/labs/<labName>/virtualmachines/<vmName>"
+   }
+   ```
+
    >**TODO:** _Add tests that will supersede the above approach._
-1. Compile the code.
+2. Compile the code.
 
    `tsc`
 
-2. Run the task you want to test; for example, to test creating a custom image, run command:
+   or, copy structure and compile the code.
+
+   `npm run build-dev`
+
+3. Run the task you want to test; for example, to test creating a custom image, run command:
 
    `node .\out\tasks\AzureDtlCreateCustomImage\task.js --test`
 
 You can also combine commands as follows:
 
-`cls; tsc; node .\out\tasks\AzureDtlCreateCustomImage\task.js --test`
+`cls; npm run build-dev; node .\out\tasks\AzureDtlCreateCustomImage\task.js --test`
 
 # Package the extension for publishing
 

@@ -2,6 +2,7 @@ import '../../modules/task-utils/polyfill';
 
 import * as tl from 'azure-pipelines-task-lib/task';
 import * as resutil from '../../modules/task-utils/resourceutil';
+import * as testutil from '../../modules/task-utils/testutil';
 
 import { DevTestLabsClient } from "@azure/arm-devtestlabs";
 
@@ -53,13 +54,13 @@ async function deleteVm(client: DevTestLabsClient, labVmId: string): Promise<any
 
 async function testRun() {
     try {
-        const subscriptionId = 'e605a3bc-ee4e-4c7a-9709-1868a28b1d4d';
-        const labVmId = '/subscriptions/e605a3bc-ee4e-4c7a-9709-1868a28b1d4d/resourcegroups/lv-rg-sandbox/providers/microsoft.devtestlab/labs/lv-lab-sandbox/virtualmachines/vinagesh002';
-        const vmName: string = resutil.getLabResourceName(labVmId, 'virtualmachines');
+        const data: any = await testutil.getTestData();
 
-        const client: DevTestLabsClient = await resutil.getDtlClient(subscriptionId, true);
+        const vmName: string = resutil.getLabResourceName(data.labVmId, 'virtualmachines');
 
-        await deleteVm(client, labVmId);
+        const client: DevTestLabsClient = await resutil.getDtlClient(data.subscriptionId, true);
+
+        await deleteVm(client, data.labVmId);
 
         tl.setResult(tl.TaskResult.Succeeded, `Lab VM '${vmName}' was successfully deleted.`);
     }

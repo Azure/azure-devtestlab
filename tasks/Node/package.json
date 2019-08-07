@@ -1,7 +1,7 @@
 {
   "name": "azure-pipelines-dtl-tasks",
   "version": "3.0.0",
-  "description": "Collection of Azure Pipelines tasks to interact with Azure DevTest Labs.",
+  "description": "Collection of cross-platform Azure Pipelines tasks to interact with Azure DevTest Labs.",
   "main": "index.js",
   "dependencies": {
     "@azure/arm-devtestlabs": "^3.2.0",
@@ -27,15 +27,16 @@
     "webpack": "^4.39.0"
   },
   "scripts": {
+    "build-dev": "npm run copy-dev && tsc",
     "bundle": "node scripts/bundle.js",
     "clean": "node scripts/clean.js",
     "clean-dev": "node scripts/clean.js --dev",
     "copy": "node scripts/copy.js",
     "copy-dev": "node scripts/copy.js --dev",
-    "install-dev": "node scripts/install.js",
-    "init-dev": "npm run clean-dev && npm run copy-dev && npm run install-dev && tsc",
-    "package": "npm run clean && npm run bundle && npm run copy && tfx extension create --manifest-globs --root dist --output-path dist",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "init-dev": "npm run clean-dev && npm run build-dev",
+    "package": "npm run clean && npm run bundle && npm run copy && npm run tfx",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "tfx": "tfx extension create --manifest-globs --root dist --output-path dist"
   },
   "keywords": [],
   "author": "rbest, leov",

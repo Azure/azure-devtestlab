@@ -2,6 +2,7 @@ import '../../modules/task-utils/polyfill';
 
 import * as tl from 'azure-pipelines-task-lib/task';
 import * as resutil from '../../modules/task-utils/resourceutil';
+import * as testutil from '../../modules/task-utils/testutil';
 
 import { DevTestLabsClient } from "@azure/arm-devtestlabs";
 
@@ -53,13 +54,13 @@ async function deleteEnv(client: DevTestLabsClient, envId: string): Promise<any>
 
 async function testRun() {
     try {
-        const subscriptionId = 'e605a3bc-ee4e-4c7a-9709-1868a28b1d4d';
-        const envId = '/subscriptions/e605a3bc-ee4e-4c7a-9709-1868a28b1d4d/resourcegroups/lv-rg-sandbox/providers/microsoft.devtestlab/labs/lv-lab-sandbox/users/6b4e8735-3c05-43f9-8137-2e66c5c4bb87/environments/lv-env-1';
-        const envName: string = resutil.getLabResourceName(envId, 'environments');
+        const data: any = await testutil.getTestData();
 
-        const client: DevTestLabsClient = await resutil.getDtlClient(subscriptionId, true);
+        const envName: string = resutil.getLabResourceName(data.envId, 'environments');
 
-        await deleteEnv(client, envId);
+        const client: DevTestLabsClient = await resutil.getDtlClient(data.subscriptionId, true);
+
+        await deleteEnv(client, data.envId);
 
         tl.setResult(tl.TaskResult.Succeeded, `Lab Environment '${envName}' was successfully deleted.`);
     }

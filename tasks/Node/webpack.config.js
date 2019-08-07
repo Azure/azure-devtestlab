@@ -1,8 +1,8 @@
 module.exports = {
-  mode: "development",
-  devtool: "source-map",
-//  mode: "production",
-//  devtool: false,//"source-map",
+//  mode: "development",
+//  devtool: "source-map",
+  mode: "production",
+  devtool: false,
   target: "node",
   entry: {
     AzureDtlCreateCustomImage: "./src/tasks/AzureDtlCreateCustomImage/task.ts",

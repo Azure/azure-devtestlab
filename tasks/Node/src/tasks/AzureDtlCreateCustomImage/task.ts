@@ -2,6 +2,7 @@ import '../../modules/task-utils/polyfill';
 
 import * as tl from 'azure-pipelines-task-lib/task';
 import * as resutil from '../../modules/task-utils/resourceutil';
+import * as testutil from '../../modules/task-utils/testutil';
 
 import { DevTestLabsClient, DevTestLabsModels, DevTestLabsMappers } from '@azure/arm-devtestlabs';
 
@@ -84,21 +85,13 @@ async function createCustomImage(client: DevTestLabsClient, labId: string, sourc
 
 async function testRun() {
     try {
-        const subscriptionId = 'e605a3bc-ee4e-4c7a-9709-1868a28b1d4d';
-        const labId = '/subscriptions/e605a3bc-ee4e-4c7a-9709-1868a28b1d4d/resourcegroups/lv-rg-sandbox/providers/microsoft.devtestlab/labs/lv-lab-sandbox';
-        const labVmId = '/subscriptions/e605a3bc-ee4e-4c7a-9709-1868a28b1d4d/resourcegroups/lv-rg-sandbox/providers/microsoft.devtestlab/labs/lv-lab-sandbox/virtualmachines/leov001';
-        const customImageName = 'lv-ci-fromtask3';
-        const author = 'leov@microsoft.com';
-        const description = `Custom image created from local task tests requested for ${author}.`;
-        const osType = 'Windows';
-        const linuxOsState = 'NonDeprovisioned';
-        const windowsOsState = 'NonSysprepped';
+        const data: any = await testutil.getTestData();
 
-        const client: DevTestLabsClient = await resutil.getDtlClient(subscriptionId, true);
+        const client: DevTestLabsClient = await resutil.getDtlClient(data.subscriptionId, true);
 
-        await createCustomImage(client, labId, labVmId, customImageName, author, description, osType, linuxOsState, windowsOsState);
+        await createCustomImage(client, data.labId, data.labVmId, data.customImageName, data.author, data.description, data.osType, data.linuxOsState, data.windowsOsState);
 
-        tl.setResult(tl.TaskResult.Succeeded, `Lab Custom Image '${customImageName}' was successfully created.`);
+        tl.setResult(tl.TaskResult.Succeeded, `Lab Custom Image '${data.customImageName}' was successfully created.`);
     }
     catch (error) {
         console.debug(error);

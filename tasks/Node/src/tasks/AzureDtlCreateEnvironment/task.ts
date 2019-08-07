@@ -3,6 +3,7 @@ import '../../modules/task-utils/polyfill';
 import * as tl from 'azure-pipelines-task-lib/task';
 import * as resutil from '../../modules/task-utils/resourceutil';
 import * as paramutil from '../../modules/task-utils/parameterutil';
+import * as testutil from '../../modules/task-utils/testutil';
 
 import { DevTestLabsClient, DevTestLabsMappers, DevTestLabsModels } from "@azure/arm-devtestlabs";
 import { ResourceManagementClient } from "@azure/arm-resources";
@@ -41,23 +42,17 @@ async function createEnvironment(client: DevTestLabsClient, armClient: ResourceM
     console.log(`Finished creating Lab Environment '${environmentName}'.`);
 }
 
-async function testRun(envName: string = 'lv-env-1') {
+async function testRun() {
     try {
-        const subscriptionId = 'e605a3bc-ee4e-4c7a-9709-1868a28b1d4d';
-        const labId = '/subscriptions/e605a3bc-ee4e-4c7a-9709-1868a28b1d4d/resourcegroups/lv-rg-sandbox/providers/microsoft.devtestlab/labs/lv-lab-sandbox';
-        //const armTemplateId = '/subscriptions/e605a3bc-ee4e-4c7a-9709-1868a28b1d4d/resourceGroups/lv-rg-sandbox/providers/Microsoft.DevTestLab/labs/lv-lab-sandbox/artifactSources/public environment repo/armTemplates/WebApp';
-        const armTemplateId = '/subscriptions/e605a3bc-ee4e-4c7a-9709-1868a28b1d4d/resourceGroups/lv-rg-sandbox/providers/Microsoft.DevTestLab/labs/lv-lab-sandbox/artifactSources/privaterepo523/armTemplates/rbest-template';
-        const parameterFile = '';
-        const parameterOverrides = '';
+        const data: any = await testutil.getTestData();
 
-        const client: DevTestLabsClient = await resutil.getDtlClient(subscriptionId, true);
-        const armClient: ResourceManagementClient = await resutil.getArmClient(subscriptionId, true);
+        const client: DevTestLabsClient = await resutil.getDtlClient(data.subscriptionId, true);
+        const armClient: ResourceManagementClient = await resutil.getArmClient(data.subscriptionId, true);
 
-        //await createEnvironment(client, armClient, labId, envName, armTemplateId, parameterFile, parameterOverrides);
+        await createEnvironment(client, armClient, data.labId, data.envName, data.armTemplateId, data.parameterFile, data.parameterOverrides);
 
-        const envRgId = '/subscriptions/e605a3bc-ee4e-4c7a-9709-1868a28b1d4d/resourcegroups/lv-lab-sandbox-lv-env-3-153680'; // tl.getVariable('environmentResourceGroupId'); //'/subscriptions/e605a3bc-ee4e-4c7a-9709-1868a28b1d4d/resourcegroups/lv-lab-sandbox-lv-env-1-940652'
+        const envRgId = tl.getVariable('environmentResourceGroupId');
         if (envRgId) {
-            //console.log(envRgId);
             const envRgName = resutil.getResourceName(envRgId, 'resourcegroups');
 
             const deploymentOutput = await resutil.getDeploymentOutput(armClient, envRgName);
@@ -68,7 +63,7 @@ async function testRun(envName: string = 'lv-env-1') {
             // TODO: Store the template, if requested.
         }
 
-        tl.setResult(tl.TaskResult.Succeeded, `Lab Environment '${envName}' was successfully created.`);
+        tl.setResult(tl.TaskResult.Succeeded, `Lab Environment '${data.envName}' was successfully created.`);
     }
     catch (error) {
         console.log(error);
@@ -124,7 +119,7 @@ async function run() {
 
 var args = require('minimist')(process.argv.slice(2));
 if (args.test) {
-    testRun(args.envName);
+    testRun();
 }
 else {
     run();
