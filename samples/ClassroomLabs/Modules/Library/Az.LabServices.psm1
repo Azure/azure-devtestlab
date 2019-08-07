@@ -429,6 +429,44 @@ function Remove-AzLabAccount {
     end { }
 }
 
+function New-AzLabAccountSharedLibrary {
+    [CmdletBinding()]
+    param(
+        [parameter(Mandatory = $true, HelpMessage = "Lab Account to Remove.", ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        $LabAccount,
+
+        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Azure resource for shared gallery.")]
+        [ValidateNotNullOrEmpty()]
+        $SharedGallery
+    )
+
+    begin { . BeginPreamble }
+    process {
+        try {
+            foreach ($la in $LabAccount) {
+                $uri = ConvertToUri -resource $la
+                $sharedGalleryName = $SharedGallery.Name
+                $sharedLibraryId = $SharedGallery.ResourceId
+
+                $fullUri = $uri + "/SharedGalleries/$sharedGalleryName"
+
+                InvokeRest -Uri $fullUri -Method 'Put' -Body (@{
+                    properties = @{
+                        galleryId = $sharedLibraryId
+                    }
+                } | ConvertTo-Json) | Out-Null
+
+                return $la
+            }
+        }
+        catch {
+            Write-Error -ErrorRecord $_ -EA $callerEA
+        }
+    }
+    end { }
+}
+
 function Get-AzLabAccount {
     [CmdletBinding()]
     param(
@@ -1279,27 +1317,28 @@ function New-AzLabSchedule {
     end { }
 }
 
-Export-ModuleMember -Function Get-AzLabAccount,
-Get-AzLab,
-New-AzLab,
-Get-AzLabAccountSharedImage,
-Get-AzLabAccountGalleryImage,
-Remove-AzLab,
-New-AzLabTemplateVM,
-Get-AzLabTemplateVM,
-Publish-AzLab,
-Add-AzLabUser,
-Get-AzLabUser,
-Remove-AzLabUser,
-Get-AzLabVm,
-Register-AzLabUser,
-Send-AzLabUserInvitationEmail,
-Set-AzLab,
-Get-AzLabSchedule,
-New-AzLabSchedule,
-Remove-AzLabSchedule,
-New-AzLabAccount,
-Remove-AzLabAccount,
-Start-AzLabVm,
-Stop-AzLabVm,
-Get-AzLabForVm
+Export-ModuleMember -Function   Get-AzLabAccount,
+                                Get-AzLab,
+                                New-AzLab,
+                                Get-AzLabAccountSharedImage,
+                                Get-AzLabAccountGalleryImage,
+                                Remove-AzLab,
+                                New-AzLabTemplateVM,
+                                Get-AzLabTemplateVM,
+                                Publish-AzLab,
+                                Add-AzLabUser,
+                                Get-AzLabUser,
+                                Remove-AzLabUser,
+                                Get-AzLabVm,
+                                Register-AzLabUser,
+                                Send-AzLabUserInvitationEmail,
+                                Set-AzLab,
+                                Get-AzLabSchedule,
+                                New-AzLabSchedule,
+                                Remove-AzLabSchedule,
+                                New-AzLabAccount,
+                                Remove-AzLabAccount,
+                                Start-AzLabVm,
+                                Stop-AzLabVm,
+                                Get-AzLabForVm,
+                                New-AzLabAccountSharedLibrary
