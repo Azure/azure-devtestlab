@@ -1,7 +1,6 @@
 [cmdletbinding()]
 Param()
 Import-Module $PSScriptRoot\..\Az.LabServices.psm1
-$VerbosePreference="Continue"
 
 $rgName     = 'Acme' + (Get-Random)
 $rgLocation = 'West Europe'

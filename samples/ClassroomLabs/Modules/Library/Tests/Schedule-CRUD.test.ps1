@@ -1,7 +1,6 @@
 [cmdletbinding()]
 Param()
 Import-Module $PSScriptRoot\..\Az.LabServices.psm1
-$VerbosePreference="Continue"
 
 $today      = (Get-Date).ToString()
 $tomorrow   = (Get-Date).AddDays(1)
