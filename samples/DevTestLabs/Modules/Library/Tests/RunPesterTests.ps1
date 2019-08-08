@@ -1,6 +1,10 @@
 Param(
     [Parameter(Mandatory = $false, HelpMessage="The suite of tests to execute, this is done by string matching (StartsWith) on filenames - 'Lab' matches 'Lab.tests.ps1' and 'LabUsers.tests.ps1'")]
-    [string] $TestSuite
+    [string] $TestSuite = "*",
+
+    [Parameter(Mandatory = $false, HelpMessage="If we should run the tests in 'verbose' mode for extra logging")]
+    [bool] $VerboseTests = $false
+
 )
 
 # Import the module here to make sure we validate up front versions of Azure Powershell
@@ -26,12 +30,12 @@ if (-not $threadModule) {
 }
 
 $invokePesterScriptBlock = {
-    param($testScript, $PSScriptRoot)
+    param($testScript, $PSScriptRoot, $VerboseTests)
 
     Write-Output "TestScript: $testScript"
 
     # Run pester for the scripts
-    Invoke-Pester -Script @{Path = "$testScript"; Parameters = @{Verbose = $true}} -PassThru
+    Invoke-Pester -Script @{Path = "$testScript"; Parameters = @{Verbose = $VerboseTests}} -PassThru
 }
 
 # Start searching for scripts from wherever RunPesterTests.ps1 lives
@@ -39,7 +43,7 @@ $TestScriptsLocation = $PSScriptRoot
 Write-Output "Test Script Location: $TestScriptsLocation"
 
 # Filter down to a specific test suite, if one was passed in
-if ($TestSuite) {
+if ($TestSuite -and $TestSuite -ne "*") {
     $TestScripts = Get-ChildItem -Include *.tests.ps1, *.test.ps1 -Recurse -Path $TestScriptsLocation | Where-Object {$_.Name.StartsWith($TestSuite, "CurrentCultureIgnoreCase")}
 }
 else {
@@ -57,31 +61,11 @@ else {
     $jobs = @()
 
     $TestScripts | ForEach-Object {
-        $jobs += Start-ThreadJob -Script $invokePesterScriptBlock -ArgumentList $_, $PSScriptRoot
+        $jobs += Start-ThreadJob -Script $invokePesterScriptBlock -ArgumentList $_, $PSScriptRoot, $VerboseTests
     }
 
-    while ($jobs -and $jobs.Count -gt 0) {
-
-        # look for a completed job
-        $jobs | ForEach-Object {
-            if ($_.State -ne "NotStarted" -and $_.State -ne "Running") {
-
-                # We found a completed job! Let's peek in and see if we have any failures...  If so - we want verbose output instead of basic output
-                $failures = $_.Output.TestResult | Where-Object {$_.Passed -eq $false}
-
-                Write-Output "-----------------------------------------------------------------"
-                if ($failures) {
-                    $result = Receive-Job -Wait -Job $_ -Verbose
-                }
-                else {
-                    $result = Receive-Job -Wait -Job $_
-                }
-
-                Remove-Job -Job $_
-            }
-
-            Start-Sleep -Seconds 30
-            $jobs = Get-Job
-        }
+    $jobs | ForEach-Object {
+        Write-Output "-----------------------------------------------------------------"
+        Recieve-Job -Wait -Verbose
     }
 }

@@ -1,13 +1,17 @@
 Param(
     [Parameter(Mandatory = $false, HelpMessage="The suite of tests to execute, this is done by string matching (StartsWith) on filenames - 'Lab' matches 'Lab.tests.ps1' and 'LabUsers.tests.ps1'")]
-    [string] $TestSuite,
+    [string] $TestSuite = "*",
 
-    [Parameter(Mandatory = $false, HelpMessage="Run the tests in parallel using jobs, and then summarize the results")]
-    [switch] $AsJob = $false
+    [Parameter(Mandatory = $false, HelpMessage="If we should run the tests in 'verbose' mode for extra logging")]
+    [bool] $VerboseTests = $false
+
 )
 
 # Import the module here to make sure we validate up front versions of Azure Powershell
 Import-Module $PSScriptRoot\..\Az.LabServices.psm1
+
+# We don't want to give up on the rest after a single error
+$ErrorActionPreference="Continue"
 
 # Check if we have a newer version of Pester, if not - let's install it
 $pesterModule = Get-Module -ListAvailable | Where-Object {$_.Name -eq "Pester"} | Sort-Object -Descending Version | Select-Object -First 1
@@ -26,13 +30,12 @@ if (-not $threadModule) {
 }
 
 $invokePesterScriptBlock = {
-    param($testScripts, $PSScriptRoot)
+    param($testScript, $PSScriptRoot, $VerboseTests)
 
-    # In the job, we have to re-import the library for this process
-    Import-Module $PSScriptRoot\..\Az.LabServices.psm1
+    Write-Output "TestScript: $testScript"
 
     # Run pester for the scripts
-    Invoke-Pester -Script $testScripts -PassThru
+    Invoke-Pester -Script @{Path = "$testScript"; Parameters = @{Verbose = $VerboseTests}} -PassThru
 }
 
 # Start searching for scripts from wherever RunPesterTests.ps1 lives
@@ -40,7 +43,7 @@ $TestScriptsLocation = $PSScriptRoot
 Write-Output "Test Script Location: $TestScriptsLocation"
 
 # Filter down to a specific test suite, if one was passed in
-if ($TestSuite) {
+if ($TestSuite -and $TestSuite -ne "*") {
     $TestScripts = Get-ChildItem -Include *.tests.ps1, *.test.ps1 -Recurse -Path $TestScriptsLocation | Where-Object {$_.Name.StartsWith($TestSuite, "CurrentCultureIgnoreCase")}
 }
 else {
@@ -55,35 +58,14 @@ if (-not $TestScripts) {
     Write-Error "Unable to find any test scripts.."
 }
 else {
-    if ($AsJob) {
-        $jobs = @()
-        
-        $TestScripts | ForEach-Object {
-            $jobs += Start-ThreadJob -Script $invokePesterScriptBlock -ArgumentList $_, $PSScriptRoot
-        }
+    $jobs = @()
 
-        if($jobs.Count -ne 0)
-        {
-            Write-Output "Waiting for $($jobs.Count) test runner jobs to complete"
-            foreach ($job in $jobs){
-                $result = Receive-Job $job -Wait
+    $TestScripts | ForEach-Object {
+        $jobs += Start-ThreadJob -Script $invokePesterScriptBlock -ArgumentList $_, $PSScriptRoot, $VerboseTests
+    }
 
-                if ($result.FailedCount -ne 0) {
-                    Write-Error "Pester returned errors for $($result.TestResult.Describe) - $($result.TestResult.Context)"
-                }
-            }
-            Remove-Job -Job $jobs
-        }
-        else 
-        {
-            Write-Output "No test scripts to run"
-        }
-    } 
-    else {
-
-        $result = Invoke-Pester -Script $TestScripts -PassThru
-        if ($result.FailedCount -ne 0) {
-            Write-Error "Pester returned errors for $($result.TestResult.Describe) - $($result.TestResult.Context)"
-        }
+    $jobs | ForEach-Object {
+        Write-Output "-----------------------------------------------------------------"
+        Recieve-Job -Wait -Verbose
     }
 }
