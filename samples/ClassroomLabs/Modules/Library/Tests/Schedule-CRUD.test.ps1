@@ -1,3 +1,5 @@
+[cmdletbinding()]
+Param()
 Import-Module $PSScriptRoot\..\Az.LabServices.psm1
 $VerbosePreference="Continue"
 
