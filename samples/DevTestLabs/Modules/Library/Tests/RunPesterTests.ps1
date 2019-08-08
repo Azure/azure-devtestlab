@@ -15,14 +15,6 @@ if ($pesterModule.Version.Major -lt 4 -or $pesterModule.version.Minor -lt 8) {
     Install-Module -Name Pester -Force -Scope CurrentUser
 }
 
-# Check if we have a good version of ThreadJob - if not, let's install it
-$threadModule = Get-Module -ListAvailable | Where-Object {$_.Name -eq "ThreadJob"} | Sort-Object -Descending Version | Select-Object -First 1
-if (-not $threadModule) {
-    Write-Output "Don't have a version of ThreadJob module locally, installing from PSGallery"
-    Install-Module -Name ThreadJob -Force -Scope CurrentUser
-}
-
-
 $invokePesterScriptBlock = {
     param($testScript, $PSScriptRoot)
 
@@ -55,7 +47,7 @@ else {
     $jobs = @()
 
     $TestScripts | ForEach-Object {
-        $jobs += Start-ThreadJob -Script $invokePesterScriptBlock -ArgumentList $_, $PSScriptRoot
+        $jobs += Start-Job -Script $invokePesterScriptBlock -ArgumentList $_, $PSScriptRoot
     }
 
     while ($jobs -and $jobs.Count -gt 0) {
