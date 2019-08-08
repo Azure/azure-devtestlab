@@ -6,6 +6,9 @@ Param(
 # Import the module here to make sure we validate up front versions of Azure Powershell
 Import-Module $PSScriptRoot\..\Az.DevTestLabs2.psm1
 
+# We don't want to give up on the rest after a single error
+$ErrorActionPreference="Continue"
+
 # Check if we have a newer version of Pester, if not - let's install it
 $pesterModule = Get-Module -ListAvailable | Where-Object {$_.Name -eq "Pester"} | Sort-Object -Descending Version | Select-Object -First 1
 if ($pesterModule.Version.Major -lt 4 -or $pesterModule.version.Minor -lt 8) {
@@ -13,6 +16,13 @@ if ($pesterModule.Version.Major -lt 4 -or $pesterModule.version.Minor -lt 8) {
     Write-Output "Latest version of Pester is $($pesterModule.Version), Installing the latest Pester from PSGallery"
     Install-PackageProvider -Name NuGet -Force -Scope CurrentUser
     Install-Module -Name Pester -Force -Scope CurrentUser
+}
+
+# Check if we have a good version of ThreadJob - if not, let's install it
+$threadModule = Get-Module -ListAvailable | Where-Object {$_.Name -eq "ThreadJob"} | Sort-Object -Descending Version | Select-Object -First 1
+if (-not $threadModule) {
+    Write-Output "Don't have a version of ThreadJob module locally, installing from PSGallery"
+    Install-Module -Name ThreadJob -Force -Scope CurrentUser
 }
 
 $invokePesterScriptBlock = {
@@ -47,7 +57,7 @@ else {
     $jobs = @()
 
     $TestScripts | ForEach-Object {
-        $jobs += Start-Job -Script $invokePesterScriptBlock -ArgumentList $_, $PSScriptRoot
+        $jobs += Start-ThreadJob -Script $invokePesterScriptBlock -ArgumentList $_, $PSScriptRoot
     }
 
     while ($jobs -and $jobs.Count -gt 0) {
