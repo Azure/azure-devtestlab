@@ -1,5 +1,7 @@
-Import-Module $PSScriptRoot\..\Az.DevTestLabs2.psm1
-$VerbosePreference="Continue"
+[cmdletbinding()]
+Param()
+
+Import-Module $PSScriptRoot\..\Az.DevTestLabs2.psm1 -Verbose:$false
 
 $labs = @(
     [pscustomobject]@{Name=('DtlLibrary-Lab-' + (Get-Random)); ResourceGroupName=('DtlLibrary-LabRg-' + (Get-Random)); Location='westus'},

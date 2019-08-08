@@ -1,9 +1,6 @@
 Param(
     [Parameter(Mandatory = $false, HelpMessage="The suite of tests to execute, this is done by string matching (StartsWith) on filenames - 'Lab' matches 'Lab.tests.ps1' and 'LabUsers.tests.ps1'")]
-    [string] $TestSuite,
-
-    [Parameter(Mandatory = $false, HelpMessage="Run the tests in parallel using jobs, and then summarize the results")]
-    [switch] $AsJob = $false
+    [string] $TestSuite
 )
 
 # Import the module here to make sure we validate up front versions of Azure Powershell
@@ -25,14 +22,14 @@ if (-not $threadModule) {
     Install-Module -Name ThreadJob -Force -Scope CurrentUser
 }
 
-$invokePesterScriptBlock = {
-    param($testScripts, $PSScriptRoot)
 
-    # In the job, we have to re-import the library for this process
-    Import-Module $PSScriptRoot\..\Az.DevTestLabs2.psm1
+$invokePesterScriptBlock = {
+    param($testScript, $PSScriptRoot)
+
+    Write-Output "TestScript: $testScript"
 
     # Run pester for the scripts
-    Invoke-Pester -Script $testScripts -PassThru
+    Invoke-Pester -Script @{Path = "$testScript"; Parameters = @{Verbose = $true}} -PassThru
 }
 
 # Start searching for scripts from wherever RunPesterTests.ps1 lives
@@ -55,35 +52,34 @@ if (-not $TestScripts) {
     Write-Error "Unable to find any test scripts.."
 }
 else {
-    if ($AsJob) {
-        $jobs = @()
-        
-        $TestScripts | ForEach-Object {
-            $jobs += Start-ThreadJob -Script $invokePesterScriptBlock -ArgumentList $_, $PSScriptRoot
-        }
+    $jobs = @()
 
-        if($jobs.Count -ne 0)
-        {
-            Write-Output "Waiting for $($jobs.Count) test runner jobs to complete"
-            foreach ($job in $jobs){
-                $result = Receive-Job $job -Wait
+    $TestScripts | ForEach-Object {
+        $jobs += Start-ThreadJob -Script $invokePesterScriptBlock -ArgumentList $_, $PSScriptRoot
+    }
 
-                if ($result.FailedCount -ne 0) {
-                    Write-Error "Pester returned errors for $($result.TestResult.Describe) - $($result.TestResult.Context)"
+    while ($jobs -and $jobs.Count -gt 0) {
+
+        # look for a completed job
+        $jobs | ForEach-Object {
+            if ($_.State -ne "NotStarted" -and $_.State -ne "Running") {
+
+                # We found a completed job! Let's peek in and see if we have any failures...  If so - we want verbose output instead of basic output
+                $failures = $_.Output.TestResult | Where-Object {$_.Passed -eq $false}
+
+                Write-Output "-----------------------------------------------------------------"
+                if ($failures) {
+                    $result = Receive-Job -Wait -Job $_ -Verbose
                 }
-            }
-            Remove-Job -Job $jobs
-        }
-        else 
-        {
-            Write-Output "No test scripts to run"
-        }
-    } 
-    else {
+                else {
+                    $result = Receive-Job -Wait -Job $_
+                }
 
-        $result = Invoke-Pester -Script $TestScripts -PassThru
-        if ($result.FailedCount -ne 0) {
-            Write-Error "Pester returned errors for $($result.TestResult.Describe) - $($result.TestResult.Context)"
+                Remove-Job -Job $_
+            }
+
+            Start-Sleep -Seconds 30
+            $jobs = Get-Job
         }
     }
 }
