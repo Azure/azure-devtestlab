@@ -27,11 +27,6 @@
             "name": "advanced",
             "displayName": "Advanced Options",
             "isExpanded": true
-        },
-        {
-            "name": "output",
-            "displayName": "Output Variables",
-            "isExpanded": true
         }
     ],
     "inputs": [
@@ -55,28 +50,36 @@
             }
         },
         {
-            "name": "SourceTemplate",
+            "name": "VirtualMachineName",
+            "type": "string",
+            "label": "Virtual Machine Name",
+            "required": true,
+            "defaultValue": "",
+            "helpMarkDown": "The name of the virtual machine to create."
+        },
+        {
+            "name": "TemplateFile",
             "type": "filePath",
             "label": "Template File",
             "defaultValue": "",
             "required": true,
-            "helpMarkDown": "Path to the ARM template. You can generate the ARM template from the **View ARM template** section when creating a Lab VM. Select the ARM template by browsing to the file that you have saved in your VSTS source control. It can be either a relative path in a build output or a relative path inside an artifacts package."
+            "helpMarkDown": "Path to the ARM template. You can generate the ARM template from the **View ARM template** section when creating a Lab VM. Select the ARM template by browsing to the file that you have saved in your Azure DevOps source control. It can be either a relative path in a build output or a relative path inside an artifacts package."
         },
         {
-            "name": "SourceTemplateParameterFile",
+            "name": "ParametersFile",
             "type": "filePath",
-            "label": "Template Parameters File",
-            "defaultValue": "",
+            "label": "Parameters File",
             "required": false,
-            "helpMarkDown": "Path to the ARM template. You can generate the ARM template from the **View ARM template** section when creating a Lab VM. Select the ARM template by browsing to the file that you have saved in your VSTS source control. It can be either a relative path in a build output or a relative path inside an artifacts package."
+            "defaultValue": "",
+            "helpMarkDown": "Path to a ARM template parameters file that provides parameter values for the virtual machine template."
         },
         {
-            "name": "SourceTemplateParameterOverrides",
+            "name": "ParameterOverrides",
             "type": "multiLine",
-            "label": "Template Parameters",
-            "defaultValue": "-newVMName '$(<Enter VM Name>)' -userName '$(<Enter User Name>)' -password (ConvertTo-SecureString -String '$(<Enter User Password>)' -AsPlainText -Force)",
+            "label": "Parameters",
+            "defaultValue": "-SampleParameter 'SampleValue'",
             "required": false,
-            "helpMarkDown": "ARM template parameters to use. You can use any variable such as `$(Build.BuildNumber)` or `$(Release.ReleaseName)` when in a build or a release, respectively, for the `newVMName`. Similarly, you can create variables such as `User.Name` and `User.Password`, where the latter is marked as a _secret_."
+            "helpMarkDown": "Set parameter values needed by the virtual machine template. Parameter values set by parameters file will be overridden."
         },
         {
             "name": "FailOnArtifactError",

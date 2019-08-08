@@ -94,7 +94,7 @@ async function testRun() {
         tl.setResult(tl.TaskResult.Succeeded, `Lab Custom Image '${data.customImageName}' was successfully created.`);
     }
     catch (error) {
-        tl.debug(error);
+        console.debug(error);
         tl.setResult(tl.TaskResult.Failed, error.message);
     }
 }
@@ -137,7 +137,7 @@ async function run() {
         tl.setResult(tl.TaskResult.Succeeded, `Lab Custom Image '${customImageName}' was successfully created.`);
     }
     catch (error) {
-        tl.debug(error);
+        console.debug(error);
         tl.setResult(tl.TaskResult.Failed, error.message);
     }
 }

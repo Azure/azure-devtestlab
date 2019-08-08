@@ -37,7 +37,7 @@ To configure your local environment, after cloning the repo, do the following:
 
    `npm run init-mods`
 
-3. Run command to initialize your development environment. The command will clean the `out` folder, copy the necessary files, run `npm install` for each task and compile the task code for local running.
+3. Run command to initialize your development environment. The command will clean the `out` folder, copy the necessary files and compile the task code for local running.
 
    `npm run init-dev`
 

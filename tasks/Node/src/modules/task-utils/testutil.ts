@@ -24,3 +24,22 @@ export async function getTestData(): Promise<any> {
         tl.error(error);
     }
 }
+
+export async function writeTestLog(error: any): Promise<any> {
+    try {
+        const parentFileName = module.parent ? module.parent.filename : null;
+        if (!parentFileName) {
+            throw 'TestUtil: Expectation is that this function is called from a parent module.';
+        }
+
+        tl.debug(`TestUtil: Writing test log for module '${path.relative(process.cwd(), parentFileName)}'.`)
+        const testLogFilePath = path.join(path.dirname(parentFileName), 'testlog.json');
+
+        tl.debug(`TestUtil: Writing test log to file '${path.relative(process.cwd(), testLogFilePath)}'.`)
+        const fsWriteFile = util.promisify(fs.writeFile);
+        await fsWriteFile(testLogFilePath, JSON.stringify(error, null, 2), 'utf8');
+    }
+    catch (error) {
+        tl.error(error);
+    }
+}

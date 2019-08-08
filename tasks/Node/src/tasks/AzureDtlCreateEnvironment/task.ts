@@ -1,8 +1,8 @@
 import '../../modules/task-utils/polyfill';
 
 import * as tl from 'azure-pipelines-task-lib/task';
+import * as deployutil from '../../modules/task-utils/deployutil';
 import * as resutil from '../../modules/task-utils/resourceutil';
-import * as paramutil from '../../modules/task-utils/parameterutil';
 import * as testutil from '../../modules/task-utils/testutil';
 
 import { DevTestLabsClient, DevTestLabsMappers, DevTestLabsModels } from "@azure/arm-devtestlabs";
@@ -10,12 +10,12 @@ import { ResourceManagementClient } from "@azure/arm-resources";
 
 async function getEnvironment(armTemplateId: string, parametersFile: string, parameterOverrides: string): Promise<DevTestLabsModels.DtlEnvironment> {
     let environment = Object.create(DevTestLabsMappers.DtlEnvironment);
-    let deploymentProperties = Object.create(DevTestLabsMappers.EnvironmentDeploymentProperties);
+    let environmentProperties = Object.create(DevTestLabsMappers.EnvironmentDeploymentProperties);
 
-    deploymentProperties.armTemplateId = armTemplateId;
-    deploymentProperties.parameters = await paramutil.getDeploymentParameters(parametersFile, parameterOverrides);
+    environmentProperties.armTemplateId = armTemplateId;
+    environmentProperties.parameters = await deployutil.getDeploymentParameters(parametersFile, parameterOverrides);
 
-    environment.deploymentProperties = deploymentProperties;
+    environment.deploymentProperties = environmentProperties;
 
     return environment;
 }
@@ -66,7 +66,7 @@ async function testRun() {
         tl.setResult(tl.TaskResult.Succeeded, `Lab Environment '${data.envName}' was successfully created.`);
     }
     catch (error) {
-        tl.debug(error);
+        console.debug(error);
         tl.setResult(tl.TaskResult.Failed, error.message);
     }
 }
@@ -79,13 +79,13 @@ async function run() {
         const labId: string = tl.getInput('LabId', false);
         const envName: string = tl.getInput('EnvironmentName', false);
         const armTemplateId: string = tl.getInput('TemplateId', false);
-        const parameterFile: string = tl.getInput('ParameterFile', false)
+        const parametersFile: string = tl.getInput('ParametersFile', false)
         const parameterOverrides: string = tl.getInput('ParameterOverrides', false);
 
         const client: DevTestLabsClient = await resutil.getDtlClient(subscriptionId);
         const armClient: ResourceManagementClient = await resutil.getArmClient(subscriptionId);
 
-        await createEnvironment(client, armClient, labId, envName, armTemplateId, parameterFile, parameterOverrides);
+        await createEnvironment(client, armClient, labId, envName, armTemplateId, parametersFile, parameterOverrides);
 
         const templateOutputVariables = tl.getBoolInput('TemplateOutputVariables');
         if (templateOutputVariables) {
@@ -112,7 +112,7 @@ async function run() {
         tl.setResult(tl.TaskResult.Succeeded, `Lab Environment '${envName}' was successfully created.`);
     }
     catch (error) {
-        tl.debug(error);
+        console.debug(error);
         tl.setResult(tl.TaskResult.Failed, error.message);
     }
 }

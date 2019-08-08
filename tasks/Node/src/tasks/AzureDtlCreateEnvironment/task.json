@@ -80,9 +80,9 @@
             "helpMarkDown": "The name of the environment to create."
         },
         {
-            "name": "ParameterFile",
+            "name": "ParametersFile",
             "type": "filePath",
-            "label": "Parameter File",
+            "label": "Parameters File",
             "required": false,
             "defaultValue": "",
             "helpMarkDown": "Path to a ARM template parameters file that provides parameter values for the environment template."

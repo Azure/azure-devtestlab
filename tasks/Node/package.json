@@ -12,7 +12,8 @@
     "azure-pipelines-task-lib": "^2.8.0",
     "isomorphic-fetch": "^2.2.1",
     "minimist": "^1.2.0",
-    "tough-cookie": "^3.0.1"
+    "tough-cookie": "^3.0.1",
+    "uuid": "^3.3.2"
   },
   "devDependencies": {
     "@types/mocha": "^5.2.7",

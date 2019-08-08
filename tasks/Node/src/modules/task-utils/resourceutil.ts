@@ -1,3 +1,6 @@
+import fs from 'fs';
+import util from 'util';
+
 import * as tl from 'azure-pipelines-task-lib/task';
 import * as msRestNodeAuth from '@azure/ms-rest-nodeauth';
 
@@ -135,50 +138,3 @@ export async function getDeploymentOutput(armClient: ResourceManagementClient, r
 
     return deploymentOutput;
 }
-
-/*
-export function deployResource(sourceFile: string, deploymentInfo: any, dtlClient: DevTestLabsClient, armClient: ResourceManagementClient, labRg: string, labName: string, RetryOnFailure: boolean, RetryCount: number, DeleteFailedDeploymentBeforeRetry: boolean, FailOnArtifactError: boolean, DeleteFailedLabVMBeforeRetry: boolean, AppendRetryNumberToVMName: boolean): Promise<any> {
-    const deploymentProperties: ResourceManagementModels.DeploymentProperties = Object.create(ResourceManagementMappers.DeploymentProperties);
-    const deployment: ResourceManagementModels.Deployment = Object.create(ResourceManagementMappers.Deployment);
-
-    // Generate random number for deployment name 
-    let min = Math.ceil(999);
-    let max = Math.floor(999999999);
-    let randNum = Math.floor(Math.random() * (max - min)) + min;
-    let deploymentName = 'DTLTaskDeploy' + randNum.toString();
-
-    return new Promise(function(resolve,reject){
-        console.log('Deploying DTL VM.');
-        try {
-            if (sourceFile != undefined) {
-                fs.readFile(sourceFile, 'utf8', function(err,contents) {
-                    if (err) { console.log('Unable to read template file. ', err);}
-                    deploymentProperties.template = JSON.parse(contents);
-                    deploymentProperties.mode = 'Incremental';
-                    deploymentProperties.parameters = deploymentInfo;
-                    deployment.properties = deploymentProperties;
-
-                    console.log('Starting VM creation.');
-                    let currentCount: number = 1;
-                    if (!RetryOnFailure) {
-                        RetryCount = 1;
-                    }
-
-                    console.log('Azure deployment name: ', deploymentName);
-                    deployVM(dtlClient, armClient,labRg,labName, deploymentName,deployment,RetryOnFailure,FailOnArtifactError, DeleteFailedDeploymentBeforeRetry, currentCount, RetryCount, DeleteFailedLabVMBeforeRetry, AppendRetryNumberToVMName).then((results) =>{
-                        resolve(results);
-                    }).catch((err) =>{
-                        reject(err);
-                    });
-                });
-            }
-            else {
-                reject(sourceFile + ' does not exist.');
-            }
-        }
-        catch (err) {
-            reject(err);
-        }
-    })
-}
-*/
