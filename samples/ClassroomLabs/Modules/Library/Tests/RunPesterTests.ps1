@@ -66,6 +66,6 @@ else {
 
     $jobs | ForEach-Object {
         Write-Output "-----------------------------------------------------------------"
-        Recieve-Job -Wait -Verbose
+        Receive-Job -Wait -Verbose
     }
 }
