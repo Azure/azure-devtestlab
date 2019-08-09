@@ -10,7 +10,6 @@ Describe 'Shared Gallery Management' {
     Context 'Pipeline Tests' {
         It 'Can attach a shared library' {
 
-            # Creat RG, Lab Account and lab if not existing
             if(-not (Get-AzResourceGroup -ResourceGroupName $rgName -EA SilentlyContinue)) {
                 New-AzResourceGroup -ResourceGroupName $rgName -Location $rgLocation | Out-null
                 Write-Verbose "$rgname resource group didn't exist. Created it."
