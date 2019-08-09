@@ -851,7 +851,7 @@ function Get-AzLabAccountSharedImage {
         try {
             foreach ($la in $LabAccount) {
                 $uri = (ConvertToUri -resource $la) + "/SharedImages"
-                InvokeRest -Uri $uri -Method 'Get' | Where-Object { $_.properties.isEnabled }
+                InvokeRest -Uri $uri -Method 'Get' | Where-Object { $_.properties.EnableState -eq 'Enabled' }
             }
         }
         catch {
