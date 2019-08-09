@@ -67,5 +67,9 @@ else {
     $jobs | ForEach-Object {
         Write-Output "-----------------------------------------------------------------"
         $result = Receive-Job -Job $_ -Wait -Verbose
+
+        if ($result.FailedCount -ne 0) {
+            Write-Error "Pester returned errors for $($result.TestResult.Describe) - $($result.TestResult.Context)"
+        }
     }
 }
