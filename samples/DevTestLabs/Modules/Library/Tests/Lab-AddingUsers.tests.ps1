@@ -1,5 +1,7 @@
-Import-Module $PSScriptRoot\..\Az.DevTestLabs2.psm1
-$VerbosePreference="Continue"
+[cmdletbinding()]
+Param()
+
+Import-Module $PSScriptRoot\..\Az.DevTestLabs2.psm1 -Verbose:$false
 
 $users = @'
 UserEmail, Role
