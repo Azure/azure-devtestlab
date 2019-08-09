@@ -21,10 +21,12 @@ Describe 'Shared Gallery Management' {
             $sg = Get-AzResource -resourceId "/subscriptions/39df6a21-006d-4800-a958-2280925030cb/resourceGroups/SharedImageGalleryRG/providers/Microsoft.Compute/galleries/EnterpriseSharedImages"
             $sg | Should -Not -Be $null
 
-            $la = $la | New-AzLabAccountSharedGallery -SharedGallery $sg
+            $acsg = $la | New-AzLabAccountSharedGallery -SharedGallery $sg
+            $acsg | Should -Not -Be $null
 
             $imgs = $la | Get-AzLabAccountSharedImage
-            $imgs.Count | Should -BeGreaterThan 0
+            $img = $imgs[0]
+            $img | Should -Not -Be $null
 
             # Cleanup
             Remove-AzResourceGroup -ResourceGroupName $rgName -Force

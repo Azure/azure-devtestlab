@@ -451,13 +451,11 @@ function New-AzLabAccountSharedGallery {
 
                 $fullUri = $uri + "/SharedGalleries/$sharedGalleryName"
 
-                InvokeRest -Uri $fullUri -Method 'Put' -Body (@{
+                return InvokeRest -Uri $fullUri -Method 'Put' -Body (@{
                     properties = @{
                         galleryId = $sharedLibraryId
                     }
-                } | ConvertTo-Json) | Out-Null
-
-                return $la
+                } | ConvertTo-Json)
             }
         }
         catch {
