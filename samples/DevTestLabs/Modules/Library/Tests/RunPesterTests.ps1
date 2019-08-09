@@ -61,7 +61,7 @@ else {
     $jobs = @()
 
     $TestScripts | ForEach-Object {
-        $jobs += Start-ThreadJob -Script $invokePesterScriptBlock -ArgumentList $_, $PSScriptRoot, $VerboseTests
+        $jobs += Start-Job -Script $invokePesterScriptBlock -ArgumentList $_, $PSScriptRoot, $VerboseTests
     }
 
     $jobs | ForEach-Object {
