@@ -177,7 +177,7 @@
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
-                    "clusterDnsName": {
+                    "clusterName": {
                         "value": "[variables('clusterName')]"
                     },
                     "adminUsername": {
@@ -207,7 +207,7 @@
                     "certificateThumbprint": {
                         "value": "[parameters('certificateThumbprint')]"
                     },
-                    "sourceVaultValue": {
+                    "sourceVaultResourceId": {
                         "value": "[resourceId('Microsoft.KeyVault/vaults', variables('vaultName'))]"
                     },
                     "certificateUrlValue": {
