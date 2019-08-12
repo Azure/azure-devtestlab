@@ -1,6 +1,5 @@
 ﻿using Microsoft.Azure.Management.DevTestLabs;
 using Microsoft.Azure.Management.LabServices;
-using Microsoft.Azure.Management.ResourceManager.Fluent;
 using System;
 using System.Collections.Generic;
 using System.Configuration;

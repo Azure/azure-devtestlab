@@ -34,11 +34,7 @@ namespace SDKSample
         public static ServiceClientCredentials CreateCredentials()
         {
             return SdkContext.AzureCredentialsFactory
-                .FromServicePrincipal(
-                ConfigurationManager.AppSettings["ClientId"],
-                ConfigurationManager.AppSettings["ClientSecret"],
-                ConfigurationManager.AppSettings["TenantId"],
-                AzureEnvironment.AzureGlobalCloud);
+                .FromFile(ConfigurationManager.AppSettings["AuthFile"]);
         }
 
         /// <summary>
