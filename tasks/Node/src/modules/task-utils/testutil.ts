@@ -12,7 +12,9 @@ export async function getTestData(): Promise<any> {
         }
 
         tl.debug(`TestUtil: Getting test data for module '${path.relative(process.cwd(), parentFileName)}'.`)
-        const testDataFilePath = path.join(path.dirname(parentFileName), 'testdata.json');
+
+        const rootTestDataFilePath = path.dirname(parentFileName).replace(/\\out\\/gi, '\\src\\');
+        const testDataFilePath = path.join(rootTestDataFilePath, 'testdata.json');
 
         tl.debug(`TestUtil: Getting test data from test file '${path.relative(process.cwd(), testDataFilePath)}'.`)
         const fsReadFile = util.promisify(fs.readFile);

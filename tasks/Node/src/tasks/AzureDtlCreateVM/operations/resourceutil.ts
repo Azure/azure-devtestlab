@@ -4,158 +4,6 @@ import tl = require('azure-pipelines-task-lib/task');
 const fs = require('fs');
 const vmNameParameter = 'newVMName';
 
-export function fromParametersFile(parametersFile: string): Promise<any> { 
-    return new Promise(function(resolve,reject){
-        console.log('Parsing parameters file ', parametersFile);
-
-        try {
-            fs.stat(parametersFile,(err, stats) => {
-                if (err) reject(err);
-                if (stats.isFile()) {
-                    fs.readFile(parametersFile,'utf8', function(err2, data){
-                        if (err2) reject(err2);
-
-                        resolve(JSON.parse(data).parameters);
-                    });
-                }
-                else {
-                    reject('Missing file ' + parametersFile);
-                }
-            }, reject);
-        } catch (ex) {
-            reject(ex);
-        }
-            
-    })
-   
-}
-
-export function deployResource(sourceFile: string, deploymentInfo: any, dtlClient: DevTestLabsClient, armClient: ResourceManagementClient, labRg: string, labName: string, RetryOnFailure: boolean, RetryCount: number, DeleteFailedDeploymentBeforeRetry: boolean, FailOnArtifactError: boolean, DeleteFailedLabVMBeforeRetry: boolean, AppendRetryNumberToVMName: boolean): Promise<any> {
-    
-    let vmDeployProp: ResourceManagementModels.DeploymentProperties = Object.create(ResourceManagementMappers.DeploymentProperties);
-    let vmDeploy: ResourceManagementModels.Deployment = Object.create(ResourceManagementMappers.Deployment);
-    // Generate random number for deployment name 
-    let min = Math.ceil(999);
-    let max = Math.floor(999999999);
-    let randNum = Math.floor(Math.random() * (max - min)) + min;
-    let deploymentName = 'DTLTaskDeploy' + randNum.toString();
-
-    return new Promise(function(resolve,reject){
-        console.log('Deploying DTL VM.');
-        try {
-            if (sourceFile != undefined) {
-                fs.readFile(sourceFile, 'utf8', function(err,contents) {
-                    if (err) { console.log('Unable to read template file. ', err);}
-                    vmDeployProp.template = JSON.parse(contents);
-                    vmDeployProp.mode = 'Incremental';
-                    vmDeployProp.parameters = deploymentInfo;
-                    vmDeploy.properties = vmDeployProp;
-
-                    console.log('Starting VM creation.');
-                    let currentCount: number = 1;
-                    if (!RetryOnFailure) {
-                        RetryCount = 1;
-                    }
-
-                    console.log('Azure deployment name: ', deploymentName);
-                    deployVM(dtlClient, armClient,labRg,labName, deploymentName,vmDeploy,RetryOnFailure,FailOnArtifactError, DeleteFailedDeploymentBeforeRetry, currentCount, RetryCount, DeleteFailedLabVMBeforeRetry, AppendRetryNumberToVMName).then((results) =>{
-                        resolve(results);
-                    }).catch((err) =>{
-                        reject(err);
-                    });
-                });
-            }
-            else {
-                reject(sourceFile + ' does not exist.');
-            }
-        }
-        catch (err) {
-            reject(err);
-        }
-    })
-}
-// Update existing parameters from file with manual parameters
-export function addOverrideParameters(overrideParameters: any, existingParameters: any) : any {
-
-    let tempParam = {};
-
-    if (overrideParameters.length === 0 ) {
-        return existingParameters;
-    }
-    else {
-
-            let newParams = newOverrideParameters(overrideParameters);
-
-            for (var newParam in newParams) {
-                console.log('single: ', newParam);
-                for (var exParam in existingParameters) {
-                    console.log('exist: ', exParam);
-                    if (exParam == newParam) {
-                        console.log('EX ', existingParameters[exParam]);
-                        console.log('New: ', newParams[newParam]);
-                        existingParameters[exParam] = newParams[newParam];
-                    }
-                }
-                
-            }
-
-    }
-    console.log('Updated parameters with overrides');
-    return (existingParameters);
-
-}
-// Get the manual parameters into proper object
-export function newOverrideParameters(overrideParameters: any): any {
-
-    let overname = '';
-    let overvalue = '';
-    let valueJSON = {}; //new Array();
-    let returnParameters = '{ ';
-
-    var parsedParam = overrideParameters.split(' ');
-        parsedParam.forEach(value => {
-            if (value.startsWith('-')) {
-        
-                if (overname == '') {                
-                    overname = value.slice(1).toString().replace(/^"(.+(?="$))"$/, '$1');
-                    console.log('Return : ', valueJSON);
-                } else {
-                        if (overvalue == 'true' || overvalue == 'false') {
-                            var boolParam = (overvalue == 'true');
-                            valueJSON[overname] = {Value: boolParam};
-                        } else {
-                            valueJSON[overname] = {Value: overvalue};
-                        }
-                        
-                    overvalue = '';
-                    overname = value.slice(1).toString().replace(/^"(.+(?="$))"$/, '$1');
-                }                                
-
-            } else {
-
-                if (overvalue == '') {                
-                    // remove quotes
-                    overvalue = value.replace(/^"(.+(?="$))"$/, '$1');
-
-                } else {                
-                    
-                    overvalue +=  (" " + value);
-                    // remove quotes
-                    overvalue = overvalue.replace(/^"(.+(?="$))"$/, '$1');
-                }
-                overvalue = overvalue.replace(/["']{1}/gi,"");
-            }
-        });
-
-        if (overvalue == 'true' || overvalue == 'false') {
-            var boolParam = (overvalue == 'true');
-            valueJSON[overname] = {Value: boolParam};
-        } else {
-            valueJSON[overname] = {Value: overvalue};
-        }
-        
-    return(valueJSON);
-}
 // Get the individual resource information from the URI based on the preceding resource type name ie ResourceGroup
 export function getResourceNamesFromResourceURI(ResourceURI: string, ResourceName: string) : string {
 
@@ -170,6 +18,7 @@ export function getResourceNamesFromResourceURI(ResourceURI: string, ResourceNam
 
     return returnValue;
 }
+
 // Get the resource output
 export function getDeploymentOutput(DeployResourceGroup: string, armClient: ResourceManagementClient): Promise<any[]> {
 
@@ -194,20 +43,6 @@ export function getDeploymentOutput(DeployResourceGroup: string, armClient: Reso
         });
     })
     
-}
-
-// A helper method used to read a Node.js readable stream into string
-export function streamToString(readableStream) {
-  return new Promise((resolve, reject) => {
-    const chunks: any = [];
-    readableStream.on("data", data => {
-      chunks.push(data.toString());
-    });
-    readableStream.on("end", () => {
-      resolve(chunks.join(""));
-    });
-    readableStream.on("error", reject);
-  });
 }
 
 // core deploy VM function which calls itself to handle the retry logic.

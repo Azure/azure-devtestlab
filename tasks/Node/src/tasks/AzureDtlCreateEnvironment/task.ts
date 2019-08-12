@@ -33,10 +33,12 @@ async function createEnvironment(client: DevTestLabsClient, armClient: ResourceM
             throw results._response.bodyAsText;
         }
 
-        const environmentResourceId: string = results.id ? results.id : 'undefined';
-        const environmentResourceGroupId: string = results.resourceGroupId ? results.resourceGroupId : 'undefined';
-        tl.setVariable('environmentResourceId', environmentResourceId);
-        tl.setVariable('environmentResourceGroupId', environmentResourceGroupId);
+        if (results.id) {
+            tl.setVariable('environmentResourceId', results.id);
+        }
+        if (results.resourceGroupId) {
+            tl.setVariable('environmentResourceGroupId', results.resourceGroupId);
+        }
     }
 
     console.log(`Finished creating Lab Environment '${environmentName}'.`);

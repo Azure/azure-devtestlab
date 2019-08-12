@@ -15,11 +15,7 @@ async function ensureVmExists(client: DevTestLabsClient, labVmId: string): Promi
 
     const labVms = await client.virtualMachines.list(labRgName, labName);
 
-    var vmExists = labVms && labVms.some((vm) => {
-        if (vm && vm.name) {
-            return vm.name.toLocaleLowerCase() === vmName;
-        }
-    });
+    var vmExists = labVms && labVms.some((vm) => vm && vm.name && vm.name.toLocaleLowerCase() === vmName);
 
     const message: string = `Lab VM '${vmName}' ${vmExists ? 'exists' : 'does not exist'}.`;
 

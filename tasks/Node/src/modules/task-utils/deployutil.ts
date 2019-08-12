@@ -69,13 +69,20 @@ async function fromParametersFile(parametersFile: string): Promise<DevTestLabsMo
     let parameters: DevTestLabsModels.ArmTemplateParameterProperties[] = [];
 
     if (!parametersFile) {
-        console.warn(`DeployUtil: Ignoring invalid parameter file '${parametersFile}'.`);
+        console.warn(`DeployUtil: Ignoring invalid parameters file '${parametersFile}'.`);
+        return parameters;
+    }
+
+    const fsExists = util.promisify(fs.exists);
+
+    if (!await fsExists(parametersFile)) {
+        console.warn(`DeployUtil: Ignoring. Unable to locate parameters file '${parametersFile}'.`);
         return parameters;
     }
 
     const fsStat = util.promisify(fs.stat);
     const fsReadFile = util.promisify(fs.readFile);
-
+    
     const stats = await fsStat(parametersFile);
     if (stats.isFile()) {
         const data = await fsReadFile(parametersFile, 'utf8');
@@ -117,18 +124,34 @@ export async function getDeploymentTemplate(templateFile: string): Promise<any> 
 }
 
 export function getDeploymentName(prefix: string = 'Dtl') {
-    const guid = uuidv4().replace('-', '');
+    const guid: string = uuidv4().replace(/-/gi, '');
     return `${prefix}${guid}`;
 }
 
 export function getDeploymentError(deploymentError: any): string {
-    let message = deploymentError.body.error.message;
-    if (deploymentError.body && deploymentError.body.error && deploymentError.body.error.details) {
-        const deploymentErrorDetails = deploymentError.body.error.details;
-        deploymentErrorDetails.forEach(detail => {
-            message += getDeploymentErrorDetailMessage(detail);
-        });
+    let message: string = deploymentError;
+
+    if (deploymentError.message) {
+        message = `Error => code: '${deploymentError.code}'; message = '${deploymentError.message}'`
     }
+
+    if (deploymentError.body) {
+        if (deploymentError.body.message) {
+            message = `Error => code: '${deploymentError.body.code}'; message = '${deploymentError.body.message}'`;
+        }
+        if (deploymentError.body.error) {
+            if (deploymentError.body.error.message) {
+                message = deploymentError.body.error.message;
+            }
+            if (deploymentError.body.error.details) {
+                const deploymentErrorDetails = deploymentError.body.error.details;
+                deploymentErrorDetails.forEach(detail => {
+                    message += getDeploymentErrorDetailMessage(detail);
+                });
+            }
+        }
+    }
+
     return message;
 }
 

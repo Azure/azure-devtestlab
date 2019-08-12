@@ -15,11 +15,7 @@ async function ensureEnvExists(client: DevTestLabsClient, envId: string): Promis
 
     const environments = await client.environments.list(labRgName, labName, '@all');
 
-    var envExists = environments && environments.some((env) => {
-        if (env && env.name) {
-            return env.name.toLocaleLowerCase() === envName;
-        }
-    });
+    var envExists = environments && environments.some((env) => env && env.name && env.name.toLocaleLowerCase() === envName );
 
     const message: string = `Lab Environment '${envName}' ${envExists ? 'exists' : 'does not exist'}.`;
 

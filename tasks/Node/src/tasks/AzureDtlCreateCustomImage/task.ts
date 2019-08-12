@@ -76,8 +76,9 @@ async function createCustomImage(client: DevTestLabsClient, labId: string, sourc
             throw results._response.bodyAsText;
         }
 
-        const customImageId: string = results.id ? results.id : 'undefined';
-        tl.setVariable('customImageId', customImageId);
+        if (results.id) {
+            tl.setVariable('customImageId', results.id);
+        }
     }
 
     console.log(`Finished creating Lab Custom Image '${customImageName}'.`);
