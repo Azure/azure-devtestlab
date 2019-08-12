@@ -36,16 +36,6 @@ namespace SDKSample
 
                             break;
                         }
-                    case "getPublicRdpFilesForUser":
-                        {
-                            GetRdpFilesForUser.CreateRdpFiles().Wait();
-
-                            Console.ForegroundColor = ConsoleColor.Green;
-                            Console.WriteLine($"Saved all RDP files!");
-                            Console.ResetColor();
-
-                            break;
-                        }
                 }
             }
             catch (Exception ex)
