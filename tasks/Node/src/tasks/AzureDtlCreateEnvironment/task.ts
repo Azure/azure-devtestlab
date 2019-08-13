@@ -57,7 +57,7 @@ async function testRun() {
         if (envRgId) {
             const envRgName = resutil.getResourceName(envRgId, 'resourcegroups');
 
-            const deploymentOutput = await resutil.getDeploymentOutput(armClient, envRgName);
+            const deploymentOutput = await deployutil.getDeploymentOutput(armClient, envRgName);
             deploymentOutput.forEach((element: any[]) => {
                 tl.setVariable(element[0], element[1], false);
             });
@@ -95,7 +95,7 @@ async function run() {
             if (envRgId) {
                 const envRgName = resutil.getResourceName(envRgId, 'resourcegroups');
     
-                const deploymentOutput = await resutil.getDeploymentOutput(armClient, envRgName);
+                const deploymentOutput = await deployutil.getDeploymentOutput(armClient, envRgName);
                 deploymentOutput.forEach((element: any[]) => {
                     tl.setVariable(element[0], element[1], false);
                 });

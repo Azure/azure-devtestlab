@@ -1,12 +1,8 @@
-import fs from 'fs';
-import util from 'util';
-
 import * as tl from 'azure-pipelines-task-lib/task';
 import * as msRestNodeAuth from '@azure/ms-rest-nodeauth';
 
 import { DevTestLabsClient } from '@azure/arm-devtestlabs';
-import { DeploymentsListByResourceGroupResponse } from '@azure/arm-resources/esm/models';
-import { ResourceManagementClient, ResourceManagementModels, ResourceManagementMappers } from '@azure/arm-resources';
+import { ResourceManagementClient } from '@azure/arm-resources';
 
 function getIdParts(resourceId: string): string[] {
     // Resource Id should not be escaped.
@@ -112,29 +108,20 @@ export async function getDtlClient(subscriptionId: string, forTesting?: boolean)
     return new DevTestLabsClient(credentials, subscriptionId);
 }
 
-export async function getDeploymentOutput(armClient: ResourceManagementClient, resourceGroupName: string): Promise<any[]> {
-    let deploymentOutput: any[] = new Array(0);
-
-    tl.debug(`ResourceUtil: Getting deployment output for resource group '${resourceGroupName}'.`);
-
-    const results: DeploymentsListByResourceGroupResponse = await armClient.deployments.listByResourceGroup(resourceGroupName);
-    if (results) {
-        const deploymentName = results._response.parsedBody[0].name;
-        if (deploymentName) {
-            const deploymentResults = await armClient.deployments.get(resourceGroupName, deploymentName);
-            if (deploymentResults && deploymentResults.properties && deploymentResults.properties.outputs) {
-                const props = Object.keys(deploymentResults.properties.outputs)
-                let i = props.length;
-                deploymentOutput = new Array(i);
-                while(i--) {
-                    deploymentOutput[i] = [props[i], deploymentResults.properties.outputs[props[i]].value];
-                }
-            }
-        }
+export function testVmName(vmName: string, maxNameLength: number = 15): boolean {
+    if (!vmName) {
+        throw `Invalid VM name '${vmName}'. Name must be specified.`;
     }
 
-    tl.debug(`ResourceUtil: Completed getting deployment output for resource group '${resourceGroupName}'.`);
-    tl.debug(JSON.stringify(deploymentOutput));
+    if (vmName.length > maxNameLength) {
+        throw `Invalid VM name '${vmName}'. Name must be between 1 and ${maxNameLength} characters.`;
+    }
 
-    return deploymentOutput;
+    // TODO: Get latest Regex from DTL UI code.
+    const regex = new RegExp('^(?=.*[a-zA-Z/-]+)[0-9a-zA-Z/-]*$');
+    if (!regex.test(vmName)) {
+        throw `Invalid VM name '${vmName}'. Name cannot contain any spaces or special characters. The name may contain letters, numbers, or '-'. However, it must begin and end with a letter or number, and cannot be all numbers.`;
+    }
+
+    return true;
 }

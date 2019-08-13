@@ -2,7 +2,11 @@ import fs from 'fs';
 import util from 'util';
 import uuidv4 from 'uuid/v4';
 
+import * as tl from 'azure-pipelines-task-lib/task';
+
 import { DevTestLabsModels, DevTestLabsMappers } from "@azure/arm-devtestlabs";
+import { DeploymentsListByResourceGroupResponse } from '@azure/arm-resources/esm/models';
+import { ResourceManagementClient } from '@azure/arm-resources';
 
 async function addParameterOverrides(parameterOverrides: string, existingParameters: DevTestLabsModels.ArmTemplateParameterProperties[]): Promise<DevTestLabsModels.ArmTemplateParameterProperties[]> {
     if (parameterOverrides == null ||
@@ -103,29 +107,26 @@ async function fromParametersFile(parametersFile: string): Promise<DevTestLabsMo
     return parameters;
 }
 
-export async function getDeploymentParameters(parametersFile: string, parameterOverrides: string): Promise<DevTestLabsModels.ArmTemplateParameterProperties[]> {
-    let parameters = await fromParametersFile(parametersFile);
-    return await addParameterOverrides(parameterOverrides, parameters);
-}
+function getDeploymentErrorDetailMessage(detail: any) {
+    let code = detail.code;
+    let message = detail.message;
 
-export async function getDeploymentTemplate(templateFile: string): Promise<any> {
-    let template: any = null;
+    try {
+        const innerError = JSON.parse(detail.message);
 
-    const fsStat = util.promisify(fs.stat);
-    const fsReadFile = util.promisify(fs.readFile);
+        code = innerError.error.code;
+        message = innerError.error.message;
 
-    const stats = await fsStat(templateFile);
-    if (stats.isFile()) {
-        const contents = await fsReadFile(templateFile, 'utf8');
-        template = JSON.parse(contents);
+        const innerDetails = innerError.error.details;
+        innerDetails.forEach(innerDetail => {
+            message += getDeploymentErrorDetailMessage(innerDetail);
+        });
+    }
+    catch (error) {
+        // Ignore. Failed to parse JSON string. Assuming it is a relugar string.
     }
 
-    return template;
-}
-
-export function getDeploymentName(prefix: string = 'Dtl') {
-    const guid: string = uuidv4().replace(/-/gi, '');
-    return `${prefix}${guid}`;
+    return ` InnerError => code: '${code}'; message: '${message}'`;
 }
 
 export function getDeploymentError(deploymentError: any): string {
@@ -155,24 +156,71 @@ export function getDeploymentError(deploymentError: any): string {
     return message;
 }
 
-function getDeploymentErrorDetailMessage(detail: any) {
-    let code = detail.code;
-    let message = detail.message;
+export function getDeploymentName(prefix: string = 'Dtl') {
+    const guid: string = uuidv4().replace(/-/gi, '');
+    return `${prefix}${guid}`;
+}
 
-    try {
-        const innerError = JSON.parse(detail.message);
+export async function getDeploymentOutput(armClient: ResourceManagementClient, resourceGroupName: string): Promise<any[]> {
+    let deploymentOutput: any[] = new Array(0);
 
-        code = innerError.error.code;
-        message = innerError.error.message;
+    tl.debug(`DeployUtil: Getting deployment output for resource group '${resourceGroupName}'.`);
 
-        const innerDetails = innerError.error.details;
-        innerDetails.forEach(innerDetail => {
-            message += getDeploymentErrorDetailMessage(innerDetail);
-        });
+    const results: DeploymentsListByResourceGroupResponse = await armClient.deployments.listByResourceGroup(resourceGroupName);
+    if (results) {
+        const deploymentName = results._response.parsedBody[0].name;
+        if (deploymentName) {
+            const deploymentResults = await armClient.deployments.get(resourceGroupName, deploymentName);
+            if (deploymentResults && deploymentResults.properties && deploymentResults.properties.outputs) {
+                const props = Object.keys(deploymentResults.properties.outputs)
+                let i = props.length;
+                deploymentOutput = new Array(i);
+                while(i--) {
+                    deploymentOutput[i] = [props[i], deploymentResults.properties.outputs[props[i]].value];
+                }
+            }
+        }
     }
-    catch (error) {
-        // Ignore. Failed to parse JSON string. Assuming it is a relugar string.
+
+    tl.debug(`DeployUtil: Completed getting deployment output for resource group '${resourceGroupName}'.`);
+    tl.debug(JSON.stringify(deploymentOutput));
+
+    return deploymentOutput;
+}
+
+export async function getDeploymentParameters(parametersFile: string, parameterOverrides: string): Promise<DevTestLabsModels.ArmTemplateParameterProperties[]> {
+    let parameters = await fromParametersFile(parametersFile);
+    return await addParameterOverrides(parameterOverrides, parameters);
+}
+
+export async function getDeploymentTemplate(templateFile: string): Promise<any> {
+    let template: any = null;
+
+    const fsStat = util.promisify(fs.stat);
+    const fsReadFile = util.promisify(fs.readFile);
+
+    const stats = await fsStat(templateFile);
+    if (stats.isFile()) {
+        const contents = await fsReadFile(templateFile, 'utf8');
+        template = JSON.parse(contents);
     }
 
-    return ` InnerError => code: '${code}'; message: '${message}'`;
+    return template;
+}
+
+export function replaceParameter(parameters: DevTestLabsModels.ArmTemplateParameterProperties[], name: string, value: string): void {
+    let newParameter: DevTestLabsModels.ArmTemplateParameterProperties = { name: name, value: value };
+    let index = parameters.findIndex(p => p.name === name);
+    if (index > -1) {
+        // Replace inplace.
+        parameters.splice(index, 1, newParameter);
+    }
+    else {
+        // Insert at the begining.
+        parameters.splice(0, 0, newParameter);
+    }
+}
+
+export function sleep(ms: number): Promise<any> {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
