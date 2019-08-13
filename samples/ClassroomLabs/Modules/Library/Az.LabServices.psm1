@@ -486,8 +486,18 @@ function Get-AzLabAccount {
                     # Proper RG
                     if ($LabAccountName -and (-not $LabAccountName.Contains("*"))) {
                         # Proper RG, Proper Name
-                        $uri = (GetLabAccountUri -ResourceGroupName $ResourceGroupName) + "/$LabAccountName"
-                        InvokeRest  -Uri $uri -Method 'Get'
+                        # A get for a single resource returns 404 if it doesn't exist, so need to convert to empty array.
+                        try {
+                            $uri = (GetLabAccountUri -ResourceGroupName $ResourceGroupName) + "/$LabAccountName"
+                            InvokeRest  -Uri $uri -Method 'Get'
+                        } catch {
+                            $StatusCode = $_.Exception.Response.StatusCode.value__
+                            if($StatusCode -eq 404) {
+                                return @()
+                            } else {
+                                Write-Error $_
+                            }
+                        }
                     }
                     else {
                         #Proper RG, wild name
