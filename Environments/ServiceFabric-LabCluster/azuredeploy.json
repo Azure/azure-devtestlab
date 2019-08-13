@@ -187,16 +187,16 @@
                         "value": "[parameters('adminPassword')]"
                     },
                     "vmImagePublisher": {
-                        "value": "Microsoft.Azure.ServiceFabric"
+                        "value": "Canonical"
                     },
                     "vmImageOffer": {
                         "value": "UbuntuServer"
                     },
                     "vmImageSku": {
-                        "value": "16.04"
+                        "value": "16.04-LTS"
                     },
                     "vmImageVersion": {
-                        "value": "6.0.11"
+                        "value": "latest"
                     },
                     "loadBalancedAppPort1": {
                         "value": "[variables('loadBalancedAppPort1')]"
