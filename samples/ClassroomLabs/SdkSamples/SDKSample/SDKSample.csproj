@@ -100,8 +100,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="GetPrivateRdpFilesForLab.cs" />
-    <Compile Include="GetPublicRdpFilesForLab.cs" />
+    <Compile Include="PeeredVnetScenario.cs" />
+    <Compile Include="DefaultVnetScenario.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities.cs" />
