@@ -16,9 +16,9 @@ namespace SDKSample
 
                 switch (args[0])
                 {
-                    case "getPublicRdpFilesForLab":
+                    case "getStudentRdpFiles":
                         {
-                            GetPublicRdpFilesForLab.CreateRdpFiles().Wait();
+                            DefaultVnetScenario.CreateRdpFiles().Wait();
 
                             Console.ForegroundColor = ConsoleColor.Green;
                             Console.WriteLine($"Saved all RDP files!");
@@ -26,9 +26,9 @@ namespace SDKSample
 
                             break;
                         }
-                    case "getPrivateRdpFilesForLab":
+                    case "getStudentRdpFilesOnPeeredVnet":
                         {
-                            GetPrivateRdpFilesForLab.CreateRdpFiles().Wait();
+                            PeeredVnetScenario.CreateRdpFiles().Wait();
 
                             Console.ForegroundColor = ConsoleColor.Green;
                             Console.WriteLine($"Saved all RDP files!");

@@ -19,5 +19,5 @@ Now you should be able to run the solution and create the RDP files.
 ## Project parameters
 
 You will need to provide one of the following parameters when you run the project:
-* `getPublicRdpFilesForLab` - This is for the typical scenario of an app with professor permissions trying to retrieve all the RDP files for all the student virtual machines.
-* `getPrivateRdpFilesForLab` - This is the same as above, but this is for lab accounts with vnet peering enabled.
+* `getStudentRdpFiles` - This is for the typical scenario of an app with professor permissions trying to retrieve all the RDP files for all the student virtual machines.
+* `getStudentRdpFilesOnPeeredVnet` - This is the same as above, but this is for lab accounts with vnet peering enabled.
