@@ -95,7 +95,7 @@ function fromParametersFile(parametersFile: string): DevTestLabsModels.ArmTempla
         }
     }
     else {
-        tl.debug(`DeployUtil: Provided parameters file is not valid: '${parametersFile}'`)
+        tl.debug(`DeployUtil: Ignoring. Provided parameters file is not valid: '${parametersFile}'.`)
     }
 
     return parameters;

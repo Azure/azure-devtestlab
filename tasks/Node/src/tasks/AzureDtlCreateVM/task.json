@@ -16,7 +16,7 @@
     "version": {
         "Major": 0,
         "Minor": 0,
-        "Patch": 7
+        "Patch": 8
     },
     "visibility": [
         "Build",
@@ -151,7 +151,7 @@
     ],
     "outputVariables": [
         {
-            "name": "labVMId",
+            "name": "labVmId",
             "description": "Capture the created lab VM ID."
         }
     ],
