@@ -50,7 +50,7 @@ async function deleteEnv(client: DevTestLabsClient, envId: string): Promise<any>
 
 async function testRun() {
     try {
-        const data: any = await testutil.getTestData();
+        const data: any = testutil.getTestData();
 
         const envName: string = resutil.getLabResourceName(data.envId, 'environments');
 
@@ -61,7 +61,7 @@ async function testRun() {
         tl.setResult(tl.TaskResult.Succeeded, `Lab Environment '${envName}' was successfully deleted.`);
     }
     catch (error) {
-        console.debug(error);
+        testutil.writeTestLog(error);
         tl.setResult(tl.TaskResult.Failed, error.message);
     }
 }

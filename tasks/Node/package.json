@@ -37,7 +37,7 @@
     "copy-dev": "node scripts/copy.js --dev",
     "init-dev": "npm run clean-dev && npm run build-dev",
     "init-mods": "npm install && npm run clean-submods",
-    "package": "npm run clean && npm run bundle && npm run copy && npm run tfx",
+    "package": "npm run clean && npm run clean-submods && npm run bundle && npm run copy && npm run tfx",
     "test": "echo \"Error: no test specified\" && exit 1",
     "tfx": "tfx extension create --manifest-globs --root dist --output-path dist"
   },

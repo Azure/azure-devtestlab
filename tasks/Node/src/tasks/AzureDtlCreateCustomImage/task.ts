@@ -86,7 +86,7 @@ async function createCustomImage(client: DevTestLabsClient, labId: string, sourc
 
 async function testRun() {
     try {
-        const data: any = await testutil.getTestData();
+        const data: any = testutil.getTestData();
 
         const client: DevTestLabsClient = await resutil.getDtlClient(data.subscriptionId, true);
 
@@ -95,7 +95,7 @@ async function testRun() {
         tl.setResult(tl.TaskResult.Succeeded, `Lab Custom Image '${data.customImageName}' was successfully created.`);
     }
     catch (error) {
-        console.debug(error);
+        testutil.writeTestLog(error);
         tl.setResult(tl.TaskResult.Failed, error.message);
     }
 }

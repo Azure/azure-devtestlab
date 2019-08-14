@@ -70,7 +70,7 @@ export function getLabResourceName(resourceId: string, resourceTypePlural: strin
     return getResourceName(resourceId, resourceTypePlural);
 }
 
-async function getCredentials(subscriptionId: string, forTesting?: boolean): Promise<any> {
+async function getCredentials(forTesting?: boolean): Promise<any> {
     let credentials: any;
 
     if (forTesting) {
@@ -98,13 +98,13 @@ async function getCredentials(subscriptionId: string, forTesting?: boolean): Pro
 
 export async function getArmClient(subscriptionId: string, forTesting?: boolean): Promise<ResourceManagementClient> {
     tl.debug(`ResourceUtil: Getting ARM client instance.`);
-    const credentials = await getCredentials(subscriptionId, forTesting);
+    const credentials = await getCredentials(forTesting);
     return new ResourceManagementClient(credentials, subscriptionId)
 }
 
 export async function getDtlClient(subscriptionId: string, forTesting?: boolean): Promise<DevTestLabsClient> {
     tl.debug(`ResourceUtil: Getting DTL client instance.`);
-    const credentials = await getCredentials(subscriptionId, forTesting);
+    const credentials = await getCredentials(forTesting);
     return new DevTestLabsClient(credentials, subscriptionId);
 }
 

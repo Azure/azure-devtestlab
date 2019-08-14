@@ -16,7 +16,7 @@
     "version": {
         "Major": 0,
         "Minor": 0,
-        "Patch": 1
+        "Patch": 4
     },
     "visibility": [
         "Build",
@@ -90,7 +90,7 @@
         {
             "name": "ParameterOverrides",
             "type": "multiLine",
-            "label": "Parameters",
+            "label": "Parameter Overrides",
             "defaultValue": "-SampleParameter 'SampleValue'",
             "required": false,
             "helpMarkDown": "Set parameter values needed by the environment template. Parameter values set by parameters file will be overridden."

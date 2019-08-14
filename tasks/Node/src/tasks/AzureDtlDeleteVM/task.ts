@@ -50,7 +50,7 @@ async function deleteVm(client: DevTestLabsClient, labVmId: string): Promise<any
 
 async function testRun() {
     try {
-        const data: any = await testutil.getTestData();
+        const data: any = testutil.getTestData();
 
         const vmName: string = resutil.getLabResourceName(data.labVmId, 'virtualmachines');
 
@@ -61,7 +61,7 @@ async function testRun() {
         tl.setResult(tl.TaskResult.Succeeded, `Lab VM '${vmName}' was successfully deleted.`);
     }
     catch (error) {
-        console.debug(error);
+        testutil.writeTestLog(error);
         tl.setResult(tl.TaskResult.Failed, error.message);
     }
 }

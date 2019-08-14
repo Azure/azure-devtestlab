@@ -1,14 +1,13 @@
 import fs from 'fs';
-import util from 'util';
 import uuidv4 from 'uuid/v4';
 
 import * as tl from 'azure-pipelines-task-lib/task';
 
 import { DevTestLabsModels, DevTestLabsMappers } from "@azure/arm-devtestlabs";
-import { DeploymentsListByResourceGroupResponse } from '@azure/arm-resources/esm/models';
+import { DeploymentsListByResourceGroupResponse, DeploymentOperationsListResponse } from '@azure/arm-resources/esm/models';
 import { ResourceManagementClient } from '@azure/arm-resources';
 
-async function addParameterOverrides(parameterOverrides: string, existingParameters: DevTestLabsModels.ArmTemplateParameterProperties[]): Promise<DevTestLabsModels.ArmTemplateParameterProperties[]> {
+function addParameterOverrides(parameterOverrides: string, existingParameters: DevTestLabsModels.ArmTemplateParameterProperties[]): DevTestLabsModels.ArmTemplateParameterProperties[] {
     if (parameterOverrides == null ||
         parameterOverrides == undefined ||
         parameterOverrides.length == 0) {
@@ -69,27 +68,22 @@ function checkParamArray(newParameter: DevTestLabsModels.ArmTemplateParameterPro
     return existingParameters;
 }
 
-async function fromParametersFile(parametersFile: string): Promise<DevTestLabsModels.ArmTemplateParameterProperties[]> {
+function fromParametersFile(parametersFile: string): DevTestLabsModels.ArmTemplateParameterProperties[] {
     let parameters: DevTestLabsModels.ArmTemplateParameterProperties[] = [];
 
     if (!parametersFile) {
-        console.warn(`DeployUtil: Ignoring invalid parameters file '${parametersFile}'.`);
+        tl.warning(`DeployUtil: Ignoring invalid parameters file '${parametersFile}'.`);
         return parameters;
     }
 
-    const fsExists = util.promisify(fs.exists);
-
-    if (!await fsExists(parametersFile)) {
-        console.warn(`DeployUtil: Ignoring. Unable to locate parameters file '${parametersFile}'.`);
+    if (!fs.existsSync(parametersFile)) {
+        tl.warning(`DeployUtil: Ignoring. Unable to locate parameters file '${parametersFile}'.`);
         return parameters;
     }
 
-    const fsStat = util.promisify(fs.stat);
-    const fsReadFile = util.promisify(fs.readFile);
-    
-    const stats = await fsStat(parametersFile);
+    const stats = fs.statSync(parametersFile);
     if (stats.isFile()) {
-        const data = await fsReadFile(parametersFile, 'utf8');
+        const data = fs.readFileSync(parametersFile, 'utf8');
         const params = JSON.parse(data);
         let props = Object.keys(params.parameters), i = props.length, resArray = new Array(i);
         while (i--) {
@@ -101,13 +95,13 @@ async function fromParametersFile(parametersFile: string): Promise<DevTestLabsMo
         }
     }
     else {
-        console.warn(`DeployUtil: Provided parameters file is not valid: '${parametersFile}'`)
+        tl.debug(`DeployUtil: Provided parameters file is not valid: '${parametersFile}'`)
     }
 
     return parameters;
 }
 
-function getDeploymentErrorDetailMessage(detail: any) {
+function getDeploymentErrorDetailMessage(detail: any): string {
     let code = detail.code;
     let message = detail.message;
 
@@ -156,7 +150,7 @@ export function getDeploymentError(deploymentError: any): string {
     return message;
 }
 
-export function getDeploymentName(prefix: string = 'Dtl') {
+export function getDeploymentName(prefix: string = 'Dtl'): string {
     const guid: string = uuidv4().replace(/-/gi, '');
     return `${prefix}${guid}`;
 }
@@ -188,20 +182,39 @@ export async function getDeploymentOutput(armClient: ResourceManagementClient, r
     return deploymentOutput;
 }
 
-export async function getDeploymentParameters(parametersFile: string, parameterOverrides: string): Promise<DevTestLabsModels.ArmTemplateParameterProperties[]> {
-    let parameters = await fromParametersFile(parametersFile);
-    return await addParameterOverrides(parameterOverrides, parameters);
+export function getDeploymentParameters(parametersFile: string, parameterOverrides: string): DevTestLabsModels.ArmTemplateParameterProperties[] {
+    let parameters = fromParametersFile(parametersFile);
+    return addParameterOverrides(parameterOverrides, parameters);
 }
 
-export async function getDeploymentTemplate(templateFile: string): Promise<any> {
+export async function getDeploymentTargetResourceId(armClient: ResourceManagementClient, resourceGroupName: string, deploymentName: string): Promise<string> {
+    let targetResourceId: string | undefined = undefined;
+
+    const operations: DeploymentOperationsListResponse = await armClient.deploymentOperations.list(resourceGroupName, deploymentName);
+    if (operations) {
+        for (const op of operations) {
+            if (op && op.properties && op.properties.targetResource && op.properties.targetResource.id) {
+                targetResourceId = op.properties.targetResource.id;
+                break;
+            }
+        }
+    }
+
+    if (!targetResourceId) {
+        tl.warning(`Dumping resource group deployment operation details for deployment '${deploymentName}' in resource group '${resourceGroupName}':`);
+        console.log(JSON.stringify(operations, null, 2));
+        throw `Unable to extract the target resource from operations for deployment '${deploymentName}' in resource group '${resourceGroupName}'.`;
+    }
+
+    return targetResourceId;
+}
+
+export function getDeploymentTemplate(templateFile: string): any {
     let template: any = null;
 
-    const fsStat = util.promisify(fs.stat);
-    const fsReadFile = util.promisify(fs.readFile);
-
-    const stats = await fsStat(templateFile);
+    const stats = fs.statSync(templateFile);
     if (stats.isFile()) {
-        const contents = await fsReadFile(templateFile, 'utf8');
+        const contents = fs.readFileSync(templateFile, 'utf8');
         template = JSON.parse(contents);
     }
 

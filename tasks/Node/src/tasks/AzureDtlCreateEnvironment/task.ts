@@ -8,12 +8,12 @@ import * as testutil from '../../modules/task-utils/testutil';
 import { DevTestLabsClient, DevTestLabsMappers, DevTestLabsModels } from "@azure/arm-devtestlabs";
 import { ResourceManagementClient } from "@azure/arm-resources";
 
-async function getEnvironment(armTemplateId: string, parametersFile: string, parameterOverrides: string): Promise<DevTestLabsModels.DtlEnvironment> {
+function getEnvironment(armTemplateId: string, parametersFile: string, parameterOverrides: string): DevTestLabsModels.DtlEnvironment {
     let environment = Object.create(DevTestLabsMappers.DtlEnvironment);
     let environmentProperties = Object.create(DevTestLabsMappers.EnvironmentDeploymentProperties);
 
     environmentProperties.armTemplateId = armTemplateId;
-    environmentProperties.parameters = await deployutil.getDeploymentParameters(parametersFile, parameterOverrides);
+    environmentProperties.parameters = deployutil.getDeploymentParameters(parametersFile, parameterOverrides);
 
     environment.deploymentProperties = environmentProperties;
 
@@ -23,7 +23,7 @@ async function getEnvironment(armTemplateId: string, parametersFile: string, par
 async function createEnvironment(client: DevTestLabsClient, armClient: ResourceManagementClient, labId: string, environmentName: string, armTemplateId: string, parametersFile: string, parameterOverrides: string): Promise<any> {
     const labName = resutil.getLabResourceName(labId, 'labs');
     const labRgName = resutil.getLabResourceName(labId, 'resourcegroups');
-    const environment: DevTestLabsModels.DtlEnvironment = await getEnvironment(armTemplateId, parametersFile, parameterOverrides);
+    const environment: DevTestLabsModels.DtlEnvironment = getEnvironment(armTemplateId, parametersFile, parameterOverrides);
 
     console.log(`Creating Environment '${environmentName}' in Lab '${labName}' under Resource Group '${labRgName}'.`);
 
@@ -46,7 +46,7 @@ async function createEnvironment(client: DevTestLabsClient, armClient: ResourceM
 
 async function testRun() {
     try {
-        const data: any = await testutil.getTestData();
+        const data: any = testutil.getTestData();
 
         const client: DevTestLabsClient = await resutil.getDtlClient(data.subscriptionId, true);
         const armClient: ResourceManagementClient = await resutil.getArmClient(data.subscriptionId, true);
@@ -68,7 +68,7 @@ async function testRun() {
         tl.setResult(tl.TaskResult.Succeeded, `Lab Environment '${data.envName}' was successfully created.`);
     }
     catch (error) {
-        console.debug(error);
+        testutil.writeTestLog(error);
         tl.setResult(tl.TaskResult.Failed, error.message);
     }
 }
