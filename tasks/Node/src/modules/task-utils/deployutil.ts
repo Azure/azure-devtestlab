@@ -177,7 +177,6 @@ export async function getDeploymentOutput(armClient: ResourceManagementClient, r
     }
 
     tl.debug(`DeployUtil: Completed getting deployment output for resource group '${resourceGroupName}'.`);
-    tl.debug(JSON.stringify(deploymentOutput));
 
     return deploymentOutput;
 }

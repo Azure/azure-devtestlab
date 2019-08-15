@@ -5,29 +5,19 @@ import * as deployutil from '../../modules/task-utils/deployutil';
 import * as resutil from '../../modules/task-utils/resourceutil';
 import * as testutil from '../../modules/task-utils/testutil';
 
+import { CreateEnvTaskInputData, TaskClients } from '../../modules/task-models/models';
 import { DevTestLabsClient, DevTestLabsMappers, DevTestLabsModels } from "@azure/arm-devtestlabs";
 import { ResourceManagementClient } from "@azure/arm-resources";
+import { ResourcesGetByIdResponse } from '@azure/arm-resources/esm/models';
 
-function getEnvironment(armTemplateId: string, parametersFile: string, parameterOverrides: string): DevTestLabsModels.DtlEnvironment {
-    let environment = Object.create(DevTestLabsMappers.DtlEnvironment);
-    let environmentProperties = Object.create(DevTestLabsMappers.EnvironmentDeploymentProperties);
+async function createEnvironment(dtlClient: DevTestLabsClient, inputData: CreateEnvTaskInputData): Promise<any> {
+    const labName = resutil.getLabResourceName(inputData.labId, 'labs');
+    const labRgName = resutil.getLabResourceName(inputData.labId, 'resourcegroups');
+    const env: DevTestLabsModels.DtlEnvironment = getEnvironment(inputData.armTemplateId, inputData.parametersFile, inputData.parameterOverrides);
 
-    environmentProperties.armTemplateId = armTemplateId;
-    environmentProperties.parameters = deployutil.getDeploymentParameters(parametersFile, parameterOverrides);
+    console.log(`Creating Environment '${inputData.envName}' in Lab '${labName}' under Resource Group '${labRgName}'.`);
 
-    environment.deploymentProperties = environmentProperties;
-
-    return environment;
-}
-
-async function createEnvironment(client: DevTestLabsClient, armClient: ResourceManagementClient, labId: string, environmentName: string, armTemplateId: string, parametersFile: string, parameterOverrides: string): Promise<any> {
-    const labName = resutil.getLabResourceName(labId, 'labs');
-    const labRgName = resutil.getLabResourceName(labId, 'resourcegroups');
-    const environment: DevTestLabsModels.DtlEnvironment = getEnvironment(armTemplateId, parametersFile, parameterOverrides);
-
-    console.log(`Creating Environment '${environmentName}' in Lab '${labName}' under Resource Group '${labRgName}'.`);
-
-    const results = await client.environments.createOrUpdate(labRgName, labName, '@me', environmentName, environment);
+    const results = await dtlClient.environments.createOrUpdate(labRgName, labName, '@me', inputData.envName, env);
     if (results) {
         if (results.provisioningState !== 'Succeeded') {
             throw results._response.bodyAsText;
@@ -41,77 +31,147 @@ async function createEnvironment(client: DevTestLabsClient, armClient: ResourceM
         }
     }
 
-    console.log(`Finished creating Lab Environment '${environmentName}'.`);
+    console.log(`Finished creating Lab Environment '${inputData.envName}'.`);
 }
 
-async function testRun() {
-    try {
+async function exportEnvironmentTemplate(armClient: ResourceManagementClient, envRgId: string, envTemplateLocation: string, envTemplateSasToken: string): Promise<any> {
+    if (!envTemplateLocation || !envTemplateSasToken) {
+        throw 'Missing Environment Location or Environment SAS Token as outputs variables.';
+    }
+
+    console.log('Parsing environment information.');
+
+    console.log('Downloading Azure RM templates.');
+    
+    console.log('Azure RM templates stored.');
+
+    // TODO: Remove once function is fully implemented.
+    await deployutil.sleep(200);
+}
+
+function getEnvironment(armTemplateId: string, parametersFile: string, parameterOverrides: string): DevTestLabsModels.DtlEnvironment {
+    let environment = Object.create(DevTestLabsMappers.DtlEnvironment);
+    let environmentProperties = Object.create(DevTestLabsMappers.EnvironmentDeploymentProperties);
+
+    environmentProperties.armTemplateId = armTemplateId;
+    environmentProperties.parameters = deployutil.getDeploymentParameters(parametersFile, parameterOverrides);
+
+    environment.deploymentProperties = environmentProperties;
+
+    return environment;
+}
+
+function getInputData(envName?: string, test?: boolean): CreateEnvTaskInputData {
+    let inputData: CreateEnvTaskInputData;
+
+    if (test) {
         const data: any = testutil.getTestData();
+        const retryOnFailure: boolean = data.retryOnFailure ? Boolean(data.retryOnFailure) : false;
 
-        const client: DevTestLabsClient = await resutil.getDtlClient(data.subscriptionId, true);
-        const armClient: ResourceManagementClient = await resutil.getArmClient(data.subscriptionId, true);
+        inputData = {
+            armTemplateId: data.armTemplateId,
+            connectedServiceName: 'local',
+            envName: envName ? envName : data.envName,
+            envTemplateLocationVariable: data.envTemplateLocationVariable,
+            envTemplateSasTokenVariable: data.envTemplateSasTokenVariable,
+            exportEnvTemplate: data.exportEnvTemplate,
+            exportEnvTemplateLocation: data.exportEnvTemplateLocation,
+            labId: data.labId,
+            parametersFile: data.parametersFile,
+            parameterOverrides: data.parameterOverrides,
+            subscriptionId: data.subscriptionId,
+            templateOutputVariables: data.templateOutputVariables
+        };
+    } else {
+        const connectedServiceName: string = tl.getInput('ConnectedServiceName', true);
 
-        await createEnvironment(client, armClient, data.labId, data.envName, data.armTemplateId, data.parameterFile, data.parameterOverrides);
+        inputData = {
+            armTemplateId: tl.getInput('TemplateId', true),
+            connectedServiceName: connectedServiceName,
+            envName: tl.getInput('EnvironmentName', true),
+            exportEnvTemplate: tl.getBoolInput('ExportEnvironmentTemplate'),
+            exportEnvTemplateLocation: tl.getInput('ExportEnvironmentTemplateLocation'),
+            envTemplateLocationVariable: tl.getInput('EnvironmentTemplateLocationVariable'),
+            envTemplateSasTokenVariable: tl.getInput('EnvironmentTemplateSasTokenVariable'),
+            labId: tl.getInput('LabId', true),
+            parametersFile: tl.getInput('ParametersFile', false),
+            parameterOverrides: tl.getInput('ParameterOverrides', false),
+            subscriptionId: tl.getEndpointDataParameter(connectedServiceName, 'SubscriptionId', true),
+            templateOutputVariables: tl.getBoolInput('TemplateOutputVariables')
+        };
+    }
+
+    return inputData;
+}
+
+async function setOutputVariables(armClient: ResourceManagementClient, envRgId: string, armTemplateId: string): Promise<any> {
+    const template: ResourcesGetByIdResponse = await armClient.resources.getById(armTemplateId, '2016-05-15');
+    const templateProperties: any = template._response.parsedBody.properties;
+    if (templateProperties && templateProperties.contents && templateProperties.contents.outputs) {
+        const envRgName = resutil.getResourceName(envRgId, 'resourcegroups');
+        const templateOutputs: any = templateProperties.contents.outputs;
+        const deploymentOutput = await deployutil.getDeploymentOutput(armClient, envRgName);
+        deploymentOutput.forEach((element: any[]) => {
+            const name: string = element[0];
+            const value: string = element[1];
+            const key = Object.keys(templateOutputs).find(key => key.toLowerCase() === name.toLowerCase());
+            if (key) {
+                const type: string = templateOutputs[key].type;
+                if (type) {
+                    const secret: boolean = type.toLowerCase().indexOf('secure') !== -1;
+                    if (secret) {
+                        tl.debug(`Output parameter '${name}' is a secret. Therefore, variable will not be set.`);
+                    }
+                    else {
+                        tl.setVariable(name, value, secret);
+                    }
+                }
+            }
+        });
+    }
+}
+
+function showInputData(inputData: CreateEnvTaskInputData): void {
+    console.log('Task called with the following parameters:');
+    console.log(`  ConnectedServiceName = ${inputData.connectedServiceName}`);
+    console.log(`  LabId = ${inputData.labId}`);
+    console.log(`  TemplateId = ${inputData.armTemplateId}`);
+    console.log(`  EnvironmentName = ${inputData.envName}`);
+    console.log(`  ParametersFile = ${inputData.parametersFile}`);
+    console.log(`  TemplateOutputVariables = ${inputData.templateOutputVariables}`);
+    console.log(`  ExportEnvironmentTemplate = ${inputData.exportEnvTemplate}`);
+    console.log(`  ExportEnvironmentTemplateLocation = ${inputData.exportEnvTemplateLocation}`);
+    console.log(`  EnvironmentTemplateLocationVariable = ${inputData.envTemplateLocationVariable}`);
+    console.log(`  EnvironmentTemplateSasTokenVariable = ${inputData.envTemplateSasTokenVariable}`);
+}
+
+async function run(envName?: string, test?: boolean) {
+    try {
+        console.log('Starting Azure DevTest Labs Create Environment Task');
+
+        const inputData: CreateEnvTaskInputData = getInputData(envName, test);
+
+        const clients: TaskClients = {
+            arm: await resutil.getArmClient(inputData.subscriptionId, test),
+            dtl: await resutil.getDtlClient(inputData.subscriptionId, test)
+        };
+
+        showInputData(inputData);
+
+        await createEnvironment(clients.dtl, inputData);
 
         const envRgId = tl.getVariable('environmentResourceGroupId');
         if (envRgId) {
-            const envRgName = resutil.getResourceName(envRgId, 'resourcegroups');
+            if (inputData.templateOutputVariables) {
+                await setOutputVariables(clients.arm, envRgId, inputData.armTemplateId);
+            }
 
-            const deploymentOutput = await deployutil.getDeploymentOutput(armClient, envRgName);
-            deploymentOutput.forEach((element: any[]) => {
-                tl.setVariable(element[0], element[1], false);
-            });
-
-            // TODO: Store the template, if requested.
-        }
-
-        tl.setResult(tl.TaskResult.Succeeded, `Lab Environment '${data.envName}' was successfully created.`);
-    }
-    catch (error) {
-        testutil.writeTestLog(error);
-        tl.setResult(tl.TaskResult.Failed, error.message);
-    }
-}
-
-async function run() {
-    try {
-        const connectedServiceName: string = tl.getInput('ConnectedServiceName', true);
-
-        const subscriptionId: string = tl.getEndpointDataParameter(connectedServiceName, 'SubscriptionId', true);
-        const labId: string = tl.getInput('LabId', false);
-        const envName: string = tl.getInput('EnvironmentName', false);
-        const armTemplateId: string = tl.getInput('TemplateId', false);
-        const parametersFile: string = tl.getInput('ParametersFile', false)
-        const parameterOverrides: string = tl.getInput('ParameterOverrides', false);
-
-        const client: DevTestLabsClient = await resutil.getDtlClient(subscriptionId);
-        const armClient: ResourceManagementClient = await resutil.getArmClient(subscriptionId);
-
-        await createEnvironment(client, armClient, labId, envName, armTemplateId, parametersFile, parameterOverrides);
-
-        const templateOutputVariables = tl.getBoolInput('TemplateOutputVariables');
-        if (templateOutputVariables) {
-            const envRgId = tl.getVariable('environmentResourceGroupId');
-            if (envRgId) {
-                const envRgName = resutil.getResourceName(envRgId, 'resourcegroups');
-    
-                const deploymentOutput = await deployutil.getDeploymentOutput(armClient, envRgName);
-                deploymentOutput.forEach((element: any[]) => {
-                    tl.setVariable(element[0], element[1], false);
-                });
+            if (inputData.exportEnvTemplate) {
+                await exportEnvironmentTemplate(clients.arm, envRgId, inputData.envTemplateLocationVariable, inputData.envTemplateSasTokenVariable);
             }
         }
 
-        const exportEnvironmentTemplate = tl.getBoolInput('ExportEnvironmentTemplate');
-        if (exportEnvironmentTemplate) {
-            const exportEnvironmentTemplateLocation: string = tl.getInput('ExportEnvironmentTemplateLocation');
-            const environmentTemplateLocationVariable: string = tl.getInput('EnvironmentTemplateLocationVariable');
-            const environmentTemplateSasTokenVariable: string = tl.getInput('EnvironmentTemplateSasTokenVariable');
-
-            // TODO: Store the template, if requested.
-        }
-
-        tl.setResult(tl.TaskResult.Succeeded, `Lab Environment '${envName}' was successfully created.`);
+        tl.setResult(tl.TaskResult.Succeeded, `Lab Environment '${inputData.envName}' was successfully created.`);
     }
     catch (error) {
         console.debug(error);
@@ -120,9 +180,4 @@ async function run() {
 }
 
 var args = require('minimist')(process.argv.slice(2));
-if (args.test) {
-    testRun();
-}
-else {
-    run();
-}
+run(args.envName, args.test);

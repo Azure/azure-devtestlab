@@ -5,29 +5,9 @@ import * as deployutil from '../../modules/task-utils/deployutil';
 import * as resutil from '../../modules/task-utils/resourceutil';
 import * as testutil from '../../modules/task-utils/testutil';
 
+import { CreateVmTaskInputData, TaskClients } from '../../modules/task-models/models';
 import { DevTestLabsClient, DevTestLabsModels } from '@azure/arm-devtestlabs';
 import { ResourceManagementClient, ResourceManagementMappers, ResourceManagementModels } from '@azure/arm-resources';
-
-interface CreateVmTaskClients {
-    arm: ResourceManagementClient;
-    dtl: DevTestLabsClient;
-}
-
-interface CreateVmTaskInputData {
-    appendRetryNumberToVmName: boolean;
-    deleteDeployment: boolean;
-    deleteLabVm: boolean;
-    failOnArtifactError: boolean;
-    labId: string;
-    parameterOverrides: string;
-    parametersFile: string;
-    retryCount: number;
-    retryOnFailure: boolean;
-    subscriptionId: string;
-    templateFile: string;
-    vmName: string;
-    waitMinutes: number;
-}
 
 function areArtifactsInstalling(artifacts?: DevTestLabsModels.ArtifactInstallProperties[]): boolean {
     if (!artifacts) {
@@ -95,31 +75,31 @@ function convertToMinutesString(minutes: number): string {
     return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
 }
 
-async function createVm(clients: CreateVmTaskClients, input: CreateVmTaskInputData): Promise<any> {
+async function createVm(clients: TaskClients, inputData: CreateVmTaskInputData): Promise<any> {
     let labVmId: string | undefined = undefined;
 
-    const labName: string = resutil.getLabResourceName(input.labId, 'labs');
-    const labRgName: string = resutil.getLabResourceName(input.labId, 'resourcegroups');
+    const labName: string = resutil.getLabResourceName(inputData.labId, 'labs');
+    const labRgName: string = resutil.getLabResourceName(inputData.labId, 'resourcegroups');
 
     console.log(`Creating Virtual Machine in Lab '${labName}' under Resource Group '${labRgName}'.`);
 
-    const baseVmName: string = input.vmName;
-    const count: number = 1 + input.retryCount;
+    const baseVmName: string = inputData.vmName;
+    const count: number = 1 + inputData.retryCount;
 
     for (let i = 1; i <= count; i++) {
         const deploymentName: string = deployutil.getDeploymentName();
 
-        resutil.testVmName(input.vmName);
+        resutil.testVmName(inputData.vmName);
 
         try {
-            const deployment: ResourceManagementModels.Deployment = getDeployment(labName, input.vmName, input.templateFile, input.parametersFile, input.parameterOverrides);
+            const deployment: ResourceManagementModels.Deployment = getDeployment(labName, inputData.vmName, inputData.templateFile, inputData.parametersFile, inputData.parameterOverrides);
 
             console.log('Invoking deployment with the following parameters:');
             console.log(`  DeploymentName = ${deploymentName}`);
             console.log(`  ResourceGroupName = ${labRgName}`);
             console.log(`  LabName = ${labName}`);
-            console.log(`  VmName = ${input.vmName}`);
-            console.log(`  TemplateFile = ${input.templateFile}`);
+            console.log(`  VmName = ${inputData.vmName}`);
+            console.log(`  TemplateFile = ${inputData.templateFile}`);
 
             const results: ResourceManagementModels.DeploymentsCreateOrUpdateResponse = await clients.arm.deployments.createOrUpdate(labRgName, deploymentName, deployment);
 
@@ -139,8 +119,8 @@ async function createVm(clients: CreateVmTaskClients, input: CreateVmTaskInputDa
             }
 
             if (labVmId) {
-                await waitForApplyArtifacts(clients.dtl, labVmId, input.waitMinutes);
-                await checkArtifactsStatus(clients.dtl, labVmId, input.templateFile, input.failOnArtifactError);
+                await waitForApplyArtifacts(clients.dtl, labVmId, inputData.waitMinutes);
+                await checkArtifactsStatus(clients.dtl, labVmId, inputData.templateFile, inputData.failOnArtifactError);
                 break;
             }
         }
@@ -156,10 +136,10 @@ async function createVm(clients: CreateVmTaskClients, input: CreateVmTaskInputDa
                 tl.debug('Deployment failed with error:');
                 tl.debug(JSON.stringify(error, null, 2));
 
-                await removeFailedResources(clients.arm, labRgName, deploymentName, input.deleteLabVm, input.deleteDeployment);
+                await removeFailedResources(clients.arm, labRgName, deploymentName, inputData.deleteLabVm, inputData.deleteDeployment);
 
-                if (input.appendRetryNumberToVmName) {
-                    input.vmName = `${baseVmName}-${i}`;
+                if (inputData.appendRetryNumberToVmName) {
+                    inputData.vmName = `${baseVmName}-${i}`;
                 }
             }
         }
@@ -169,7 +149,7 @@ async function createVm(clients: CreateVmTaskClients, input: CreateVmTaskInputDa
         tl.setVariable('labVmId', labVmId);
     }
 
-    console.log(`Finished creating Lab Virtual Machine '${input.vmName}'.`);
+    console.log(`Finished creating Lab Virtual Machine '${inputData.vmName}'.`);
 }
 
 function getArtifactName(artifact: DevTestLabsModels.ArtifactInstallProperties): string {
@@ -221,6 +201,54 @@ function getExpectedArtifactsCount(templateFile: string): number {
     return expectedArtifactCount;
 }
 
+function getInputData(vmName?: string, test?: boolean): CreateVmTaskInputData {
+    let inputData: CreateVmTaskInputData;
+
+    if (test) {
+        const data: any = testutil.getTestData();
+        const retryOnFailure: boolean = data.retryOnFailure ? Boolean(data.retryOnFailure) : false;
+
+        inputData = {
+            appendRetryNumberToVmName: data.appendRetryNumberToVmName ? Boolean(data.appendRetryNumberToVmName) : false,
+            connectedServiceName: 'local',
+            deleteDeployment: data.deleteDeployment ? Boolean(data.deleteDeployment) : false,
+            deleteLabVm: data.deleteLabVm ? Boolean(data.deleteLabVm) : false,
+            failOnArtifactError: data.failOnArtifactError ? Boolean(data.failOnArtifactError) : false,
+            labId: data.labId,
+            parameterOverrides: data.parameterOverrides,
+            parametersFile: data.parametersFile,
+            retryOnFailure: retryOnFailure,
+            retryCount: retryOnFailure && data.retryCount ? +data.retryCount : 0,
+            subscriptionId: data.subscriptionId,
+            templateFile: data.templateFile,
+            vmName: vmName ? vmName : data.vmName,
+            waitMinutes: data.waitMinutes ? +data.waitMinutes : 0
+        };
+    } else {
+        const connectedServiceName: string = tl.getInput('ConnectedServiceName', true);
+        const retryOnFailure: boolean = tl.getBoolInput('RetryOnFailure', false);
+
+        inputData = {
+            appendRetryNumberToVmName: tl.getBoolInput('AppendRetryNumberToVmName', false),
+            connectedServiceName: connectedServiceName,
+            deleteDeployment: tl.getBoolInput('DeleteFailedDeploymentBeforeRetry', false),
+            deleteLabVm: tl.getBoolInput('DeleteFailedLabVMBeforeRetry', false),
+            failOnArtifactError: tl.getBoolInput('FailOnArtifactError', false),
+            labId: tl.getInput('LabId', true),
+            parameterOverrides: tl.getInput('ParameterOverrides', false),
+            parametersFile: tl.getInput('ParametersFile', false),
+            retryOnFailure: retryOnFailure,
+            retryCount: retryOnFailure ? +tl.getInput('RetryCount', false) : 0,
+            subscriptionId: tl.getEndpointDataParameter(connectedServiceName, 'SubscriptionId', true),
+            templateFile: tl.getInput('TemplateFile', true),
+            vmName: tl.getInput('VirtualMachineName', true),
+            waitMinutes: +tl.getInput('WaitMinutesForApplyArtifacts', false)
+        };
+    }
+
+    return inputData;
+}
+
 async function getLabVm(client: DevTestLabsClient, labVmId: string): Promise<DevTestLabsModels.VirtualMachinesGetResponse> {
     const labName: string = resutil.getLabResourceName(labVmId, 'labs');
     const labRgName: string = resutil.getLabResourceName(labVmId, 'resourcegroups');
@@ -259,20 +287,20 @@ async function removeFailedResources(armClient: ResourceManagementClient, labRgN
     }
 }
 
-function showInputData(input: CreateVmTaskInputData, connectedServiceName?: string): void {
+function showInputData(inputData: CreateVmTaskInputData): void {
     console.log('Task called with the following parameters:');
-    console.log(`  ConnectedServiceName = ${connectedServiceName ? connectedServiceName : 'local'}`);
-    console.log(`  LabId = ${input.labId}`);
-    console.log(`  VirtualMachineName = ${input.vmName}`);
-    console.log(`  TemplateFile = ${input.templateFile}`);
-    console.log(`  ParametersFile = ${input.parametersFile}`);
-    console.log(`  FailOnArtifactError = ${input.failOnArtifactError}`);
-    console.log(`  RetryOnFailure = ${input.retryOnFailure}`);
-    console.log(`  RetryCount = ${input.retryCount}`);
-    console.log(`  DeleteFailedLabVMBeforeRetry = ${input.deleteLabVm}`);
-    console.log(`  DeleteFailedDeploymentBeforeRetry = ${input.deleteDeployment}`);
-    console.log(`  AppendRetryNumberToVMName = ${input.appendRetryNumberToVmName}`);
-    console.log(`  WaitMinutesForApplyArtifacts = ${input.waitMinutes}`);
+    console.log(`  ConnectedServiceName = ${inputData.connectedServiceName}`);
+    console.log(`  LabId = ${inputData.labId}`);
+    console.log(`  VirtualMachineName = ${inputData.vmName}`);
+    console.log(`  TemplateFile = ${inputData.templateFile}`);
+    console.log(`  ParametersFile = ${inputData.parametersFile}`);
+    console.log(`  FailOnArtifactError = ${inputData.failOnArtifactError}`);
+    console.log(`  RetryOnFailure = ${inputData.retryOnFailure}`);
+    console.log(`  RetryCount = ${inputData.retryCount}`);
+    console.log(`  DeleteFailedLabVMBeforeRetry = ${inputData.deleteLabVm}`);
+    console.log(`  DeleteFailedDeploymentBeforeRetry = ${inputData.deleteDeployment}`);
+    console.log(`  AppendRetryNumberToVMName = ${inputData.appendRetryNumberToVmName}`);
+    console.log(`  WaitMinutesForApplyArtifacts = ${inputData.waitMinutes}`);
 }
 
 async function waitForApplyArtifacts(client: DevTestLabsClient, labVmId: string, waitMinutes: number): Promise<any> {
@@ -313,91 +341,28 @@ async function waitForApplyArtifacts(client: DevTestLabsClient, labVmId: string,
     console.log(`Waited for a total of ${convertToMinutesString(totalWaitMinutes)}. Latest provisioning state is ${provisioningState}.`);
 }
 
-async function testRun(vmName: string): Promise<any> {
+async function run(vmName?: string, test?: boolean) {
     try {
         console.log('Starting Azure DevTest Labs Create VM Task');
 
-        const data: any = testutil.getTestData();
-        const retryOnFailure: boolean = data.retryOnFailure ? Boolean(data.retryOnFailure) : false;
+        const inputData: CreateVmTaskInputData = getInputData(vmName, test);
 
-        const clients: CreateVmTaskClients = {
-            arm: await resutil.getArmClient(data.subscriptionId, true),
-            dtl: await resutil.getDtlClient(data.subscriptionId, true)
+        const clients: TaskClients = {
+            arm: await resutil.getArmClient(inputData.subscriptionId, test),
+            dtl: await resutil.getDtlClient(inputData.subscriptionId, test)
         };
 
-        const input: CreateVmTaskInputData = {
-            appendRetryNumberToVmName: data.appendRetryNumberToVmName ? Boolean(data.appendRetryNumberToVmName) : false,
-            deleteDeployment: data.deleteDeployment ? Boolean(data.deleteDeployment) : false,
-            deleteLabVm: data.deleteLabVm ? Boolean(data.deleteLabVm) : false,
-            failOnArtifactError: data.failOnArtifactError ? Boolean(data.failOnArtifactError) : false,
-            labId: data.labId,
-            parameterOverrides: data.parameterOverrides,
-            parametersFile: data.parametersFile,
-            retryOnFailure: retryOnFailure,
-            retryCount: retryOnFailure && data.retryCount ? +data.retryCount : 0,
-            subscriptionId: data.subscriptionId,
-            templateFile: data.templateFile,
-            vmName: vmName ? vmName : data.vmName,
-            waitMinutes: data.waitMinutes ? +data.waitMinutes : 0
-        };
+        showInputData(inputData);
 
-        showInputData(input);
+        await createVm(clients, inputData);
 
-        await createVm(clients, input);
-
-        tl.setResult(tl.TaskResult.Succeeded, `Lab Virtual Machine '${vmName}' was successfully created.`);
+        tl.setResult(tl.TaskResult.Succeeded, `Lab Virtual Machine '${inputData.vmName}' was successfully created.`);
     }
     catch (error) {
-        testutil.writeTestLog(error);
-        tl.setResult(tl.TaskResult.Failed, deployutil.getDeploymentError(error));
-    }
-}
-
-async function run() {
-    try {
-        console.log('Starting Azure DevTest Labs Create VM Task');
-
-        const connectedServiceName: string = tl.getInput('ConnectedServiceName', true);
-        const subscriptionId: string = tl.getEndpointDataParameter(connectedServiceName, 'SubscriptionId', true);
-        const retryOnFailure: boolean = tl.getBoolInput('RetryOnFailure', false);
-
-        const clients: CreateVmTaskClients = {
-            arm: await resutil.getArmClient(subscriptionId),
-            dtl: await resutil.getDtlClient(subscriptionId)
-        };
-
-        const input: CreateVmTaskInputData = {
-            appendRetryNumberToVmName: tl.getBoolInput('AppendRetryNumberToVmName', false),
-            deleteDeployment: tl.getBoolInput('DeleteFailedDeploymentBeforeRetry', false),
-            deleteLabVm: tl.getBoolInput('DeleteFailedLabVMBeforeRetry', false),
-            failOnArtifactError: tl.getBoolInput('FailOnArtifactError', false),
-            labId: tl.getInput('LabId', true),
-            parameterOverrides: tl.getInput('ParameterOverrides', false),
-            parametersFile: tl.getInput('ParametersFile', false),
-            retryOnFailure: retryOnFailure,
-            retryCount: retryOnFailure ? +tl.getInput('RetryCount', false) : 0,
-            subscriptionId: subscriptionId,
-            templateFile: tl.getInput('TemplateFile', true),
-            vmName: tl.getInput('VirtualMachineName', true),
-            waitMinutes: +tl.getInput('WaitMinutesForApplyArtifacts', false)
-        };
-
-        showInputData(input, connectedServiceName);
-
-        await createVm(clients, input);
-
-        tl.setResult(tl.TaskResult.Succeeded, `Lab Virtual Machine '${input.vmName}' was successfully created.`);
-    }
-    catch (error) {
-        console.debug(error);
+        test ? testutil.writeTestLog(error) : console.debug(error);
         tl.setResult(tl.TaskResult.Failed, deployutil.getDeploymentError(error));
     }
 }
 
 var args = require('minimist')(process.argv.slice(2));
-if (args.test) {
-    testRun(args.vmName);
-}
-else {
-    run();
-}
+run(args.vmName, args.test);

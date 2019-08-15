@@ -16,7 +16,7 @@
     "version": {
         "Major": 0,
         "Minor": 0,
-        "Patch": 4
+        "Patch": 5
     },
     "visibility": [
         "Build",
@@ -24,9 +24,9 @@
     ],
     "groups": [
         {
-            "name": "advanced",
-            "displayName": "Advanced",
-            "isExpanded": false
+            "name": "exportOptions",
+            "displayName": "Export Options",
+            "isExpanded": true
         }
     ],
     "inputs": [
@@ -110,7 +110,7 @@
             "required": true,
             "defaultValue": "false",
             "helpMarkDown": "Export the DevTest Lab environment to an ARM template(s) and output as a build artifact.",
-            "groupName": "advanced"
+            "groupName": "exportOptions"
         },
         {
             "name": "ExportEnvironmentTemplateLocation",
@@ -119,7 +119,8 @@
             "required": false,
             "defaultValue": "$(Build.ArtifactStagingDirectory)/DeployedEnvironment",
             "helpMarkDown": "The location to store the template.",
-            "groupName": "advanced"
+            "visibleRule": "ExportEnvironmentTemplate = true",
+            "groupName": "exportOptions"
         },
         {
             "name": "EnvironmentTemplateLocationVariable",
@@ -128,7 +129,8 @@
             "required": false,
             "defaultValue": "EnvironmentLocation",
             "helpMarkDown": "The output name for the location (_artifactsLocation) to store the template.",
-            "groupName": "advanced"
+            "visibleRule": "ExportEnvironmentTemplate = true",
+            "groupName": "exportOptions"
         },
         {
             "name": "EnvironmentTemplateSasTokenVariable",
@@ -137,7 +139,8 @@
             "required": false,
             "defaultValue": "EnvironmentSAS",
             "helpMarkDown": "The output name for the SAS token (_artifactsLocationSasToken).",
-            "groupName": "advanced"
+            "visibleRule": "ExportEnvironmentTemplate = true",
+            "groupName": "exportOptions"
         }
     ],
     "outputVariables": [
