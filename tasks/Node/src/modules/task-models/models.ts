@@ -10,10 +10,10 @@ export interface CreateEnvTaskInputData {
     exportEnvTemplate: boolean,
     exportEnvTemplateLocation: string,
     labId: string,
+    outputTemplateVariables: boolean,
     parametersFile: string,
     parameterOverrides: string,
-    subscriptionId: string,
-    templateOutputVariables: boolean
+    subscriptionId: string
 }
 
 export interface CreateVmTaskInputData {

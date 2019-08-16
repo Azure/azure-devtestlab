@@ -6,6 +6,7 @@ import * as resutil from '../../modules/task-utils/resourceutil';
 import * as testutil from '../../modules/task-utils/testutil';
 
 import { CreateVmTaskInputData, TaskClients } from '../../modules/task-models/models';
+
 import { DevTestLabsClient, DevTestLabsModels } from '@azure/arm-devtestlabs';
 import { ResourceManagementClient, ResourceManagementMappers, ResourceManagementModels } from '@azure/arm-resources';
 

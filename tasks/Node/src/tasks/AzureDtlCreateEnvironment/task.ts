@@ -1,11 +1,15 @@
 import '../../modules/task-utils/polyfill';
 
+import fs from 'fs';
+
 import * as tl from 'azure-pipelines-task-lib/task';
 import * as deployutil from '../../modules/task-utils/deployutil';
 import * as resutil from '../../modules/task-utils/resourceutil';
 import * as testutil from '../../modules/task-utils/testutil';
 
 import { CreateEnvTaskInputData, TaskClients } from '../../modules/task-models/models';
+
+import { Aborter, AnonymousCredential, BlobURL, Models, StorageURL } from "@azure/storage-blob";
 import { DevTestLabsClient, DevTestLabsMappers, DevTestLabsModels } from "@azure/arm-devtestlabs";
 import { ResourceManagementClient } from "@azure/arm-resources";
 import { ResourcesGetByIdResponse } from '@azure/arm-resources/esm/models';
@@ -34,19 +38,29 @@ async function createEnvironment(dtlClient: DevTestLabsClient, inputData: Create
     console.log(`Finished creating Lab Environment '${inputData.envName}'.`);
 }
 
-async function exportEnvironmentTemplate(armClient: ResourceManagementClient, envRgId: string, envTemplateLocation: string, envTemplateSasToken: string): Promise<any> {
+async function exportEnvironmentTemplate(exportEnvTemplateLocation: string, envTemplateLocation: string, envTemplateSasToken: string): Promise<any> {
     if (!envTemplateLocation || !envTemplateSasToken) {
         throw 'Missing Environment Location or Environment SAS Token as outputs variables.';
     }
 
-    console.log('Parsing environment information.');
+    console.log('Exporting environment template.');
 
-    console.log('Downloading Azure RM templates.');
+    const templateFileName = 'azuredeploy.json';
+    const credential = new AnonymousCredential();
+    const pipeline = StorageURL.newPipeline(credential);
+
+    const blobUrl = new BlobURL(`${envTemplateLocation}/${templateFileName}${envTemplateSasToken}`, pipeline);
+    const response: Models.BlobDownloadResponse = await blobUrl.download(Aborter.none, 0);
+
+    if (response && response.readableStreamBody) {
+        tl.mkdirP(exportEnvTemplateLocation);
+        const templateFileLocation = `${exportEnvTemplateLocation}/${templateFileName}`;
+        const data: string = response.readableStreamBody.read().toString();
+        fs.writeFileSync(templateFileLocation, data, 'utf8');
+        console.log(`Environment template has been exported to file: ${templateFileLocation}`);
+    }
     
-    console.log('Azure RM templates stored.');
-
-    // TODO: Remove once function is fully implemented.
-    await deployutil.sleep(200);
+    console.log('Environment template has been exported successfully.');
 }
 
 function getEnvironment(armTemplateId: string, parametersFile: string, parameterOverrides: string): DevTestLabsModels.DtlEnvironment {
@@ -77,10 +91,10 @@ function getInputData(envName?: string, test?: boolean): CreateEnvTaskInputData 
             exportEnvTemplate: data.exportEnvTemplate,
             exportEnvTemplateLocation: data.exportEnvTemplateLocation,
             labId: data.labId,
+            outputTemplateVariables: data.outputTemplateVariables,
             parametersFile: data.parametersFile,
             parameterOverrides: data.parameterOverrides,
-            subscriptionId: data.subscriptionId,
-            templateOutputVariables: data.templateOutputVariables
+            subscriptionId: data.subscriptionId
         };
     } else {
         const connectedServiceName: string = tl.getInput('ConnectedServiceName', true);
@@ -94,10 +108,10 @@ function getInputData(envName?: string, test?: boolean): CreateEnvTaskInputData 
             envTemplateLocationVariable: tl.getInput('EnvironmentTemplateLocationVariable'),
             envTemplateSasTokenVariable: tl.getInput('EnvironmentTemplateSasTokenVariable'),
             labId: tl.getInput('LabId', true),
+            outputTemplateVariables: tl.getBoolInput('OutputTemplateVariables'),
             parametersFile: tl.getInput('ParametersFile', false),
             parameterOverrides: tl.getInput('ParameterOverrides', false),
-            subscriptionId: tl.getEndpointDataParameter(connectedServiceName, 'SubscriptionId', true),
-            templateOutputVariables: tl.getBoolInput('TemplateOutputVariables')
+            subscriptionId: tl.getEndpointDataParameter(connectedServiceName, 'SubscriptionId', true)
         };
     }
 
@@ -138,7 +152,7 @@ function showInputData(inputData: CreateEnvTaskInputData): void {
     console.log(`  TemplateId = ${inputData.armTemplateId}`);
     console.log(`  EnvironmentName = ${inputData.envName}`);
     console.log(`  ParametersFile = ${inputData.parametersFile}`);
-    console.log(`  TemplateOutputVariables = ${inputData.templateOutputVariables}`);
+    console.log(`  OutputTemplateVariables = ${inputData.outputTemplateVariables}`);
     console.log(`  ExportEnvironmentTemplate = ${inputData.exportEnvTemplate}`);
     console.log(`  ExportEnvironmentTemplateLocation = ${inputData.exportEnvTemplateLocation}`);
     console.log(`  EnvironmentTemplateLocationVariable = ${inputData.envTemplateLocationVariable}`);
@@ -162,12 +176,14 @@ async function run(envName?: string, test?: boolean) {
 
         const envRgId = tl.getVariable('environmentResourceGroupId');
         if (envRgId) {
-            if (inputData.templateOutputVariables) {
+            if (inputData.outputTemplateVariables) {
                 await setOutputVariables(clients.arm, envRgId, inputData.armTemplateId);
             }
 
             if (inputData.exportEnvTemplate) {
-                await exportEnvironmentTemplate(clients.arm, envRgId, inputData.envTemplateLocationVariable, inputData.envTemplateSasTokenVariable);
+                const envTemplateLocation: string = tl.getVariable(inputData.envTemplateLocationVariable);
+                const envTemplateSasToken: string = tl.getVariable(inputData.envTemplateSasTokenVariable);
+                await exportEnvironmentTemplate(inputData.exportEnvTemplateLocation, envTemplateLocation, envTemplateSasToken);
             }
         }
 
