@@ -133,12 +133,7 @@ async function setOutputVariables(armClient: ResourceManagementClient, envRgId: 
                 const type: string = templateOutputs[key].type;
                 if (type) {
                     const secret: boolean = type.toLowerCase().indexOf('secure') !== -1;
-                    if (secret) {
-                        tl.debug(`Output parameter '${name}' is a secret. Therefore, variable will not be set.`);
-                    }
-                    else {
-                        tl.setVariable(name, value, secret);
-                    }
+                    tl.setVariable(name, value, secret);
                 }
             }
         });
