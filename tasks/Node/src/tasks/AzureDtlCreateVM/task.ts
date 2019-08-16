@@ -366,4 +366,4 @@ async function run(vmName?: string, test?: boolean) {
 }
 
 var args = require('minimist')(process.argv.slice(2));
-run(args.vmName, args.test);
+run(args.name, args.test);

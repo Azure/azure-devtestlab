@@ -96,7 +96,7 @@
             "helpMarkDown": "Set parameter values needed by the environment template. Parameter values set by parameters file will be overridden."
         },
         {
-            "name": "TemplateOutputVariables",
+            "name": "OutputTemplateVariables",
             "type": "boolean",
             "label": "Create output variables based on the environment template output?",
             "required": true,

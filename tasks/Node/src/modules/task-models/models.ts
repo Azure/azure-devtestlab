@@ -1,6 +1,19 @@
 import { DevTestLabsClient } from "@azure/arm-devtestlabs";
 import { ResourceManagementClient } from "@azure/arm-resources";
 
+export interface CreateCiTaskInputData {
+    author: string,
+    ciName: string,
+    connectedServiceName: string,
+    description: string,
+    labId: string,
+    labVmId: string,
+    linuxOsState: string,
+    osType: string,
+    subscriptionId: string,
+    windowsOsState: string
+}
+
 export interface CreateEnvTaskInputData {
     armTemplateId: string,
     connectedServiceName: string,

@@ -6,14 +6,14 @@ import * as testutil from '../../modules/task-utils/testutil';
 
 import { DevTestLabsClient } from "@azure/arm-devtestlabs";
 
-async function ensureEnvExists(client: DevTestLabsClient, envId: string): Promise<any> {
+async function ensureEnvExists(dtlClient: DevTestLabsClient, envId: string): Promise<any> {
     let labName: string = resutil.getLabResourceName(envId, 'labs');
     let labRgName: string = resutil.getLabResourceName(envId, 'resourcegroups');
     let envName: string = resutil.getLabResourceName(envId, 'environments');
 
     console.log(`Determining if Environment '${envName}' exists in Lab '${labName}' under Resource Group '${labRgName}'.`);
 
-    const environments = await client.environments.list(labRgName, labName, '@all');
+    const environments = await dtlClient.environments.list(labRgName, labName, '@all');
 
     var envExists = environments && environments.some((env) => env && env.name && env.name.toLocaleLowerCase() === envName );
 
@@ -27,16 +27,16 @@ async function ensureEnvExists(client: DevTestLabsClient, envId: string): Promis
     }
 }
 
-async function deleteEnv(client: DevTestLabsClient, envId: string): Promise<any> {
+async function deleteEnv(dtlClient: DevTestLabsClient, envId: string): Promise<any> {
     let labName: string = resutil.getLabResourceName(envId, 'labs');
     let labRgName: string = resutil.getLabResourceName(envId, 'resourcegroups');
     let envName: string = resutil.getLabResourceName(envId, 'environments');
 
-    await ensureEnvExists(client, envId);
+    await ensureEnvExists(dtlClient, envId);
 
     console.log(`Deleting Environment '${envName}' from Lab '${labName}' under Resource Group '${labRgName}'.`);
 
-    const results = await client.environments.deleteMethod(labRgName, labName, '@me', envName);
+    const results = await dtlClient.environments.deleteMethod(labRgName, labName, '@me', envName);
     if (results) {
         var status = Object.keys(results._response.parsedBody);
 
@@ -48,35 +48,28 @@ async function deleteEnv(client: DevTestLabsClient, envId: string): Promise<any>
     console.log(`Finished deleting Lab Environment '${envName}'.`);
 }
 
-async function testRun() {
+async function run(id?: string, test?: boolean): Promise<any> {
     try {
-        const data: any = testutil.getTestData();
+        console.log('Starting Azure DevTest Labs Delete Environment Task');
 
-        const envName: string = resutil.getLabResourceName(data.envId, 'environments');
+        let subscriptionId: string;
+        let envId: string;
 
-        const client: DevTestLabsClient = await resutil.getDtlClient(data.subscriptionId, true);
+        if (test) {
+            const data: any = testutil.getTestData();
+            subscriptionId = data.subscriptionId;
+            envId = id ? id : data.envId;
+        } else {
+            const connectedServiceName: string = tl.getInput('ConnectedServiceName', true);
+            subscriptionId = tl.getEndpointDataParameter(connectedServiceName, 'SubscriptionId', true);
+            envId = tl.getInput('EnvironmentId', true);
+        }
 
-        await deleteEnv(client, data.envId);
-
-        tl.setResult(tl.TaskResult.Succeeded, `Lab Environment '${envName}' was successfully deleted.`);
-    }
-    catch (error) {
-        testutil.writeTestLog(error);
-        tl.setResult(tl.TaskResult.Failed, error.message);
-    }
-}
-
-async function run() {
-    try {
-        const connectedServiceName: string = tl.getInput('ConnectedServiceName', true);
-
-        const subscriptionId = tl.getEndpointDataParameter(connectedServiceName, 'SubscriptionId', true);
-        const envId: string = tl.getInput('EnvironmentId', true);
         const envName: string = resutil.getLabResourceName(envId, 'environments');
 
-        const client: DevTestLabsClient = await resutil.getDtlClient(subscriptionId);
+        const dtlClient: DevTestLabsClient = await resutil.getDtlClient(subscriptionId, test);
 
-        await deleteEnv(client, envId);
+        await deleteEnv(dtlClient, envId);
 
         tl.setResult(tl.TaskResult.Succeeded, `Lab Environment '${envName}' was successfully deleted.`);
     }
@@ -87,9 +80,4 @@ async function run() {
 }
 
 var args = require('minimist')(process.argv.slice(2));
-if (args.test) {
-    testRun();
-}
-else {
-    run();
-}
+run(args.id, args.test);

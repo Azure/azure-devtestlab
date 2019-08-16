@@ -4,7 +4,30 @@ import * as tl from 'azure-pipelines-task-lib/task';
 import * as resutil from '../../modules/task-utils/resourceutil';
 import * as testutil from '../../modules/task-utils/testutil';
 
+import { CreateCiTaskInputData } from '../../modules/task-models/models';
+
 import { DevTestLabsClient, DevTestLabsModels, DevTestLabsMappers } from '@azure/arm-devtestlabs';
+
+async function createCustomImage(dtlClient: DevTestLabsClient, inputData: CreateCiTaskInputData): Promise<any> {
+    let labName = resutil.getLabResourceName(inputData.labId, 'labs');
+    let labRgName = resutil.getLabResourceName(inputData.labId, 'resourcegroups');
+    let customImage: DevTestLabsModels.CustomImage = getCustomImage(inputData);
+
+    console.log(`Creating Custom Image '${inputData.ciName}' in Lab '${labName}' under Resource Group '${labRgName}'.`);
+
+    const results = await dtlClient.customImages.createOrUpdate(labRgName, labName, inputData.ciName, customImage);
+    if (results) {
+        if (results.provisioningState !== 'Succeeded') {
+            throw results._response.bodyAsText;
+        }
+
+        if (results.id) {
+            tl.setVariable('customImageId', results.id);
+        }
+    }
+
+    console.log(`Finished creating Lab Custom Image '${inputData.ciName}'.`);
+}
 
 function getCustomImageProperties(sourceVmId: string, osType: string, linuxOsState: string, windowsOsState: string): DevTestLabsModels.CustomImagePropertiesFromVm {
     let properties = Object.create(DevTestLabsMappers.CustomImagePropertiesFromVm);
@@ -53,64 +76,37 @@ function getCustomImageProperties(sourceVmId: string, osType: string, linuxOsSta
     return properties;
 }
 
-function getCustomImage(sourceVmId: string, author: string, description: string, osType: string, linuxOsState: string, windowsOsState: string): DevTestLabsModels.CustomImage {
+function getCustomImage(inputData: CreateCiTaskInputData): DevTestLabsModels.CustomImage {
     let customImage: DevTestLabsModels.CustomImage = Object.create(DevTestLabsMappers.CustomImage);
 
-    customImage.vm = getCustomImageProperties(sourceVmId, osType, linuxOsState, windowsOsState);
-    customImage.description = description;
-    customImage.author = author;
+    customImage.vm = getCustomImageProperties(inputData.labVmId, inputData.osType, inputData.linuxOsState, inputData.windowsOsState);
+    customImage.description = inputData.description;
+    customImage.author = inputData.author;
 
     return customImage;
 }
 
-async function createCustomImage(client: DevTestLabsClient, labId: string, sourceVmId: string, customImageName: string, author: string, description: string, osType: string, linuxOsState: string, windowsOsState: string): Promise<any> {
-    let labName = resutil.getLabResourceName(labId, 'labs');
-    let labRgName = resutil.getLabResourceName(labId, 'resourcegroups');
-    let customImage: DevTestLabsModels.CustomImage = getCustomImage(sourceVmId, author, description, osType, linuxOsState, windowsOsState);
+function getInputData(ciName?: string, test?: boolean): CreateCiTaskInputData {
+    let inputData: CreateCiTaskInputData;
 
-    console.log(`Creating Custom Image '${customImageName}' in Lab '${labName}' under Resource Group '${labRgName}'.`);
-
-    const results = await client.customImages.createOrUpdate(labRgName, labName, customImageName, customImage);
-    if (results) {
-        if (results.provisioningState !== 'Succeeded') {
-            throw results._response.bodyAsText;
-        }
-
-        if (results.id) {
-            tl.setVariable('customImageId', results.id);
-        }
-    }
-
-    console.log(`Finished creating Lab Custom Image '${customImageName}'.`);
-}
-
-async function testRun() {
-    try {
+    if (test) {
         const data: any = testutil.getTestData();
 
-        const client: DevTestLabsClient = await resutil.getDtlClient(data.subscriptionId, true);
-
-        await createCustomImage(client, data.labId, data.labVmId, data.customImageName, data.author, data.description, data.osType, data.linuxOsState, data.windowsOsState);
-
-        tl.setResult(tl.TaskResult.Succeeded, `Lab Custom Image '${data.customImageName}' was successfully created.`);
-    }
-    catch (error) {
-        testutil.writeTestLog(error);
-        tl.setResult(tl.TaskResult.Failed, error.message);
-    }
-}
-
-async function run() {
-    try {
+        inputData = {
+            author: data.author ? data.author : 'local',
+            ciName: ciName ? ciName : data.ciName,
+            connectedServiceName: 'local',
+            description: data.description ? data.description : 'Custom image created from local task tests.',
+            labId: data.labId,
+            labVmId: data.labVmId,
+            linuxOsState: data.linuxOsState,
+            osType: data.osType,
+            subscriptionId: data.subscriptionId,
+            windowsOsState: data.windowsOsState
+        };
+    } else {
         const connectedServiceName: string = tl.getInput('ConnectedServiceName', true);
-
-        const subscriptionId: string = tl.getEndpointDataParameter(connectedServiceName, 'SubscriptionId', true);
-        const labId: string = tl.getInput('LabId', true);
-        const labVmId: string = tl.getInput('LabVMId', false);
-        const customImageName: string = tl.getInput('NewCustomImageName', false);
-        const osType: string = tl.getInput('OSType', false)
-        const linuxOsState: string = tl.getInput('LinuxOsState', false);
-        const windowsOsState: string = tl.getInput('WindowsOsState', false);
+        const osType: string = tl.getInput('OSType', true)
 
         let author = process.env.RELEASE_RELEASENAME;
         let authorType = 'release';
@@ -131,11 +127,48 @@ async function run() {
             description = `Custom image created from ${authorType} ${author} requested for ${requestedFor}.`;
         }
 
-        const client: DevTestLabsClient = await resutil.getDtlClient(subscriptionId);
+        inputData = {
+            author: author,
+            ciName: tl.getInput('NewCustomImageName', true),
+            connectedServiceName: connectedServiceName,
+            description: description,
+            labId: tl.getInput('LabId', true),
+            labVmId: tl.getInput('LabVmId', true),
+            linuxOsState: tl.getInput('LinuxOsState', osType === 'Linux'),
+            osType: osType,
+            subscriptionId: tl.getEndpointDataParameter(connectedServiceName, 'SubscriptionId', true),
+            windowsOsState: tl.getInput('WindowsOsState', osType === 'Windows')
+        };
+    }
 
-        await createCustomImage(client, labId, labVmId, customImageName, author, description, osType, linuxOsState, windowsOsState);
+    return inputData;
+}
 
-        tl.setResult(tl.TaskResult.Succeeded, `Lab Custom Image '${customImageName}' was successfully created.`);
+function showInputData(inputData: CreateCiTaskInputData): void {
+    console.log('Task called with the following parameters:');
+    console.log(`  ConnectedServiceName = ${inputData.connectedServiceName}`);
+    console.log(`  LabId = ${inputData.labId}`);
+    console.log(`  NewCustomImageName = ${inputData.ciName}`);
+    console.log(`  Description = ${inputData.description}`);
+    console.log(`  SourceLabVmId = ${inputData.labVmId}`);
+    console.log(`  OsType = ${inputData.osType}`);
+    console.log(`  LinuxOsState = ${inputData.linuxOsState}`);
+    console.log(`  WindowsOsState = ${inputData.windowsOsState}`);
+}
+
+async function run(ciName?: string, test?: boolean) {
+    try {
+        console.log('Starting Azure DevTest Labs Create Custom Image Task');
+
+        const inputData: CreateCiTaskInputData = getInputData(ciName, test);
+
+        const dtlClient: DevTestLabsClient = await resutil.getDtlClient(inputData.subscriptionId, test);
+
+        showInputData(inputData);
+
+        await createCustomImage(dtlClient, inputData);
+
+        tl.setResult(tl.TaskResult.Succeeded, `Lab Custom Image '${inputData.ciName}' was successfully created.`);
     }
     catch (error) {
         console.debug(error);
@@ -144,9 +177,4 @@ async function run() {
 }
 
 var args = require('minimist')(process.argv.slice(2));
-if (args.test) {
-    testRun();
-}
-else {
-    run();
-}
+run(args.name, args.test);

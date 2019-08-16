@@ -6,14 +6,14 @@ import * as testutil from '../../modules/task-utils/testutil';
 
 import { DevTestLabsClient } from "@azure/arm-devtestlabs";
 
-async function ensureVmExists(client: DevTestLabsClient, labVmId: string): Promise<any> {
+async function ensureVmExists(dtlClient: DevTestLabsClient, labVmId: string): Promise<any> {
     let labName: string = resutil.getLabResourceName(labVmId, 'labs');
     let labRgName: string = resutil.getLabResourceName(labVmId, 'resourcegroups');
     let vmName: string = resutil.getLabResourceName(labVmId, 'virtualmachines');
 
     console.log(`Determining if VM '${vmName}' exists in Lab '${labName}' under Resource Group '${labRgName}'.`);
 
-    const labVms = await client.virtualMachines.list(labRgName, labName);
+    const labVms = await dtlClient.virtualMachines.list(labRgName, labName);
 
     var vmExists = labVms && labVms.some((vm) => vm && vm.name && vm.name.toLocaleLowerCase() === vmName);
 
@@ -27,16 +27,16 @@ async function ensureVmExists(client: DevTestLabsClient, labVmId: string): Promi
     }
 }
 
-async function deleteVm(client: DevTestLabsClient, labVmId: string): Promise<any> {
+async function deleteVm(dtlClient: DevTestLabsClient, labVmId: string): Promise<any> {
     let labName = resutil.getLabResourceName(labVmId, 'labs');
     let labRgName = resutil.getLabResourceName(labVmId, 'resourcegroups');
     let vmName = resutil.getLabResourceName(labVmId, 'virtualmachines');
 
-    await ensureVmExists(client, labVmId);
+    await ensureVmExists(dtlClient, labVmId);
 
     console.log(`Deleting VM '${vmName}' from Lab '${labName}' under Resource Group '${labRgName}'.`);
 
-    const results = await client.virtualMachines.deleteMethod(labRgName, labName, vmName);
+    const results = await dtlClient.virtualMachines.deleteMethod(labRgName, labName, vmName);
     if (results) {
         var status = Object.keys(results._response.parsedBody);
 
@@ -48,35 +48,28 @@ async function deleteVm(client: DevTestLabsClient, labVmId: string): Promise<any
     console.log(`Finished deleting Lab VM '${vmName}'.`);
 }
 
-async function testRun() {
+async function run(id?: string, test?: boolean) {
     try {
-        const data: any = testutil.getTestData();
+        console.log('Starting Azure DevTest Labs Delete VM Task');
 
-        const vmName: string = resutil.getLabResourceName(data.labVmId, 'virtualmachines');
+        let subscriptionId: string;
+        let labVmId: string;
 
-        const client: DevTestLabsClient = await resutil.getDtlClient(data.subscriptionId, true);
+        if (test) {
+            const data: any = testutil.getTestData();
+            subscriptionId = data.subscriptionId;
+            labVmId = id ? id : data.labVmId;
+        } else {
+            const connectedServiceName: string = tl.getInput('ConnectedServiceName', true);
+            subscriptionId = tl.getEndpointDataParameter(connectedServiceName, 'SubscriptionId', true);
+            labVmId = tl.getInput('LabVmId', true);
+        }
 
-        await deleteVm(client, data.labVmId);
-
-        tl.setResult(tl.TaskResult.Succeeded, `Lab VM '${vmName}' was successfully deleted.`);
-    }
-    catch (error) {
-        testutil.writeTestLog(error);
-        tl.setResult(tl.TaskResult.Failed, error.message);
-    }
-}
-
-async function run() {
-    try {
-        const connectedServiceName: string = tl.getInput('ConnectedServiceName', true);
-
-        const subscriptionId = tl.getEndpointDataParameter(connectedServiceName, 'SubscriptionId', true);
-        const labVmId: string = tl.getInput('LabVmId', true);
         const vmName: string = resutil.getLabResourceName(labVmId, 'virtualmachines');
 
-        const client: DevTestLabsClient = await resutil.getDtlClient(subscriptionId);
+        const dtlClient: DevTestLabsClient = await resutil.getDtlClient(subscriptionId, test);
 
-        await deleteVm(client, labVmId);
+        await deleteVm(dtlClient, labVmId);
 
         tl.setResult(tl.TaskResult.Succeeded, `Lab VM '${vmName}' was successfully deleted.`);
     }
@@ -87,9 +80,4 @@ async function run() {
 }
 
 var args = require('minimist')(process.argv.slice(2));
-if (args.test) {
-    testRun();
-}
-else {
-    run();
-}
+run(args.id, args.test);

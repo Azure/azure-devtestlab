@@ -16,7 +16,7 @@
     "version": {
         "Major": 0,
         "Minor": 0,
-        "Patch": 7
+        "Patch": 8
     },
     "visibility": [
         "Build",
@@ -74,7 +74,7 @@
             "helpMarkDown": "Description of the custom image that will be created. If left blank, an auto-generated string will be used as the description."
         },
         {
-            "name": "LabVMId",
+            "name": "LabVmId",
             "type": "pickList",
             "label": "Source Lab VM ID",
             "defaultValue": "",
