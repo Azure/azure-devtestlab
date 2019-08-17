@@ -3,7 +3,7 @@
     "name": "AzureDevTestLabsDeleteVM",
     "friendlyName": "Azure DevTest Labs Delete VM",
     "description": "Delete the given Azure DevTest Labs VM",
-    "helpMarkDown": "",
+    "helpMarkDown": "Deletes the specified virtual machine from the selected lab.",
     "author": "Microsoft Corporation",
     "category": "Deploy",
     "minimumAgentVersion": "1.95.1",
@@ -16,7 +16,7 @@
     "version": {
         "Major": 0,
         "Minor": 0,
-        "Patch": 4
+        "Patch": 5
     },
     "visibility": [
         "Build",
@@ -25,6 +25,9 @@
     "inputs": [
         {
             "name": "ConnectedServiceName",
+            "aliases": [
+                "azureSubscription"
+            ],
             "type": "connectedService:AzureRM",
             "label": "Azure RM Subscription",
             "defaultValue": "",

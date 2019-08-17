@@ -3,7 +3,7 @@
     "name": "AzureDevTestLabsCreateCustomImage",
     "friendlyName": "Azure DevTest Labs Create Custom Image",
     "description": "Create an Azure DevTest Labs Custom Image",
-    "helpMarkDown": "",
+    "helpMarkDown": "Creates a custom image in the selected lab.",
     "author": "Microsoft Corporation",
     "category": "Deploy",
     "minimumAgentVersion": "1.95.1",
@@ -16,7 +16,7 @@
     "version": {
         "Major": 0,
         "Minor": 0,
-        "Patch": 8
+        "Patch": 10
     },
     "visibility": [
         "Build",

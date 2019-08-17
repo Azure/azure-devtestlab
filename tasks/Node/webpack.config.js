@@ -8,6 +8,7 @@ module.exports = {
     AzureDtlCreateCustomImage: "./src/tasks/AzureDtlCreateCustomImage/task.ts",
     AzureDtlCreateEnvironment: "./src/tasks/AzureDtlCreateEnvironment/task.ts",
     AzureDtlCreateVM: "./src/tasks/AzureDtlCreateVM/task.ts",
+    AzureDtlDeleteCustomImage: "./src/tasks/AzureDtlDeleteCustomImage/task.ts",
     AzureDtlDeleteEnvironment: "./src/tasks/AzureDtlDeleteEnvironment/task.ts",
     AzureDtlDeleteVM: "./src/tasks/AzureDtlDeleteVM/task.ts",
     AzureDtlUpdateEnvironment: "./src/tasks/AzureDtlUpdateEnvironment/task.ts"

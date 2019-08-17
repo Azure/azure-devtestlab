@@ -2,8 +2,8 @@
     "id": "1FBE9BB7-B97B-4D08-8CB3-E0A776F687AA",
     "name": "AzureDevTestLabsUpdateEnvironment",
     "friendlyName": "Azure DevTest Labs Update Environment",
-    "description": "Update an Azure DevTest Labs Environment",
-    "helpMarkDown": "",
+    "description": "Update the given Azure DevTest Labs Environment",
+    "helpMarkDown": "Updates the specified environment in the selected lab.",
     "author": "Microsoft Corporation",
     "category": "Deploy",
     "minimumAgentVersion": "1.95.1",
@@ -16,7 +16,7 @@
     "version": {
         "Major": 0,
         "Minor": 0,
-        "Patch": 1
+        "Patch": 2
     },
     "visibility": [
         "Build",
@@ -32,6 +32,9 @@
     "inputs": [
         {
             "name": "ConnectedServiceName",
+            "aliases": [
+                "azureSubscription"
+            ],
             "type": "connectedService:AzureRM",
             "label": "Azure RM Subscription",
             "defaultValue": "",

@@ -3,7 +3,7 @@
     "name": "AzureDevTestLabsCreateEnvironment",
     "friendlyName": "Azure DevTest Labs Create Environment",
     "description": "Create an Azure DevTest Labs Environment",
-    "helpMarkDown": "",
+    "helpMarkDown": "Creates an environment in the selected lab.",
     "author": "Microsoft Corporation",
     "category": "Deploy",
     "minimumAgentVersion": "1.95.1",
@@ -16,7 +16,7 @@
     "version": {
         "Major": 0,
         "Minor": 0,
-        "Patch": 5
+        "Patch": 7
     },
     "visibility": [
         "Build",
@@ -32,6 +32,9 @@
     "inputs": [
         {
             "name": "ConnectedServiceName",
+            "aliases": [
+                "azureSubscription"
+            ],
             "type": "connectedService:AzureRM",
             "label": "Azure RM Subscription",
             "defaultValue": "",

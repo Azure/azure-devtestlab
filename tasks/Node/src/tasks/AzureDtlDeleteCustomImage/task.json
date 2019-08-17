@@ -1,13 +1,13 @@
 {
-    "id": "1D06D619-904C-4671-9EE1-0A1D919EB00B",
-    "name": "AzureDevTestLabsDeleteEnvironment",
-    "friendlyName": "Azure DevTest Labs Delete Environment",
-    "description": "Delete an Azure DevTest Labs Environment",
-    "helpMarkDown": "Deletes the specified environment from the selected lab.",
+    "id": "38BE4A2A-4252-4F07-8BA7-228DB9ED722D",
+    "name": "AzureDevTestLabsDeleteCustomImage",
+    "friendlyName": "Azure DevTest Labs Delete Custom Image",
+    "description": "Delete an Azure DevTest Labs Custom Image",
+    "helpMarkDown": "Deletes the specified custom image from the selected lab.",
     "author": "Microsoft Corporation",
     "category": "Deploy",
     "minimumAgentVersion": "1.95.1",
-    "instanceNameFormat": "Delete Azure DevTest Labs Environment",
+    "instanceNameFormat": "Delete Azure DevTest Labs Custom Image",
     "releaseNotes": "Works with cross-platform agents (Linux, macOS, or Windows)",
     "preview": true,
     "demands": [
@@ -16,7 +16,7 @@
     "version": {
         "Major": 0,
         "Minor": 0,
-        "Patch": 6
+        "Patch": 1
     },
     "visibility": [
         "Build",
@@ -40,18 +40,18 @@
             "label": "Lab Name",
             "defaultValue": "",
             "required": true,
-            "helpMarkDown": "Name of an existing lab in which the lab environment will be deleted. This is a pick list generated as a result of selecting an **Azure RM Subscription**.",
+            "helpMarkDown": "Name of an existing lab from which the custom image will be deleted. This is a pick list generated as a result of selecting an **Azure RM Subscription**.",
             "properties": {
                 "EditableOptions": "True"
             }
         },
         {
-            "name": "EnvironmentId",
+            "name": "CustomImageId",
             "type": "pickList",
-            "label": "Environment Name",
+            "label": "Custom Image Name",
             "defaultValue": "",
             "required": true,
-            "helpMarkDown": "Name of an existing environment that will be deleted. This is a pick list generated as a result of selecting an lab.",
+            "helpMarkDown": "Name of an existing custom image that will be deleted. This is a pick list generated as a result of selecting an lab.",
             "properties": {
                 "EditableOptions": "True"
             }
@@ -66,8 +66,8 @@
             "authKey": "$(ConnectedServiceName)"
         },
         {
-            "target": "EnvironmentId",
-            "endpoint": "https://management.azure.com$(LabId)/users/@all/environments?api-version=2018-10-15-preview",
+            "target": "CustomImageId",
+            "endpoint": "https://management.azure.com$(LabId)/customimages?api-version=2018-10-15-preview",
             "selector": "jsonpath:$.value[*].name",
             "keySelector": "jsonpath:$.value[*].id",
             "authKey": "$(ConnectedServiceName)"

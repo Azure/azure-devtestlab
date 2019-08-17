@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "id": "dtl-tasks",
-  "version": "0.0.11",
+  "version": "0.0.15",
   "name": "Azure DevTest Labs Tasks (DEV)",
   "publisher": "ms-azuredevtestlabs-dev",
   "description": "Collection of Azure Pipelines tasks to interact with Azure DevTest Labs.",
@@ -79,6 +79,16 @@
       }
     },
     {
+      "id": "azure-dtl-task-deleteCustomImage",
+      "type": "ms.vss-distributed-task.task",
+      "targets": [
+        "ms.vss-distributed-task.tasks"
+      ],
+      "properties": {
+        "name": "tasks/AzureDtlDeleteCustomImage"
+      }
+    },
+    {
       "id": "azure-dtl-task-deleteEnvironment",
       "type": "ms.vss-distributed-task.task",
       "targets": [
@@ -118,6 +128,9 @@
     },
     {
       "path": "tasks/AzureDtlCreateVM"
+    },
+    {
+      "path": "tasks/AzureDtlDeleteCustomImage"
     },
     {
       "path": "tasks/AzureDtlDeleteEnvironment"

@@ -3,7 +3,7 @@
     "name": "AzureDevTestLabsCreateVM",
     "friendlyName": "Azure DevTest Labs Create VM",
     "description": "Create an Azure DevTest Labs VM",
-    "helpMarkDown": "",
+    "helpMarkDown": "Creates a virtual machine in the selected lab.",
     "author": "Microsoft Corporation",
     "category": "Deploy",
     "minimumAgentVersion": "1.95.1",
@@ -16,7 +16,7 @@
     "version": {
         "Major": 0,
         "Minor": 0,
-        "Patch": 8
+        "Patch": 10
     },
     "visibility": [
         "Build",
@@ -32,6 +32,9 @@
     "inputs": [
         {
             "name": "ConnectedServiceName",
+            "aliases": [
+                "azureSubscription"
+            ],
             "type": "connectedService:AzureRM",
             "label": "Azure RM Subscription",
             "defaultValue": "",
