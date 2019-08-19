@@ -447,7 +447,13 @@ function New-AzLabAccountSharedGallery {
             foreach ($la in $LabAccount) {
                 $uri = ConvertToUri -resource $la
                 $sharedGalleryName = $SharedGallery.Name
-                $sharedLibraryId = $SharedGallery.ResourceId
+
+                # Bizarre. Using Get-AzLibrary returns an object with Id property, Get-AzResource one with ResourceId. This should work for both.
+                if($SharedGallery.ResourceId) {
+                    $sharedLibraryId = $SharedGallery.ResourceId
+                } else {
+                    $sharedLibraryId = $SharedGallery.Id
+                }
 
                 $fullUri = $uri + "/SharedGalleries/$sharedGalleryName"
 
