@@ -1,9 +1,9 @@
 Import-Module $PSScriptRoot\..\Az.LabServices.psm1
 
-$rgName = 'TestPerm'
+$rgName = 'AzLabsLibrary'
 $rgLocation = 'West Europe'
 $labName = 'FastLab'
-$laName = 'LATest'
+$laName = 'AzLabsLibrary-la'
 $imgName = 'CentOS-Based*'
 $maxUsers = 2
 $usageQuota = 30
