@@ -60,4 +60,16 @@ function Get-FastLab {
     }
 }
 
+# Returns the first shared image gallery in the subscription with images in it
+function Get-FastGallery {
+    [CmdletBinding()]
+    param()
+    $allsg = Get-AzGallery
+    $sg = $allsg | Where-Object { (Get-AzGalleryImageDefinition -ResourceGroupName $_.ResourceGroupName -GalleryName $_.Name).Count -gt 0 }
+    if($sg) {
+        return $sg[0]
+    } else {
+        Write-Error "No shared image gallery with images exist in this subscription"
+    }
+}
 
