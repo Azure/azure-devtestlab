@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "id": "dtl-tasks",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "name": "Azure DevTest Labs Tasks (DEV)",
   "publisher": "ms-azuredevtestlabs-dev",
   "description": "Collection of Azure Pipelines tasks to interact with Azure DevTest Labs.",

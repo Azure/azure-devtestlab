@@ -28,26 +28,36 @@ export async function exportEnvironmentTemplate(exportEnvTemplateLocation: strin
         fs.writeFileSync(templateFileLocation, data, 'utf8');
         console.log(`Environment template has been exported to file: ${templateFileLocation}`);
     }
-    
+
     console.log('Environment template has been exported successfully.');
 }
 
 export async function setOutputVariables(armClient: ResourceManagementClient, envRgId: string, template: any): Promise<any> {
-    if (template && template.properties && template.properties.contents && template.properties.contents.outputs) {
-        const envRgName: string = resutil.getResourceName(envRgId, 'resourcegroups');
-        const templateOutputs: any = template.properties.contents.outputs;
-        const deploymentOutput: any[] = await deployutil.getDeploymentOutput(armClient, envRgName);
-        deploymentOutput.forEach((element: any[]) => {
-            const name: string = element[0];
-            const value: string = element[1];
-            const key = Object.keys(templateOutputs).find(key => key.toLowerCase() === name.toLowerCase());
-            if (key) {
-                const type: string = templateOutputs[key].type;
-                if (type) {
-                    const secret: boolean = type.toLowerCase().indexOf('secure') !== -1;
-                    tl.setVariable(name, value, secret);
-                }
-            }
-        });
+    let templateOutputs: any;
+    
+    if (template && template.outputs) {
+        templateOutputs = template.outputs;
     }
+    else if (template && template.properties && template.properties.contents && template.properties.contents.outputs) {
+        templateOutputs = template.properties.contents.outputs;
+    }
+    else {
+        tl.debug(`Ignoring. Unable to extract 'outputs' from provided 'template' parameter.`);
+        return;
+    }
+
+    const envRgName: string = resutil.getResourceName(envRgId, 'resourcegroups');
+    const deploymentOutput: any[] = await deployutil.getDeploymentOutput(armClient, envRgName);
+    deploymentOutput.forEach((element: any[]) => {
+        const name: string = element[0];
+        const value: string = element[1];
+        const key = Object.keys(templateOutputs).find(key => key.toLowerCase() === name.toLowerCase());
+        if (key) {
+            const type: string = templateOutputs[key].type;
+            if (type) {
+                const secret: boolean = type.toLowerCase().indexOf('secure') !== -1;
+                tl.setVariable(name, value, secret);
+            }
+        }
+    });
 }
