@@ -16,7 +16,7 @@
     "version": {
         "Major": 0,
         "Minor": 0,
-        "Patch": 2
+        "Patch": 4
     },
     "visibility": [
         "Build",
@@ -24,9 +24,9 @@
     ],
     "groups": [
         {
-            "name": "advanced",
-            "displayName": "Advanced",
-            "isExpanded": false
+            "name": "exportOptions",
+            "displayName": "Export Options",
+            "isExpanded": true
         }
     ],
     "inputs": [
@@ -47,7 +47,7 @@
             "label": "Lab Name",
             "defaultValue": "",
             "required": true,
-            "helpMarkDown": "Name of an existing lab in which the lab VM will be created. This is a pick list generated as a result of selecting an **Azure RM Subscription**.",
+            "helpMarkDown": "Name of an existing lab in which the lab VM will be created. This is a pick list generated as a result of selecting a subscription.",
             "properties": {
                 "EditableOptions": "True"
             }
@@ -58,34 +58,42 @@
             "label": "Environment Name",
             "defaultValue": "",
             "required": true,
-            "helpMarkDown": "Name of an existing environment that will be deleted. This is a pick list generated as a result of selecting an lab.",
+            "helpMarkDown": "Name of an existing environment that will be updated. This is a pick list generated as a result of selecting an lab.",
             "properties": {
                 "EditableOptions": "True"
             }
         },
         {
-            "name": "SourceTemplate",
+            "name": "TemplateFile",
             "type": "filePath",
-            "label": "Source ARM Template",
+            "label": "Template File",
             "required": true,
             "defaultValue": "",
-            "helpMarkDown": "Path to an ARM template to add to the environment."
+            "helpMarkDown": "Path to an existing ARM template to add to the environment."
         },
         {
-            "name": "SourceTemplateParameterFile",
+            "name": "ParametersFile",
             "type": "filePath",
-            "label": "Source ARM Parameter File",
+            "label": "Parameters File",
             "required": false,
             "defaultValue": "",
-            "helpMarkDown": "Path to a ARM template parameters file that provides parameter values for the template."
+            "helpMarkDown": "Path to a ARM template parameters file that provides parameter values for the environment template."
         },
         {
-            "name": "SourceTemplateParameterOverrides",
+            "name": "ParameterOverrides",
             "type": "multiLine",
-            "label": "Source ARM Template Parameters",
+            "label": "Parameter Overrides",
             "defaultValue": "-SampleParameter 'SampleValue'",
             "required": false,
-            "helpMarkDown": "Set parameter values needed by the template. This will not override the parameter file."
+            "helpMarkDown": "Set parameter values needed by the environment template. Parameter values set by parameters file will be overridden."
+        },
+        {
+            "name": "OutputTemplateVariables",
+            "type": "boolean",
+            "label": "Create output variables based on the environment template output?",
+            "required": true,
+            "defaultValue": "false",
+            "helpMarkDown": "Capture environment template output as build/release variables."
         },
         {
             "name": "ExportEnvironmentTemplate",
@@ -93,8 +101,8 @@
             "label": "Export the environment template to a build artifact?",
             "required": true,
             "defaultValue": "false",
-            "helpMarkDown": "Export the DevTest Lab update to an ARM template(s) and output as a build artifact.",
-            "groupName": "advanced"
+            "helpMarkDown": "Export the DevTest Lab environment to an ARM template(s) and output as a build artifact.",
+            "groupName": "exportOptions"
         },
         {
             "name": "ExportEnvironmentTemplateLocation",
@@ -103,7 +111,28 @@
             "required": false,
             "defaultValue": "$(Build.ArtifactStagingDirectory)/DeployedEnvironment",
             "helpMarkDown": "The location to store the template.",
-            "groupName": "advanced"
+            "visibleRule": "ExportEnvironmentTemplate = true",
+            "groupName": "exportOptions"
+        },
+        {
+            "name": "EnvironmentTemplateLocationVariable",
+            "type": "string",
+            "label": "Template Output name for location",
+            "required": false,
+            "defaultValue": "EnvironmentLocation",
+            "helpMarkDown": "The output name for the location (_artifactsLocation) to store the template.",
+            "visibleRule": "ExportEnvironmentTemplate = true",
+            "groupName": "exportOptions"
+        },
+        {
+            "name": "EnvironmentTemplateSasTokenVariable",
+            "type": "string",
+            "label": "Template Output name for the SAS token",
+            "required": false,
+            "defaultValue": "EnvironmentSAS",
+            "helpMarkDown": "The output name for the SAS token (_artifactsLocationSasToken).",
+            "visibleRule": "ExportEnvironmentTemplate = true",
+            "groupName": "exportOptions"
         }
     ],
     "sourceDefinitions": [

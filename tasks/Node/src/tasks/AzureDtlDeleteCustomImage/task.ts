@@ -7,9 +7,9 @@ import * as testutil from '../../modules/task-utils/testutil';
 import { DevTestLabsClient } from "@azure/arm-devtestlabs";
 
 async function ensureCiExists(dtlClient: DevTestLabsClient, ciId: string): Promise<any> {
-    let labName: string = resutil.getLabResourceName(ciId, 'labs');
-    let labRgName: string = resutil.getLabResourceName(ciId, 'resourcegroups');
-    let ciName: string = resutil.getLabResourceName(ciId, 'customimages');
+    const labName: string = resutil.getLabResourceName(ciId, 'labs');
+    const labRgName: string = resutil.getLabResourceName(ciId, 'resourcegroups');
+    const ciName: string = resutil.getLabResourceName(ciId, 'customimages');
 
     console.log(`Determining if Custom Image '${ciName}' exists in Lab '${labName}' under Resource Group '${labRgName}'.`);
 
@@ -28,9 +28,9 @@ async function ensureCiExists(dtlClient: DevTestLabsClient, ciId: string): Promi
 }
 
 async function deleteCi(dtlClient: DevTestLabsClient, ciId: string): Promise<any> {
-    let labName: string = resutil.getLabResourceName(ciId, 'labs');
-    let labRgName: string = resutil.getLabResourceName(ciId, 'resourcegroups');
-    let ciName: string = resutil.getLabResourceName(ciId, 'customimages');
+    const labName: string = resutil.getLabResourceName(ciId, 'labs');
+    const labRgName: string = resutil.getLabResourceName(ciId, 'resourcegroups');
+    const ciName: string = resutil.getLabResourceName(ciId, 'customimages');
 
     await ensureCiExists(dtlClient, ciId);
 

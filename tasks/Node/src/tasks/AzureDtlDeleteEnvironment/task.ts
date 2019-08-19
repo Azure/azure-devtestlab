@@ -7,15 +7,15 @@ import * as testutil from '../../modules/task-utils/testutil';
 import { DevTestLabsClient } from "@azure/arm-devtestlabs";
 
 async function ensureEnvExists(dtlClient: DevTestLabsClient, envId: string): Promise<any> {
-    let labName: string = resutil.getLabResourceName(envId, 'labs');
-    let labRgName: string = resutil.getLabResourceName(envId, 'resourcegroups');
-    let envName: string = resutil.getLabResourceName(envId, 'environments');
+    const labName: string = resutil.getLabResourceName(envId, 'labs');
+    const labRgName: string = resutil.getLabResourceName(envId, 'resourcegroups');
+    const envName: string = resutil.getLabResourceName(envId, 'environments');
 
     console.log(`Determining if Environment '${envName}' exists in Lab '${labName}' under Resource Group '${labRgName}'.`);
 
     const environments = await dtlClient.environments.list(labRgName, labName, '@all');
 
-    var envExists = environments && environments.some((env) => env && env.name && env.name.toLocaleLowerCase() === envName );
+    const envExists = environments && environments.some((env) => env && env.name && env.name.toLocaleLowerCase() === envName );
 
     const message: string = `Lab Environment '${envName}' ${envExists ? 'exists' : 'does not exist'}.`;
 
@@ -28,9 +28,9 @@ async function ensureEnvExists(dtlClient: DevTestLabsClient, envId: string): Pro
 }
 
 async function deleteEnv(dtlClient: DevTestLabsClient, envId: string): Promise<any> {
-    let labName: string = resutil.getLabResourceName(envId, 'labs');
-    let labRgName: string = resutil.getLabResourceName(envId, 'resourcegroups');
-    let envName: string = resutil.getLabResourceName(envId, 'environments');
+    const labName: string = resutil.getLabResourceName(envId, 'labs');
+    const labRgName: string = resutil.getLabResourceName(envId, 'resourcegroups');
+    const envName: string = resutil.getLabResourceName(envId, 'environments');
 
     await ensureEnvExists(dtlClient, envId);
 

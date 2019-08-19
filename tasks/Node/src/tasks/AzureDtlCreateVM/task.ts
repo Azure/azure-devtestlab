@@ -112,7 +112,7 @@ async function createVm(clients: TaskClients, inputData: CreateVmTaskInputData):
                 }
 
                 if (properties.outputResources) {
-                    const outputs = properties.outputResources[0];
+                    const outputs: any = properties.outputResources[0];
                     if (outputs.id) {
                         labVmId = outputs.id;
                     }
@@ -165,9 +165,9 @@ function getArtifactName(artifact: DevTestLabsModels.ArtifactInstallProperties):
 }
 
 function getDeploymentParameters(labName: string, vmName: string, parametersFile: string, parameterOverrides: string): any {
-    let parameters = {};
+    const parameters = {};
 
-    let deploymentParameters: DevTestLabsModels.ArmTemplateParameterProperties[] = deployutil.getDeploymentParameters(parametersFile, parameterOverrides);
+    const deploymentParameters: DevTestLabsModels.ArmTemplateParameterProperties[] = deployutil.getDeploymentParameters(parametersFile, parameterOverrides);
 
     deployutil.replaceParameter(deploymentParameters, 'labName', labName);
     deployutil.replaceParameter(deploymentParameters, 'newVMName', vmName);
@@ -178,8 +178,8 @@ function getDeploymentParameters(labName: string, vmName: string, parametersFile
 }
 
 function getDeployment(labName: string, vmName: string, templateFile: string, parametersFile: string, parameterOverrides: string): ResourceManagementModels.Deployment {
-    let deployment = Object.create(ResourceManagementMappers.Deployment);
-    let deploymentProperties = Object.create(ResourceManagementMappers.DeploymentProperties);
+    const deployment = Object.create(ResourceManagementMappers.Deployment);
+    const deploymentProperties = Object.create(ResourceManagementMappers.DeploymentProperties);
 
     deploymentProperties.mode = 'Incremental';
     deploymentProperties.template = deployutil.getDeploymentTemplate(templateFile);
@@ -271,7 +271,7 @@ async function removeFailedResources(armClient: ResourceManagementClient, labRgN
             const resourceId: string = await deployutil.getDeploymentTargetResourceId(armClient, labRgName, deploymentName);
             if (resourceId) {
                 console.log(`Removing previously created lab virtual machine with resource ID '${resourceId}'.`);
-                await armClient.resources.deleteById(resourceId, '');
+                await armClient.resources.deleteById(resourceId, '2018-10-15-preview');
             }
             else {
                 console.log('Resource identifier is not available, will not attempt to remove corresponding resouce before retrying.');

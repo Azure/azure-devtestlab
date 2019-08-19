@@ -7,15 +7,15 @@ import * as testutil from '../../modules/task-utils/testutil';
 import { DevTestLabsClient } from "@azure/arm-devtestlabs";
 
 async function ensureVmExists(dtlClient: DevTestLabsClient, labVmId: string): Promise<any> {
-    let labName: string = resutil.getLabResourceName(labVmId, 'labs');
-    let labRgName: string = resutil.getLabResourceName(labVmId, 'resourcegroups');
-    let vmName: string = resutil.getLabResourceName(labVmId, 'virtualmachines');
+    const labName: string = resutil.getLabResourceName(labVmId, 'labs');
+    const labRgName: string = resutil.getLabResourceName(labVmId, 'resourcegroups');
+    const vmName: string = resutil.getLabResourceName(labVmId, 'virtualmachines');
 
     console.log(`Determining if VM '${vmName}' exists in Lab '${labName}' under Resource Group '${labRgName}'.`);
 
     const labVms = await dtlClient.virtualMachines.list(labRgName, labName);
 
-    var vmExists = labVms && labVms.some((vm) => vm && vm.name && vm.name.toLocaleLowerCase() === vmName);
+    const vmExists = labVms && labVms.some((vm) => vm && vm.name && vm.name.toLocaleLowerCase() === vmName);
 
     const message: string = `Lab VM '${vmName}' ${vmExists ? 'exists' : 'does not exist'}.`;
 
@@ -28,9 +28,9 @@ async function ensureVmExists(dtlClient: DevTestLabsClient, labVmId: string): Pr
 }
 
 async function deleteVm(dtlClient: DevTestLabsClient, labVmId: string): Promise<any> {
-    let labName = resutil.getLabResourceName(labVmId, 'labs');
-    let labRgName = resutil.getLabResourceName(labVmId, 'resourcegroups');
-    let vmName = resutil.getLabResourceName(labVmId, 'virtualmachines');
+    const labName = resutil.getLabResourceName(labVmId, 'labs');
+    const labRgName = resutil.getLabResourceName(labVmId, 'resourcegroups');
+    const vmName = resutil.getLabResourceName(labVmId, 'virtualmachines');
 
     await ensureVmExists(dtlClient, labVmId);
 

@@ -16,7 +16,7 @@
     "version": {
         "Major": 0,
         "Minor": 0,
-        "Patch": 10
+        "Patch": 11
     },
     "visibility": [
         "Build",
@@ -52,7 +52,7 @@
             "label": "Lab Name",
             "defaultValue": "",
             "required": true,
-            "helpMarkDown": "Name of an existing lab in which the custom image will be created. This is a pick list generated as a result of selecting an **Azure RM Subscription**.",
+            "helpMarkDown": "Name of an existing lab in which the custom image will be created. This is a pick list generated as a result of selecting a subscription.",
             "properties": {
                 "EditableOptions": "True"
             }

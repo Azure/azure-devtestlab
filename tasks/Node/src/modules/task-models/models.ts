@@ -14,9 +14,9 @@ export interface CreateCiTaskInputData {
     windowsOsState: string
 }
 
-export interface CreateEnvTaskInputData {
-    armTemplateId: string,
+export interface CreateOrUpdateEnvTaskInputData {
     connectedServiceName: string,
+    envId: string,
     envName: string,
     envTemplateLocationVariable: string,
     envTemplateSasTokenVariable: string,
@@ -26,7 +26,9 @@ export interface CreateEnvTaskInputData {
     outputTemplateVariables: boolean,
     parametersFile: string,
     parameterOverrides: string,
-    subscriptionId: string
+    subscriptionId: string,
+    templateFile: string,
+    templateId: string
 }
 
 export interface CreateVmTaskInputData {

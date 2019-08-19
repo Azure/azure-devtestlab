@@ -69,7 +69,7 @@ function checkParamArray(newParameter: DevTestLabsModels.ArmTemplateParameterPro
 }
 
 function fromParametersFile(parametersFile: string): DevTestLabsModels.ArmTemplateParameterProperties[] {
-    let parameters: DevTestLabsModels.ArmTemplateParameterProperties[] = [];
+    const parameters: DevTestLabsModels.ArmTemplateParameterProperties[] = [];
 
     if (!parametersFile) {
         tl.warning(`DeployUtil: Ignoring invalid parameters file '${parametersFile}'.`);
@@ -85,10 +85,13 @@ function fromParametersFile(parametersFile: string): DevTestLabsModels.ArmTempla
     if (stats.isFile()) {
         const data = fs.readFileSync(parametersFile, 'utf8');
         const params = JSON.parse(data);
-        let props = Object.keys(params.parameters), i = props.length, resArray = new Array(i);
+        const props = Object.keys(params.parameters);
+        const resArray = new Array(props.length);
+
+        let i = props.length;
         while (i--) {
             resArray[i] = [props[i], params.parameters[props[i]]];
-            let parameter = Object.create(DevTestLabsMappers.ArmTemplateParameterProperties);
+            const parameter = Object.create(DevTestLabsMappers.ArmTemplateParameterProperties);
             parameter.name = props[i];
             parameter.value = params.parameters[props[i]].value.toString();
             parameters.push(parameter);
@@ -182,7 +185,7 @@ export async function getDeploymentOutput(armClient: ResourceManagementClient, r
 }
 
 export function getDeploymentParameters(parametersFile: string, parameterOverrides: string): DevTestLabsModels.ArmTemplateParameterProperties[] {
-    let parameters = fromParametersFile(parametersFile);
+    const parameters = fromParametersFile(parametersFile);
     return addParameterOverrides(parameterOverrides, parameters);
 }
 
@@ -221,8 +224,8 @@ export function getDeploymentTemplate(templateFile: string): any {
 }
 
 export function replaceParameter(parameters: DevTestLabsModels.ArmTemplateParameterProperties[], name: string, value: string): void {
-    let newParameter: DevTestLabsModels.ArmTemplateParameterProperties = { name: name, value: value };
-    let index = parameters.findIndex(p => p.name === name);
+    const newParameter: DevTestLabsModels.ArmTemplateParameterProperties = { name: name, value: value };
+    const index = parameters.findIndex(p => p.name === name);
     if (index > -1) {
         // Replace inplace.
         parameters.splice(index, 1, newParameter);

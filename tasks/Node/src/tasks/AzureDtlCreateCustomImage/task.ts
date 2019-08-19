@@ -9,9 +9,9 @@ import { CreateCiTaskInputData } from '../../modules/task-models/models';
 import { DevTestLabsClient, DevTestLabsModels, DevTestLabsMappers } from '@azure/arm-devtestlabs';
 
 async function createCustomImage(dtlClient: DevTestLabsClient, inputData: CreateCiTaskInputData): Promise<any> {
-    let labName = resutil.getLabResourceName(inputData.labId, 'labs');
-    let labRgName = resutil.getLabResourceName(inputData.labId, 'resourcegroups');
-    let customImage: DevTestLabsModels.CustomImage = getCustomImage(inputData);
+    const labName: string = resutil.getLabResourceName(inputData.labId, 'labs');
+    const labRgName: string = resutil.getLabResourceName(inputData.labId, 'resourcegroups');
+    const customImage: DevTestLabsModels.CustomImage = getCustomImage(inputData);
 
     console.log(`Creating Custom Image '${inputData.ciName}' in Lab '${labName}' under Resource Group '${labRgName}'.`);
 
@@ -30,12 +30,12 @@ async function createCustomImage(dtlClient: DevTestLabsClient, inputData: Create
 }
 
 function getCustomImageProperties(sourceVmId: string, osType: string, linuxOsState: string, windowsOsState: string): DevTestLabsModels.CustomImagePropertiesFromVm {
-    let properties = Object.create(DevTestLabsMappers.CustomImagePropertiesFromVm);
+    const properties = Object.create(DevTestLabsMappers.CustomImagePropertiesFromVm);
     properties.sourceVmId = sourceVmId;
 
     switch (osType) {
         case 'Linux':
-            let linuxOsInfo: DevTestLabsModels.LinuxOsInfo = Object.create(DevTestLabsMappers.LinuxOsInfo);
+            const linuxOsInfo: DevTestLabsModels.LinuxOsInfo = Object.create(DevTestLabsMappers.LinuxOsInfo);
             switch (linuxOsState) {
                 case ('NonDeprovisioned'):
                     linuxOsInfo.linuxOsState = "NonDeprovisioned";
@@ -52,7 +52,7 @@ function getCustomImageProperties(sourceVmId: string, osType: string, linuxOsSta
             properties.linuxOsInfo = linuxOsInfo;
             break;
         case 'Windows':
-            let windowsOsInfo: DevTestLabsModels.WindowsOsInfo = Object.create(DevTestLabsMappers.WindowsOsInfo);
+            const windowsOsInfo: DevTestLabsModels.WindowsOsInfo = Object.create(DevTestLabsMappers.WindowsOsInfo);
 
             switch (windowsOsState) {
                 case ('SysprepRequested'):
@@ -77,7 +77,7 @@ function getCustomImageProperties(sourceVmId: string, osType: string, linuxOsSta
 }
 
 function getCustomImage(inputData: CreateCiTaskInputData): DevTestLabsModels.CustomImage {
-    let customImage: DevTestLabsModels.CustomImage = Object.create(DevTestLabsMappers.CustomImage);
+    const customImage: DevTestLabsModels.CustomImage = Object.create(DevTestLabsMappers.CustomImage);
 
     customImage.vm = getCustomImageProperties(inputData.labVmId, inputData.osType, inputData.linuxOsState, inputData.windowsOsState);
     customImage.description = inputData.description;

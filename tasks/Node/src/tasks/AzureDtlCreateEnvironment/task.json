@@ -16,7 +16,7 @@
     "version": {
         "Major": 0,
         "Minor": 0,
-        "Patch": 7
+        "Patch": 8
     },
     "visibility": [
         "Build",
@@ -47,10 +47,18 @@
             "label": "Lab Name",
             "defaultValue": "",
             "required": true,
-            "helpMarkDown": "Name of an existing lab in which the lab VM will be created. This is a pick list generated as a result of selecting an **Azure RM Subscription**.",
+            "helpMarkDown": "Name of an existing lab in which the lab VM will be created. This is a pick list generated as a result of selecting a subscription.",
             "properties": {
                 "EditableOptions": "True"
             }
+        },
+        {
+            "name": "EnvironmentName",
+            "type": "string",
+            "label": "Environment Name",
+            "required": true,
+            "defaultValue": "",
+            "helpMarkDown": "The name of the environment to create."
         },
         {
             "name": "RepositoryId",
@@ -69,18 +77,10 @@
             "label": "Template Name",
             "defaultValue": "",
             "required": true,
-            "helpMarkDown": "Name of an existing template that should be used to create a new environment. This is a pick list generated as a result of selecting a repository.",
+            "helpMarkDown": "Name of an existing ARM template that should be used to create a new environment. This is a pick list generated as a result of selecting a repository.",
             "properties": {
                 "EditableOptions": "True"
             }
-        },
-        {
-            "name": "EnvironmentName",
-            "type": "string",
-            "label": "Environment Name",
-            "required": true,
-            "defaultValue": "",
-            "helpMarkDown": "The name of the environment to create."
         },
         {
             "name": "ParametersFile",

@@ -40,7 +40,7 @@
             "label": "Lab Name",
             "defaultValue": "",
             "required": true,
-            "helpMarkDown": "Name of an existing lab from which the custom image will be deleted. This is a pick list generated as a result of selecting an **Azure RM Subscription**.",
+            "helpMarkDown": "Name of an existing lab from which the custom image will be deleted. This is a pick list generated as a result of selecting a subscription.",
             "properties": {
                 "EditableOptions": "True"
             }
