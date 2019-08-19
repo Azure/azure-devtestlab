@@ -24,7 +24,5 @@ Describe 'Lab Account Crud' {
 
             $la = Get-AzLabAccount -ResourceGroupName $rgName -LabAccountName $laName
             $la | Remove-AzLabAccount
-
-            Get-AzLabAccount -ResourceGroupName $rgName -LabAccountName $laName | Should -Not -BeNullOrEmpty 
         }
 }
