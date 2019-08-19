@@ -449,7 +449,7 @@ function New-AzLabAccountSharedGallery {
                 $sharedGalleryName = $SharedGallery.Name
 
                 # Bizarre. Using Get-AzLibrary returns an object with Id property, Get-AzResource one with ResourceId. This should work for both.
-                if($SharedGallery.ResourceId) {
+                if (Get-Member -inputobject $SharedGallery -name "ResourceId" -Membertype Properties) {
                     $sharedLibraryId = $SharedGallery.ResourceId
                 } else {
                     $sharedLibraryId = $SharedGallery.Id
