@@ -1,11 +1,14 @@
 {
   "manifestVersion": 1,
-  "id": "dtl-tasks",
-  "version": "0.0.18",
-  "name": "Azure DevTest Labs Tasks (DEV)",
-  "publisher": "ms-azuredevtestlabs-dev",
+  "id": "tasks",
+  "version": "3.0.0",
+  "name": "Azure DevTest Labs Tasks",
+  "publisher": "ms-azuredevtestlabs",
   "description": "Collection of Azure Pipelines tasks to interact with Azure DevTest Labs.",
-  "galleryFlags": [],
+  "galleryFlags": [
+    "Public",
+    "Preview"
+  ],
   "targets": [
     {
       "id": "Microsoft.VisualStudio.Services"
@@ -36,17 +39,31 @@
     }
   },
   "links": {
-    "support": {
-      "uri": "https://social.msdn.microsoft.com/Forums/en-US/home?forum=AzureDevTestLabs"
+    "getstarted": {
+      "uri": "https://docs.microsoft.com/en-us/azure/lab-services/devtest-lab-integrate-ci-cd"
     },
     "learn": {
-      "uri": "https://blogs.msdn.microsoft.com/devtestlab/2016/06/15/azure-devtest-labs-vsts-extension/"
+      "uri": "https://azure.microsoft.com/en-ca/services/devtest-lab/"
+    },
+    "license": {
+      "uri": "https://github.com/Azure/azure-devtestlab/blob/master/LICENSE.txt"
+    },
+    "support": {
+      "uri": "https://github.com/Azure/azure-devtestlab/issues"
     }
+  },
+  "repository": {
+    "type": "git",
+    "uri": "https://github.com/Azure/azure-devtestlab/tree/master/tasks/Node"
   },
   "branding": {
     "color": "rgb(34, 34, 34)",
     "theme": "dark"
   },
+  "scopes": [
+    "vso.build_execute",
+    "vso.serviceendpoint_manage"
+  ],
   "contributions": [
     {
       "id": "azure-dtl-task-createCustomImage",

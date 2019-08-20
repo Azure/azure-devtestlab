@@ -1,5 +1,5 @@
 {
-    "id": "1FBE9BB7-A17B-4D08-8CB3-E0A776F68744",
+    "id": "1FBE9BB7-B97B-4D08-8CB3-E0A776F68744",
     "name": "AzureDevTestLabsCreateEnvironment",
     "friendlyName": "Azure DevTest Labs Create Environment",
     "description": "Create an Azure DevTest Labs Environment",
@@ -14,9 +14,9 @@
         "npm"
     ],
     "version": {
-        "Major": 0,
+        "Major": 3,
         "Minor": 0,
-        "Patch": 9
+        "Patch": 0
     },
     "visibility": [
         "Build",
@@ -94,9 +94,9 @@
             "name": "ParameterOverrides",
             "type": "multiLine",
             "label": "Parameter Overrides",
-            "defaultValue": "-SampleParameter 'SampleValue'",
+            "defaultValue": "",
             "required": false,
-            "helpMarkDown": "Set parameter values needed by the environment template. Parameter values set by parameters file will be overridden."
+            "helpMarkDown": "Set parameter values needed by the environment template. Parameter values set by parameters file will be overridden. Expected format is -SampleParameter 'SampleValue'."
         },
         {
             "name": "OutputTemplateVariables",

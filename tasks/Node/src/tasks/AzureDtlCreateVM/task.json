@@ -14,9 +14,9 @@
         "npm"
     ],
     "version": {
-        "Major": 0,
+        "Major": 3,
         "Minor": 0,
-        "Patch": 11
+        "Patch": 0
     },
     "visibility": [
         "Build",
@@ -80,9 +80,9 @@
             "name": "ParameterOverrides",
             "type": "multiLine",
             "label": "Parameter Overrides",
-            "defaultValue": "-SampleParameter 'SampleValue'",
+            "defaultValue": "",
             "required": false,
-            "helpMarkDown": "Set parameter values needed by the virtual machine template. Parameter values set by parameters file will be overridden."
+            "helpMarkDown": "Set parameter values needed by the virtual machine template. Parameter values set by parameters file will be overridden. Expected format is -SampleParameter 'SampleValue'."
         },
         {
             "name": "FailOnArtifactError",

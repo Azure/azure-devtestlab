@@ -1,5 +1,5 @@
 {
-    "id": "1FBE9BB7-B97B-4D08-8CB3-E0A776F687AA",
+    "id": "9567583F-9650-4185-9901-4D713CD3E6A2",
     "name": "AzureDevTestLabsUpdateEnvironment",
     "friendlyName": "Azure DevTest Labs Update Environment",
     "description": "Update the given Azure DevTest Labs Environment",
@@ -14,9 +14,9 @@
         "npm"
     ],
     "version": {
-        "Major": 0,
+        "Major": 3,
         "Minor": 0,
-        "Patch": 5
+        "Patch": 0
     },
     "visibility": [
         "Build",
@@ -83,9 +83,9 @@
             "name": "ParameterOverrides",
             "type": "multiLine",
             "label": "Parameter Overrides",
-            "defaultValue": "-SampleParameter 'SampleValue'",
+            "defaultValue": "",
             "required": false,
-            "helpMarkDown": "Set parameter values needed by the environment template. Parameter values set by parameters file will be overridden."
+            "helpMarkDown": "Set parameter values needed by the environment template. Parameter values set by parameters file will be overridden. Expected format is -SampleParameter 'SampleValue'."
         },
         {
             "name": "OutputTemplateVariables",

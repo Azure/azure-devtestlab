@@ -14,9 +14,9 @@
         "npm"
     ],
     "version": {
-        "Major": 0,
+        "Major": 3,
         "Minor": 0,
-        "Patch": 11
+        "Patch": 0
     },
     "visibility": [
         "Build",

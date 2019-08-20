@@ -14,9 +14,9 @@
         "npm"
     ],
     "version": {
-        "Major": 0,
+        "Major": 3,
         "Minor": 0,
-        "Patch": 5
+        "Patch": 0
     },
     "visibility": [
         "Build",
@@ -48,7 +48,7 @@
         {
             "name": "LabVmId",
             "type": "pickList",
-            "label": "Lab VM ID",
+            "label": "Virtual Machine Name",
             "defaultValue": "",
             "required": true,
             "helpMarkDown": "Name of the lab VM to delete. This is a pick list generated as a result of selecting a lab.",
