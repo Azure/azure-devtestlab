@@ -15,32 +15,24 @@ $schedules = @(
     [PSCustomObject]@{Frequency = 'Weekly'; FromDate = $tomorrow; ToDate = $end; StartTime = '11:00'; EndTime = '12:00'; Notes = 'Practice' }
 )
 
+# Here the test is made multi-thread safe by making sure to examine and delete just the objects that were created inside the test
+# The worst that can happen is that it crashes after having created objects without deleting them, leaving garbage inside the common lab
+# But that doesn't impede the subsequent tests to run fine as they create their own objects,
+# but we might want to do a periodic clean up (nightly?) not to waste resources
 Describe 'Schedule Management' {
     It 'Can create a schedule, get it and delete it' {
-            
-        # Manage leftovers from previous failed runs.
-        $created = $lab | Get-AzLabSchedule
-        if ($created) {
-            $created | Remove-AzLabSchedule   
-        }
-
-        # Create Schedules
-        $schedules | ForEach-Object { $_ | New-AzLabSchedule -Lab $lab } | Out-Null
+        
+        $created = $schedules | ForEach-Object { $_ | New-AzLabSchedule -Lab $lab }
         Write-Verbose "Added all schedules."
 
-        # Get Schedules
-        $created = $lab | Get-AzLabSchedule
-        $created | Should -HaveCount $schedules.Count
+        $foundNames = $lab | Get-AzLabSchedule | Select-Object -ExpandProperty Name
 
-    }
+        $created | ForEach-Object {$_.Name | Should -BeIn $foundNames}
 
-    It 'Can remove schedule' {
-
-        $created = $lab | Get-AzLabSchedule
-        $created | Should -HaveCount $schedules.Count
+        $created | Should -Not -BeNullOrEmpty
         $created | Remove-AzLabSchedule
-        $existing = $lab | Get-AzLabSchedule
-        $existing | Should -HaveCount 0                        
-            
+        
+        $foundNames = $lab | Get-AzLabSchedule | Select-Object -ExpandProperty Name
+        $created | ForEach-Object {$_.Name | Should -Not -BeIn $foundNames}       
     }
 }

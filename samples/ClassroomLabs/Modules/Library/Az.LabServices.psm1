@@ -899,7 +899,7 @@ function Get-AzLabAccountSharedImage {
         try {
             foreach ($la in $LabAccount) {
                 $uri = (ConvertToUri -resource $la) + "/SharedImages"
-                InvokeRest -Uri $uri -Method 'Get' | Where-Object { $_.properties.EnableState -eq 'Enabled' }
+                return InvokeRest -Uri $uri -Method 'Get' | Where-Object { $_.properties.EnableState -eq 'Enabled' }
             }
         }
         catch {
@@ -1352,8 +1352,7 @@ function New-AzLabSchedule {
 
                 Write-Verbose $body
 
-                InvokeRest -Uri $uri -Method 'Put' -Body $body | Out-Null
-                return $l
+                return InvokeRest -Uri $uri -Method 'Put' -Body $body
             }
         }
         catch {
