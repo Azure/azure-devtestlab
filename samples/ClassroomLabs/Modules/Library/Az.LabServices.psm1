@@ -447,7 +447,13 @@ function New-AzLabAccountSharedGallery {
             foreach ($la in $LabAccount) {
                 $uri = ConvertToUri -resource $la
                 $sharedGalleryName = $SharedGallery.Name
-                $sharedLibraryId = $SharedGallery.ResourceId
+
+                # Bizarre. Using Get-AzLibrary returns an object with Id property, Get-AzResource one with ResourceId. This should work for both.
+                if (Get-Member -inputobject $SharedGallery -name "ResourceId" -Membertype Properties) {
+                    $sharedLibraryId = $SharedGallery.ResourceId
+                } else {
+                    $sharedLibraryId = $SharedGallery.Id
+                }
 
                 $fullUri = $uri + "/SharedGalleries/$sharedGalleryName"
 
@@ -456,6 +462,37 @@ function New-AzLabAccountSharedGallery {
                         galleryId = $sharedLibraryId
                     }
                 } | ConvertTo-Json)
+            }
+        }
+        catch {
+            Write-Error -ErrorRecord $_ -EA $callerEA
+        }
+    }
+    end { }
+}
+
+function Remove-AzLabAccountSharedGallery {
+    [CmdletBinding()]
+    param(
+        [parameter(Mandatory = $true, HelpMessage = "Lab Account to Remove.", ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        $LabAccount,
+
+        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Azure resource for shared gallery.")]
+        [ValidateNotNullOrEmpty()]
+        $SharedGalleryName
+    )
+
+    begin { . BeginPreamble }
+    process {
+        try {
+            foreach ($la in $LabAccount) {
+                $uri = ConvertToUri -resource $la
+
+                $fullUri = $uri + "/SharedGalleries/$sharedGalleryName"
+
+                InvokeRest -Uri $fullUri -Method 'Delete' | Out-Null
+                return $la
             }
         }
         catch {
@@ -548,6 +585,7 @@ function Get-AzLab {
     end { }
 }
 
+# TODO: should this be synchronous (aka wait for completion of deletion)?
 function Remove-AzLab {
     [CmdletBinding()]
     param(
@@ -1349,4 +1387,5 @@ Export-ModuleMember -Function   Get-AzLabAccount,
                                 Start-AzLabVm,
                                 Stop-AzLabVm,
                                 Get-AzLabForVm,
-                                New-AzLabAccountSharedGallery
+                                New-AzLabAccountSharedGallery,
+                                Remove-AzLabAccountSharedGallery
