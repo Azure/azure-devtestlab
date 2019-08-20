@@ -32,23 +32,23 @@ The following considerations should be taken when updating from previous version
 * **Deprecated**. It is superseded by task `Update Environment`.
 * Replace with task `Update Environment`.
 
-## Update Environment
+### Update Environment
 * None. New task.
 
 ### Delete Environment
 * No impact.
 
-# New Features
+## New Features
 - Moved implementation from `PowerShell` to `Node.js` to work with cross-platform agents (Linux, macOS, or Windows).
 - Added new task named `Delete Custom Image`.
 
-# Bug Fixes
+## Bug Fixes
 - Removed references to non-supported handlers.
 
-# Improvements
+## Improvements
 - Tasks now support cross-platform agents (Linux, macOS, or Windows).
 - Better parameter parity amongst tasks.
 
-# Other Changes
+## Other Changes
 - Updated documentation.
 - Baselined all task versions.
