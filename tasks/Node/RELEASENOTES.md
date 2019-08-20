@@ -32,6 +32,9 @@ The following considerations should be taken when updating from previous version
 * **Deprecated**. It is superseded by task `Update Environment`.
 * Replace with task `Update Environment`.
 
+## Update Environment
+* None. New task.
+
 ### Delete Environment
 * No impact.
 

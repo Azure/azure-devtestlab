@@ -7,6 +7,10 @@ Collection of build/release tasks to interact with [Azure DevTest Labs](https://
 * [Azure Pipelines Tasks](https://github.com/microsoft/azure-pipelines-tasks) - source code for out of the box tasks provided with [Azure DevOps](https://azure.microsoft.com/en-ca/services/devops/).
 * Article [Add a build or release task](https://docs.microsoft.com/en-us/azure/devops/extend/develop/add-build-task?view=azure-devops&viewFallbackFrom=vsts).
 
+# Release Notes
+
+See the [RELEASENOTES.md](RELEASENOTES.md) file for details.
+
 # Pre-requisites
 
 The following are tools used to create these tasks and are recommended.
