@@ -8,7 +8,7 @@ import { CreateCiTaskInputData } from '../../modules/task-models/models';
 
 import { DevTestLabsClient, DevTestLabsModels, DevTestLabsMappers } from '@azure/arm-devtestlabs';
 
-async function createCustomImage(dtlClient: DevTestLabsClient, inputData: CreateCiTaskInputData): Promise<any> {
+async function createCustomImage(dtlClient: DevTestLabsClient, inputData: CreateCiTaskInputData): Promise<void> {
     const labName: string = resutil.getLabResourceName(inputData.labId, 'labs');
     const labRgName: string = resutil.getLabResourceName(inputData.labId, 'resourcegroups');
     const customImage: DevTestLabsModels.CustomImage = getCustomImage(inputData);
@@ -156,7 +156,7 @@ function showInputData(inputData: CreateCiTaskInputData): void {
     console.log(`  WindowsOsState = ${inputData.windowsOsState}`);
 }
 
-async function run(ciName?: string, test?: boolean) {
+async function run(ciName?: string, test?: boolean): Promise<void> {
     try {
         console.log('Starting Azure DevTest Labs Create Custom Image Task');
 

@@ -7,7 +7,7 @@ import * as resutil from '../../modules/task-utils/resourceutil';
 import { Aborter, AnonymousCredential, BlobURL, Models, StorageURL } from "@azure/storage-blob";
 import { ResourceManagementClient } from "@azure/arm-resources";
 
-export async function exportEnvironmentTemplate(exportEnvTemplateLocation: string, envTemplateLocation: string, envTemplateSasToken: string): Promise<any> {
+export async function exportEnvironmentTemplate(exportEnvTemplateLocation: string, envTemplateLocation: string, envTemplateSasToken: string): Promise<void> {
     if (!envTemplateLocation || !envTemplateSasToken) {
         throw 'Missing Environment Location or Environment SAS Token as outputs variables.';
     }
@@ -32,7 +32,7 @@ export async function exportEnvironmentTemplate(exportEnvTemplateLocation: strin
     console.log('Environment template has been exported successfully.');
 }
 
-export async function setOutputVariables(armClient: ResourceManagementClient, envRgId: string, template: any): Promise<any> {
+export async function setOutputVariables(armClient: ResourceManagementClient, envRgId: string, template: any): Promise<void> {
     let templateOutputs: any;
     
     if (template && template.outputs) {

@@ -21,7 +21,7 @@ function areArtifactsInstalling(artifacts?: DevTestLabsModels.ArtifactInstallPro
     return installingArtifacts || pendingArtifacts;
 }
 
-async function checkArtifactsStatus(client: DevTestLabsClient, labVmId: string, templateFile: string, failOnArtifactError: boolean): Promise<any> {
+async function checkArtifactsStatus(client: DevTestLabsClient, labVmId: string, templateFile: string, failOnArtifactError: boolean): Promise<void> {
     if (!failOnArtifactError) {
         tl.debug(`Fail on artifact error is ${failOnArtifactError}. Nothing to check. Ignoring.`);
         return;
@@ -76,7 +76,7 @@ function convertToMinutesString(minutes: number): string {
     return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
 }
 
-async function createVm(clients: TaskClients, inputData: CreateVmTaskInputData): Promise<any> {
+async function createVm(clients: TaskClients, inputData: CreateVmTaskInputData): Promise<void> {
     let labVmId: string | undefined = undefined;
 
     const labName: string = resutil.getLabResourceName(inputData.labId, 'labs');
@@ -264,7 +264,7 @@ async function getLabVm(client: DevTestLabsClient, labVmId: string): Promise<Dev
     return vm;
 }
 
-async function removeFailedResources(armClient: ResourceManagementClient, labRgName: string, deploymentName: string, deleteLabVm: boolean, deleteDeployment: boolean): Promise<any> {
+async function removeFailedResources(armClient: ResourceManagementClient, labRgName: string, deploymentName: string, deleteLabVm: boolean, deleteDeployment: boolean): Promise<void> {
     try {
         // Delete the failed lab VM.
         if (deleteLabVm) {
@@ -304,7 +304,7 @@ function showInputData(inputData: CreateVmTaskInputData): void {
     console.log(`  WaitMinutesForApplyArtifacts = ${inputData.waitMinutes}`);
 }
 
-async function waitForApplyArtifacts(client: DevTestLabsClient, labVmId: string, waitMinutes: number): Promise<any> {
+async function waitForApplyArtifacts(client: DevTestLabsClient, labVmId: string, waitMinutes: number): Promise<void> {
     if (waitMinutes <= 0) {
         return;
     }
@@ -342,7 +342,7 @@ async function waitForApplyArtifacts(client: DevTestLabsClient, labVmId: string,
     console.log(`Waited for a total of ${convertToMinutesString(totalWaitMinutes)}. Latest provisioning state is ${provisioningState}.`);
 }
 
-async function run(vmName?: string, test?: boolean) {
+async function run(vmName?: string, test?: boolean): Promise<void> {
     try {
         console.log('Starting Azure DevTest Labs Create VM Task');
 

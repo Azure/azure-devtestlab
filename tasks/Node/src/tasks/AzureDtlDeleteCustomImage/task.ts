@@ -6,7 +6,7 @@ import * as testutil from '../../modules/task-utils/testutil';
 
 import { DevTestLabsClient } from "@azure/arm-devtestlabs";
 
-async function ensureCiExists(dtlClient: DevTestLabsClient, ciId: string): Promise<any> {
+async function ensureCiExists(dtlClient: DevTestLabsClient, ciId: string): Promise<void> {
     const labName: string = resutil.getLabResourceName(ciId, 'labs');
     const labRgName: string = resutil.getLabResourceName(ciId, 'resourcegroups');
     const ciName: string = resutil.getLabResourceName(ciId, 'customimages');
@@ -27,7 +27,7 @@ async function ensureCiExists(dtlClient: DevTestLabsClient, ciId: string): Promi
     }
 }
 
-async function deleteCi(dtlClient: DevTestLabsClient, ciId: string): Promise<any> {
+async function deleteCi(dtlClient: DevTestLabsClient, ciId: string): Promise<void> {
     const labName: string = resutil.getLabResourceName(ciId, 'labs');
     const labRgName: string = resutil.getLabResourceName(ciId, 'resourcegroups');
     const ciName: string = resutil.getLabResourceName(ciId, 'customimages');
@@ -48,7 +48,7 @@ async function deleteCi(dtlClient: DevTestLabsClient, ciId: string): Promise<any
     console.log(`Finished deleting Lab Custom Image '${ciName}'.`);
 }
 
-async function run(id?: string, test?: boolean): Promise<any> {
+async function run(id?: string, test?: boolean): Promise<void> {
     try {
         console.log('Starting Azure DevTest Labs Delete Custom Image Task');
 

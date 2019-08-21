@@ -6,7 +6,7 @@ import * as testutil from '../../modules/task-utils/testutil';
 
 import { DevTestLabsClient } from "@azure/arm-devtestlabs";
 
-async function ensureEnvExists(dtlClient: DevTestLabsClient, envId: string): Promise<any> {
+async function ensureEnvExists(dtlClient: DevTestLabsClient, envId: string): Promise<void> {
     const labName: string = resutil.getLabResourceName(envId, 'labs');
     const labRgName: string = resutil.getLabResourceName(envId, 'resourcegroups');
     const envName: string = resutil.getLabResourceName(envId, 'environments');
@@ -27,7 +27,7 @@ async function ensureEnvExists(dtlClient: DevTestLabsClient, envId: string): Pro
     }
 }
 
-async function deleteEnv(dtlClient: DevTestLabsClient, envId: string): Promise<any> {
+async function deleteEnv(dtlClient: DevTestLabsClient, envId: string): Promise<void> {
     const labName: string = resutil.getLabResourceName(envId, 'labs');
     const labRgName: string = resutil.getLabResourceName(envId, 'resourcegroups');
     const envName: string = resutil.getLabResourceName(envId, 'environments');
@@ -48,7 +48,7 @@ async function deleteEnv(dtlClient: DevTestLabsClient, envId: string): Promise<a
     console.log(`Finished deleting Lab Environment '${envName}'.`);
 }
 
-async function run(id?: string, test?: boolean): Promise<any> {
+async function run(id?: string, test?: boolean): Promise<void> {
     try {
         console.log('Starting Azure DevTest Labs Delete Environment Task');
 

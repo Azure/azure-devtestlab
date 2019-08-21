@@ -11,7 +11,7 @@ import { CreateOrUpdateEnvTaskInputData, TaskClients } from '../../modules/task-
 import { DevTestLabsClient, DevTestLabsMappers, DevTestLabsModels } from "@azure/arm-devtestlabs";
 import { ResourcesGetByIdResponse } from '@azure/arm-resources/esm/models';
 
-async function createEnvironment(dtlClient: DevTestLabsClient, inputData: CreateOrUpdateEnvTaskInputData): Promise<any> {
+async function createEnvironment(dtlClient: DevTestLabsClient, inputData: CreateOrUpdateEnvTaskInputData): Promise<void> {
     const labName: string = resutil.getLabResourceName(inputData.labId, 'labs');
     const labRgName: string = resutil.getLabResourceName(inputData.labId, 'resourcegroups');
     const env: DevTestLabsModels.DtlEnvironment = getEnvironment(inputData.templateId, inputData.parametersFile, inputData.parameterOverrides);
@@ -107,7 +107,7 @@ function showInputData(inputData: CreateOrUpdateEnvTaskInputData): void {
     console.log(`  EnvironmentTemplateSasTokenVariable = ${inputData.envTemplateSasTokenVariable}`);
 }
 
-async function run(envName?: string, test?: boolean) {
+async function run(envName?: string, test?: boolean): Promise<void> {
     try {
         console.log('Starting Azure DevTest Labs Create Environment Task');
 

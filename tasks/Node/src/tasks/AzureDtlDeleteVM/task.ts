@@ -6,7 +6,7 @@ import * as testutil from '../../modules/task-utils/testutil';
 
 import { DevTestLabsClient } from "@azure/arm-devtestlabs";
 
-async function ensureVmExists(dtlClient: DevTestLabsClient, labVmId: string): Promise<any> {
+async function ensureVmExists(dtlClient: DevTestLabsClient, labVmId: string): Promise<void> {
     const labName: string = resutil.getLabResourceName(labVmId, 'labs');
     const labRgName: string = resutil.getLabResourceName(labVmId, 'resourcegroups');
     const vmName: string = resutil.getLabResourceName(labVmId, 'virtualmachines');
@@ -27,7 +27,7 @@ async function ensureVmExists(dtlClient: DevTestLabsClient, labVmId: string): Pr
     }
 }
 
-async function deleteVm(dtlClient: DevTestLabsClient, labVmId: string): Promise<any> {
+async function deleteVm(dtlClient: DevTestLabsClient, labVmId: string): Promise<void> {
     const labName = resutil.getLabResourceName(labVmId, 'labs');
     const labRgName = resutil.getLabResourceName(labVmId, 'resourcegroups');
     const vmName = resutil.getLabResourceName(labVmId, 'virtualmachines');
@@ -48,7 +48,7 @@ async function deleteVm(dtlClient: DevTestLabsClient, labVmId: string): Promise<
     console.log(`Finished deleting Lab VM '${vmName}'.`);
 }
 
-async function run(id?: string, test?: boolean) {
+async function run(id?: string, test?: boolean): Promise<void> {
     try {
         console.log('Starting Azure DevTest Labs Delete VM Task');
 

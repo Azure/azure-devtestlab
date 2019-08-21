@@ -80,7 +80,7 @@ function getInputData(envId?: string, test?: boolean): CreateOrUpdateEnvTaskInpu
     return inputData;
 }
 
-async function updateEnvironment(clients: TaskClients, inputData: CreateOrUpdateEnvTaskInputData): Promise<any> {
+async function updateEnvironment(clients: TaskClients, inputData: CreateOrUpdateEnvTaskInputData): Promise<void> {
     const labName: string = resutil.getLabResourceName(inputData.labId, 'labs');
     const labRgName: string = resutil.getLabResourceName(inputData.labId, 'resourcegroups');
     const envName: string = resutil.getLabResourceName(inputData.envId, 'environments');
@@ -142,7 +142,7 @@ function showInputData(inputData: CreateOrUpdateEnvTaskInputData): void {
     console.log(`  EnvironmentTemplateSasTokenVariable = ${inputData.envTemplateSasTokenVariable}`);
 }
 
-async function run(envId?: string, test?: boolean) {
+async function run(envId?: string, test?: boolean): Promise<void> {
     try {
         console.log('Starting Azure DevTest Labs Update Environment Task');
 
