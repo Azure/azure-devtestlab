@@ -61,7 +61,6 @@
   ],
   "exclude": [
     "**/authfile.json",
-    "**/tasktemplate.ts",
     "**/testdata.json"
   ]
 }

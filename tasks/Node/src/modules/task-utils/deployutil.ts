@@ -16,7 +16,7 @@ function addParameterOverrides(parameterOverrides: string, existingParameters: D
 
     let newParameter: DevTestLabsModels.ArmTemplateParameterProperties = Object.create(DevTestLabsMappers.ArmTemplateParameterProperties);
 
-    var parsedParameterOverrides = parameterOverrides.split(' ');
+    const parsedParameterOverrides = parameterOverrides.split(' ');
 
     parsedParameterOverrides.forEach(parameterOverride => {
         if (parameterOverride.startsWith('-')) {

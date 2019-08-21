@@ -38,7 +38,7 @@ async function deleteEnv(dtlClient: DevTestLabsClient, envId: string): Promise<a
 
     const results = await dtlClient.environments.deleteMethod(labRgName, labName, '@me', envName);
     if (results) {
-        var status = Object.keys(results._response.parsedBody);
+        const status = Object.keys(results._response.parsedBody);
 
         if (results._response.parsedBody[status[0]] != 'Succeeded') {
             throw results._response.parsedBody;
@@ -79,5 +79,5 @@ async function run(id?: string, test?: boolean): Promise<any> {
     }
 }
 
-var args = require('minimist')(process.argv.slice(2));
+const args = require('minimist')(process.argv.slice(2));
 run(args.id, args.test);

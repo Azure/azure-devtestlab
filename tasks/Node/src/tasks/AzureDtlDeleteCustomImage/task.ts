@@ -15,7 +15,7 @@ async function ensureCiExists(dtlClient: DevTestLabsClient, ciId: string): Promi
 
     const customImages = await dtlClient.customImages.list(labRgName, labName);
 
-    var ciExists = customImages && customImages.some((ci) => ci && ci.name && ci.name.toLocaleLowerCase() === ciName );
+    const ciExists = customImages && customImages.some((ci) => ci && ci.name && ci.name.toLocaleLowerCase() === ciName);
 
     const message: string = `Lab Custom Image '${ciName}' ${ciExists ? 'exists' : 'does not exist'}.`;
 
@@ -38,7 +38,7 @@ async function deleteCi(dtlClient: DevTestLabsClient, ciId: string): Promise<any
 
     const results = await dtlClient.customImages.deleteMethod(labRgName, labName, ciName);
     if (results) {
-        var status = Object.keys(results._response.parsedBody);
+        const status = Object.keys(results._response.parsedBody);
 
         if (results._response.parsedBody[status[0]] != 'Succeeded') {
             throw results._response.parsedBody;
@@ -79,5 +79,5 @@ async function run(id?: string, test?: boolean): Promise<any> {
     }
 }
 
-var args = require('minimist')(process.argv.slice(2));
+const args = require('minimist')(process.argv.slice(2));
 run(args.id, args.test);

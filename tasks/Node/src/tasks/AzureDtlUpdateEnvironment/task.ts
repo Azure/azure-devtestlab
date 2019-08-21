@@ -180,5 +180,5 @@ async function run(envId?: string, test?: boolean) {
     }
 }
 
-var args = require('minimist')(process.argv.slice(2));
+const args = require('minimist')(process.argv.slice(2));
 run(args.id, args.test);
