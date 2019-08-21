@@ -1,3 +1,9 @@
+> **NOTICE**
+>
+> The Azure DevTest Labs Tasks version based on PowerShell is being superseded by the [Node.js implementation](https://github.com/Azure/azure-devtestlab/tree/master/tasks/Node).
+>
+> Any enhancements and bug fixes will be done in the [Node.js project](https://github.com/Azure/azure-devtestlab/tree/master/tasks/Node). We ask that any contributions are directed to that project.
+
 # Azure DevTest Labs Tasks
 
 Collection of build/release tasks to interact with [Azure DevTest Labs](https://azure.microsoft.com/en-us/services/devtest-lab/).
