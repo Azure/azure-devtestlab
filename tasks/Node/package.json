@@ -21,7 +21,6 @@
     "@types/node": "^10.14.14",
     "@types/q": "^1.5.2",
     "ncp": "^2.0.0",
-    "react-dev-utils": "^9.0.1",
     "rimraf": "^2.6.3",
     "ts-loader": "^6.0.4",
     "typescript": "^3.0.3",
