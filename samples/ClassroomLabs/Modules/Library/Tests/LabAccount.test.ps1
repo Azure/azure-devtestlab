@@ -4,7 +4,7 @@ Import-Module $PSScriptRoot\..\Az.LabServices.psm1
 
 $rgName     = 'AzLabsLibrary'
 $rgLocation = 'West Europe'
-$laName     = 'AzLabsLibrary-la' + (Get-Random)
+$laName     = 'Temp' + (Get-Random)
 
 Describe 'Lab Account Crud' {
         It 'Can create a Lab Account' {
