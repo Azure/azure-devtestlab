@@ -15,20 +15,35 @@ $descr = 'Bringing it to the 21st Century'
 $userName = 'test0000'
 $password = 'Test000'
 
-function Get-FastLabAccount {
+function Get-FastResourceGroup {
     [CmdletBinding()]
     param()
 
-    # Creat RG, Lab Account and lab if not existing
-    if (-not (Get-AzResourceGroup -ResourceGroupName $rgName -EA SilentlyContinue)) {
+    $rg = Get-AzResourceGroup -ResourceGroupName $rgName -EA SilentlyContinue
+    if (-not $rg) {
         New-AzResourceGroup -ResourceGroupName $rgName -Location $rgLocation | Out-null
         Write-Verbose "$rgname resource group didn't exist. Created it."
     }
+    return $rg
+}
 
-    $la = Get-AzLabAccount -ResourceGroupName $rgName -LabAccountName $laName
+function Get-FastLabAccount {
+    [CmdletBinding()]
+    param([Switch]$RandomName = $false)
+
+    # Creat RG, Lab Account and lab if not existing
+    Get-FastResourceGroup | Out-Null
+    
+    if($RandomName) {
+        $laRealName = 'Temp' + (Get-Random)
+    } else {
+        $laRealName = $laName
+    }
+
+    $la = Get-AzLabAccount -ResourceGroupName $rgName -LabAccountName $laRealName
     if (-not $la) {
-        $la = New-AzLabAccount -ResourceGroupName $rgName -LabAccountName $laName
-        Write-Verbose "$laName lab account created."                
+        $la = New-AzLabAccount -ResourceGroupName $rgName -LabAccountName $laRealName
+        Write-Verbose "$laRealName lab account created."                
     }
     return $la
 }
