@@ -13,6 +13,6 @@ Describe 'Cleanup resources as might get left dangling' {
             
         Get-AzLabAccount -ResourceGroupName $rg.ResourceGroupName | Where-Object {$_.Name.StartsWith('Temp')} | Remove-AzLabAccount
         $la | Get-AzLab | Where-Object {$_.Name.StartsWith('Temp')} | Remove-AzLab
-        $lab | Get-AzLabSchedule | Remove-AzLabSchedule
+        $lab | Get-AzLabSchedule | Where-Object {$_.properties.start -lt (Get-Date).AddDays(-7)} | Remove-AzLabSchedule
     }    
 }
