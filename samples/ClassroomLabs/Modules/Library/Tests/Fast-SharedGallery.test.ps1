@@ -17,7 +17,7 @@ Describe 'Shared Gallery Management' {
         $acsg | Should -Not -Be $null
 
         $imgs = $la | Get-AzLabAccountSharedImage
-        $imgs.Count | Should -BeGreaterThan 0
+        $imgs | Should -Not -BeNullOrEmpty
 
         $la | Remove-AzLabAccountSharedGallery -SharedGalleryName $sg.Name
         $la | Remove-AzLabAccount
