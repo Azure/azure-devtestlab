@@ -88,7 +88,7 @@ namespace DtlClient
             Console.WriteLine("Virtual network ID: " + virtualNetwork.Id);
 
             Console.WriteLine($"Bulk-creating {vmCount} virtual machines...");
-            client.Labs.CreateEnvironment(labName, new LabVirtualMachineCreationParameter
+            client.Labs.CreateEnvironment(labResourceGroupName, labName, new LabVirtualMachineCreationParameter
             {
                 BulkCreationParameters = new BulkCreationParameters
                 {
