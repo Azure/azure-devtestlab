@@ -1,0 +1,81 @@
+{
+    "id": "AE5DFA8C-0C57-41E8-BFDF-5B83AC08D896",
+    "name": "AzureDevTestLabsDeleteVM",
+    "friendlyName": "Azure DevTest Labs Delete VM",
+    "description": "Delete the given Azure DevTest Labs VM",
+    "helpMarkDown": "Deletes the specified virtual machine from the selected lab.",
+    "author": "Microsoft Corporation",
+    "category": "Deploy",
+    "minimumAgentVersion": "1.95.1",
+    "instanceNameFormat": "Delete Azure DevTest Labs VM",
+    "releaseNotes": "Works with cross-platform agents (Linux, macOS, or Windows)",
+    "preview": true,
+    "demands": [
+        "npm"
+    ],
+    "version": {
+        "Major": 3,
+        "Minor": 0,
+        "Patch": 0
+    },
+    "visibility": [
+        "Build",
+        "Release"
+    ],
+    "inputs": [
+        {
+            "name": "ConnectedServiceName",
+            "aliases": [
+                "azureSubscription"
+            ],
+            "type": "connectedService:AzureRM",
+            "label": "Azure RM Subscription",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Azure Resource Manager subscription to configure before running."
+        },
+        {
+            "name": "LabId",
+            "type": "pickList",
+            "label": "Lab Name",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Name of an existing lab in which the lab VM will be deleted. This is a pick list generated as a result of selecting a subscription.",
+            "properties": {
+                "EditableOptions": "True"
+            }
+        },
+        {
+            "name": "LabVmId",
+            "type": "pickList",
+            "label": "Virtual Machine Name",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Name of the lab VM to delete. This is a pick list generated as a result of selecting a lab.",
+            "properties": {
+                "EditableOptions": "True"
+            }
+        }
+    ],
+    "sourceDefinitions": [
+        {
+            "target": "LabId",
+            "endpoint": "https://management.azure.com/subscriptions/$(authKey.SubscriptionId)/resources?$filter=resourceType+EQ+'Microsoft.DevTestLab/labs'&api-version=2015-01-01",
+            "selector": "jsonpath:$.value[*].name",
+            "keySelector": "jsonpath:$.value[*].id",
+            "authKey": "$(ConnectedServiceName)"
+        },
+        {
+            "target": "LabVmId",
+            "endpoint": "https://management.azure.com$(LabId)/virtualmachines?api-version=2016-05-15",
+            "selector": "jsonpath:$.value[*].name",
+            "keySelector": "jsonpath:$.value[*].id",
+            "authKey": "$(ConnectedServiceName)"
+        }
+    ],
+    "execution": {
+        "Node": {
+            "target": "task.js"
+        }
+    }
+}

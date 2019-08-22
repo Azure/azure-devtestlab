@@ -1,0 +1,175 @@
+{
+    "id": "65B23B71-D518-4074-8370-CF84EBFC909B",
+    "name": "AzureDevTestLabsCreateVM",
+    "friendlyName": "Azure DevTest Labs Create VM",
+    "description": "Create an Azure DevTest Labs VM",
+    "helpMarkDown": "Creates a virtual machine in the selected lab.",
+    "author": "Microsoft Corporation",
+    "category": "Deploy",
+    "minimumAgentVersion": "1.95.1",
+    "instanceNameFormat": "Create Azure DevTest Labs VM",
+    "releaseNotes": "Works with cross-platform agents (Linux, macOS, or Windows)",
+    "preview": true,
+    "demands": [
+        "npm"
+    ],
+    "version": {
+        "Major": 3,
+        "Minor": 0,
+        "Patch": 0
+    },
+    "visibility": [
+        "Build",
+        "Release"
+    ],
+    "groups": [
+        {
+            "name": "advanced",
+            "displayName": "Advanced Options",
+            "isExpanded": true
+        }
+    ],
+    "inputs": [
+        {
+            "name": "ConnectedServiceName",
+            "aliases": [
+                "azureSubscription"
+            ],
+            "type": "connectedService:AzureRM",
+            "label": "Azure RM Subscription",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Azure Resource Manager subscription to configure before running."
+        },
+        {
+            "name": "LabId",
+            "type": "pickList",
+            "label": "Lab Name",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Name of an existing lab in which the lab VM will be created. This is a pick list generated as a result of selecting a subscription.",
+            "properties": {
+                "EditableOptions": "True"
+            }
+        },
+        {
+            "name": "VirtualMachineName",
+            "type": "string",
+            "label": "Virtual Machine Name",
+            "required": true,
+            "defaultValue": "",
+            "helpMarkDown": "The name of the virtual machine to create."
+        },
+        {
+            "name": "TemplateFile",
+            "type": "filePath",
+            "label": "Template File",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Path to the ARM template. You can generate the ARM template from the **View ARM template** section when creating a Lab VM. Select the ARM template by browsing to the file that you have saved in your Azure DevOps source control. It can be either a relative path in a build output or a relative path inside an artifacts package."
+        },
+        {
+            "name": "ParametersFile",
+            "type": "filePath",
+            "label": "Parameters File",
+            "required": false,
+            "defaultValue": "",
+            "helpMarkDown": "Path to a ARM template parameters file that provides parameter values for the virtual machine template."
+        },
+        {
+            "name": "ParameterOverrides",
+            "type": "multiLine",
+            "label": "Parameter Overrides",
+            "defaultValue": "",
+            "required": false,
+            "helpMarkDown": "Set parameter values needed by the virtual machine template. Parameter values set by parameters file will be overridden. Expected format is -SampleParameter 'SampleValue'."
+        },
+        {
+            "name": "FailOnArtifactError",
+            "type": "boolean",
+            "label": "Fail on artifact error",
+            "defaultValue": "false",
+            "required": false,
+            "groupName": "advanced",
+            "helpMarkDown": "Fail the task if any artifact fails to apply successfully."
+        },
+        {
+            "name": "RetryOnFailure",
+            "type": "boolean",
+            "label": "Retry the deployment following any failure",
+            "defaultValue": "false",
+            "required": false,
+            "groupName": "advanced",
+            "helpMarkDown": "Retry the deployment when failing to create the lab VM or if any artifact fails to apply successfully."
+        },
+        {
+            "name": "RetryCount",
+            "type": "string",
+            "label": "Number of times to retry the deployment",
+            "defaultValue": "3",
+            "required": false,
+            "groupName": "advanced",
+            "helpMarkDown": "Number of times to retry the deployment when an error occurs, either while creating the lab VM or if any artifact fails to apply successfully.",
+            "visibleRule": "RetryOnFailure = true"
+        },
+        {
+            "name": "DeleteFailedLabVMBeforeRetry",
+            "type": "boolean",
+            "label": "Delete the failed lab VM before retrying",
+            "defaultValue": "false",
+            "required": false,
+            "groupName": "advanced",
+            "helpMarkDown": "Delete the failed lab VM before retrying to create a new lab VM.",
+            "visibleRule": "RetryOnFailure = true"
+        },
+        {
+            "name": "DeleteFailedDeploymentBeforeRetry",
+            "type": "boolean",
+            "label": "Delete the failed deployment before retrying",
+            "defaultValue": "false",
+            "required": false,
+            "groupName": "advanced",
+            "helpMarkDown": "Delete the failed deployment before retrying to create the lab VM.",
+            "visibleRule": "RetryOnFailure = true"
+        },
+        {
+            "name": "AppendRetryNumberToVMName",
+            "type": "boolean",
+            "label": "Append the retry iteration number to the VM name",
+            "defaultValue": "false",
+            "required": false,
+            "groupName": "advanced",
+            "helpMarkDown": "Append the retry iteration number to the lab VM name before retrying (i.e. newVMName-1). Note that this may cause your lab VM name to be longer than allowed.",
+            "visibleRule": "RetryOnFailure = true"
+        },
+        {
+            "name": "WaitMinutesForApplyArtifacts",
+            "type": "string",
+            "label": "Number of minutes to wait in case the apply artifacts operation is still running",
+            "defaultValue": "0",
+            "required": false,
+            "groupName": "advanced",
+            "helpMarkDown": "Number of minutes to wait for the apply artifacts operation to complete after the deployment has indicated completion."
+        }
+    ],
+    "outputVariables": [
+        {
+            "name": "labVmId",
+            "description": "Capture the created lab VM ID."
+        }
+    ],
+    "sourceDefinitions": [
+        {
+            "target": "LabId",
+            "endpoint": "https://management.azure.com/subscriptions/$(authKey.SubscriptionId)/resources?$filter=resourceType+EQ+'Microsoft.DevTestLab/labs'&api-version=2015-01-01",
+            "selector": "jsonpath:$.value[*].name",
+            "keySelector": "jsonpath:$.value[*].id",
+            "authKey": "$(ConnectedServiceName)"
+        }
+    ],
+    "execution": {
+        "Node": {
+            "target": "task.js"
+        }
+    }
+}

@@ -1,0 +1,81 @@
+{
+    "id": "38BE4A2A-4252-4F07-8BA7-228DB9ED722D",
+    "name": "AzureDevTestLabsDeleteCustomImage",
+    "friendlyName": "Azure DevTest Labs Delete Custom Image",
+    "description": "Delete an Azure DevTest Labs Custom Image",
+    "helpMarkDown": "Deletes the specified custom image from the selected lab.",
+    "author": "Microsoft Corporation",
+    "category": "Deploy",
+    "minimumAgentVersion": "1.95.1",
+    "instanceNameFormat": "Delete Azure DevTest Labs Custom Image",
+    "releaseNotes": "Works with cross-platform agents (Linux, macOS, or Windows)",
+    "preview": true,
+    "demands": [
+        "npm"
+    ],
+    "version": {
+        "Major": 3,
+        "Minor": 0,
+        "Patch": 0
+    },
+    "visibility": [
+        "Build",
+        "Release"
+    ],
+    "inputs": [
+        {
+            "name": "ConnectedServiceName",
+            "aliases": [
+                "azureSubscription"
+            ],
+            "type": "connectedService:AzureRM",
+            "label": "Azure RM Subscription",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Azure Resource Manager subscription to configure before running."
+        },
+        {
+            "name": "LabId",
+            "type": "pickList",
+            "label": "Lab Name",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Name of an existing lab from which the custom image will be deleted. This is a pick list generated as a result of selecting a subscription.",
+            "properties": {
+                "EditableOptions": "True"
+            }
+        },
+        {
+            "name": "CustomImageId",
+            "type": "pickList",
+            "label": "Custom Image Name",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Name of an existing custom image that will be deleted. This is a pick list generated as a result of selecting an lab.",
+            "properties": {
+                "EditableOptions": "True"
+            }
+        }
+    ],
+    "sourceDefinitions": [
+        {
+            "target": "LabId",
+            "endpoint": "https://management.azure.com/subscriptions/$(authKey.SubscriptionId)/resources?$filter=resourceType+EQ+'Microsoft.DevTestLab/labs'&api-version=2015-01-01",
+            "selector": "jsonpath:$.value[*].name",
+            "keySelector": "jsonpath:$.value[*].id",
+            "authKey": "$(ConnectedServiceName)"
+        },
+        {
+            "target": "CustomImageId",
+            "endpoint": "https://management.azure.com$(LabId)/customimages?api-version=2018-10-15-preview",
+            "selector": "jsonpath:$.value[*].name",
+            "keySelector": "jsonpath:$.value[*].id",
+            "authKey": "$(ConnectedServiceName)"
+        }
+    ],
+    "execution": {
+        "Node": {
+            "target": "task.js"
+        }
+    }
+}

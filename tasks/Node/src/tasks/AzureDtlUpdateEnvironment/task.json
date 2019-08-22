@@ -1,0 +1,159 @@
+{
+    "id": "9567583F-9650-4185-9901-4D713CD3E6A2",
+    "name": "AzureDevTestLabsUpdateEnvironment",
+    "friendlyName": "Azure DevTest Labs Update Environment",
+    "description": "Update the given Azure DevTest Labs Environment",
+    "helpMarkDown": "Updates the specified environment in the selected lab.",
+    "author": "Microsoft Corporation",
+    "category": "Deploy",
+    "minimumAgentVersion": "1.95.1",
+    "instanceNameFormat": "Update Azure DevTest Labs Environment",
+    "releaseNotes": "Works with cross-platform agents (Linux, macOS, or Windows)",
+    "preview": true,
+    "demands": [
+        "npm"
+    ],
+    "version": {
+        "Major": 3,
+        "Minor": 0,
+        "Patch": 0
+    },
+    "visibility": [
+        "Build",
+        "Release"
+    ],
+    "groups": [
+        {
+            "name": "exportOptions",
+            "displayName": "Export Options",
+            "isExpanded": true
+        }
+    ],
+    "inputs": [
+        {
+            "name": "ConnectedServiceName",
+            "aliases": [
+                "azureSubscription"
+            ],
+            "type": "connectedService:AzureRM",
+            "label": "Azure RM Subscription",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Azure Resource Manager subscription to configure before running."
+        },
+        {
+            "name": "LabId",
+            "type": "pickList",
+            "label": "Lab Name",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Name of an existing lab in which the lab VM will be created. This is a pick list generated as a result of selecting a subscription.",
+            "properties": {
+                "EditableOptions": "True"
+            }
+        },
+        {
+            "name": "EnvironmentId",
+            "type": "pickList",
+            "label": "Environment Name",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Name of an existing environment that will be updated. This is a pick list generated as a result of selecting an lab.",
+            "properties": {
+                "EditableOptions": "True"
+            }
+        },
+        {
+            "name": "TemplateFile",
+            "type": "filePath",
+            "label": "Template File",
+            "required": true,
+            "defaultValue": "",
+            "helpMarkDown": "Path to an existing ARM template to add to the environment."
+        },
+        {
+            "name": "ParametersFile",
+            "type": "filePath",
+            "label": "Parameters File",
+            "required": false,
+            "defaultValue": "",
+            "helpMarkDown": "Path to a ARM template parameters file that provides parameter values for the environment template."
+        },
+        {
+            "name": "ParameterOverrides",
+            "type": "multiLine",
+            "label": "Parameter Overrides",
+            "defaultValue": "",
+            "required": false,
+            "helpMarkDown": "Set parameter values needed by the environment template. Parameter values set by parameters file will be overridden. Expected format is -SampleParameter 'SampleValue'."
+        },
+        {
+            "name": "OutputTemplateVariables",
+            "type": "boolean",
+            "label": "Create output variables based on the environment template output?",
+            "required": true,
+            "defaultValue": "false",
+            "helpMarkDown": "Capture environment template output as build/release variables."
+        },
+        {
+            "name": "ExportEnvironmentTemplate",
+            "type": "boolean",
+            "label": "Export the environment template to a build artifact?",
+            "required": true,
+            "defaultValue": "false",
+            "helpMarkDown": "Export the DevTest Lab environment to an ARM template(s) and output as a build artifact.",
+            "groupName": "exportOptions"
+        },
+        {
+            "name": "ExportEnvironmentTemplateLocation",
+            "type": "string",
+            "label": "Build store location",
+            "required": false,
+            "defaultValue": "$(Build.ArtifactStagingDirectory)/DeployedEnvironment",
+            "helpMarkDown": "The location to store the template.",
+            "visibleRule": "ExportEnvironmentTemplate = true",
+            "groupName": "exportOptions"
+        },
+        {
+            "name": "EnvironmentTemplateLocationVariable",
+            "type": "string",
+            "label": "Template Output name for location",
+            "required": false,
+            "defaultValue": "EnvironmentLocation",
+            "helpMarkDown": "The output name for the location (_artifactsLocation) to store the template.",
+            "visibleRule": "ExportEnvironmentTemplate = true",
+            "groupName": "exportOptions"
+        },
+        {
+            "name": "EnvironmentTemplateSasTokenVariable",
+            "type": "string",
+            "label": "Template Output name for the SAS token",
+            "required": false,
+            "defaultValue": "EnvironmentSAS",
+            "helpMarkDown": "The output name for the SAS token (_artifactsLocationSasToken).",
+            "visibleRule": "ExportEnvironmentTemplate = true",
+            "groupName": "exportOptions"
+        }
+    ],
+    "sourceDefinitions": [
+        {
+            "target": "LabId",
+            "endpoint": "https://management.azure.com/subscriptions/$(authKey.SubscriptionId)/resources?$filter=resourceType+EQ+'Microsoft.DevTestLab/labs'&api-version=2015-01-01",
+            "selector": "jsonpath:$.value[*].name",
+            "keySelector": "jsonpath:$.value[*].id",
+            "authKey": "$(ConnectedServiceName)"
+        },
+        {
+            "target": "EnvironmentId",
+            "endpoint": "https://management.azure.com$(LabId)/users/@all/environments?api-version=2017-04-26-preview",
+            "selector": "jsonpath:$.value[*].name",
+            "keySelector": "jsonpath:$.value[*].id",
+            "authKey": "$(ConnectedServiceName)"
+        }
+    ],
+    "execution": {
+        "Node": {
+            "target": "task.js"
+        }
+    }
+}

@@ -1,0 +1,81 @@
+{
+    "id": "1D06D619-904C-4671-9EE1-0A1D919EB00B",
+    "name": "AzureDevTestLabsDeleteEnvironment",
+    "friendlyName": "Azure DevTest Labs Delete Environment",
+    "description": "Delete an Azure DevTest Labs Environment",
+    "helpMarkDown": "Deletes the specified environment from the selected lab.",
+    "author": "Microsoft Corporation",
+    "category": "Deploy",
+    "minimumAgentVersion": "1.95.1",
+    "instanceNameFormat": "Delete Azure DevTest Labs Environment",
+    "releaseNotes": "Works with cross-platform agents (Linux, macOS, or Windows)",
+    "preview": true,
+    "demands": [
+        "npm"
+    ],
+    "version": {
+        "Major": 3,
+        "Minor": 0,
+        "Patch": 0
+    },
+    "visibility": [
+        "Build",
+        "Release"
+    ],
+    "inputs": [
+        {
+            "name": "ConnectedServiceName",
+            "aliases": [
+                "azureSubscription"
+            ],
+            "type": "connectedService:AzureRM",
+            "label": "Azure RM Subscription",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Azure Resource Manager subscription to configure before running."
+        },
+        {
+            "name": "LabId",
+            "type": "pickList",
+            "label": "Lab Name",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Name of an existing lab in which the lab environment will be deleted. This is a pick list generated as a result of selecting an **Azure RM Subscription**.",
+            "properties": {
+                "EditableOptions": "True"
+            }
+        },
+        {
+            "name": "EnvironmentId",
+            "type": "pickList",
+            "label": "Environment Name",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Name of an existing environment that will be deleted. This is a pick list generated as a result of selecting an lab.",
+            "properties": {
+                "EditableOptions": "True"
+            }
+        }
+    ],
+    "sourceDefinitions": [
+        {
+            "target": "LabId",
+            "endpoint": "https://management.azure.com/subscriptions/$(authKey.SubscriptionId)/resources?$filter=resourceType+EQ+'Microsoft.DevTestLab/labs'&api-version=2015-01-01",
+            "selector": "jsonpath:$.value[*].name",
+            "keySelector": "jsonpath:$.value[*].id",
+            "authKey": "$(ConnectedServiceName)"
+        },
+        {
+            "target": "EnvironmentId",
+            "endpoint": "https://management.azure.com$(LabId)/users/@all/environments?api-version=2018-10-15-preview",
+            "selector": "jsonpath:$.value[*].name",
+            "keySelector": "jsonpath:$.value[*].id",
+            "authKey": "$(ConnectedServiceName)"
+        }
+    ],
+    "execution": {
+        "Node": {
+            "target": "task.js"
+        }
+    }
+}

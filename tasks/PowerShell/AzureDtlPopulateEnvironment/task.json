@@ -2,8 +2,9 @@
     "id": "1FBE9BB7-B97B-4D08-8CB3-E0A776F687AA",
     "name": "AzureDevTestLabsPopulateEnvironment",
     "friendlyName": "Azure DevTest Labs Populate Environment.",
-    "description": "Deploy an Azure ARM template to an existing DevTest Lab environment.",
+    "description": "Superseded by task 'Azure DevTest Labs Update Environment'. Deploy an Azure ARM template to an existing DevTest Lab environment.",
     "category": "Deploy",
+    "deprecated": true,
     "visibility": [
         "Build",
         "Release"
@@ -12,7 +13,7 @@
     "version": {
         "Major": 1,
         "Minor": 0,
-        "Patch": 110
+        "Patch": 112
     },
     "demands": [
         "azureps"

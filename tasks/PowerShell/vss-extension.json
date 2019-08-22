@@ -1,7 +1,7 @@
 {
     "manifestVersion": 1,
     "id": "tasks",
-    "version": "1.0.53",
+    "version": "1.0.55",
     "name": "Azure DevTest Labs Tasks",
     "publisher": "ms-azuredevtestlabs",
     "description": "Collection of build/release tasks to interact with Azure DevTest Labs.",
@@ -17,7 +17,7 @@
         "default": "images/azure-dtl128.png"
     },
     "categories": [
-        "Build and release"
+        "Azure Pipelines"
     ],
     "tags": [
         "azure",

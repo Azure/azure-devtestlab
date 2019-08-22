@@ -1,0 +1,159 @@
+{
+    "id": "476A3548-C6F0-4F7D-849F-6AD9EE28C254",
+    "name": "AzureDevTestLabsCreateCustomImage",
+    "friendlyName": "Azure DevTest Labs Create Custom Image",
+    "description": "Create an Azure DevTest Labs Custom Image",
+    "helpMarkDown": "Creates a custom image in the selected lab.",
+    "author": "Microsoft Corporation",
+    "category": "Deploy",
+    "minimumAgentVersion": "1.95.1",
+    "instanceNameFormat": "Create Azure DevTest Labs Custom Image",
+    "releaseNotes": "Works with cross-platform agents (Linux, macOS, or Windows)",
+    "preview": true,
+    "demands": [
+        "npm"
+    ],
+    "version": {
+        "Major": 3,
+        "Minor": 0,
+        "Patch": 0
+    },
+    "visibility": [
+        "Build",
+        "Release"
+    ],
+    "groups": [
+        {
+            "name": "sourceLabVM",
+            "displayName": "Source Lab VM",
+            "isExpanded": true
+        },
+        {
+            "name": "output",
+            "displayName": "Output Variables",
+            "isExpanded": true
+        }
+    ],
+    "inputs": [
+        {
+            "name": "ConnectedServiceName",
+            "aliases": [
+                "azureSubscription"
+            ],
+            "type": "connectedService:AzureRM",
+            "label": "Azure RM Subscription",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Azure Resource Manager subscription to configure before running."
+        },
+        {
+            "name": "LabId",
+            "type": "pickList",
+            "label": "Lab Name",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Name of an existing lab in which the custom image will be created. This is a pick list generated as a result of selecting a subscription.",
+            "properties": {
+                "EditableOptions": "True"
+            }
+        },
+        {
+            "name": "NewCustomImageName",
+            "type": "string",
+            "label": "Custom Image Name",
+            "defaultValue": "",
+            "required": true,
+            "helpMarkDown": "Name of the custom image that will be created. You can use any variable such as `$(Build.BuildNumber)` or `$(Release.ReleaseName)` when in a build or a release, respectively."
+        },
+        {
+            "name": "Description",
+            "type": "multiLine",
+            "label": "Description",
+            "defaultValue": "",
+            "required": false,
+            "helpMarkDown": "Description of the custom image that will be created. If left blank, an auto-generated string will be used as the description."
+        },
+        {
+            "name": "LabVmId",
+            "type": "pickList",
+            "label": "Source Lab VM ID",
+            "defaultValue": "",
+            "required": true,
+            "groupName": "sourceLabVM",
+            "helpMarkDown": "Resource ID of the source lab VM. The source lab VM must be in the selected lab, as the custom image will be created using its VHD file. You can use any variable such as `$(labVMId)`, the output of calling **Create Azure DevTest Labs VM**, that contains a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}/virtualMachines/{vmName}`.",
+            "properties": {
+                "EditableOptions": "True"
+            }
+        },
+        {
+            "name": "OsType",
+            "type": "pickList",
+            "label": "OS Type",
+            "defaultValue": "Windows",
+            "required": true,
+            "groupName": "sourceLabVM",
+            "helpMarkDown": "Type of operating system of the source lab VM. This is a pick list whose allowed values are _Linux_ or _Windows_.",
+            "options": {
+                "Linux": "Linux",
+                "Windows": "Windows"
+            }
+        },
+        {
+            "name": "LinuxOsState",
+            "type": "pickList",
+            "label": "Linux OS State",
+            "defaultValue": "NonDeprovisioned",
+            "required": true,
+            "groupName": "sourceLabVM",
+            "helpMarkDown": "Value indicating how to prepare the source lab VM for custom image creation. This is a pick list whose allowed values are _NonDeprovisioned_, _DeprovisionRequested_ or _DeprovisionApplied_. See [Deprovisioning](http://aka.ms/Deprovisioning) for more information.",
+            "visibleRule": "OsType = Linux",
+            "options": {
+                "NonDeprovisioned": "NonDeprovisioned",
+                "DeprovisionRequested": "DeprovisionRequested",
+                "DeprovisionApplied": "DeprovisionApplied"
+            }
+        },
+        {
+            "name": "WindowsOsState",
+            "type": "pickList",
+            "label": "Windows OS State",
+            "defaultValue": "SysprepRequested",
+            "required": true,
+            "groupName": "sourceLabVM",
+            "helpMarkDown": "Value indicating how to prepare the the source lab VM for custom image creation. This is a pick list whose allowed values are _NonSysprepped_, _SysprepRequested_ or _SysprepApplied_. See [Sysprep](http://aka.ms/Sysprep) for more information.",
+            "visibleRule": "OsType = Windows",
+            "options": {
+                "NonSysprepped": "NonSysprepped",
+                "SysprepRequested": "SysprepRequested",
+                "SysprepApplied": "SysprepApplied"
+            }
+        }
+    ],
+    "outputVariables": [
+        {
+            "name": "customImageId",
+            "description": "Capture the created custom image ID."
+        }
+    ],
+    "sourceDefinitions": [
+        {
+            "target": "LabId",
+            "endpoint": "https://management.azure.com/subscriptions/$(authKey.SubscriptionId)/resources?$filter=resourceType+EQ+'Microsoft.DevTestLab/labs'&api-version=2015-01-01",
+            "selector": "jsonpath:$.value[*].name",
+            "keySelector": "jsonpath:$.value[*].id",
+            "authKey": "$(ConnectedServiceName)"
+        },
+        {
+            "target": "LabVmId",
+            "endpoint": "https://management.azure.com$(LabId)/virtualmachines?api-version=2016-05-15",
+            "selector": "jsonpath:$.value[*].name",
+            "keySelector": "jsonpath:$.value[*].id",
+            "authKey": "$(ConnectedServiceName)"
+        }
+    ],
+    "execution": {
+        "Node": {
+            "target": "task.js"
+        }
+    }
+}

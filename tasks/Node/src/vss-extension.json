@@ -1,0 +1,170 @@
+{
+  "manifestVersion": 1,
+  "id": "tasks",
+  "version": "3.0.0",
+  "name": "Azure DevTest Labs Tasks",
+  "publisher": "ms-azuredevtestlabs",
+  "description": "Collection of Azure Pipelines tasks to interact with Azure DevTest Labs.",
+  "galleryFlags": [
+    "Public",
+    "Preview"
+  ],
+  "targets": [
+    {
+      "id": "Microsoft.VisualStudio.Services"
+    }
+  ],
+  "icons": {
+    "default": "images/azure-dtl128.png"
+  },
+  "categories": [
+    "Azure Pipelines"
+  ],
+  "tags": [
+    "azure",
+    "devtest",
+    "dtl",
+    "labs",
+    "pipelines",
+    "tasks"
+  ],
+  "screenshots": [
+    {
+      "path": "screenshots/azure-dtl.png"
+    }
+  ],
+  "content": {
+    "details": {
+      "path": "docs/overview.md"
+    }
+  },
+  "links": {
+    "getstarted": {
+      "uri": "https://docs.microsoft.com/en-us/azure/lab-services/devtest-lab-integrate-ci-cd"
+    },
+    "learn": {
+      "uri": "https://azure.microsoft.com/en-ca/services/devtest-lab/"
+    },
+    "license": {
+      "uri": "https://github.com/Azure/azure-devtestlab/blob/master/LICENSE.txt"
+    },
+    "support": {
+      "uri": "https://github.com/Azure/azure-devtestlab/issues"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "uri": "https://github.com/Azure/azure-devtestlab/tree/master/tasks/Node"
+  },
+  "branding": {
+    "color": "rgb(34, 34, 34)",
+    "theme": "dark"
+  },
+  "scopes": [
+    "vso.build_execute",
+    "vso.serviceendpoint_manage"
+  ],
+  "contributions": [
+    {
+      "id": "azure-dtl-task-createCustomImage",
+      "type": "ms.vss-distributed-task.task",
+      "targets": [
+        "ms.vss-distributed-task.tasks"
+      ],
+      "properties": {
+        "name": "tasks/AzureDtlCreateCustomImage"
+      }
+    },
+    {
+      "id": "azure-dtl-task-createEnvironment",
+      "type": "ms.vss-distributed-task.task",
+      "targets": [
+        "ms.vss-distributed-task.tasks"
+      ],
+      "properties": {
+        "name": "tasks/AzureDtlCreateEnvironment"
+      }
+    },
+    {
+      "id": "azure-dtl-task-createvm",
+      "type": "ms.vss-distributed-task.task",
+      "targets": [
+        "ms.vss-distributed-task.tasks"
+      ],
+      "properties": {
+        "name": "tasks/AzureDtlCreateVM"
+      }
+    },
+    {
+      "id": "azure-dtl-task-deleteCustomImage",
+      "type": "ms.vss-distributed-task.task",
+      "targets": [
+        "ms.vss-distributed-task.tasks"
+      ],
+      "properties": {
+        "name": "tasks/AzureDtlDeleteCustomImage"
+      }
+    },
+    {
+      "id": "azure-dtl-task-deleteEnvironment",
+      "type": "ms.vss-distributed-task.task",
+      "targets": [
+        "ms.vss-distributed-task.tasks"
+      ],
+      "properties": {
+        "name": "tasks/AzureDtlDeleteEnvironment"
+      }
+    },
+    {
+      "id": "azure-dtl-task-deleteVm",
+      "type": "ms.vss-distributed-task.task",
+      "targets": [
+        "ms.vss-distributed-task.tasks"
+      ],
+      "properties": {
+        "name": "tasks/AzureDtlDeleteVM"
+      }
+    },
+    {
+      "id": "azure-dtl-task-updateEnvironment",
+      "type": "ms.vss-distributed-task.task",
+      "targets": [
+        "ms.vss-distributed-task.tasks"
+      ],
+      "properties": {
+        "name": "tasks/AzureDtlUpdateEnvironment"
+      }
+    }
+  ],
+  "files": [
+    {
+      "path": "tasks/AzureDtlCreateCustomImage"
+    },
+    {
+      "path": "tasks/AzureDtlCreateEnvironment"
+    },
+    {
+      "path": "tasks/AzureDtlCreateVM"
+    },
+    {
+      "path": "tasks/AzureDtlDeleteCustomImage"
+    },
+    {
+      "path": "tasks/AzureDtlDeleteEnvironment"
+    },
+    {
+      "path": "tasks/AzureDtlDeleteVM"
+    },
+    {
+      "path": "tasks/AzureDtlUpdateEnvironment"
+    },
+    {
+      "path": "images",
+      "addressable": true
+    },
+    {
+      "path": "screenshots",
+      "addressable": true
+    }
+  ]
+}
