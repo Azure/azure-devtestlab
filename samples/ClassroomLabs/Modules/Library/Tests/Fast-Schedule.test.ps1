@@ -21,7 +21,6 @@ $schedules = @(
 # but we might want to do a periodic clean up (nightly?) not to waste resources
 Describe 'Schedule Management' {
     It 'Can create a schedule, get it and delete it' {
-        
         $created = $schedules | ForEach-Object { $_ | New-AzLabSchedule -Lab $lab }
         Write-Verbose "Added all schedules."
 

@@ -9,7 +9,6 @@ $sg = Get-FastGallery
 
 Describe 'Shared Gallery Management' {
     It 'Can attach/detach a shared library' {
-            
         $sg | Should -Not -Be $null
         $la | Should -Not -Be $null
 
