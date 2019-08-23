@@ -4,7 +4,7 @@ Import-Module $PSScriptRoot\..\Az.LabServices.psm1
 
 . $PSScriptRoot\Utils.ps1
 
-$la = Get-FastLabAccount -Random
+$la = Get-FastLabAccount -RandomName
 $sg = Get-FastGallery
 
 Describe 'Shared Gallery Management' {
