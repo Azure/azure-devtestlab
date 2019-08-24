@@ -6,7 +6,7 @@ Param(
     [bool] $VerboseTests = $false
 )
 
-Import-Module $PSScriptRoot\..\Az.LabServices.psm1
+Import-Module $PSScriptRoot\..\Az.DevTestLabs2.psm1
 
 # This allows the parallel tests not to give up on all of them when one test fails. Using just 'Continue' doesn't do it. Mystery.
 $ErrorActionPreference="SilentlyContinue"
