@@ -4,25 +4,20 @@ Param(
 
     [Parameter(Mandatory = $false, HelpMessage="If we should run the tests in 'verbose' mode for extra logging")]
     [bool] $VerboseTests = $false
-
 )
 
-# Import the module here to make sure we validate up front versions of Azure Powershell
-Import-Module $PSScriptRoot\..\Az.DevTestLabs2.psm1
+Import-Module $PSScriptRoot\..\Az.LabServices.psm1
 
-# We don't want to give up on the rest after a single error
-$ErrorActionPreference="Continue"
+# This allows the parallel tests not to give up on all of them when one test fails. Using just 'Continue' doesn't do it. Mystery.
+$ErrorActionPreference="SilentlyContinue"
 
-# Check if we have a newer version of Pester, if not - let's install it
 $pesterModule = Get-Module -ListAvailable | Where-Object {$_.Name -eq "Pester"} | Sort-Object -Descending Version | Select-Object -First 1
 if ($pesterModule.Version.Major -lt 4 -or $pesterModule.version.Minor -lt 8) {
-    # We don't have a new enough version of Pester, install it
     Write-Output "Latest version of Pester is $($pesterModule.Version), Installing the latest Pester from PSGallery"
     Install-PackageProvider -Name NuGet -Force -Scope CurrentUser
     Install-Module -Name Pester -Force -Scope CurrentUser
 }
 
-# Check if we have a good version of ThreadJob - if not, let's install it
 $threadModule = Get-Module -ListAvailable | Where-Object {$_.Name -eq "ThreadJob"} | Sort-Object -Descending Version | Select-Object -First 1
 if (-not $threadModule) {
     Write-Output "Don't have a version of ThreadJob module locally, installing from PSGallery"
@@ -32,10 +27,17 @@ if (-not $threadModule) {
 $invokePesterScriptBlock = {
     param($testScript, $PSScriptRoot, $VerboseTests)
 
+    $ErrorActionPreference="Continue"
+
     Write-Output "TestScript: $testScript"
 
-    # Run pester for the scripts
-    Invoke-Pester -Script @{Path = "$testScript"; Parameters = @{Verbose = $VerboseTests}} -PassThru
+    try {
+        $outputFile = Split-Path $testScript -leaf
+        $outputPath = (Join-Path -Path $PSScriptRoot -ChildPath $outputFile) + '.xml'
+        Invoke-Pester -Script @{Path = "$testScript"; Parameters = @{Verbose = $VerboseTests}} -OutputFile $outputPath -OutputFormat NUnitXml
+    } catch {
+
+    }
 }
 
 # Start searching for scripts from wherever RunPesterTests.ps1 lives
@@ -64,12 +66,5 @@ else {
         $jobs += Start-Job -Script $invokePesterScriptBlock -ArgumentList $_, $PSScriptRoot, $VerboseTests
     }
 
-    $jobs | ForEach-Object {
-        Write-Output "-----------------------------------------------------------------"
-        $result = Receive-Job -Job $_ -Wait -Verbose
-
-        if ($result.FailedCount -ne 0) {
-            Write-Error "Pester returned errors for $($result.TestResult.Describe) - $($result.TestResult.Context)"
-        }
-    }
+    $jobs | Receive-Job -Wait
 }
