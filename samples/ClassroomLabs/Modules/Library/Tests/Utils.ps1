@@ -80,7 +80,9 @@ function Get-FastGallery {
     [CmdletBinding()]
     param()
     $allsg = Get-AzGallery
-    $sg = $allsg | Where-Object { (Get-AzGalleryImageDefinition -ResourceGroupName $_.ResourceGroupName -GalleryName $_.Name).Count -gt 0 }
+    $sg = $allsg `
+         | Where-Object {$_.Name.StartsWith('AzLabsTestGallery')} `
+         | Where-Object { (Get-AzGalleryImageDefinition -ResourceGroupName $_.ResourceGroupName -GalleryName $_.Name).Count -gt 0 }
     if($sg) {
         return $sg[0]
     } else {
