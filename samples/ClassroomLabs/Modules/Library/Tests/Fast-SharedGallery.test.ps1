@@ -4,22 +4,33 @@ Import-Module $PSScriptRoot\..\Az.LabServices.psm1
 
 . $PSScriptRoot\Utils.ps1
 
-$la = Get-FastLabAccount -RandomName
-$sg = Get-FastGallery
 
-Describe 'Shared Gallery Management' {
+Describe 'Shared Gallery' {
+
+    BeforeAll {
+        $script:la = Get-FastLabAccount -RandomName
+        $script:sg = Get-FastGallery
+    }
+
+    AfterAll {
+        $script:la | Remove-AzLabAccount
+    }
+
     It 'Can attach/detach a shared library' {
-        $sg | Should -Not -Be $null
-        $la | Should -Not -Be $null
+        $script:sg | Should -Not -Be $null
+        $script:la | Should -Not -Be $null
 
-        $acsg = $la | New-AzLabAccountSharedGallery -SharedGallery $sg
+        $acsg = $script:la | New-AzLabAccountSharedGallery -SharedGallery $script:sg
         $acsg | Should -Not -Be $null
+    }
 
-        $imgs = $la | Get-AzLabAccountSharedImage
+    It 'Can retrieve images' {
+        $imgs = $script:la | Get-AzLabAccountSharedImage
         # TODO: reenable once bug resolved
         #$imgs | Should -Not -BeNullOrEmpty
+    }
 
-        $la | Remove-AzLabAccountSharedGallery -SharedGalleryName $sg.Name
-        $la | Remove-AzLabAccount
-    }    
+    It 'Can remove a gallery' {
+        $script:la | Remove-AzLabAccountSharedGallery -SharedGalleryName $script:sg.Name
+    }
 }
