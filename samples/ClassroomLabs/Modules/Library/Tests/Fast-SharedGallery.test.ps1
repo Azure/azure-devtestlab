@@ -26,8 +26,7 @@ Describe 'Shared Gallery' {
 
     It 'Can retrieve images' {
         $imgs = $script:la | Get-AzLabAccountSharedImage
-        # TODO: reenable once bug resolved
-        #$imgs | Should -Not -BeNullOrEmpty
+        $imgs | Should -Not -BeNullOrEmpty
     }
 
     It 'Can remove a gallery' {
