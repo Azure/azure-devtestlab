@@ -18,38 +18,40 @@ $userName = 'test0000'
 $password = 'Test00000000'
 $linuxRdp = $true
 
-Describe 'Lab Crud' {
-    It 'Can create a lab' {
+Describe 'Lab' {
 
-        # Creat RG, Lab Account and lab if not existing
+    BeforeAll {
         if (-not (Get-AzResourceGroup -ResourceGroupName $rgName -EA SilentlyContinue)) {
             New-AzResourceGroup -ResourceGroupName $rgName -Location $rgLocation | Out-null
             Write-Verbose "$rgname resource group didn't exist. Created it."
         }
 
-        $la = Get-AzLabAccount -ResourceGroupName $rgName -LabAccountName $laName
+        $script:la = Get-AzLabAccount -ResourceGroupName $rgName -LabAccountName $laName
         if (-not $la) {
-            $la = New-AzLabAccount -ResourceGroupName $rgName -LabAccountName $laName
+            $script:la = New-AzLabAccount -ResourceGroupName $rgName -LabAccountName $laName
             Write-Verbose "$laName lab account created."                
         }
+    }
+
+    It 'Can create a lab' {
                  
-        $lab = $la | Get-AzLab -LabName $labName
+        $lab = $script:la | Get-AzLab -LabName $labName
             
         if ($lab) {
-            $lab = $la `
+            $lab = $script:la `
             | New-AzLab -LabName $LabName -MaxUsers $maxUsers -UsageQuotaInHours $usageQuota -UserAccessMode $usageAMode -SharedPasswordEnabled:$shPsswd `
             | Publish-AzLab
             Write-Verbose "$LabName lab already exist. Republished."
         }
         else {
-            $imgs = $la | Get-AzLabAccountGalleryImage
+            $imgs = $script:la | Get-AzLabAccountGalleryImage
             $imgs | Should -Not -Be $null
             # $imgs.Count | Should -BeGreaterThan 0
             $img = $imgs[0]
             $img | Should -Not -Be $null
             Write-Verbose "Image $imgName found."
                 
-            $lab = $la `
+            $lab = $script:la `
             | New-AzLab -LabName $LabName -MaxUsers $maxUsers -UsageQuotaInHours $usageQuota -UserAccessMode $usageAMode -SharedPasswordEnabled:$shPsswd `
             | New-AzLabTemplateVM -Image $img -Size $size -Title $title -Description $descr -UserName $userName -Password $password -LinuxRdpEnabled:$linuxRdp `
             | Publish-AzLab
@@ -59,9 +61,14 @@ Describe 'Lab Crud' {
         $lab | Should -Not -BeNullOrEmpty                   
     }
 
+    It 'Can query using wildcards' {
+        $script:la | Get-AzLab -LabName Fast* | Should -Not -BeNullOrEmpty
+        $script:la | Get-AzLab -LabName FastLab | Should -Not -BeNullOrEmpty       
+    }
+
+
     it 'Can remove a lab' {
-        $la = Get-AzLabAccount -ResourceGroupName $rgName -LabAccountName $laName
-        $lab = $la | Get-AzLab -LabName $labName
+        $lab = $script:la | Get-AzLab -LabName $labName
 
         # OK, this is ugly. I am testing randomly both branches in the creation test by leaving the lab there half the time
         # In theory it should be two different tests, but We have issues of running time for tests, hence this hack ...
