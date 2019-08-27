@@ -26,7 +26,7 @@ Describe 'Shared Gallery' {
 
     It 'Can retrieve images' {
         $imgs = $script:la | Get-AzLabAccountSharedImage
-        $imgs[0] | Should -Not -BeNullOrEmpty
+        $imgs | Should -Not -BeNullOrEmpty
     }
 
     It 'Can remove a gallery' {
