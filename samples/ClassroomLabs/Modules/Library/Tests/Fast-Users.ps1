@@ -13,7 +13,7 @@ Describe 'Users' {
 
     BeforeAll {
         $script:lab = Get-FastLab
-        $script:userNames = @('test' + (Get-Random) + '@test.com', 'test' + (Get-Random) + '@test.com')
+        [string[]]$script:userNames = @(('test' + (Get-Random) + '@test.com'), ('test' + (Get-Random) + '@test.com'))
     }
     
     It 'Can add users to lab and get them' {
