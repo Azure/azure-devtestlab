@@ -50,11 +50,17 @@ function Get-FastLabAccount {
 
 function Get-FastLab {
     [CmdletBinding()]
-    param()
+    param([Switch]$RandomName = $false)
 
     $la = Get-FastLabAccount
-                
-    $lab = $la | Get-AzLab -LabName $labName
+ 
+    if($RandomName) {
+        $labRealName = 'Temp' + (Get-Random)
+    } else {
+        $labRealName = $labName
+    }
+
+    $lab = $la | Get-AzLab -LabName $labRealName
     if ($lab) {
         return $lab
     }
@@ -67,10 +73,10 @@ function Get-FastLab {
         Write-Verbose "Image $imgName found."
             
         $lab = $la `
-        | New-AzLab -LabName $LabName -MaxUsers $maxUsers -UsageQuotaInHours $usageQuota -UserAccessMode $usageAMode -SharedPasswordEnabled:$shPsswd `
+        | New-AzLab -LabName $LabRealName -MaxUsers $maxUsers -UsageQuotaInHours $usageQuota -UserAccessMode $usageAMode -SharedPasswordEnabled:$shPsswd `
         | New-AzLabTemplateVM -Image $img -Size $size -Title $title -Description $descr -UserName $userName -Password $password -LinuxRdpEnabled:$linuxRdp `
         | Publish-AzLab
-        Write-Verbose "$LabName lab doesn't exist. Created it."
+        Write-Verbose "$LaRealbName lab doesn't exist. Created it."
         return $lab
     }
 }
