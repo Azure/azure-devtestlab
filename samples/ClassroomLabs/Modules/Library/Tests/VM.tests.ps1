@@ -17,7 +17,7 @@ Describe 'VMs' {
         $script:lab | Remove-AzLab
     }
     
-    It 'Can start/stop VM' {
+    It 'Can start VM' -Skip {
         $script:vm.Status | Should -Be 'Stopped'
         $script:vm | Start-AzLabVm
         $started = $script:lab | Get-AzLabVm -Status 'Running'
