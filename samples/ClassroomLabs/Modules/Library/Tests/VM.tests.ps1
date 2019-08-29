@@ -8,7 +8,7 @@ Import-Module $PSScriptRoot\..\Az.LabServices.psm1
 Describe 'VMs' {
 
     BeforeAll {
-        $script:lab = Get-FastLab -RandomName
+        $script:lab = Get-FastLab
         $script:vms = $script:lab | Get-AzLabVm
         $script:vm = $script:vms[0]
     }
@@ -21,7 +21,7 @@ Describe 'VMs' {
         $script:vm.Status | Should -Be 'Stopped'
         $script:vm | Start-AzLabVm
         $started = $script:lab | Get-AzLabVm -Status 'Running'
-        $started.Count | Should -Be 1
+        $started.Count | Should -Be 1 -Because "$($script:lab.Id) at $(Get-Date)"
         $started[0].Name | Should -Be $script:vm.Name
     }
 
