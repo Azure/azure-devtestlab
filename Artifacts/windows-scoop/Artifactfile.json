@@ -1,0 +1,15 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "Scoop",
+    "description": "A command-line installer for Windows (https://scoop.sh/)",
+    "publisher": "https://github.com/lukesampson",
+    "tags": [
+        "Windows",
+        "scoop"
+    ],
+    "targetOsType": "Windows",
+    "parameters": {},
+    "runCommand": {
+        "commandToExecute": "powershell.exe -ExecutionPolicy RemoteSigned -Command \"Invoke-Expression (new-object net.webclient).downloadstring('https://get.scoop.sh')\""
+    }
+}
