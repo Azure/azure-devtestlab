@@ -66,12 +66,11 @@ Returns true is script is running with administrator privileges and false otherw
 #>
 function Get-RunningAsAdministrator {
     [CmdletBinding()]
-    param(    )
+    param()
     
     $isAdministrator = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] “Administrator”)
     Write-Verbose "Running with Administrator privileges (t/f): $isAdministrator"
     return $isAdministrator
-
 }
 
 <#
@@ -92,7 +91,6 @@ Enables Hyper-V role, including PowerShell cmdlets for Hyper-V and management to
 function Install-HypervAndTools {
     [CmdletBinding()]
     param()
-   
 
     if ($null -eq $(Get-WindowsFeature -Name 'Hyper-V')) {
         Write-Error "This script only applies to machines that can run Hyper-V."
@@ -104,7 +102,7 @@ function Install-HypervAndTools {
         }  
     } 
 
-    #install PowerShell cmdlets
+    # Install PowerShell cmdlets
     $featureStatus = Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-Management-PowerShell
     if ($featureStatus.RestartNeeded -eq $true) {
         Write-Error "Restart required to finish installing the Hyper-V PowerShell Module.  Please restart and re-run this script."
@@ -117,7 +115,7 @@ Enables DHCP role, including management tools.
 #>
 function Install-DHCP {
     [CmdletBinding()]
-    param(    )
+    param()
    
     if ($null -eq $(Get-WindowsFeature -Name 'DHCP')) {
         Write-Error "This script only applies to machines that can run DHCP."
@@ -129,7 +127,7 @@ function Install-DHCP {
         }  
     } 
 
-    #Tell Windows we are done installing DHCP
+    # Tell Windows we are done installing DHCP
     Set-ItemProperty –Path registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\ServerManager\Roles\12 –Name ConfigurationState –Value 2
 }
 
@@ -177,11 +175,10 @@ function Select-ResourceByProperty {
         $choiceTable.Rows.Add($null, "< Exit >", "Choose this option to exit the script.") | Out-Null
         $items | ForEach-Object { $choiceTable.Rows.Add($null, $($_ | Select-Object -ExpandProperty $PropertyName), $_.ToString()) } | Out-Null
 
-
         Write-Host "Found multiple items with $PropertyName = $ExpectedPropertyValue.  Please choose on of the following options."
         $choiceTable | ForEach-Object { Write-Host "$($_[0]): $($_[1]) ($($_[2]))" }
-                
-        while ( -not (($choice -ge 0 ) -and ($choice -le $choiceTable.Rows.Count - 1 ))) {     
+
+        while (-not (($choice -ge 0 ) -and ($choice -le $choiceTable.Rows.Count - 1 ))) {     
             $choice = Read-Host "Please enter option number. (Between 0 and $($choiceTable.Rows.Count - 1))"           
         }
     
@@ -193,6 +190,7 @@ function Select-ResourceByProperty {
         }
           
     }
+
     return $returnValue
 }
 
@@ -202,25 +200,25 @@ function Select-ResourceByProperty {
 #
 
 try {
-    #Verify that we are on a server os, not a client os
+    # Verify that we are on a server os, not a client os
     Write-Output "Verify server operating system."
-    if (-Not (Get-RunningServerOperatingSystem)) { Write-Error "This script is designed to run on Windows Server." }
+    if (-not (Get-RunningServerOperatingSystem)) { Write-Error "This script is designed to run on Windows Server." }
 
-    #Check that script is being run with Administrator privilege.
+    # Check that script is being run with Administrator privilege.
     Write-Output "Verify running as administrator."
-    if (-NOT (Get-RunningAsAdministrator)) { Write-Error "Please re-run this script as Administrator." }
+    if (-not (Get-RunningAsAdministrator)) { Write-Error "Please re-run this script as Administrator." }
 
-    #Install HyperV service and client tools
+    # Install HyperV service and client tools
     Write-Output "Installing Hyper-V, if needed."
     Install-HypervAndTools
 
-    #Pin Hyper-V to the user's desktop.
+    # Pin Hyper-V to the user's desktop.
     Write-Output "Creating shortcut to Hyper-V Manager on desktop."
     $Shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut($(Join-Path "$env:UserProfile\Desktop" "Hyper-V Manager.lnk"))
     $Shortcut.TargetPath = "$env:SystemRoot\System32\virtmgmt.msc"
     $Shortcut.Save()
 
-    #Ip addresses and range information.
+    # Ip addresses and range information.
     $ipAddress = "192.168.0.1"
     $ipAddressPrefixRange = "24"
     $ipAddressPrefix = "192.168.0.0/$ipAddressPrefixRange"
@@ -228,11 +226,11 @@ try {
     $endRangeForClientIps = "192.168.0.200"
     $subnetMaskForClientIps = "255.255.255.0"
 
-    #Install DHCP so client vms will automatically get an IP address.
+    # Install DHCP so client vms will automatically get an IP address.
     Write-Output "Installing DHCP, if needed."
     Install-DHCP 
 
-    #Add scope for client vm ip address
+    # Add scope for client vm ip address
     $scopeName = "LabServicesDhcpScope"
     $dhcpScope = Select-ResourceByProperty `
         -PropertyName 'Name' -ExpectedPropertyValue $scopeName `
@@ -240,7 +238,7 @@ try {
         -NewObjectScriptBlock { Add-DhcpServerv4Scope -name $scopeName -StartRange $startRangeForClientIps -EndRange $endRangeForClientIps -SubnetMask $subnetMaskForClientIps -State Active }
     Write-Output "Using $dhcpScope"
 
-    #Create Switch
+    # Create Switch
     Write-Output "Setting up network for client virtual machines."
     $switchName = "LabServicesSwitch"
     $vmSwitch = Select-ResourceByProperty `
@@ -249,7 +247,7 @@ try {
         -NewObjectScriptBlock { New-VMSwitch -Name $switchName -SwitchType Internal }
     Write-Output "Using $vmSwitch"
 
-    #Get network adapter information
+    # Get network adapter information
     $netAdapter = Select-ResourceByProperty `
         -PropertyName "Name" -ExpectedPropertyValue "*$switchName*"  `
         -List @(Get-NetAdapter) `
@@ -257,7 +255,7 @@ try {
     Write-Output "Using  $netAdapter"
     Write-Output "Adapter found is $($netAdapter.ifAlias) and Interface Index is $($netAdapter.ifIndex)"
 
-    #Create IP Address 
+    # Create IP Address 
     $netIpAddr = Select-ResourceByProperty  `
         -PropertyName 'IPAddress' -ExpectedPropertyValue $ipAddress `
         -List @(Get-NetIPAddress) `
@@ -267,7 +265,7 @@ try {
     }
     Write-Output "Net ip address found is $ipAddress"
 
-    #Create NAT
+    # Create NAT
     $natName = "LabServicesNat"
     $netNat = Select-ResourceByProperty -PropertyName 'Name' -ExpectedPropertyValue $natName -List @(Get-NetNat) -NewObjectScriptBlock { New-NetNat -Name $natName -InternalIPInterfaceAddressPrefix $ipAddressPrefix }
     if ($netNat.InternalIPInterfaceAddressPrefix -ne $ipAddressPrefix) {
@@ -275,7 +273,7 @@ try {
     }
     Write-Output "Nat found is $netNat"
 
-    #Tell the user script is done.
+    # Tell the user script is done.
     Write-Host -Object "Script completed." -ForegroundColor Green
 }
 finally {
