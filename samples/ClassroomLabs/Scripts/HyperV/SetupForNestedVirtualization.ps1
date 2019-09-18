@@ -97,8 +97,7 @@ function Install-HypervAndTools {
     if ($null -eq $(Get-WindowsFeature -Name 'Hyper-V')) {
         Write-Error "This script only applies to machines that can run Hyper-V."
     }
-    else 
-    {
+    else {
         $roleInstallStatus = Install-WindowsFeature -Name Hyper-V -IncludeManagementTools
         if ($roleInstallStatus.RestartNeeded -eq 'Yes') {
             Write-Error "Restart required to finish installing the Hyper-V role .  Please restart and re-run this script."
@@ -110,8 +109,6 @@ function Install-HypervAndTools {
     if ($featureStatus.RestartNeeded -eq $true) {
         Write-Error "Restart required to finish installing the Hyper-V PowerShell Module.  Please restart and re-run this script."
     }
-    
-
 }
 
 <#
@@ -125,8 +122,7 @@ function Install-DHCP {
     if ($null -eq $(Get-WindowsFeature -Name 'DHCP')) {
         Write-Error "This script only applies to machines that can run DHCP."
     }
-    else
-    {
+    else {
         $roleInstallStatus = Install-WindowsFeature -Name DHCP -IncludeManagementTools
         if ($roleInstallStatus.RestartNeeded -eq 'Yes') {
             Write-Error "Restart required to finish installing the DHCP role .  Please restart and re-run this script."
@@ -183,9 +179,9 @@ function Select-ResourceByProperty {
 
 
         Write-Host "Found multiple items with $PropertyName = $ExpectedPropertyValue.  Please choose on of the following options."
-        $choiceTable | ForEach-Object {Write-Host "$($_[0]): $($_[1]) ($($_[2]))"}
+        $choiceTable | ForEach-Object { Write-Host "$($_[0]): $($_[1]) ($($_[2]))" }
                 
-while ( -not (($choice -ge 0 ) -and ($choice -le $choiceTable.Rows.Count -1 ))) {     
+        while ( -not (($choice -ge 0 ) -and ($choice -le $choiceTable.Rows.Count - 1 ))) {     
             $choice = Read-Host "Please enter option number. (Between 0 and $($choiceTable.Rows.Count - 1))"           
         }
     
@@ -224,9 +220,9 @@ try {
     $Shortcut.TargetPath = "$env:SystemRoot\System32\virtmgmt.msc"
     $Shortcut.Save()
 
-	#Ip addresses and range information.
+    #Ip addresses and range information.
     $ipAddress = "192.168.0.1"
-	$ipAddressPrefixRange = "24"
+    $ipAddressPrefixRange = "24"
     $ipAddressPrefix = "192.168.0.0/$ipAddressPrefixRange"
     $startRangeForClientIps = "192.168.0.100"
     $endRangeForClientIps = "192.168.0.200"
@@ -239,33 +235,33 @@ try {
     #Add scope for client vm ip address
     $scopeName = "LabServicesDhcpScope"
     $dhcpScope = Select-ResourceByProperty `
-		-PropertyName 'Name' -ExpectedPropertyValue $scopeName `
-		-List @(Get-DhcpServerV4Scope) `
-		-NewObjectScriptBlock { Add-DhcpServerv4Scope -name $scopeName -StartRange $startRangeForClientIps -EndRange $endRangeForClientIps -SubnetMask $subnetMaskForClientIps -State Active }
+        -PropertyName 'Name' -ExpectedPropertyValue $scopeName `
+        -List @(Get-DhcpServerV4Scope) `
+        -NewObjectScriptBlock { Add-DhcpServerv4Scope -name $scopeName -StartRange $startRangeForClientIps -EndRange $endRangeForClientIps -SubnetMask $subnetMaskForClientIps -State Active }
     Write-Output "Using $dhcpScope"
 
     #Create Switch
     Write-Output "Setting up network for client virtual machines."
     $switchName = "LabServicesSwitch"
     $vmSwitch = Select-ResourceByProperty `
-		-PropertyName 'Name' -ExpectedPropertyValue $switchName `
-		-List (Get-VMSwitch -SwitchType Internal) `
-		-NewObjectScriptBlock { New-VMSwitch -Name $switchName -SwitchType Internal }
+        -PropertyName 'Name' -ExpectedPropertyValue $switchName `
+        -List (Get-VMSwitch -SwitchType Internal) `
+        -NewObjectScriptBlock { New-VMSwitch -Name $switchName -SwitchType Internal }
     Write-Output "Using $vmSwitch"
 
     #Get network adapter information
     $netAdapter = Select-ResourceByProperty `
-		-PropertyName "Name" -ExpectedPropertyValue "*$switchName*"  `
-		-List @(Get-NetAdapter) `
-		-NewObjectScriptBlock { Write-Error "No Net Adapters found" } 
+        -PropertyName "Name" -ExpectedPropertyValue "*$switchName*"  `
+        -List @(Get-NetAdapter) `
+        -NewObjectScriptBlock { Write-Error "No Net Adapters found" } 
     Write-Output "Using  $netAdapter"
     Write-Output "Adapter found is $($netAdapter.ifAlias) and Interface Index is $($netAdapter.ifIndex)"
 
     #Create IP Address 
     $netIpAddr = Select-ResourceByProperty  `
-		-PropertyName 'IPAddress' -ExpectedPropertyValue $ipAddress `
-		-List @(Get-NetIPAddress) `
-		-NewObjectScriptBlock { New-NetIPAddress -IPAddress $ipAddress -PrefixLength $ipAddressPrefixRange -InterfaceIndex $netAdapter.ifIndex }
+        -PropertyName 'IPAddress' -ExpectedPropertyValue $ipAddress `
+        -List @(Get-NetIPAddress) `
+        -NewObjectScriptBlock { New-NetIPAddress -IPAddress $ipAddress -PrefixLength $ipAddressPrefixRange -InterfaceIndex $netAdapter.ifIndex }
     if (($netIpAddr.PrefixLength -ne $ipAddressPrefixRange) -or ($netIpAddr.InterfaceIndex -ne $netAdapter.ifIndex)) {
         Write-Error "Found Net IP Address $netIpAddr, but prefix $ipAddressPrefix ifIndex not $($netAdapter.ifIndex)."
     }
@@ -280,7 +276,7 @@ try {
     Write-Output "Nat found is $netNat"
 
     #Tell the user script is done.
-	Write-Host -Object "Script completed." -ForegroundColor Green
+    Write-Host -Object "Script completed." -ForegroundColor Green
 }
 finally {
     # Restore system to state prior to execution of this script.
