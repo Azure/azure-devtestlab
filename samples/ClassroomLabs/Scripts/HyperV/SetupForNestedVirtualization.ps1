@@ -68,7 +68,7 @@ function Get-RunningAsAdministrator {
     [CmdletBinding()]
     param()
     
-    $isAdministrator = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] “Administrator”)
+    $isAdministrator = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
     Write-Verbose "Running with Administrator privileges (t/f): $isAdministrator"
     return $isAdministrator
 }
