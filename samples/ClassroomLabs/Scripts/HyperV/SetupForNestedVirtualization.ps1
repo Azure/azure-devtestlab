@@ -128,7 +128,7 @@ function Install-DHCP {
     } 
 
     # Tell Windows we are done installing DHCP
-    Set-ItemProperty –Path registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\ServerManager\Roles\12 –Name ConfigurationState –Value 2
+    Set-ItemProperty -Path registry::HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\ServerManager\Roles\12 -Name ConfigurationState -Value 2
 }
 
 <#
@@ -172,7 +172,7 @@ function Select-ResourceByProperty {
         $choiceTable.Columns.Add($(New-Object System.Data.DataColumn($PropertyName)))
         $choiceTable.Columns.Add($(New-Object System.Data.DataColumn("Details")))
            
-        $choiceTable.Rows.Add($null, "< Exit >", "Choose this option to exit the script.") | Out-Null
+        $choiceTable.Rows.Add($null, "\< Exit \>", "Choose this option to exit the script.") | Out-Null
         $items | ForEach-Object { $choiceTable.Rows.Add($null, $($_ | Select-Object -ExpandProperty $PropertyName), $_.ToString()) } | Out-Null
 
         Write-Host "Found multiple items with $PropertyName = $ExpectedPropertyValue.  Please choose on of the following options."
@@ -225,6 +225,7 @@ try {
     $startRangeForClientIps = "192.168.0.100"
     $endRangeForClientIps = "192.168.0.200"
     $subnetMaskForClientIps = "255.255.255.0"
+    $dnsServerIp = "168.63.129.16"
 
     # Install DHCP so client vms will automatically get an IP address.
     Write-Output "Installing DHCP, if needed."
@@ -235,7 +236,9 @@ try {
     $dhcpScope = Select-ResourceByProperty `
         -PropertyName 'Name' -ExpectedPropertyValue $scopeName `
         -List @(Get-DhcpServerV4Scope) `
-        -NewObjectScriptBlock { Add-DhcpServerv4Scope -name $scopeName -StartRange $startRangeForClientIps -EndRange $endRangeForClientIps -SubnetMask $subnetMaskForClientIps -State Active }
+        -NewObjectScriptBlock { Add-DhcpServerv4Scope -name $scopeName -StartRange $startRangeForClientIps -EndRange $endRangeForClientIps -SubnetMask $subnetMaskForClientIps -State Active
+                                Set-DhcpServerV4OptionValue -DnsServer $dnsServerIp -Router $ipAddress
+                             }
     Write-Output "Using $dhcpScope"
 
     # Create Switch
