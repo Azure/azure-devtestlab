@@ -225,6 +225,7 @@ try {
     $startRangeForClientIps = "192.168.0.100"
     $endRangeForClientIps = "192.168.0.200"
     $subnetMaskForClientIps = "255.255.255.0"
+    # Azure Static DNS Server IP
     $dnsServerIp = "168.63.129.16"
 
     # Install DHCP so client vms will automatically get an IP address.
