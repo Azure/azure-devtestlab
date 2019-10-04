@@ -11,6 +11,7 @@ if((gwmi win32_computersystem).partofdomain -eq $true)
 	#Download RZUpdate if missing...
 	if((Test-Path "$($env:temp)\RZUpdate.exe") -eq $false) 
 	{ 
+	        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 		(New-Object System.Net.WebClient).DownloadFile("https://ruckzuck.azurewebsites.net/DL/RZUpdate.exe", "$($env:temp)\RZUpdate.exe") 
 	}
 
