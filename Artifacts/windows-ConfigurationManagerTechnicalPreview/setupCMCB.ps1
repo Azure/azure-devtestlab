@@ -8,6 +8,11 @@ cd $($PSScriptRoot)
 #Check if System is Domain-Joined
 if((gwmi win32_computersystem).partofdomain -eq $true)
 {
+	#Add TLS 1.1, TLS 1.2 to security protocol
+	IF ([System.Net.ServicePointManager]::SecurityProtocol -notmatch "^(?=.*\bTls12\b)(?=.*\bTls11\b).*$") {
+		[System.Net.ServicePointManager]::SecurityProtocol = @([System.Net.ServicePointManager]::SecurityProtocol, [System.Net.SecurityProtocolType]::Tls12, [System.Net.SecurityProtocolType]::Tls11)
+	}
+	
 	#Download RZUpdate if missing...
 	if((Test-Path "$($env:temp)\RZUpdate.exe") -eq $false) 
 	{ 
