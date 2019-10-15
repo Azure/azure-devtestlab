@@ -5,7 +5,7 @@
 * Add parameter ConfigureADFS, set to No by default, to skip the whole ADFS configuration if it is not desired. This speeds up the deployment time of the template
 * Add optional service Azure Bastion
 * Rename parameter createPublicIPAndDNS to addPublicIPAddressToEachVM
-* Parameter createPublicIPAndDNS to addPublicIPAddressToEachVM does not add any rule in network security groups if it is set to No, so that no inbound traffic is allowed from Internet. If set to Yes, only RDP port is allowed
+* Parameter addPublicIPAddressToEachVM does not add any rule in network security groups if it is set to No, so that no inbound traffic is allowed from Internet. If set to Yes, only RDP port is allowed
 * Replace SQL Server 2016 with SQL Server 2017
 * Use SQL Server Developer edition instead of Standard edition. More info: <https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sql/virtual-machines-windows-sql-server-pricing-guidance>
 * Update DC to run with Windows Server 2019
