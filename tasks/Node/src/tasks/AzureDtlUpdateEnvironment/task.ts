@@ -1,4 +1,5 @@
 import '../../modules/task-utils/polyfill';
+import { equalsIgnoreCase } from '../../modules/task-utils/polyfill';
 
 import * as tl from 'azure-pipelines-task-lib/task';
 import * as deployutil from '../../modules/task-utils/deployutil';
@@ -88,7 +89,7 @@ async function updateEnvironment(clients: TaskClients, inputData: CreateOrUpdate
     console.log(`Updating Environment '${envName}' in Lab '${labName}' under Resource Group '${labRgName}'.`);
 
     const environments: DevTestLabsModels.EnvironmentsListResponse = await clients.dtl.environments.list(labRgName, labName, '@all');
-    const env: DevTestLabsModels.DtlEnvironment | undefined = environments && environments.find((env) => env && env.name && env.name.toLocaleLowerCase() === envName);
+    const env: DevTestLabsModels.DtlEnvironment | undefined = environments && environments.find((env) => env && env.name && equalsIgnoreCase(env.name, envName));
 
     if (!env) {
         throw `Lab Environment '${envName}' does not exist.`;

@@ -1,4 +1,5 @@
 import '../../modules/task-utils/polyfill';
+import { equalsIgnoreCase } from '../../modules/task-utils/polyfill';
 
 import * as tl from 'azure-pipelines-task-lib/task';
 import * as deployutil from '../../modules/task-utils/deployutil';
@@ -15,8 +16,8 @@ function areArtifactsInstalling(artifacts?: DevTestLabsModels.ArtifactInstallPro
         return false;
     }
 
-    const installingArtifacts: boolean = artifacts.some(a => a.status === 'Installing');
-    const pendingArtifacts: boolean = artifacts.some(a => a.status === 'Pending');
+    const installingArtifacts: boolean = artifacts.some(a => equalsIgnoreCase(a.status, 'Installing'));
+    const pendingArtifacts: boolean = artifacts.some(a => equalsIgnoreCase(a.status, 'Pending'));
 
     return installingArtifacts || pendingArtifacts;
 }
@@ -36,8 +37,8 @@ async function checkArtifactsStatus(client: DevTestLabsClient, labVmId: string, 
     const vm: DevTestLabsModels.VirtualMachinesGetResponse = await getLabVm(client, labVmId);
 
     const artifacts: DevTestLabsModels.ArtifactInstallProperties[] = vm.artifacts ? vm.artifacts : [];
-    const failedArtifacts: DevTestLabsModels.ArtifactInstallProperties[] = artifacts.filter(a => a && a.status === 'Failed');
-    const succeededArtifacts: DevTestLabsModels.ArtifactInstallProperties[] = artifacts.filter(a => a && a.status === 'Succeeded');
+    const failedArtifacts: DevTestLabsModels.ArtifactInstallProperties[] = artifacts.filter(a => a && equalsIgnoreCase(a.status, 'Failed'));
+    const succeededArtifacts: DevTestLabsModels.ArtifactInstallProperties[] = artifacts.filter(a => a && equalsIgnoreCase(a.status, 'Succeeded'));
 
     console.log(`Number of Artifacts Expected: ${expectedArtifactsCount}, Reported: ${artifacts.length}, Succeeded: ${succeededArtifacts.length}, Failed: ${failedArtifacts.length}`);
 
@@ -195,7 +196,7 @@ function getExpectedArtifactsCount(templateFile: string): number {
 
     const template: any = deployutil.getDeploymentTemplate(templateFile);
     if (template && template.resources) {
-        const vmTemplate = template.resources.find((r: any) => r && r.type === 'Microsoft.DevTestLab/labs/virtualmachines');
+        const vmTemplate = template.resources.find((r: any) => r && equalsIgnoreCase(r.type, 'Microsoft.DevTestLab/labs/virtualmachines'));
         expectedArtifactCount = vmTemplate && vmTemplate.properties && vmTemplate.properties.artifacts && vmTemplate.properties.artifacts.length ? vmTemplate.properties.artifacts.length : 0;
     }
 

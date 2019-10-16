@@ -16,7 +16,7 @@
     "version": {
         "Major": 3,
         "Minor": 0,
-        "Patch": 0
+        "Patch": 1
     },
     "visibility": [
         "Build",
@@ -44,10 +44,10 @@
         {
             "name": "LabId",
             "type": "pickList",
-            "label": "Lab Name",
+            "label": "Lab",
             "defaultValue": "",
             "required": true,
-            "helpMarkDown": "Name of an existing lab in which the lab VM will be created. This is a pick list generated as a result of selecting a subscription.",
+            "helpMarkDown": "Lab in which the resource will be created. This is a pick list generated as a result of selecting a subscription. Selecting a name from the list will extract the corresponding Lab ID. The Lab ID is a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}`. Variables in the form `$(varName)` are allowed.",
             "properties": {
                 "EditableOptions": "True"
             }

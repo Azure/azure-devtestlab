@@ -23,7 +23,7 @@ The task requires the following inputs:
 |Parameter|Description|Notes
 | --- | --- | ---
 | **Azure RM Subscription** | _Azure Resource Manager subscription to configure before running._ | This is required to connect to Azure on your behalf.
-| **Lab Name** | _Name of an existing lab in which the lab VM will be created._ | This is a pick list generated as a result of selecting a subscription.
+| **Lab** | _Lab in which the resource will be created._ | This is a pick list generated as a result of selecting a subscription. Selecting a name from the list will extract the corresponding Lab ID. The Lab ID is a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}`. Variables in the form `$(varName)` are allowed.
 | **Virtual Machine Name** | _Name of the virtual machine to be created within the selected lab._ | This name will replace the value for the template parameter `-newVMName`. As such, it is expected to be in your ARM template.
 | **Template File** | _Path to the ARM template._ | You can [generate the ARM template](https://azure.microsoft.com/en-us/documentation/articles/devtest-lab-add-vm-with-artifacts/#save-arm-template) from the **View ARM template** section when creating a Lab VM. Select the ARM template by browsing to the file that you have saved in your Azure DevOps source control. It can be either a relative path in a build output or a relative path inside an artifacts package.
 
@@ -63,8 +63,8 @@ The task requires the following inputs:
 |Parameter|Description|Notes
 | --- | --- | ---
 | **Azure RM Subscription** | _Azure Resource Manager subscription to configure before running._ | This is required to connect to Azure on your behalf.
-| **Lab Name** | _Name of an existing lab from which the lab VM will be deleted._ | This is a pick list generated as a result of selecting a subscription.
-| **Virtual Machine Name** | _Name of the Lab VM to delete._ | You can use any variable such as `$(labVmId)`, which is the output of calling **Create Azure DevTest Labs VM**, that contains a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}/virtualMachines/{vmName}`.
+| **Lab** | _Lab from which the resource will be deleted._ | This is a pick list generated as a result of selecting a subscription. Selecting a name from the list will extract the corresponding Lab ID. The Lab ID is a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}`. Variables in the form `$(varName)` are allowed.
+| **Virtual Machine** | _Virtual Machine that will be deleted._ | This is a pick list generated as a result of selecting a lab. Selecting a name from the list will extract the corresponding Virtual Machine ID. The Virtual Machine ID is a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}/virtualMachines/{vmName}`. Variables in the form `$(varName)` are allowed. For example, you can use any variable such as `$(labVmId)`, the output of calling **Create Azure DevTest Labs VM**.
 
 ## Create Custom Image
 The task allows you  to create a custom image in your lab based on an existing lab VM.
@@ -75,9 +75,9 @@ The task requires the following inputs:
 |Parameter|Description|Notes
 | --- | --- | ---
 | **Azure RM Subscription** | _Azure Resource Manager subscription to configure before running._ | This is required to connect to Azure on your behalf.
-| **Lab Name** | _Name of an existing lab in which the lab VM will be created._ | This is a pick list generated as a result of selecting a subscription.
+| **Lab** | _Lab in which the resource will be created._ | This is a pick list generated as a result of selecting a subscription. Selecting a name from the list will extract the corresponding Lab ID. The Lab ID is a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}`. Variables in the form `$(varName)` are allowed.
 | **Custom Image Name** | _Name of the custom image that will be created._ | You can use any variable such as `$(Build.BuildNumber)` or `$(Release.ReleaseName)` when in a build or a release, respectively. 
-| **Source Lab VM ID** | _Resource ID of the source lab VM._ | The source lab VM must be in the selected lab, as the custom image will be created using its VHD file. You can use any variable such as `$(labVmId)`, the output of calling **Create Azure DevTest Labs VM**, that contains a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}/virtualMachines/{vmName}`.
+| **Source Lab VM** | _Source Lab VM from which the resource will be created._ | The source lab VM must be in the selected lab, as the custom image will be created using its VHD file. Selecting a name from the list will extract the corresponding Lab VM ID. The Lab VM ID is a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}/virtualMachines/{vmName}`. Variables in the form `$(varName)` are allowed. For example, you can use any variable such as `$(labVmId)`, the output of calling **Create Azure DevTest Labs VM**.
 | **OS Type** | _Type of operating system of the source lab VM._ | This is a pick list whose allowed values are _Linux_ or _Windows_.
 | **Linux OS State** | _Value indicating how to prepare the source lab VM for custom image creation._ | (When **OS Type** = _Linux_) This is a pick list whose allowed values are _NonDeprovisioned_, _DeprovisionRequested_ or _DeprovisionRequested_. See [Deprovisioning](http://aka.ms/Deprovisioning) for more information.
 | **Windows OS State** | _Value indicating how to prepare the the source lab VM for custom image creation._ | (When **OS Type** = _Windows_) This is a pick list whose allowed values are _NonSysprepped_, _SysprepRequested_ or _SysprepRequested_. See [Sysprep](http://aka.ms/Sysprep) for more information.
@@ -104,8 +104,8 @@ The task requires the following inputs:
 |Parameter|Description|Notes
 | --- | --- | ---
 | **Azure RM Subscription** | _Azure Resource Manager subscription to configure before running._ | This is required to connect to Azure on your behalf.
-| **Lab Name** | _Name of an existing lab from which the custom image will be deleted._ | This is a pick list generated as a result of selecting a subscription.
-| **Custom Image Name** | _Name of the custom image to delete._ | You can use any variable such as `$(customImageId)`, which is the output of calling **Create Azure DevTest Labs Custom Image**, that contains a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}/customImages/{vmName}`.
+| **Lab** | _Lab from which the resource will be deleted._ | This is a pick list generated as a result of selecting a subscription. Selecting a name from the list will extract the corresponding Lab ID. The Lab ID is a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}`. Variables in the form `$(varName)` are allowed.
+| **Custom Image** | _Custom Image that will be deleted._ | This is a pick list generated as a result of selecting a lab. Selecting a name from the list will extract the corresponding Custom Image ID. The Custom Image ID is a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}/customImages/{ciName}`. Variables in the form `$(varName)` are allowed. For example, you can use any variable such as `$(customImageId)`, which is the output of calling **Create Azure DevTest Labs Custom Image**.
 
 ## Create Environment
 The task allows you to create an environment in the selected lab.
@@ -116,10 +116,10 @@ The task requires the following inputs:
 |Parameter|Description|Notes
 | --- | --- | ---
 | **Azure RM Subscription** | _Azure Resource Manager subscription to configure before running._ | This is required to connect to Azure on your behalf.
-| **Lab Name** | _Name of an existing lab in which the lab VM will be created._ | This is a pick list generated as a result of selecting a subscription.
+| **Lab** | _Lab in which the resource will be created._ | This is a pick list generated as a result of selecting a subscription. Selecting a name from the list will extract the corresponding Lab ID. The Lab ID is a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}`. Variables in the form `$(varName)` are allowed.
 | **Environment Name** | _Name of the environment to be created within the selected lab._
-| **Repository Name** | _Repository friendly name where the environment ARM templates are stored._
-| **Template Name** | _Name of the environment ARM template._
+| **Repository** | _Repository from which to pick a template. | This is a pick list generated as a result of selecting a lab. Selecting a name from the list will extract the corresponding Repository ID. The Repository ID is a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}/artifactSources/{repoName}`. Variables in the form `$(varName)` are allowed.
+| **Template** | _Template that should be used to create an environment._ | This is a pick list generated as a result of selecting a repository. Selecting a name from the list will extract the corresponding Template ID. The Template ID is a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}/artifactSources/{repoName}/armTemplates/{templateName}`. Variables in the form `$(varName)` are allowed.
 
 ### Optional Parameters
 
@@ -146,8 +146,8 @@ The task requires the following inputs:
 |Parameter|Description|Notes
 | --- | --- | ---
 | **Azure RM Subscription** | _Azure Resource Manager subscription to configure before running._ | This is required to connect to Azure on your behalf.
-| **Lab Name** | _Name of an existing lab in which the lab VM will be updated._ | This is a pick list generated as a result of selecting a subscription.
-| **Environment Name** | _Name of the environment to be updated within the selected lab._
+| **Lab** | _Lab in which the resource will be updated._ | This is a pick list generated as a result of selecting a subscription. Selecting a name from the list will extract the corresponding Lab ID. The Lab ID is a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}`. Variables in the form `$(varName)` are allowed.
+| **Environment** | _Environment that will be updated._ | This is a pick list generated as a result of selecting a lab. Selecting a name from the list will extract the corresponding Environment ID. The Environment ID is a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}/users/@me/environments/{envName}`. Variables in the form `$(varName)` are allowed.
 | **Template File** | _Path to the ARM template to use to update the environment._ | The file is expected to be stored in your source control. It can contain any resources that are allowed by an environment.
 
 ### Optional Parameters
@@ -170,5 +170,5 @@ The task requires the following inputs:
 |Parameter|Description|Notes
 | --- | --- | ---
 | **Azure RM Subscription** | _Azure Resource Manager subscription to configure before running._ | This is required to connect to Azure on your behalf.
-| **Lab Name** | _Name of an existing lab from which the environment will be deleted._ | This is a pick list generated as a result of selecting a subscription.
-| **Environment Name** | _Name of the environment to delete._ | You can use any variable such as `$(environmentResourceId)`, which is the output of calling **Create Azure DevTest Labs Environment**, that contains a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}/users/@me/environments/{envName}`.
+| **Lab** | _Lab in which the resource will be deleted._ | This is a pick list generated as a result of selecting a subscription. Selecting a name from the list will extract the corresponding Lab ID. The Lab ID is a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}`. Variables in the form `$(varName)` are allowed.
+| **Environment** | _Environment that will be deleted._ | This is a pick list generated as a result of selecting a lab. Selecting a name from the list will extract the corresponding Environment ID. The Environment ID is a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}/users/@me/environments/{envName}`. Variables in the form `$(varName)` are allowed. For example, you can use any variable such as `$(environmentResourceId)`, which is the output of calling **Create Azure DevTest Labs Environment**.

@@ -1,4 +1,5 @@
 import '../../modules/task-utils/polyfill';
+import { equalsIgnoreCase } from '../../modules/task-utils/polyfill';
 
 import * as tl from 'azure-pipelines-task-lib/task';
 import * as resutil from '../../modules/task-utils/resourceutil';
@@ -15,7 +16,7 @@ async function ensureCiExists(dtlClient: DevTestLabsClient, ciId: string): Promi
 
     const customImages = await dtlClient.customImages.list(labRgName, labName);
 
-    const ciExists = customImages && customImages.some((ci) => ci && ci.name && ci.name.toLocaleLowerCase() === ciName);
+    const ciExists = customImages && customImages.some((ci) => ci && ci.name && equalsIgnoreCase(ci.name, ciName));
 
     const message: string = `Lab Custom Image '${ciName}' ${ciExists ? 'exists' : 'does not exist'}.`;
 

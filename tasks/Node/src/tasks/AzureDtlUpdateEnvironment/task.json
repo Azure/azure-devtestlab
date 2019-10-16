@@ -16,7 +16,7 @@
     "version": {
         "Major": 3,
         "Minor": 0,
-        "Patch": 0
+        "Patch": 1
     },
     "visibility": [
         "Build",
@@ -44,10 +44,10 @@
         {
             "name": "LabId",
             "type": "pickList",
-            "label": "Lab Name",
+            "label": "Lab",
             "defaultValue": "",
             "required": true,
-            "helpMarkDown": "Name of an existing lab in which the lab VM will be created. This is a pick list generated as a result of selecting a subscription.",
+            "helpMarkDown": "Lab in which the resource will be updated. This is a pick list generated as a result of selecting a subscription. Selecting a name from the list will extract the corresponding Lab ID. The Lab ID is a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}`. Variables in the form `$(varName)` are allowed.",
             "properties": {
                 "EditableOptions": "True"
             }
@@ -55,10 +55,10 @@
         {
             "name": "EnvironmentId",
             "type": "pickList",
-            "label": "Environment Name",
+            "label": "Environment",
             "defaultValue": "",
             "required": true,
-            "helpMarkDown": "Name of an existing environment that will be updated. This is a pick list generated as a result of selecting an lab.",
+            "helpMarkDown": "Environment that will be updated. This is a pick list generated as a result of selecting a lab. Selecting a name from the list will extract the corresponding Environment ID. The Environment ID is a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}/users/@me/environments/{envName}`. Variables in the form `$(varName)` are allowed.",
             "properties": {
                 "EditableOptions": "True"
             }

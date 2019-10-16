@@ -1,4 +1,5 @@
 import '../../modules/task-utils/polyfill';
+import { equalsIgnoreCase } from '../../modules/task-utils/polyfill';
 
 import * as tl from 'azure-pipelines-task-lib/task';
 import * as resutil from '../../modules/task-utils/resourceutil';
@@ -15,7 +16,7 @@ async function ensureEnvExists(dtlClient: DevTestLabsClient, envId: string): Pro
 
     const environments = await dtlClient.environments.list(labRgName, labName, '@all');
 
-    const envExists = environments && environments.some((env) => env && env.name && env.name.toLocaleLowerCase() === envName );
+    const envExists = environments && environments.some((env) => env && env.name && equalsIgnoreCase(env.name, envName));
 
     const message: string = `Lab Environment '${envName}' ${envExists ? 'exists' : 'does not exist'}.`;
 

@@ -16,7 +16,7 @@
     "version": {
         "Major": 3,
         "Minor": 0,
-        "Patch": 0
+        "Patch": 1
     },
     "visibility": [
         "Build",
@@ -37,10 +37,10 @@
         {
             "name": "LabId",
             "type": "pickList",
-            "label": "Lab Name",
+            "label": "Lab",
             "defaultValue": "",
             "required": true,
-            "helpMarkDown": "Name of an existing lab in which the lab VM will be deleted. This is a pick list generated as a result of selecting a subscription.",
+            "helpMarkDown": "Lab from which the resource will be deleted. This is a pick list generated as a result of selecting a subscription. Selecting a name from the list will extract the corresponding Lab ID. The Lab ID is a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}`. Variables in the form `$(varName)` are allowed.",
             "properties": {
                 "EditableOptions": "True"
             }
@@ -48,10 +48,10 @@
         {
             "name": "LabVmId",
             "type": "pickList",
-            "label": "Virtual Machine Name",
+            "label": "Virtual Machine",
             "defaultValue": "",
             "required": true,
-            "helpMarkDown": "Name of the lab VM to delete. This is a pick list generated as a result of selecting a lab.",
+            "helpMarkDown": "Virtual Machine that will be deleted. This is a pick list generated as a result of selecting a lab. Selecting a name from the list will extract the corresponding Virtual Machine ID. The Virtual Machine ID is a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}/virtualMachines/{vmName}`. Variables in the form `$(varName)` are allowed.",
             "properties": {
                 "EditableOptions": "True"
             }
