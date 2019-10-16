@@ -8,6 +8,7 @@ configuration ConfigureSPVM
         [Parameter(Mandatory)] [String]$SQLName,
         [Parameter(Mandatory)] [String]$SQLAlias,
         [Parameter(Mandatory)] [String]$SharePointVersion,
+        [Parameter(Mandatory)] [Boolean]$ConfigureADFS,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$DomainAdminCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSetupCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPFarmCreds,
@@ -15,7 +16,7 @@ configuration ConfigureSPVM
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPPassphraseCreds
     )
 
-    Import-DscResource -ModuleName ComputerManagementDsc, StorageDsc, NetworkingDsc, xActiveDirectory, xCredSSP, xWebAdministration, SharePointDsc, xPSDesiredStateConfiguration, xDnsServer, CertificateDsc, SqlServerDsc, xPendingReboot
+    Import-DscResource -ModuleName ComputerManagementDsc, StorageDsc, NetworkingDsc, xActiveDirectory, xCredSSP, xWebAdministration, SharePointDsc, xPSDesiredStateConfiguration, xDnsServer, CertificateDsc, SqlServerDsc
 
     [String] $DomainNetbiosName = (Get-NetBIOSName -DomainFQDN $DomainFQDN)
     $Interface = Get-NetAdapter| Where-Object Name -Like "Ethernet*"| Select-Object -First 1
@@ -340,32 +341,6 @@ configuration ConfigureSPVM
             DependsOn            = "[SPFarm]CreateSPFarm"
         }
 
-        SPTrustedIdentityTokenIssuer CreateSPTrust
-        {
-            Name                         = $DomainFQDN
-            Description                  = "Federation with $DomainFQDN"
-            Realm                        = "urn:federation:sharepoint"
-            SignInUrl                    = "https://adfs.$DomainFQDN/adfs/ls/"
-            IdentifierClaim              = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
-            ClaimsMappings               = @(
-                MSFT_SPClaimTypeMapping{
-                    Name = "Email"
-                    IncomingClaimType = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
-                }
-                MSFT_SPClaimTypeMapping{
-                    Name = "Role"
-                    IncomingClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
-                }
-            )
-            SigningCertificateFilePath   = "$SetupPath\Certificates\ADFS Signing.cer"
-            ClaimProviderName            = ""
-            #ProviderSignOutUri          = "https://adfs.$DomainFQDN/adfs/ls/"
-            UseWReplyParameter           = $true
-            Ensure                       = "Present"
-            DependsOn                    = "[SPFarm]CreateSPFarm"
-            PsDscRunAsCredential         = $SPSetupCredsQualified
-        }
-
         SPWebApplication MainWebApp
         {
             Name                   = "SharePoint - 80"
@@ -393,70 +368,6 @@ configuration ConfigureSPVM
             PsDscRunAsCredential = $DomainAdminCredsQualified
         }
 
-        CertReq SPSSiteCert
-        {
-            CARootName             = "$DomainNetbiosName-$DCName-CA"
-            CAServerFQDN           = "$DCName.$DomainFQDN"
-            Subject                = "$SPTrustedSitesName.$DomainFQDN"
-            SubjectAltName         = "dns=*.$DomainFQDN"
-            KeyLength              = '2048'
-            Exportable             = $true
-            ProviderName           = '"Microsoft RSA SChannel Cryptographic Provider"'
-            OID                    = '1.3.6.1.5.5.7.3.1'
-            KeyUsage               = '0xa0'
-            CertificateTemplate    = 'WebServer'
-            AutoRenew              = $true
-            Credential             = $DomainAdminCredsQualified
-            DependsOn              = '[xScript]UpdateGPOToTrustRootCACert'
-        }
-
-        SPWebApplicationExtension ExtendWebApp
-        {
-            WebAppUrl              = "http://$SPTrustedSitesName/"
-            Name                   = "SharePoint - 443"
-            AllowAnonymous         = $false
-            Url                    = "https://$SPTrustedSitesName.$DomainFQDN"
-            Zone                   = "Intranet"
-            UseSSL                 = $true
-            Port                   = 443
-            Ensure                 = "Present"
-            PsDscRunAsCredential   = $SPSetupCredsQualified
-            DependsOn              = '[CertReq]SPSSiteCert'
-        }
-
-        SPWebAppAuthentication ConfigureWebAppAuthentication
-        {
-            WebAppUrl = "http://$SPTrustedSitesName/"
-            Default = @(
-                MSFT_SPWebAppAuthenticationMode {
-                    AuthenticationMethod = "NTLM"
-                }
-            )
-            Intranet = @(
-                MSFT_SPWebAppAuthenticationMode {
-                    AuthenticationMethod = "Federated"
-                    AuthenticationProvider = $DomainFQDN
-                }
-            )
-            PsDscRunAsCredential = $SPSetupCredsQualified
-            DependsOn            = "[SPWebApplicationExtension]ExtendWebApp"
-        }
-
-        xWebsite SetHTTPSCertificate
-        {
-            Name                 = "SharePoint - 443"
-            BindingInfo          = MSFT_xWebBindingInformation
-            {
-                Protocol             = "HTTPS"
-                Port                 = 443
-                CertificateStoreName = "My"
-                CertificateSubject   = "$SPTrustedSitesName.$DomainFQDN"
-            }
-            Ensure               = "Present"
-            PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn            = "[SPWebAppAuthentication]ConfigureWebAppAuthentication"
-        }
-
         # Creating site collection in SharePoint 2019 fail: https://github.com/PowerShell/SharePointDsc/issues/990
         # The workaround is to force a reboot before creating it
         if ($SharePointVersion -eq "2019") {
@@ -475,7 +386,7 @@ configuration ConfigureSPVM
                 DependsOn = "[SPWebApplication]MainWebApp"
             }
 
-            xPendingReboot RebootBeforeCreatingSPSite
+            PendingReboot RebootBeforeCreatingSPSite
             {
                 Name             = "BeforeCreatingSPTrust"
                 SkipCcmClientSDK = $true
@@ -483,15 +394,130 @@ configuration ConfigureSPVM
             }
         }
 
-        SPSite RootTeamSite
-        {
-            Url                  = "http://$SPTrustedSitesName/"
-            OwnerAlias           = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
-            SecondaryOwnerAlias  = "i:05.t|$DomainFQDN|$($DomainAdminCreds.UserName)@$DomainFQDN"
-            Name                 = "Blank site"
-            Template             = "STS#1"
-            PsDscRunAsCredential = $SPSetupCredsQualified
-            DependsOn            = "[SPWebApplication]MainWebApp"
+        if ($ConfigureADFS -eq $true) {
+            SPTrustedIdentityTokenIssuer CreateSPTrust
+            {
+                Name                         = $DomainFQDN
+                Description                  = "Federation with $DomainFQDN"
+                Realm                        = "urn:federation:sharepoint"
+                SignInUrl                    = "https://adfs.$DomainFQDN/adfs/ls/"
+                IdentifierClaim              = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
+                ClaimsMappings               = @(
+                    MSFT_SPClaimTypeMapping{
+                        Name = "Email"
+                        IncomingClaimType = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
+                    }
+                    MSFT_SPClaimTypeMapping{
+                        Name = "Role"
+                        IncomingClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+                    }
+                )
+                SigningCertificateFilePath   = "$SetupPath\Certificates\ADFS Signing.cer"
+                ClaimProviderName            = ""
+                #ProviderSignOutUri          = "https://adfs.$DomainFQDN/adfs/ls/"
+                UseWReplyParameter           = $true
+                Ensure                       = "Present"
+                DependsOn                    = "[SPFarm]CreateSPFarm"
+                PsDscRunAsCredential         = $SPSetupCredsQualified
+            }
+
+            CertReq SPSSiteCert
+            {
+                CARootName             = "$DomainNetbiosName-$DCName-CA"
+                CAServerFQDN           = "$DCName.$DomainFQDN"
+                Subject                = "$SPTrustedSitesName.$DomainFQDN"
+                SubjectAltName         = "dns=*.$DomainFQDN"
+                KeyLength              = '2048'
+                Exportable             = $true
+                ProviderName           = '"Microsoft RSA SChannel Cryptographic Provider"'
+                OID                    = '1.3.6.1.5.5.7.3.1'
+                KeyUsage               = '0xa0'
+                CertificateTemplate    = 'WebServer'
+                AutoRenew              = $true
+                Credential             = $DomainAdminCredsQualified
+                DependsOn              = '[xScript]UpdateGPOToTrustRootCACert'
+            }
+
+            SPWebApplicationExtension ExtendWebApp
+            {
+                WebAppUrl              = "http://$SPTrustedSitesName/"
+                Name                   = "SharePoint - 443"
+                AllowAnonymous         = $false
+                Url                    = "https://$SPTrustedSitesName.$DomainFQDN"
+                Zone                   = "Intranet"
+                UseSSL                 = $true
+                Port                   = 443
+                Ensure                 = "Present"
+                PsDscRunAsCredential   = $SPSetupCredsQualified
+                DependsOn              = '[CertReq]SPSSiteCert'
+            }
+
+            SPWebAppAuthentication ConfigureWebAppAuthentication
+            {
+                WebAppUrl = "http://$SPTrustedSitesName/"
+                Default = @(
+                    MSFT_SPWebAppAuthenticationMode {
+                        AuthenticationMethod = "NTLM"
+                    }
+                )
+                Intranet = @(
+                    MSFT_SPWebAppAuthenticationMode {
+                        AuthenticationMethod = "Federated"
+                        AuthenticationProvider = $DomainFQDN
+                    }
+                )
+                PsDscRunAsCredential = $SPSetupCredsQualified
+                DependsOn            = "[SPWebApplicationExtension]ExtendWebApp"
+            }
+
+            xWebsite SetHTTPSCertificate
+            {
+                Name                 = "SharePoint - 443"
+                BindingInfo          = MSFT_xWebBindingInformation
+                {
+                    Protocol             = "HTTPS"
+                    Port                 = 443
+                    CertificateStoreName = "My"
+                    CertificateSubject   = "$SPTrustedSitesName.$DomainFQDN"
+                }
+                Ensure               = "Present"
+                PsDscRunAsCredential = $DomainAdminCredsQualified
+                DependsOn            = "[SPWebAppAuthentication]ConfigureWebAppAuthentication"
+            }
+
+            SPSite RootTeamSite
+            {
+                Url                  = "http://$SPTrustedSitesName/"
+                OwnerAlias           = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
+                SecondaryOwnerAlias  = "i:05.t|$DomainFQDN|$($DomainAdminCreds.UserName)@$DomainFQDN"
+                Name                 = "Blank site"
+                Template             = "STS#1"
+                PsDscRunAsCredential = $SPSetupCredsQualified
+                DependsOn            = "[SPWebApplication]MainWebApp"
+            }
+        }
+        else {
+            SPWebAppAuthentication ConfigureWebAppAuthentication
+            {
+                WebAppUrl = "http://$SPTrustedSitesName/"
+                Default = @(
+                    MSFT_SPWebAppAuthenticationMode {
+                        AuthenticationMethod = "NTLM"
+                    }
+                )                
+                PsDscRunAsCredential = $SPSetupCredsQualified
+                DependsOn            = "[SPWebApplication]MainWebApp"
+            }
+
+            SPSite RootTeamSite
+            {
+                Url                  = "http://$SPTrustedSitesName/"
+                OwnerAlias           = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
+                Name                 = "Blank site"
+                Template             = "STS#1"
+                PsDscRunAsCredential = $SPSetupCredsQualified
+                DependsOn            = "[SPWebApplication]MainWebApp"
+            }
         }
     }
 }
@@ -524,7 +550,7 @@ function Get-NetBIOSName
 # Azure DSC extension logging: C:\WindowsAzure\Logs\Plugins\Microsoft.Powershell.DSC\2.21.0.0
 # Azure DSC extension configuration: C:\Packages\Plugins\Microsoft.Powershell.DSC\2.21.0.0\DSCWork
 
-Install-Module -Name xPendingReboot
+Install-Module -Name PendingReboot
 help ConfigureSPVM
 
 $DomainAdminCreds = Get-Credential -Credential "yvand"
@@ -538,9 +564,10 @@ $DCName = "DC"
 $SQLName = "SQL"
 $SQLAlias = "SQLAlias"
 $SharePointVersion = "2019"
+$ConfigureADFS = $false
 
-$mofPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.77.0.0\DSCWork\ConfigureSPVM.0\ConfigureSPVM"
-ConfigureSPVM -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPAppPoolCreds $SPAppPoolCreds -SPPassphraseCreds $SPPassphraseCreds -DNSServer $DNSServer -DomainFQDN $DomainFQDN -DCName $DCName -SQLName $SQLName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $mofPath
+$mofPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.80.0.0\DSCWork\ConfigureSPVM.0\ConfigureSPVM"
+ConfigureSPVM -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPAppPoolCreds $SPAppPoolCreds -SPPassphraseCreds $SPPassphraseCreds -DNSServer $DNSServer -DomainFQDN $DomainFQDN -DCName $DCName -SQLName $SQLName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -ConfigureADFS $ConfigureADFS -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $mofPath
 Set-DscLocalConfigurationManager -Path $mofPath
 Start-DscConfiguration -Path $mofPath -Wait -Verbose -Force
 
