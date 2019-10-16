@@ -16,7 +16,7 @@
     "version": {
         "Major": 3,
         "Minor": 0,
-        "Patch": 0
+        "Patch": 1
     },
     "visibility": [
         "Build",
@@ -49,10 +49,10 @@
         {
             "name": "LabId",
             "type": "pickList",
-            "label": "Lab Name",
+            "label": "Lab",
             "defaultValue": "",
             "required": true,
-            "helpMarkDown": "Name of an existing lab in which the custom image will be created. This is a pick list generated as a result of selecting a subscription.",
+            "helpMarkDown": "Lab in which the resource will be created. This is a pick list generated as a result of selecting a subscription. Selecting a name from the list will extract the corresponding Lab ID. The Lab ID is a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}`. Variables in the form `$(varName)` are allowed.",
             "properties": {
                 "EditableOptions": "True"
             }
@@ -76,11 +76,11 @@
         {
             "name": "LabVmId",
             "type": "pickList",
-            "label": "Source Lab VM ID",
+            "label": "Source Lab VM",
             "defaultValue": "",
             "required": true,
             "groupName": "sourceLabVM",
-            "helpMarkDown": "Resource ID of the source lab VM. The source lab VM must be in the selected lab, as the custom image will be created using its VHD file. You can use any variable such as `$(labVMId)`, the output of calling **Create Azure DevTest Labs VM**, that contains a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}/virtualMachines/{vmName}`.",
+            "helpMarkDown": "Source Lab VM from which the resource will be created. The source lab VM must be in the selected lab, as the custom image will be created using its VHD file. Selecting a name from the list will extract the corresponding Lab VM ID. The Lab VM ID is a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}/virtualMachines/{vmName}`. Variables in the form `$(varName)` are allowed. For example, you can use any variable such as `$(labVmId)`, the output of calling **Create Azure DevTest Labs VM**.",
             "properties": {
                 "EditableOptions": "True"
             }

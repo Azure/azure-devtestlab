@@ -1,4 +1,5 @@
 import '../../modules/task-utils/polyfill';
+import { equalsIgnoreCase } from '../../modules/task-utils/polyfill';
 
 import * as tl from 'azure-pipelines-task-lib/task';
 import * as resutil from '../../modules/task-utils/resourceutil';
@@ -134,10 +135,10 @@ function getInputData(ciName?: string, test?: boolean): CreateCiTaskInputData {
             description: description,
             labId: tl.getInput('LabId', true),
             labVmId: tl.getInput('LabVmId', true),
-            linuxOsState: tl.getInput('LinuxOsState', osType === 'Linux'),
+            linuxOsState: tl.getInput('LinuxOsState', equalsIgnoreCase(osType, 'Linux')),
             osType: osType,
             subscriptionId: tl.getEndpointDataParameter(connectedServiceName, 'SubscriptionId', true),
-            windowsOsState: tl.getInput('WindowsOsState', osType === 'Windows')
+            windowsOsState: tl.getInput('WindowsOsState', equalsIgnoreCase(osType, 'Windows'))
         };
     }
 

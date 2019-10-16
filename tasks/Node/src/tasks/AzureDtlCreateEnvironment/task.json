@@ -16,7 +16,7 @@
     "version": {
         "Major": 3,
         "Minor": 0,
-        "Patch": 0
+        "Patch": 1
     },
     "visibility": [
         "Build",
@@ -44,10 +44,10 @@
         {
             "name": "LabId",
             "type": "pickList",
-            "label": "Lab Name",
+            "label": "Lab",
             "defaultValue": "",
             "required": true,
-            "helpMarkDown": "Name of an existing lab in which the lab VM will be created. This is a pick list generated as a result of selecting a subscription.",
+            "helpMarkDown": "Lab in which the resource will be created. This is a pick list generated as a result of selecting a subscription. Selecting a name from the list will extract the corresponding Lab ID. The Lab ID is a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}`. Variables in the form `$(varName)` are allowed.",
             "properties": {
                 "EditableOptions": "True"
             }
@@ -63,10 +63,10 @@
         {
             "name": "RepositoryId",
             "type": "pickList",
-            "label": "Repository Name",
+            "label": "Repository",
             "defaultValue": "",
             "required": true,
-            "helpMarkDown": "Name of an existing repository from wich you want to pick a template. This is a pick list genereted as a result of selecting a lab.",
+            "helpMarkDown": "Repository from which to pick a template. This is a pick list generated as a result of selecting a lab. Selecting a name from the list will extract the corresponding Repository ID. The Repository ID is a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}/artifactSources/{repoName}`. Variables in the form `$(varName)` are allowed.",
             "properties": {
                 "EditableOptions": "True"
             }
@@ -74,10 +74,10 @@
         {
             "name": "TemplateId",
             "type": "pickList",
-            "label": "Template Name",
+            "label": "Template",
             "defaultValue": "",
             "required": true,
-            "helpMarkDown": "Name of an existing ARM template that should be used to create a new environment. This is a pick list generated as a result of selecting a repository.",
+            "helpMarkDown": "Template that should be used to create an environment. This is a pick list generated as a result of selecting a repository. Selecting a name from the list will extract the corresponding Template ID. The Template ID is a value in the form `/subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.DevTestLab/labs/{labName}/artifactSources/{repoName}/armTemplates/{templateName}`. Variables in the form `$(varName)` are allowed.",
             "properties": {
                 "EditableOptions": "True"
             }

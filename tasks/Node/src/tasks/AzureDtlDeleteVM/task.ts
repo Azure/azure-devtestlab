@@ -1,4 +1,5 @@
 import '../../modules/task-utils/polyfill';
+import { equalsIgnoreCase } from '../../modules/task-utils/polyfill';
 
 import * as tl from 'azure-pipelines-task-lib/task';
 import * as resutil from '../../modules/task-utils/resourceutil';
@@ -15,7 +16,7 @@ async function ensureVmExists(dtlClient: DevTestLabsClient, labVmId: string): Pr
 
     const labVms = await dtlClient.virtualMachines.list(labRgName, labName);
 
-    const vmExists = labVms && labVms.some((vm) => vm && vm.name && vm.name.toLocaleLowerCase() === vmName);
+    const vmExists = labVms && labVms.some((vm) => vm && vm.name && equalsIgnoreCase(vm.name, vmName));
 
     const message: string = `Lab VM '${vmName}' ${vmExists ? 'exists' : 'does not exist'}.`;
 

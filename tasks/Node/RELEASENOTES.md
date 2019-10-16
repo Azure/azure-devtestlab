@@ -8,17 +8,17 @@
 The following considerations should be taken when updating from previous versions of the tasks.
 
 ### Create VM
-* Move parameter value for `-newVMName` to field `Virtual Machine Name`.
+* Move parameter value for `-newVMName` to field `Virtual Machine`.
 * Reselect the template under `Template File`.
 * Under `Output Variables`, specify a `Reference name` (i.e. `vm`).
 * Take note of the new output variable for the lab VM ID (i.e. `vm.labVmId`).
 
 ### Delete VM
-* A lab name is now required for selection.
-* Change the Lab VM ID to match, if using the Create VM task (i.e. `vm.labVmId`).
+* A lab is now required for selection.
+* Change the Lab VM to match, if using the Create VM task (i.e. `vm.labVmId`).
 
 ### Create Custom Image
-* Change the reference to the `Virtual Machine Name`, if using one generated from the Create VM task (i.e. `vm.labVmId`).
+* Change the reference to the `Virtual Machine`, if using one generated from the Create VM task (i.e. `vm.labVmId`).
 * Under `Output Variables`, specify a `Reference name` (i.e. `ci`).
 * Take note of the new output variable for the custom image ID (i.e. `ci.customImageId`).
 
