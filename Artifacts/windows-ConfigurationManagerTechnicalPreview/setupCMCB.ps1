@@ -9,9 +9,7 @@ cd $($PSScriptRoot)
 if((gwmi win32_computersystem).partofdomain -eq $true)
 {
 	#Force usage of TLS 1.2
-	IF ([System.Net.ServicePointManager]::SecurityProtocol -notmatch "^(?=.*\bTls12\b).*$") {
-		[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
-	}
+	[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
 	
 	#Download RZUpdate if missing...
 	if((Test-Path "$($env:temp)\RZUpdate.exe") -eq $false) 
