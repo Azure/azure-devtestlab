@@ -30,7 +30,7 @@
             "displayName": "Skip dos2unix conversion",
             "description": "Skip the script conversion from MSDOS to Unix line ending",
             "allowEmpty": true,
-            "defaultValue": "true"
+            "defaultValue": true
         }
     },
     "runAzureVMExtension": {
