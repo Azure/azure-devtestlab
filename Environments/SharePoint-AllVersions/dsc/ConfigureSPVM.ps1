@@ -252,20 +252,6 @@ configuration ConfigureSPVM
             DependsOn            = "[Group]AddSPSetupAccountToAdminGroup", "[xADUser]CreateSParmAccount", "[xADUser]CreateSPAppPoolAccount"
         }
 
-        #****************************************************************
-        # Copy solutions and certificates that will be used in SharePoint
-        #****************************************************************
-        File CopyCertificatesFromDC
-        {
-            Ensure          = "Present"
-            Type            = "Directory"
-            Recurse         = $true
-            SourcePath      = "$DCSetupPath"
-            DestinationPath = "$SetupPath\Certificates"
-            Credential      = $DomainAdminCredsQualified
-            DependsOn       = "[File]AccountsProvisioned"
-        }
-
         SqlAlias AddSqlAlias
         {
             Ensure               = "Present"
@@ -332,15 +318,6 @@ configuration ConfigureSPVM
             DependsOn            = "[SPFarm]CreateSPFarm"
         }
 
-        SPTrustedRootAuthority TrustRootCA
-        {
-            Name                 = "$DomainFQDN root CA"
-            CertificateFilePath  = "$SetupPath\Certificates\ADFS Signing issuer.cer"
-            Ensure               = "Present"
-            PsDscRunAsCredential = $SPSetupCredsQualified
-            DependsOn            = "[SPFarm]CreateSPFarm"
-        }
-
         SPWebApplication MainWebApp
         {
             Name                   = "SharePoint - 80"
@@ -353,19 +330,6 @@ configuration ConfigureSPVM
             Ensure                 = "Present"
             PsDscRunAsCredential   = $SPSetupCredsQualified
             DependsOn              = "[SPFarm]CreateSPFarm"
-        }
-
-        # Update GPO to ensure the root certificate of the CA is present in "cert:\LocalMachine\Root\" before issuing a certificate request, otherwise request would fail
-        xScript UpdateGPOToTrustRootCACert
-        {
-            SetScript =
-            {
-                gpupdate.exe /force
-            }
-            GetScript            = { return @{ "Result" = "false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
-            TestScript           = { return $false }
-            DependsOn            = "[Computer]DomainJoin"
-            PsDscRunAsCredential = $DomainAdminCredsQualified
         }
 
         # Creating site collection in SharePoint 2019 fail: https://github.com/PowerShell/SharePointDsc/issues/990
@@ -395,6 +359,26 @@ configuration ConfigureSPVM
         }
 
         if ($ConfigureADFS -eq $true) {
+            File CopyCertificatesFromDC
+            {
+                Ensure          = "Present"
+                Type            = "Directory"
+                Recurse         = $true
+                SourcePath      = "$DCSetupPath"
+                DestinationPath = "$SetupPath\Certificates"
+                Credential      = $DomainAdminCredsQualified
+                DependsOn       = "[Computer]DomainJoin"
+            }
+
+            SPTrustedRootAuthority TrustRootCA
+            {
+                Name                 = "$DomainFQDN root CA"
+                CertificateFilePath  = "$SetupPath\Certificates\ADFS Signing issuer.cer"
+                Ensure               = "Present"
+                PsDscRunAsCredential = $SPSetupCredsQualified
+                DependsOn            = "[SPFarm]CreateSPFarm"
+            }
+
             SPTrustedIdentityTokenIssuer CreateSPTrust
             {
                 Name                         = $DomainFQDN
@@ -419,6 +403,19 @@ configuration ConfigureSPVM
                 Ensure                       = "Present"
                 DependsOn                    = "[SPFarm]CreateSPFarm"
                 PsDscRunAsCredential         = $SPSetupCredsQualified
+            }
+
+            # Update GPO to ensure the root certificate of the CA is present in "cert:\LocalMachine\Root\" before issuing a certificate request, otherwise request would fail
+            xScript UpdateGPOToTrustRootCACert
+            {
+                SetScript =
+                {
+                    gpupdate.exe /force
+                }
+                GetScript            = { return @{ "Result" = "false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
+                TestScript           = { return $false }
+                DependsOn            = "[Computer]DomainJoin"
+                PsDscRunAsCredential = $DomainAdminCredsQualified
             }
 
             CertReq SPSSiteCert
@@ -452,7 +449,7 @@ configuration ConfigureSPVM
                 DependsOn              = '[CertReq]SPSSiteCert'
             }
 
-            SPWebAppAuthentication ConfigureWebAppAuthentication
+            SPWebAppAuthentication ConfigureAuthentAllZones
             {
                 WebAppUrl = "http://$SPTrustedSitesName/"
                 Default = @(
@@ -482,7 +479,7 @@ configuration ConfigureSPVM
                 }
                 Ensure               = "Present"
                 PsDscRunAsCredential = $DomainAdminCredsQualified
-                DependsOn            = "[SPWebAppAuthentication]ConfigureWebAppAuthentication"
+                DependsOn            = "[SPWebAppAuthentication]ConfigureAuthentAllZones"
             }
 
             SPSite RootTeamSite
@@ -497,7 +494,7 @@ configuration ConfigureSPVM
             }
         }
         else {
-            SPWebAppAuthentication ConfigureWebAppAuthentication
+            SPWebAppAuthentication ConfigureAuthentDefaultZone
             {
                 WebAppUrl = "http://$SPTrustedSitesName/"
                 Default = @(

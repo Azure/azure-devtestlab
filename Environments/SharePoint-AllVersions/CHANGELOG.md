@@ -1,5 +1,10 @@
 # Change log for AzureRM template SharePoint-ADFS-DevTestLabs
 
+## November 2019 update
+
+* Remove configuration of AD CS if parameter ConfigureADFS is set to No, to speed up the deployment time of the template
+* Open SQL port on the firewall only when SQL VM is fully configured, as SharePoint DSC is testing it to start creation of the farm
+
 ## October 2019 update
 
 * Add parameter ConfigureADFS, set to No by default, to skip the whole ADFS configuration if it is not desired. This speeds up the deployment time of the template
