@@ -87,21 +87,21 @@
         WindowsFeature AddADFeature1    { Name = "RSAT-ADLDS";          Ensure = "Present"; DependsOn = "[PendingReboot]Reboot1" }
         WindowsFeature AddADFeature2    { Name = "RSAT-ADDS-Tools";     Ensure = "Present"; DependsOn = "[PendingReboot]Reboot1" }
 
-        #**********************************************************
-        # Configure AD CS
-        #**********************************************************
-        WindowsFeature AddCertAuthority       { Name = "ADCS-Cert-Authority"; Ensure = "Present"; DependsOn = "[PendingReboot]Reboot1" }
-        WindowsFeature AddADCSManagementTools { Name = "RSAT-ADCS-Mgmt";      Ensure = "Present"; DependsOn = "[PendingReboot]Reboot1" }
-        ADCSCertificationAuthority ADCS
-        {
-            IsSingleInstance = "Yes"
-            CAType = "EnterpriseRootCA"
-            Ensure = "Present"
-            Credential = $DomainCredsNetbios
-            DependsOn = "[WindowsFeature]AddCertAuthority"
-        }
-
         if ($ConfigureADFS -eq $true) {
+            #**********************************************************
+            # Configure AD CS
+            #**********************************************************
+            WindowsFeature AddCertAuthority       { Name = "ADCS-Cert-Authority"; Ensure = "Present"; DependsOn = "[PendingReboot]Reboot1" }
+            WindowsFeature AddADCSManagementTools { Name = "RSAT-ADCS-Mgmt";      Ensure = "Present"; DependsOn = "[PendingReboot]Reboot1" }
+            ADCSCertificationAuthority ADCS
+            {
+                IsSingleInstance = "Yes"
+                CAType = "EnterpriseRootCA"
+                Ensure = "Present"
+                Credential = $DomainCredsNetbios
+                DependsOn = "[WindowsFeature]AddCertAuthority"
+            }
+
             #**********************************************************
             # Configure AD FS
             #**********************************************************
@@ -266,38 +266,6 @@ param = c.Value);
                 return $false
                 }
                 DependsOn = "[CertReq]ADFSSiteCert", "[CertReq]ADFSSigningCert", "[CertReq]ADFSDecryptionCert"
-            }
-        } else {
-            xScript ExportCertificates
-            {
-                SetScript = 
-                {
-                    # gpupdate triggers the creation of a certificate "CN=DCName.DomainFQDN" issued by certificate authority
-                    gpupdate.exe /force
-                    
-                    Write-Verbose -Message "Exporting the public key of the certificate authority..."
-                    $ComputerName = $using:ComputerName
-                    $DomainFQDN = $using:DomainFQDN
-                    $destinationPath = "C:\Setup"
-                    $rootCAFileName = "ADFS Signing issuer.cer"
-                    New-Item $destinationPath -Type directory -ErrorAction SilentlyContinue
-                    
-                    # Find the root certificate authority by 1st getting certificate "CN=DCName.DomainFQDN", and then its issuer (easiest way I found)
-                    $machineCert = Get-ChildItem -Path "cert:\LocalMachine\My\" | Where-Object {$_.Subject -eq "CN=$ComputerName.$DomainFQDN"}
-                    Get-ChildItem -Path "cert:\LocalMachine\Root\"| Where-Object{$_.Subject -eq  $machineCert.Issuer}| Select-Object -First 1| Export-Certificate -FilePath ([System.IO.Path]::Combine($destinationPath, $rootCAFileName))
-                    Write-Verbose -Message "The public key of the certificate authority successfully exported"
-                }
-                GetScript =  
-                {
-                    # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
-                    return @{ "Result" = "false" }
-                }
-                TestScript = 
-                {
-                    # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
-                return $false
-                }
-                DependsOn = "[ADCSCertificationAuthority]ADCS"
             }
         }
     }
