@@ -20,6 +20,6 @@
     }
   },
   "runCommand": {
-    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./addUserToGroup.ps1', ' -Username ', parameters('username'), ' -Group ', parameters('group'), '\"')]"
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./addUserToGroup.ps1', ' -Username ', \"parameters('username')\", ' -Group ', \"parameters('group')\", '\"')]"
   }
 }
