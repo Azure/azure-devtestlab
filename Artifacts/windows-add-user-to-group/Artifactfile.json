@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+  "title": "Add user to user group",
+  "description": "Adds a user account to a user group on the targetted virtual machine.",
+  "publisher": "Microsoft",
+  "tags": [
+    "Windows"
+  ],
+  "targetOsType": "Windows",
+  "parameters": {
+    "username": {
+      "type": "string",
+      "displayName": "User account",
+      "description": "The user account that will be added to the provided user group of the target virtual machine."
+    },
+    "group": {
+      "type": "string",
+      "displayName": "Group",
+      "description": "The group that the user will be added to on the target virtual machine."
+    }
+  },
+  "runCommand": {
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./addUserToGroup.ps1', ' -Username ', parameters('username'), ' -Group ', parameters('group'), '\"')]"
+  }
+}
