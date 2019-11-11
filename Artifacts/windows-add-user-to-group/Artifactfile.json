@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
   "title": "Add user to user group",
-  "description": "Adds a user account to a user group on the targetted virtual machine.",
+  "description": "Adds a user account to a group on the targetted virtual machine.",
   "publisher": "Microsoft",
   "tags": [
     "Windows"
@@ -11,7 +11,7 @@
     "username": {
       "type": "string",
       "displayName": "User account",
-      "description": "The user account that will be added to the provided user group of the target virtual machine."
+      "description": "The user account that will be added to the provided group on the target virtual machine."
     },
     "group": {
       "type": "string",
