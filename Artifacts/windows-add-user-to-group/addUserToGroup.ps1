@@ -1,4 +1,15 @@
-﻿#
+﻿# Parameters for this script file.
+#
+
+[CmdletBinding()]
+param(
+    [string] $Username,
+    [string] $Group
+)
+
+###################################################################################################
+
+#
 # Functions used in this script.
 #
 
