@@ -11,5 +11,10 @@
   "targetOsType": "Windows",
   "runCommand": {
     "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./install-choco-package.ps1 -Packages ', 'webdeploy', '\"')]"
-  }
+  },
+  "postDeployActions": [
+    {
+      "action": "restart"
+    }
+  ]
 }
