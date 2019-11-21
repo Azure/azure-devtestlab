@@ -11,6 +11,6 @@
     "iconUri": "https://chocolatey.org/content/packageimages/rdcman.2.7.1406.20160916.png",
     "targetOsType": "Windows",
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', 'rdcman', '\"')]"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./install-choco-package.ps1 -Packages ', 'rdcman', '\"')]"
     }
 }

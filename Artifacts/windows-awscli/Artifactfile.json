@@ -10,6 +10,6 @@
     "iconUri": "https://chocolatey.org/content/packageimages/awscli.1.11.76.png",
     "targetOsType": "Windows",
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', 'awscli', '\"')]"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./install-choco-package.ps1 -Packages ', 'awscli', '\"')]"
     }
 }

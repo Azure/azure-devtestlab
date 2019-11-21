@@ -7,9 +7,9 @@
         "Windows",
         "Beyond Compare"
     ],
-    "iconUri": "http://www.scootersoftware.com/images/media_BeyondCompareIcon512x512.png",
+    "iconUri": "https://www.scootersoftware.com/images/media_BeyondCompareIcon512x512.png",
     "targetOsType": "Windows",
     "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ', 'beyondcompare', '\"')]"
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./install-choco-package.ps1 -Packages ', 'beyondcompare', '\"')]"
     }
 }

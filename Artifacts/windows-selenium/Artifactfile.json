@@ -13,6 +13,6 @@
   "iconUri": "https://github.com/Azure/azure-devtestlab/raw/master/Artifacts/windows-selenium/selenium-logo.png",
   "targetOsType": "Windows",
   "runCommand": {
-    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./startChocolatey.ps1 -PackageList ''', 'firefox,googlechrome,selenium-chrome-driver,selenium-ie-driver', '''\"')]"
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./install-choco-package.ps1 -Packages ''', 'firefox,googlechrome,selenium-chrome-driver,selenium-ie-driver', '''\"')]"
   }
 }
