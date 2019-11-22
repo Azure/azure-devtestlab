@@ -100,18 +100,20 @@ function Install-Packages
         $Packages
     )
 
-    $Packages = $Packages.split(',; ', [StringSplitOptions]::RemoveEmptyEntries) -join ' '
-    $checkSumFlags = ""
-    if ($AllowEmptyChecksums)
-    {
-        $checkSumFlags = $checkSumFlags + " --allow-empty-checksums "
+    $Packages = $Packages.split(',; ', [StringSplitOptions]::RemoveEmptyEntries)
+    $Packages | % {
+        $checkSumFlags = ""
+        if ($AllowEmptyChecksums)
+        {
+            $checkSumFlags = $checkSumFlags + " --allow-empty-checksums "
+        }
+        if ($IgnoreChecksums)
+        {
+            $checkSumFlags = $checkSumFlags + " --ignore-checksums "
+        }
+        $expression = "$ChocoExePath install -y -f --acceptlicense $checkSumFlags --no-progress --stoponfirstfailure $_"
+        Invoke-ExpressionImpl -Expression $expression
     }
-    if ($IgnoreChecksums)
-    {
-        $checkSumFlags = $checkSumFlags + " --ignore-checksums "
-    }
-    $expression = "$ChocoExePath install -y -f --acceptlicense $checkSumFlags --no-progress --stoponfirstfailure $Packages"
-    Invoke-ExpressionImpl -Expression $expression 
 }
 
 function Invoke-ExpressionImpl
