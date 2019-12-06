@@ -1,4 +1,4 @@
-﻿###################################################################################################
+###################################################################################################
 #
 # PowerShell configurations
 #
@@ -48,16 +48,16 @@ trap
 if ([Environment]::OSVersion.Version.Major -gt 6) {
     Write-Host "`nRemoving Appx Packages for current user`n"
 
-    Get-AppxPackage | Remove-AppxPackage -ErrorAction SilentlyContinue 
+    Get-AppxPackage |?{($_.Name -ne "Microsoft.WindowsStore") -and (-not ($_.NonRemovable)) -and ($_.Name -ne "Microsoft.StorePurchaseApp")}| Remove-AppxPackage -ErrorAction SilentlyContinue 
 
     Write-Host "`nRemoving All users Appx Packages for current user`n"
-    Get-AppxPackage -AllUsers | Remove-AppxPackage -ErrorAction SilentlyContinue
+    Get-AppxPackage -AllUsers |?{($_.Name -ne "Microsoft.WindowsStore") -and (-not ($_.NonRemovable)) -and ($_.Name -ne "Microsoft.StorePurchaseApp")}| Remove-AppxPackage -ErrorAction SilentlyContinue
 
     Write-Host "`nRemoving removable apps from provisioned apps list so they don't reinstall on new users`n"
     Get-AppxProvisionedPackage -Online  | Remove-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue
 
     Write-Host "`nRemoving all removable apps for all users`n"
-    $allPackageNames = Get-AppxPackage -AllUsers |?{($_.Name -ne "Microsoft.WindowsStore") -and (-not ($_.NonRemovable))}| Select-Object -Expand Name
+    $allPackageNames = Get-AppxPackage -AllUsers |?{($_.Name -ne "Microsoft.WindowsStore") -and (-not ($_.NonRemovable)) -and ($_.Name -ne "Microsoft.StorePurchaseApp")}| Select-Object -Expand Name
     $allPackageNames = $allPackageNames | ForEach-Object {"*$_*"}
     ForEach($app in $allPackageNames){
         Try{
@@ -67,6 +67,7 @@ if ([Environment]::OSVersion.Version.Major -gt 6) {
         }
     }
 
+    
 
     Write-Host "`nDone Removing Appx Packages`n"
 }
