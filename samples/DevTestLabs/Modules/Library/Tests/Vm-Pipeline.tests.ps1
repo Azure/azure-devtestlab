@@ -53,6 +53,10 @@ Describe 'VM Management' {
 
             $vms | Remove-AzDtlVm
 
+            # If we query DTL too fast before they update records, the VM will still show up
+            # need to wait for DTL to catch up - only happens occasionally
+            Start-Sleep -Seconds 60
+
             $vms = $labs | Get-AzDtlVm
             Write-Verbose "VMs after delete"
             $vms | Out-String | Write-Verbose
