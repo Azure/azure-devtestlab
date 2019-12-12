@@ -84,6 +84,7 @@ Describe  'Get and Set SharedImageGallery and SharedImageGalleryImages' {
             # We have to slow down our script a bit, give the back end time to catch up on processing the list of images from SIG over to DTL
             Start-Sleep -Seconds 60
             $SIG | Set-AzDtlLabSharedImageGalleryImages -ImageName $image.definitionName -OsType $image.osType -ImageType $image.imageType -Enabled $false
+            Start-Sleep -Seconds 60
 
             # Get the images, confirm it was set the right way
             ($SIG | Get-AzDtlLabSharedImageGalleryImages | Where-Object {$_.OsType -eq "Windows"} | Select-Object -First 1).enableState | Should -Be "Disabled"
