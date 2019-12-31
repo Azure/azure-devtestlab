@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2015-01-01/dtlArtifacts.json",
+  "title": "Add user to Local Group",
+  "description": "Adds the given user account to a local group on the target virtual machine. If a AD account is used the virtual machine must already be joined to the same domain before this artifact is run.",
+  "publisher": "Microsoft",
+  "tags": [
+    "Windows"
+  ],
+  "iconUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/Artifacts/windows-domain-join/domainJoinArtifact.png",
+  "targetOsType": "Windows",
+  "parameters": {
+    "username": {
+      "type": "string",
+      "displayName": "User account",
+      "description": "The account (can be a AD account e.g. CORP\\user or user@corp.contoso.com) that will be added to the local group of the target virtual machine."
+    },
+    "localGroup": {
+      "type": "string",
+      "displayName": "Local Group",
+      "description": "The Local Group that the user account will be added to, the group must already exist on the target virtual machine."
+    }
+  },
+  "runCommand": {
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./artifact-main.ps1', ' -username ', parameters('username'), ' -localGroup ', parameters('localGroup'), '\"')]"
+  }
+}
