@@ -40,15 +40,19 @@ function Add-UserToLocalGroup ()
         throw "Username not provided"
     }
 
-    if ($Username -contains '@')
+    if ($Username -match '@')
     {
         $user = ($Username -split '@')[0]
         $domain = ($Username -split '@')[1]    
     }
-    elseif ($Username -contains '\\')
+    elseif ($Username -match '\\')
     {
         $user = ($Username -split '\\')[1]
         $domain = ($Username -split '\\')[0]
+        if($domain -eq ".")
+        {
+            $domain = $env:COMPUTERNAME
+        }
     }
     else
     {
