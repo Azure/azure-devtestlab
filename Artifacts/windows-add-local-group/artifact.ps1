@@ -131,11 +131,11 @@ function Get-UsernameString ()
 
     if($DomainResolved -eq "" -or $DomainResolved -eq ".")
     {
-        Write-Output "$Username is local user."
+        Write-Output "Result: $Username is local user."
         return "WinNT://$env:COMPUTERNAME/$ADResolved"
     }
     else {
-        Write-Output "$Username is domain user."
+        Write-Output "Result: $Username is domain user."
         return "WinNT://$DomainResolved/$ADResolved"   
     }
 }
@@ -152,9 +152,10 @@ function Add-UserToLocalGroup ()
         [Parameter(Mandatory = $true)] 
         [string] $GroupName
     )
-    Write-Output "Attempting to add $Username to the local group..."
     $user = Get-UsernameString $Username
     $group = [ADSI]("WinNT://$env:COMPUTERNAME/$GroupName, group")
+
+    Write-Output "Attempting to add $user to the local group..."
 
     if ($group.IsMember($user))
     {
@@ -183,5 +184,5 @@ if (Test-LocalGroupExists -GroupName $localGroupName) {
     Get-LocalGroupMembers $localGroupName   
 }
 else {
-    Write-Error "Local Group $localGroupName does not exist on the target machine."
+    Write-Error "Result: Local Group $localGroupName does not exist on the target machine."
 }
