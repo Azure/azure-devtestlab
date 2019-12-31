@@ -3,6 +3,8 @@ param
 (
     [Parameter(Mandatory = $true)]
     [string] $username,
+    [Parameter(Mandatory = $false)]
+    [string] $userDomain,
     [Parameter(Mandatory = $true)]
     [string] $localGroupName
 )
@@ -21,117 +23,7 @@ function Test-LocalGroupExists ()
 
     return $result
 }
-
-#############################
-# Function to find the members of a local machine group, usually administrators.
-# Works around the cahnge in call pattern InvokeMember
-function Get-LocalGroupMembersPs3to5 ()
-{
-    param
-    (
-        [Parameter(Mandatory = $true)] 
-        [string] $GroupName
-    )
-    if ($PSVersionTable.PSVersion.Major -gt 4)
-    {
-        throw "This method id not supported on powershell 5 and greater"
-    }
-    $group = [ADSI]("WinNT://$env:COMPUTERNAME/$GroupName, group");
-    $members = @($group.psbase.Invoke("Members"));
-    $Details = @();
-
-    $members | ForEach-Object {
-        $name = $_.GetType().InvokeMember("Name", 'GetProperty', $null, $_, $null)
-        $path = $_.GetType().InvokeMember("ADsPath", 'GetProperty', $null, $_, $null)
-        $schema = $_.GetType().InvokeMember("Schema", 'GetProperty', $null, $_, $null)
-       
-
-        if ($schema -notlike "WinNT://$name/*")
-        {
-            $Type = "Domain"
-            if ($path -like "*/$env:COMPUTERNAME/*")
-            {
-                $Type = "Local"
-            }
-           
-            $Details += New-Object PSObject -Property @{"Account" = $name; "Type" = $type; }
-        }
-    }
-    return $Details
-}
-
-##############################
-# Function to find the members of a local machine group, usually administrators
-function Get-LocalGroupMembers ()
-{
-    param
-    (
-        [Parameter(Mandatory = $true)] 
-        [string] $GroupName
-    )
-
-    if ($PSVersionTable.PSVersion.Major -lt 5)
-    {
-        return Get-LocalGroupMembersPs3to5 $GroupName
-    }
-
-    $group = [ADSI]("WinNT://$env:COMPUTERNAME/$GroupName, group");
-    $members = @($group.psbase.Invoke("Members"));
-    $Details = @();
-    
-    $members | ForEach-Object {
-        $name = $_.GetType.Invoke().InvokeMember("Name", 'GetProperty', $null, $_, $null)
-        $path = $_.GetType.Invoke().InvokeMember("ADsPath", 'GetProperty', $null, $_, $null)
-        $schema = $_.GetType.Invoke().InvokeMember("Schema", 'GetProperty', $null, $_, $null)
-
-        if ($schema -notlike "WinNT://$name/*")
-        {
-            $Type = "Domain"
-            if ($path -like "*/$env:COMPUTERNAME/*")
-            {
-                $Type = "Local"
-            }
-           
-            $Details += New-Object PSObject -Property @{"Group" = $GroupName; "Account" = $name; "Type" = $type; }
-        }
-    }
-    return $Details
-}
-    
-##############################
-# Function to get the Fully Qualified User string in format "WinNT://<machinename|domain>/<username>"
-function Get-AdUsernameString ()
-{
-    param
-    (
-        [Parameter(Mandatory = $true)] 
-        [string] $Username
-    )
-    if ([string]::IsNullOrEmpty($Username)) 
-    { 
-        throw "Username not provided"
-    }
-
-    if($Username -notmatch '\\' -and $Username -notmatch '@')
-    {
-        Write-Output "Result: $Username is local user."
-        return "WinNT://$env:COMPUTERNAME/$Username"
-    }
-
-    Write-Output "$Username is a domain user."
-    if ($Username -notmatch '\\')
-    {
-        $ADResolved = ($Username -split '@')[0]
-        $DomainResolved = ($Username -split '@')[1]    
-    }
-    else
-    {
-        $ADResolved = ($Username -split '\\')[1]
-        $DomainResolved = ($Username -split '\\')[0]
-    }
-    return "WinNT://$DomainResolved/$ADResolved"
-}
-
+   
 ##############################
 # Function to add the user to a local group
 function Add-UserToLocalGroup ()
@@ -140,32 +32,34 @@ function Add-UserToLocalGroup ()
     (
         [Parameter(Mandatory = $true)] 
         [string] $Username, 
-        
+        [Parameter(Mandatory = $false)]
+        [string] $userDomain,        
         [Parameter(Mandatory = $true)] 
         [string] $GroupName
     )
     Write-Output "Attempting to add $Username to the local group..."
-    $adUser = Get-AdUsernameString $Username
-    $group = [ADSI]("WinNT://$env:COMPUTERNAME/$GroupName, group")
-
-    Write-Output "Is $adUser already a member of the local group $GroupName"
-
-    if ($group.IsMember($adUser))
+    
+    # Default to local user account
+    $user = "WinNT://$env:COMPUTERNAME/$Username"
+    if($userDomain)
     {
+        $user = "WinNT://$userDomain/$Username"
+    }
+
+    #Get the local group
+    $group = [ADSI]("WinNT://$env:COMPUTERNAME/$GroupName, group")
+    $Members = @($group.psbase.Invoke("Members"))
+    #Populate the $MemberNames array with all the user ID's
+    $MemberNames = @()
+    $Members | ForEach-Object {$MemberNames += $_.GetType().InvokeMember("Name", 'GetProperty', $null, $_, $null);}
+
+    #See if your user ID is in there
+    if (-Not $MemberNames.Contains($Username)) {
+        $group.Add($user)
+    }
+    else {
         Write-Output "Result: $Username already belongs to the $GroupName"
         return
-    }
-
-    Write-Output "Adding $adUser as a member of the local group $GroupName"
-    $group.Add($adUser)
-    
-    if ($group.IsMember($adUser))
-    {
-        Write-Output "Result: $Username successfully added to $GroupName"
-    }
-    else
-    {
-        Write-Error "Result: failed to add $username to $GroupName"
     }
 }
 
@@ -174,9 +68,6 @@ function Add-UserToLocalGroup ()
 
 if (Test-LocalGroupExists -GroupName $localGroupName) {
     Add-UserToLocalGroup -Username $username -GroupName $localGroupName
-
-    Write-Output "Members of $localGroupName are:"
-    Get-LocalGroupMembers $localGroupName   
 }
 else {
     Write-Error "Local Group $localGroupName does not exist on the target machine."
