@@ -155,5 +155,5 @@ function Add-UserToLocalGroup ()
 $adminGroupName = Get-LocalAdminGroupName
 Add-UserToLocalGroup -Username $DomainJoinUsername -GroupName $adminGroupName
 
-Write-Output "Members of $GroupName are:"
+Write-Output "Members of $adminGroupName are:"
 Get-LocalGroupMembers $adminGroupName
