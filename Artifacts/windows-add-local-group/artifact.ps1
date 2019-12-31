@@ -99,7 +99,7 @@ function Get-LocalGroupMembers ()
 }
     
 ##############################
-# Function to get the AD User string in format "WinNT://<domain>/<username>"
+# Function to get the Fully Qualified User string in format "WinNT://<machinename|domain>/<username>"
 function Get-UsernameString ()
 {
     param
@@ -137,7 +137,7 @@ function Get-UsernameString ()
 }
 
 ##############################
-# Function to add an AD user to a local group
+# Function to add the user to a local group
 function Add-UserToLocalGroup ()
 {
     param
