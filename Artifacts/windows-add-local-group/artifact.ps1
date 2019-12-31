@@ -114,11 +114,13 @@ function Get-UsernameString ()
 
     if ($Username -contains '@')
     {
+        Write-Output "$Username contains ampersand."
         $ADResolved = ($Username -split '@')[0]
         $DomainResolved = ($Username -split '@')[1]    
     }
     elseif ($Username -contains '\\')
     {
+        Write-Output "$Username contains backslash."
         $ADResolved = ($Username -split '\\')[1]
         $DomainResolved = ($Username -split '\\')[0]
     }else
@@ -129,11 +131,13 @@ function Get-UsernameString ()
 
     if($DomainResolved -eq "" -or $DomainResolved -eq ".")
     {
-        $DomainResolved = $env:COMPUTERNAME
+        Write-Output "$Username is local user."
+        return "WinNT://$env:COMPUTERNAME/$ADResolved"
     }
-
-    $Username = "WinNT://$DomainResolved/$ADResolved"
-    return $Username
+    else {
+        Write-Output "$Username is domain user."
+        return "WinNT://$DomainResolved/$ADResolved"   
+    }
 }
 
 ##############################
