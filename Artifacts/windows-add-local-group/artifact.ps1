@@ -66,9 +66,10 @@ function Add-UserToLocalGroup ()
     #See if your user ID is in there
     if (-Not $MemberNames.Contains($user)) {
         $group.Add("WinNT://$domain/$user")
+        Write-Output "Result: $Username added to $GroupName"
     }
     else {
-        Write-Output "Result: $Username already belongs to the $GroupName"
+        Write-Output "Result: $Username already belongs to $GroupName"
         return
     }
 }
