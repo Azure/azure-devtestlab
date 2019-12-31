@@ -12,12 +12,7 @@
     "username": {
       "type": "string",
       "displayName": "User account",
-      "description": "The accounts username."
-    },
-    "userDomain": {
-      "type": "string",
-      "displayName": "AD Domain",
-      "description": "The users AD domain if it is part of a domain."
+      "description": "The account (can be a AD account e.g. CORP\\user or user@corp.contoso.com) that will be added to the local group of the target virtual machine."
     },
     "localGroup": {
       "type": "string",
@@ -26,6 +21,6 @@
     }
   },
   "runCommand": {
-    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./artifact-main.ps1', ' -username ', parameters('username'), ' -userDomain ', parameters('userDomain'), ' -localGroup ', parameters('localGroup'), '\"')]"
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./artifact-main.ps1', ' -username ', parameters('username'), ' -localGroup ', parameters('localGroup'), '\"')]"
   }
 }

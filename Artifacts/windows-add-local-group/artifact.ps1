@@ -3,8 +3,6 @@ param
 (
     [Parameter(Mandatory = $true)]
     [string] $username,
-    [Parameter(Mandatory = $false)]
-    [string] $userDomain,
     [Parameter(Mandatory = $true)]
     [string] $localGroupName
 )
@@ -31,19 +29,31 @@ function Add-UserToLocalGroup ()
     param
     (
         [Parameter(Mandatory = $true)] 
-        [string] $Username, 
-        [Parameter(Mandatory = $false)]
-        [string] $userDomain,        
+        [string] $Username,        
         [Parameter(Mandatory = $true)] 
         [string] $GroupName
     )
     Write-Output "Attempting to add $Username to the local group..."
-    
-    # Default to local user account
-    $user = "WinNT://$env:COMPUTERNAME/$Username"
-    if($userDomain)
+
+    if ([string]::IsNullOrEmpty($Username)) 
+    { 
+        throw "Username not provided"
+    }
+
+    if ($Username -contains '@')
     {
-        $user = "WinNT://$userDomain/$Username"
+        $user = ($Username -split '@')[0]
+        $domain = ($Username -split '@')[1]    
+    }
+    elseif ($Username -contains '\\')
+    {
+        $user = ($Username -split '\\')[1]
+        $domain = ($Username -split '\\')[0]
+    }
+    else
+    {
+        $user = $username
+        $domain = $env:COMPUTERNAME
     }
 
     #Get the local group
@@ -54,8 +64,8 @@ function Add-UserToLocalGroup ()
     $Members | ForEach-Object {$MemberNames += $_.GetType().InvokeMember("Name", 'GetProperty', $null, $_, $null);}
 
     #See if your user ID is in there
-    if (-Not $MemberNames.Contains($Username)) {
-        $group.Add($user)
+    if (-Not $MemberNames.Contains($user)) {
+        $group.Add("WinNT://$domain/$user")
     }
     else {
         Write-Output "Result: $Username already belongs to the $GroupName"
