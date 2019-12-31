@@ -100,44 +100,36 @@ function Get-LocalGroupMembers ()
     
 ##############################
 # Function to get the Fully Qualified User string in format "WinNT://<machinename|domain>/<username>"
-function Get-UsernameString ()
+function Get-AdUsernameString ()
 {
     param
     (
         [Parameter(Mandatory = $true)] 
-        [string] $UserName
+        [string] $Username
     )
     if ([string]::IsNullOrEmpty($Username)) 
     { 
         throw "Username not provided"
     }
 
-    if ($Username -contains '@')
+    if($Username -notmatch '\\' -and $Username -notmatch '@')
     {
-        Write-Output "$Username contains ampersand."
+        Write-Output "Result: $Username is local user."
+        return "WinNT://$env:COMPUTERNAME/$Username"
+    }
+
+    Write-Output "$Username is a domain user."
+    if ($Username -notmatch '\\')
+    {
         $ADResolved = ($Username -split '@')[0]
         $DomainResolved = ($Username -split '@')[1]    
     }
-    elseif ($Username -contains '\\')
+    else
     {
-        Write-Output "$Username contains backslash."
         $ADResolved = ($Username -split '\\')[1]
         $DomainResolved = ($Username -split '\\')[0]
-    }else
-    {
-        $ADResolved = $UserName
-        $DomainResolved = ""
     }
-
-    if($DomainResolved -eq "" -or $DomainResolved -eq ".")
-    {
-        Write-Output "Result: $Username is local user."
-        return "WinNT://$env:COMPUTERNAME/$ADResolved, user"
-    }
-    else {
-        Write-Output "Result: $Username is domain user."
-        return "WinNT://$DomainResolved/$ADResolved, user"   
-    }
+    return "WinNT://$DomainResolved/$ADResolved"
 }
 
 ##############################
@@ -153,21 +145,21 @@ function Add-UserToLocalGroup ()
         [string] $GroupName
     )
     Write-Output "Attempting to add $Username to the local group..."
-    $user = Get-UsernameString $Username
+    $adUser = Get-AdUsernameString $Username
     $group = [ADSI]("WinNT://$env:COMPUTERNAME/$GroupName, group")
 
-    Write-Output "Is $user already a member of the local group $GroupName"
+    Write-Output "Is $adUser already a member of the local group $GroupName"
 
-    if ($group.IsMember($user))
+    if ($group.IsMember($adUser))
     {
         Write-Output "Result: $Username already belongs to the $GroupName"
         return
     }
 
-    Write-Output "Adding $user as a member of the local group $GroupName"
-    $group.Add($user)
+    Write-Output "Adding $adUser as a member of the local group $GroupName"
+    $group.Add($adUser)
     
-    if ($group.IsMember($user))
+    if ($group.IsMember($adUser))
     {
         Write-Output "Result: $Username successfully added to $GroupName"
     }
@@ -187,5 +179,5 @@ if (Test-LocalGroupExists -GroupName $localGroupName) {
     Get-LocalGroupMembers $localGroupName   
 }
 else {
-    Write-Error "Result: Local Group $localGroupName does not exist on the target machine."
+    Write-Error "Local Group $localGroupName does not exist on the target machine."
 }
