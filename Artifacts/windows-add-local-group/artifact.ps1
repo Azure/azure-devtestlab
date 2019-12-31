@@ -125,12 +125,19 @@ function Get-UsernameString ()
         $DomainResolved = ($Username -split '\\')[0]
     }else
     {
-        Write-Output "$Username is local user."
         $ADResolved = $UserName
-        $DomainResolved = "WORKGROUP"
+        $DomainResolved = ""
     }
 
-    return "WinNT://$DomainResolved/$ADResolved"   
+    if($DomainResolved -eq "" -or $DomainResolved -eq ".")
+    {
+        Write-Output "Result: $Username is local user."
+        return "WinNT://$env:COMPUTERNAME/$ADResolved, user"
+    }
+    else {
+        Write-Output "Result: $Username is domain user."
+        return "WinNT://$DomainResolved/$ADResolved, user"   
+    }
 }
 
 ##############################
