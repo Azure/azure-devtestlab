@@ -16,7 +16,8 @@
       "defaultValue": "2017",
       "allowedValues": [
         "2015",
-        "2017"
+        "2017",
+        "2019"
       ]
     },
     "sku": {
