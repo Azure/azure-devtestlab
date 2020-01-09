@@ -1464,6 +1464,15 @@ function New-AzDtlVm {
     [string]
     $Size,
 
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Storage type to use for virtual machine (i.e. Standard, Premium).")]
+    [Validateset('Standard','Premium')]
+    [string]
+    $StorageType,
+
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="The notes of the virtual machine.")]
+    [string]
+    $Notes = "",
+
     [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="This is a claimable VM.")]
     [Switch]
     $Claimable,
@@ -1580,6 +1589,10 @@ function New-AzDtlVm {
 
         $p = $t.resources.properties
         $p | Add-Member -Name 'size' -Value $Size -MemberType NoteProperty
+
+        if($StorageType) {$p | Add-Member -Name 'storageType' -Value $StorageType -MemberType NoteProperty}
+        
+        if($Notes) {$p | Add-Member -Name 'notes' -Value $Notes -MemberType NoteProperty}
 
         if($Claimable) {$p | Add-Member -Name 'allowClaim' -Value $True -MemberType NoteProperty}
 
