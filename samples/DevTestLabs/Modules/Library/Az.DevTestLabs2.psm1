@@ -1465,7 +1465,7 @@ function New-AzDtlVm {
     $Size,
 
     [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Storage type to use for virtual machine (i.e. Standard, Premium).")]
-    [Validateset('Standard','Premium')]
+    [Validateset('Standard', 'StandardSSD', 'Premium')]
     [string]
     $StorageType,
 
