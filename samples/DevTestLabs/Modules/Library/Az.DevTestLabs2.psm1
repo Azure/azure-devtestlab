@@ -1030,7 +1030,7 @@ function Remove-AzDtlVm {
   process {
     try {
       foreach($v in $Vm) {
-        Remove-AzureRmResource -ResourceId $vm.ResourceId -Force
+        Remove-AzureRmResource -ResourceId $v.ResourceId -Force
       }
     } catch {
       Write-Error -ErrorRecord $_ -EA $callerEA
