@@ -9,8 +9,8 @@ $labs = @(
 )
 
 $vms = @(
-    [pscustomobject]@{VmName=('Vm-' + (Get-Random)); Size='Standard_A4_v2'; UserName='bob'; Password='aPassword341341'; OsType='Windows'; Sku='2012-R2-Datacenter'; Publisher='MicrosoftWindowsServer'; Offer='WindowsServer'}
-    [pscustomobject]@{VmName=('Vm-' + (Get-Random)); Size='Standard_A4_v2'; UserName='bob'; Password='aPassword341341'; OsType='Windows'; Sku='2012-R2-Datacenter'; Publisher='MicrosoftWindowsServer'; Offer='WindowsServer'}
+    [pscustomobject]@{VmName=('Vm-' + (Get-Random)); Size='Standard_B4ms'; UserName='bob'; Password='aPassword341341'; OsType='Windows'; Sku='2012-R2-Datacenter'; Publisher='MicrosoftWindowsServer'; Offer='WindowsServer'}
+    [pscustomobject]@{VmName=('Vm-' + (Get-Random)); Size='Standard_B4ms'; UserName='bob'; Password='aPassword341341'; OsType='Windows'; Sku='2012-R2-Datacenter'; Publisher='MicrosoftWindowsServer'; Offer='WindowsServer'}
 )
 
 Describe 'VM Management' {
