@@ -105,6 +105,8 @@ Describe  'Get and Set SharedImageGallery and SharedImageGalleryImages' {
             $SIG | Set-AzDtlLabSharedImageGalleryImages -ImageName $image.definitionName -OsType $image.osType -ImageType $image.imageType -Enabled $true
             
             # Get the images, confirm it was set the right way
+            $sigImageResult = ($SIG | Get-AzDtlLabSharedImageGalleryImages | Where-Object {$_.OsType -eq "Windows"} | Select-Object -First 1).enableState
+            Start-Sleep -Seconds 60
 
             # There are times when it takes a few min for everything to propogate...  Let's check and try again
             $count = 10
