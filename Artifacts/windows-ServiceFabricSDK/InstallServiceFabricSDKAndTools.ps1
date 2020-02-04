@@ -15,6 +15,9 @@ $ErrorActionPreference = "Stop"
 # Hide any progress bars, due to downloads and installs of remote components.
 $ProgressPreference = "SilentlyContinue"
 
+# Ensure we force use of TLS 1.2 for all downloads.
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
 # Ensure we set the working directory to that of the script.
 Push-Location $PSScriptRoot
 

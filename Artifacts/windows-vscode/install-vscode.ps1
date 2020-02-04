@@ -16,6 +16,9 @@ $ErrorActionPreference = "Stop"
 # Hide any progress bars, due to downloads and installs of remote components.
 $ProgressPreference = "SilentlyContinue"
 
+# Ensure we force use of TLS 1.2 for all downloads.
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
 # Discard any collected errors from a previous execution.
 $Error.Clear()
 
@@ -88,7 +91,6 @@ function Get-VSCodeSetup
 
     $setupUrl = Get-RedirectedUrl -URL $url
 
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     Invoke-WebRequest -Uri $setupUrl -OutFile $SetupExe
 }
 
