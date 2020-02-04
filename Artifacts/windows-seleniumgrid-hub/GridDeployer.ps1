@@ -20,6 +20,9 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# Ensure we force use of TLS 1.2 for all downloads.
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
 #Remove the dummy set of charactes ('config:') that are prefixed to the config file url to ensure proper piping of the 
 #parameter from the Artifact as this is an optional parameter
 $configFile = $configFile.Substring(7)
@@ -73,7 +76,7 @@ if($role -ieq "node")
     if(-not ($OldPath.Contains($WebDriverDefaultInstallPath)))
     {
         $NewPath= "$OldPath;$WebDriverDefaultInstallPath"
-        Set-ItemProperty -Path "$Reg" -Name PATH –Value $NewPath
+        Set-ItemProperty -Path "$Reg" -Name PATH ï¿½Value $NewPath
     }
     $ErrorActionPreference = "Stop"
 }

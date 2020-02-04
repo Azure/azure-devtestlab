@@ -11,6 +11,9 @@ Param(
     $VimInstallerUri = "https://sourceforge.net/projects/cream/files/Vim/7.4.1641/gvim-7-4-1641.exe/download"
 )
 
+# Ensure we force use of TLS 1.2 for all downloads.
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
 # Ensure we are able to run in an elevated mode
 Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
 
