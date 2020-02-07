@@ -9,9 +9,9 @@ function StringToFile([parameter(ValueFromPipeline=$true)][string] $text) {
   return $tmp.FullName
 }
 
-$lab1 = "DtlLibraryTest" + (Get-Random)
-$lab2 = "DtlLibraryTest" + (Get-Random)
-$rgName = "DtlLibraryTestRG" + (Get-Random)
+$lab1 = "DtlLibrary-ScenarioAll-" + (Get-Random)
+$lab2 = "DtlLibrary-ScenarioAll2-" + (Get-Random)
+$rgName = "DtlLibrary-ScenarioAll-rg-" + (Get-Random)
 
 $labsData = @"
 Name, ResourceGroupName

@@ -4,8 +4,8 @@ Param()
 Import-Module $PSScriptRoot\..\Az.DevTestLabs2.psm1 -Verbose:$false
 
 $labs = @(
-    [pscustomobject]@{Name=('DtlLibrary-Vm-' + (Get-Random)); ResourceGroupName=('DtlLibrary-VmRg-' + (Get-Random)); Location='westus'},
-    [pscustomobject]@{Name=('DtlLibrary-Vm-' + (Get-Random)); ResourceGroupName=('DtlLibrary-VmRg-' + (Get-Random)); Location='eastus'}
+    [pscustomobject]@{Name=('DtlLibrary-VmPipeline-' + (Get-Random)); ResourceGroupName=('DtlLibrary-VmPipelineRg-' + (Get-Random)); Location='westus'},
+    [pscustomobject]@{Name=('DtlLibrary-VmPipeline-' + (Get-Random)); ResourceGroupName=('DtlLibrary-VmPipelineRg-' + (Get-Random)); Location='eastus'}
 )
 
 $vms = @(
@@ -25,6 +25,8 @@ Describe 'VM Management' {
 
             # Create VMs in a lab
             $createdVMs = $vms| Select-Object -Property @{N='Name'; E={$createdLabs[0].Name}}, @{N='ResourceGroupName'; E={$createdLabs[0].ResourceGroupName}}, VmName,Size,Claimable,Username,Password,OsType,Sku,Publisher,Offer | New-AzDtlVm
+            $createdVMs = Get-AzDtlVm -Lab $createdLabs[0]
+
             Write-Verbose "Created VMs:"
             $createdVMs | Out-String | Write-Verbose
             $createdVMs.Count | Should -Be 2

@@ -12,9 +12,9 @@ function StringToFile([parameter(ValueFromPipeline=$true)][string] $text) {
   return $tmp.FullName
 }
 
-$lab1 = "DtlLibraryTest" + (Get-Random)
-$lab2 = "DtlLibraryTest" + (Get-Random)
-$rgName = "DtlLibraryTestRG" + (Get-Random)
+$lab1 = "DtlLibrary-ScenarioLabs-" + (Get-Random)
+$lab2 = "DtlLibrary-ScenarioLabs2-" + (Get-Random)
+$rgName = "DtlLibrary-ScenarioLabs-rg-" + (Get-Random)
 
 $vms = @"
 Name, ResourceGroupName, VmName, Size, UserName, Password, OsType, Sku, Publisher, Offer

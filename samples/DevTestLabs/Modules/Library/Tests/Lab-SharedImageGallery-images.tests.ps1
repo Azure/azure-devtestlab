@@ -4,11 +4,46 @@ Param()
 Import-Module $PSScriptRoot\..\Az.DevTestLabs2.psm1 -Verbose:$false
 
 $lab = @(
-    [pscustomobject]@{Name=('DtlLibrary-LabPolicy-' + (Get-Random)); ResourceGroupName=('DtlLibrary-LabPolicyRg-' + (Get-Random)); Location='westus'}
+    [pscustomobject]@{Name=('DtlLibrary-LabSIGImg-' + (Get-Random)); ResourceGroupName=('DtlLibrary-LabSIGImgRg-' + (Get-Random)); Location='westus'}
 )
 
 # We are using an existing shared image gallery for this test, not ideal (external dependency) but takes to long to build it up and tear down every time
 $SharedImageGalleryId = "/subscriptions/39df6a21-006d-4800-a958-2280925030cb/resourceGroups/SharedImageGalleryRG/providers/Microsoft.Compute/galleries/EnterpriseSharedImages"
+
+function GetSharedImageGalleryWithDelay {
+    Param ($lab)
+ 
+    $SIG = $lab | Get-AzDtlLabSharedImageGallery -IncludeImages
+
+    $count = 10
+    while ($SIG.Images -eq $null -and $count -gt 0) {
+        # delay for a little bit and try again
+        Start-Sleep -Seconds 60
+        $count --
+        Write-Verbose "Getting the SIG with images again - count: $count"
+        $SIG = $lab | Get-AzDtlLabSharedImageGallery -IncludeImages
+    }
+
+    return $SIG
+}
+
+function SetSharedImageGalleryWithDelay {
+    Param ($lab, $SharedImageGalleryId)
+
+    $lab | Set-AzDtlLabSharedImageGallery -Name "EnterpriseImages" -ResourceId $SharedImageGalleryId
+
+    $SIG = $lab | Get-AzDtlLabSharedImageGallery
+    $count = 10
+
+    while ($SIG -eq $null -and $count -gt 0) {
+        # Sleep for 1 min before reapplying shared image gallery
+        Start-Sleep -Seconds 60
+        $count --
+        Write-Verbose "Adding SIG to the lab again - count: $count"
+        $lab | Set-AzDtlLabSharedImageGallery -Name "EnterpriseImages" -ResourceId $SharedImageGalleryId | Out-Null
+        $SIG = $lab | Get-AzDtlLabSharedImageGallery
+    }
+}
 
 Describe  'Get and Set SharedImageGalleryImages' {
 
@@ -20,27 +55,22 @@ Describe  'Get and Set SharedImageGalleryImages' {
             $lab | Select-Object -Property @{N='Name'; E={$_.ResourceGroupName}}, Location | New-AzureRmResourceGroup -Force | Out-Null
 
             # Create the lab
-            $lab | New-AzDtlLab | Set-AzDtlLabSharedImageGallery -Name "EnterpriseImages" -ResourceId $SharedImageGalleryId | Should -Not -Be $null
-          
-            $lab | Out-String | Write-Verbose
+            $createdLab = $lab | New-AzDtlLab
+            $createdLab | Should -Not -Be $null
+            $createdLab | Out-String | Write-Verbose
+
+            # Add the Shared Image Gallery
+            SetSharedImageGalleryWithDelay $lab $SharedImageGalleryId
+
+            # Confirm SIG set correctly
+            GetSharedImageGalleryWithDelay $lab | Should -Not -Be $null
+
         }
 
         It 'Can set individual images as enabled or disabled' {
 
-            # There's a chance that the images haven't been populated to DTL yet, we have to 
-            # do a little polling until DTL SIG catches up
             Write-Verbose 'Getting the SIG with images'
-            $SIG = $lab | Get-AzDtlLabSharedImageGallery -IncludeImages
-            
-            $count = 10
-            while ($SIG.Images -eq $null -and $count -gt 0) {
-                # delay for a little bit and try again
-                Start-Sleep -Seconds 60
-                $count --
-                Write-Verbose "Getting the SIG with images again - count: $count"
-                $SIG = $lab | Get-AzDtlLabSharedImageGallery -IncludeImages
-            }
-
+            $SIG = GetSharedImageGalleryWithDelay $lab
             $SIG.Images | Should -Not -Be $null
 
             # At this point - we've got the images!  Let's pick the first Windows one and set it to disabled
@@ -57,28 +87,21 @@ Describe  'Get and Set SharedImageGalleryImages' {
             # Set again, to enabled
             $SIG = $lab | Get-AzDtlLabSharedImageGallery -IncludeImages
             $SIG | Set-AzDtlLabSharedImageGalleryImages -ImageName $image.definitionName -OsType $image.osType -ImageType $image.imageType -Enabled $true
+            Start-Sleep -Seconds 60
             
             # Get the images, confirm it was set the right way
             $sigImageResult = ($SIG | Get-AzDtlLabSharedImageGalleryImages | Where-Object {$_.OsType -eq "Windows"} | Select-Object -First 1).enableState
-            Start-Sleep -Seconds 60
             $sigImageResult | Should -Be "Enabled"
 
         }
 
         It 'Can update all the images as enabled or disabled together' {
 
-            $SIG = $lab | Get-AzDtlLabSharedImageGallery -IncludeImages
-
-            $count = 10
-            while ($SIG.Images -eq $null -and $count -gt 0) {
-                # delay for a little bit and try again
-                Start-Sleep -Seconds 60
-                $count --
-                Write-Verbose "Getting the SIG with images again - count: $count"
-                $SIG = $lab | Get-AzDtlLabSharedImageGallery -IncludeImages
-            }
+            Write-Verbose 'Getting the SIG with images'
+            $SIG = GetSharedImageGalleryWithDelay $lab
 
             $SIG.Images | Format-Table | Out-String | Write-Verbose
+            Write-Verbose "Images Count: $($SIG.Images.Count)"
 
             $SIG.Images | ForEach-Object {
                     # Set them all to disabled

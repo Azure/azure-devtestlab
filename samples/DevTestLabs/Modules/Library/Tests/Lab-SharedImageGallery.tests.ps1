@@ -4,7 +4,7 @@ Param()
 Import-Module $PSScriptRoot\..\Az.DevTestLabs2.psm1 -Verbose:$false
 
 $lab = @(
-    [pscustomobject]@{Name=('DtlLibrary-LabPolicy-' + (Get-Random)); ResourceGroupName=('DtlLibrary-LabPolicyRg-' + (Get-Random)); Location='westus'}
+    [pscustomobject]@{Name=('DtlLibrary-LabSIG-' + (Get-Random)); ResourceGroupName=('DtlLibrary-LabSIGRg-' + (Get-Random)); Location='westus'}
 )
 
 # We are using an existing shared image gallery for this test, not ideal (external dependency) but takes to long to build it up and tear down every time

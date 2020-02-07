@@ -4,8 +4,8 @@ Param()
 Import-Module $PSScriptRoot\..\Az.DevTestLabs2.psm1 -Verbose:$false
 
 $labs = @(
-    [pscustomobject]@{Name=('DtlLibrary-Lab-' + (Get-Random)); ResourceGroupName=('DtlLibrary-LabRg-' + (Get-Random)); Location='westus'},
-    [pscustomobject]@{Name=('DtlLibrary-Lab-' + (Get-Random)); ResourceGroupName=('DtlLibrary-LabRg-' + (Get-Random)); Location='eastus'}
+    [pscustomobject]@{Name=('DtlLibrary-LabPipeline-' + (Get-Random)); ResourceGroupName=('DtlLibrary-LabPipelineRg-' + (Get-Random)); Location='westus'},
+    [pscustomobject]@{Name=('DtlLibrary-LabPipeline-' + (Get-Random)); ResourceGroupName=('DtlLibrary-LabPipelineRg-' + (Get-Random)); Location='eastus'}
 )
 
 Describe  'Lab Creation and Deletion' {
@@ -18,16 +18,17 @@ Describe  'Lab Creation and Deletion' {
             $labs | Select-Object -Property @{N='Name'; E={$_.ResourceGroupName}}, Location | New-AzureRmResourceGroup -Force | Out-Null
 
             # Create the labs
-            $createdLabs = $labs | New-AzDtlLab
+            $labs | New-AzDtlLab
+
+            # Query Azure to get the created labs to make sure they really exist
+            $createdLabs = $labs | Get-AzDtlLab
 
             # Check the number of labs created and that they were successful
             $createdLabs.Count | Should -Be 2
+
             foreach ($lab in $createdLabs) {
                 $lab.Properties.provisioningState | Should -Be "Succeeded"
             }
-
-            # Check that the labs really exist
-            $createdLabs | Get-AzDtlLab | Should -Not -Be $null
 
         }
 
