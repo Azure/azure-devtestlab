@@ -6,8 +6,8 @@ Param()
 
 Import-Module $PSScriptRoot\..\Az.DevTestLabs2.psm1 -Verbose:$false
 
-$rgName = "DtlLibraryTestRG" + (Get-Random)
-$labname = "DtlLibraryTest" + (Get-Random)
+$rgName = "DtlLibrary-ScenarioVMs-rg-" + (Get-Random)
+$labname = "DtlLibrary-ScenarioVMs-" + (Get-Random)
 
 $vms = @'
 VmName, Size, UserName, Password, OsType, Sku, Publisher, Offer

@@ -4,7 +4,7 @@ Param()
 Import-Module $PSScriptRoot\..\Az.DevTestLabs2.psm1 -Verbose:$false
 
 $lab = @(
-    [pscustomobject]@{Name=('DtlLibrary-Vm-' + (Get-Random)); ResourceGroupName=('DtlLibrary-VmRg-' + (Get-Random)); Location='eastus'}
+    [pscustomobject]@{Name=('DtlLibrary-VmExtended-' + (Get-Random)); ResourceGroupName=('DtlLibrary-VmExtendedRg-' + (Get-Random)); Location='eastus'}
 )
 
 $vm = @(

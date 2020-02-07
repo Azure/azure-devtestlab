@@ -4,7 +4,7 @@ Param()
 Import-Module $PSScriptRoot\..\Az.DevTestLabs2.psm1 -Verbose:$false
 
 $lab = @(
-    [pscustomobject]@{Name=('DtlLibrary-Vm-' + (Get-Random)); ResourceGroupName=('DtlLibrary-VmRg-' + (Get-Random)); Location='westus'}
+    [pscustomobject]@{Name=('DtlLibrary-VmProperties-' + (Get-Random)); ResourceGroupName=('DtlLibrary-VmProperties-rg-' + (Get-Random)); Location='westus'}
 )
 
 $vm = @(
@@ -21,6 +21,12 @@ Describe 'Virtual Machine Management' {
 
             # Create the lab
             $createdLab = $lab | New-AzDtlLab
+
+            Write-Verbose "Original Lab Object:"
+            $lab | Out-String | Write-Verbose
+
+            Write-Verbose "Created Lab:"
+            $createdLab | Out-String | Write-Verbose
 
             # Create a VM in the lab
             $vm | Select-Object -Property @{N='Name'; E={$createdLab.Name}}, @{N='ResourceGroupName'; E={$createdLab.ResourceGroupName}}, VmName,Size,Claimable,Username,Password,OsType,Sku,Publisher,Offer | New-AzDtlVm
