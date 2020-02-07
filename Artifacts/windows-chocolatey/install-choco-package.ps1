@@ -30,6 +30,9 @@ $ErrorActionPreference = 'Stop'
 # Suppress progress bar output.
 $ProgressPreference = 'SilentlyContinue'
 
+# Ensure we force use of TLS 1.2 for all downloads.
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
 # Expected path of the choco.exe file.
 $choco = "$Env:ProgramData/chocolatey/choco.exe"
 

@@ -11,6 +11,9 @@ param (
     [Parameter(Mandatory=$false)][String][AllowEmptyString()] $windowsLogonPassword
 )
 
+# Ensure we force use of TLS 1.2 for all downloads.
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
 function Test-InstallPrerequisites
 {
     If(-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))

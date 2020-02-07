@@ -11,12 +11,13 @@ if((gwmi win32_computersystem).partofdomain -eq $true)
 	#Download RZUpdate if missing...
 	if((Test-Path "$($env:temp)\RZUpdate.exe") -eq $false) 
 	{ 
-	        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+		# Ensure we force use of TLS 1.2 for all downloads.
+		[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 		(New-Object System.Net.WebClient).DownloadFile("https://ruckzuck.azurewebsites.net/DL/RZUpdate.exe", "$($env:temp)\RZUpdate.exe") 
 	}
 
- #Check if an unattend File already exists; otherwise create a new one...
- if(!(Test-Path c:\sccmsetup.ini))
+	#Check if an unattend File already exists; otherwise create a new one...
+	if(!(Test-Path c:\sccmsetup.ini))
 	{
 		$hostname = [System.Net.Dns]::GetHostByName(($env:computerName)).Hostname;
 		'[Identification]' | out-file -filepath C:\sccmsetup.ini

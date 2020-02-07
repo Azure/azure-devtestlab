@@ -3,6 +3,9 @@ Param(
   [string]$SiteName = 'Test Site'
 )
 
+# Ensure we force use of TLS 1.2 for all downloads.
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
 cd $($PSScriptRoot)
 
 #Check if System is Domain-Joined

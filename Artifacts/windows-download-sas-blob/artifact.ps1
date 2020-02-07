@@ -21,6 +21,9 @@ param(
 #       This is necessary to ensure we capture errors inside the try-catch-finally block.
 $ErrorActionPreference = "Stop"
 
+# Ensure we force use of TLS 1.2 for all downloads.
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
 # Ensure we set the working directory to that of the script.
 pushd $PSScriptRoot
 
