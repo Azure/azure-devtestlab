@@ -22,6 +22,10 @@ Describe 'VM Management' {
 
             # Create the labs
             $createdLabs = $labs | New-AzDtlLab
+            
+            # Query Azure to get the created labs to make sure they really exist
+            $createdLabs = $labs | Get-AzDtlLab
+            $createdLabs.Count | Should -Be 2
 
             # Create VMs in a lab
             $createdVMs = $vms| Select-Object -Property @{N='Name'; E={$createdLabs[0].Name}}, @{N='ResourceGroupName'; E={$createdLabs[0].ResourceGroupName}}, VmName,Size,Claimable,Username,Password,OsType,Sku,Publisher,Offer | New-AzDtlVm
