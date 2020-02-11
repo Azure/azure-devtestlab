@@ -45,6 +45,26 @@ function SetSharedImageGalleryWithDelay {
     }
 }
 
+function GetSharedImageGalleryImagesWithDelay {
+    Param ($SIG)
+ 
+    $images = $SIG | Get-AzDtlLabSharedImageGalleryImages
+
+    $count = 10
+    while (($images -eq $null -or `
+            $images.Count -eq 0 -or `
+            ($images | Select -First 1).enableState -eq $null) -and $count -gt 0) {
+        # delay for a little bit and try again
+        Start-Sleep -Seconds 60
+        $count --
+        Write-Verbose "Getting the SIG images again - count: $count"
+        $images = $SIG | Get-AzDtlLabSharedImageGalleryImages
+    }
+
+    return $images
+}
+
+
 Describe  'Get and Set SharedImageGalleryImages' {
 
     Context 'Pipeline Tests' {
@@ -81,7 +101,7 @@ Describe  'Get and Set SharedImageGalleryImages' {
             Start-Sleep -Seconds 60
             
             # Get the images, confirm it was set the right way
-            $sigImageResult = ($SIG | Get-AzDtlLabSharedImageGalleryImages | Where-Object {$_.OsType -eq "Windows"} | Select-Object -First 1).enableState
+            $sigImageResult = (GetSharedImageGalleryImagesWithDelay $SIG | Where-Object {$_.OsType -eq "Windows"} | Select-Object -First 1).enableState
             $sigImageResult | Should -Be "Disabled"
             
             # Set again, to enabled
@@ -90,7 +110,7 @@ Describe  'Get and Set SharedImageGalleryImages' {
             Start-Sleep -Seconds 60
             
             # Get the images, confirm it was set the right way
-            $sigImageResult = ($SIG | Get-AzDtlLabSharedImageGalleryImages | Where-Object {$_.OsType -eq "Windows"} | Select-Object -First 1).enableState
+            $sigImageResult = (GetSharedImageGalleryImagesWithDelay $SIG | Where-Object {$_.OsType -eq "Windows"} | Select-Object -First 1).enableState
             $sigImageResult | Should -Be "Enabled"
 
         }
@@ -111,7 +131,7 @@ Describe  'Get and Set SharedImageGalleryImages' {
             $SIG | Set-AzDtlLabSharedImageGalleryImages
 
             # Confirm they're all set to disabled
-            $SIG | Get-AzDtlLabSharedImageGalleryImages | ForEach-Object {
+            GetSharedImageGalleryImagesWithDelay $SIG | ForEach-Object {
                 $_.enableState | Should -Be "Disabled"
             }
 
@@ -124,7 +144,7 @@ Describe  'Get and Set SharedImageGalleryImages' {
             $SIG | Set-AzDtlLabSharedImageGalleryImages
 
             # Confirm they're all set to enabled
-            $SIG | Get-AzDtlLabSharedImageGalleryImages | ForEach-Object {
+            GetSharedImageGalleryImagesWithDelay $SIG | ForEach-Object {
                 $_.enableState | Should -Be "Enabled"
             }
 
