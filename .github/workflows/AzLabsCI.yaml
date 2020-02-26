@@ -8,24 +8,14 @@ jobs:
     runs-on: windows-latest
     steps:
     
+    - uses: actions/checkout@v2
+
     - uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    - uses: actions/checkout@v2
-
-    - name: Install Pester
-      shell: pwsh
-      run: Install-Module Pester -Force
-
-    - name: Install Azure Powershell module
-      shell: pwsh
-      run: Install-Module Az -Force
-
-    - name: Show Azure Account
-      shell: pwsh
-      run: Get-AzSubscription
-
-    - name: Run Tests
-      shell: pwsh
-      run: Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast-Schedule.tests.ps1 -EnableExit
+    - run: |
+      Install-Module Pester -Force
+      Install-Module Az -Force
+      Get-AzSubscription
+      Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast-Schedule.tests.ps1 -EnableExit
