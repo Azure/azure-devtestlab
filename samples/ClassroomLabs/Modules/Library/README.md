@@ -1,6 +1,6 @@
 # Az.LabServices [![Build Status](https://dotnetcst.visualstudio.com/DTL-Library/_apis/build/status/AzLabs-AllTests?branchName=master)](https://dotnetcst.visualstudio.com/DTL-Library/_build/latest?definitionId=102&branchName=master)
 
-![AzLabsCI](https://github.com/lucabol/azure-devtestlab/workflows/AzLabsCI/badge.svg)
+![AzLabsCI](https://github.com/lucabol/azure-devtestlab/workflows/FastTests/badge.svg)
 
 Az.LabServices is a PowerShell module to simplify the management of [Azure Lab services](https://azure.microsoft.com/en-in/services/lab-services/). It provides composable functions to create, query, update and delete lab accounts, labs, VMs and Images.
 

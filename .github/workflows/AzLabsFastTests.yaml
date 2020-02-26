@@ -12,7 +12,7 @@ name: FastTests
 jobs:
 
   # You cannot use a matrix to define a shell: https://github.community/t5/GitHub-Actions/Using-matrix-to-specify-shell-is-it-possible/m-p/39869
-  run-fast-tests:
+  run-fast-tests-core:
     strategy:
       matrix:
         # MacOs is blocked by https://github.com/microsoft/azure-pipelines-tasks/issues/12030
@@ -41,11 +41,7 @@ jobs:
         
 
   run-fast-tests-powershell:
-    strategy:
-      matrix:
-        # MacOs is blocked by https://github.com/microsoft/azure-pipelines-tasks/issues/12030
-        os: [windows-latest, ubuntu-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
     steps:
     
     - uses: actions/checkout@v2
