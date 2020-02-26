@@ -14,8 +14,9 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    - run: |
-      Install-Module Pester -Force
-      Install-Module Az -Force
-      Get-AzSubscription
-      Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast-Schedule.tests.ps1 -EnableExit
+    - name: Execute steps
+      shell: pwsh
+      run: |
+        Install-Module Pester -Force
+        Install-Module Az -Force
+        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast-Schedule.tests.ps1 -EnableExit
