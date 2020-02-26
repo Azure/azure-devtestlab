@@ -37,9 +37,35 @@ jobs:
       if: always()
       shell: pwsh
       run: |
-        ./samples/ClassroomLabs/Modules/Library/Tests/Cleanup.ps1 
-        
+        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Cleanup.ps1 
 
+  run-all-tests-core:
+    strategy:
+      matrix:
+        # MacOs is blocked by https://github.com/microsoft/azure-pipelines-tasks/issues/12030
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    
+    - uses: actions/checkout@v2
+
+    - name: Execute steps
+      shell: pwsh
+      run: |
+        Install-Module Pester -Force
+        Install-Module Az -Force
+        $User = "2075d471-a457-4e68-8723-6f3859c2360c"
+        $PWord = ConvertTo-SecureString -String ${{ secrets.PRINCIPAL_PASSWORD }} -AsPlainText -Force
+        $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $User, $PWord
+        Connect-AzAccount -Credential $Credential -Tenant "72f988bf-86f1-41af-91ab-2d7cd011db47" -ServicePrincipal
+        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/* -EnableExit
+
+    - name: Cleanup
+      if: always()
+      shell: pwsh
+      run: |
+        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Cleanup.ps1 
+        
   run-fast-tests-powershell:
     runs-on: windows-latest
     steps:
@@ -61,4 +87,21 @@ jobs:
       if: always()
       shell: powershell
       run: |
-        ./samples/ClassroomLabs/Modules/Library/Tests/Cleanup.ps1 
+        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Cleanup.ps1 
+
+  run-all-tests-powershell:
+    runs-on: windows-latest
+    steps:
+    
+    - uses: actions/checkout@v2
+
+    - name: Execute steps
+      shell: powershell
+      run: |
+        Install-Module Pester -Force
+        Install-Module Az -Force
+        $User = "2075d471-a457-4e68-8723-6f3859c2360c"
+        $PWord = ConvertTo-SecureString -String ${{ secrets.PRINCIPAL_PASSWORD }} -AsPlainText -Force
+        $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $User, $PWord
+        Connect-AzAccount -Credential $Credential -Tenant "72f988bf-86f1-41af-91ab-2d7cd011db47" -ServicePrincipal
+        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/* -EnableExit
