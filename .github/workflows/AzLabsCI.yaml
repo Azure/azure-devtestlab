@@ -1,6 +1,6 @@
 on: [push]
 
-name: Github Actions CI
+name: AllTests
 
 jobs:
 
