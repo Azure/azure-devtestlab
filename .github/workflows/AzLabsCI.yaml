@@ -10,6 +10,11 @@ jobs:
     
     - uses: actions/checkout@v2
 
+    - name: Enable Azure context autosave
+      shell: pwsh
+      run: |
+        Enable-AzContextAutoSave
+
     - uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }} 
@@ -19,7 +24,5 @@ jobs:
       run: |
         Install-Module Pester -Force
         Install-Module Az -Force
-        Enable-AzContextAutoSave
-        Get-AzContext
         Get-AzSubscription
         Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast-Schedule.tests.ps1 -EnableExit
