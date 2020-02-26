@@ -13,12 +13,12 @@ jobs:
     - name: Execute steps
       shell: pwsh
       env:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        password: ${{ secrets.PRINCIPAL_PASSWORD }}
       run: |
         Install-Module Pester -Force
         Install-Module Az -Force
         $User = "2075d471-a457-4e68-8723-6f3859c2360c"
-        $PWord = ConvertTo-SecureString -String "6cc46cf6-56f1-479a-b4fa-68ed791cda5f" -AsPlainText -Force
+        $PWord = ConvertTo-SecureString -String $password -AsPlainText -Force
         $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $User, $PWord
         Connect-AzAccount -Credential $Credential -Tenant "72f988bf-86f1-41af-91ab-2d7cd011db47" -ServicePrincipal
         Get-AzSubscription
