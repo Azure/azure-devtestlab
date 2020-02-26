@@ -4,7 +4,7 @@ name: AzLabsCI
 
 jobs:
 
-  build-and-deploy:
+  run-fast-tests:
     runs-on: windows-latest
     steps:
     
@@ -22,3 +22,8 @@ jobs:
         $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $User, $PWord
         Connect-AzAccount -Credential $Credential -Tenant "72f988bf-86f1-41af-91ab-2d7cd011db47" -ServicePrincipal
         Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast-* -EnableExit
+
+    - name: Cleanup
+      if: always()
+      run: |
+        ./samples/ClassroomLabs/Modules/Library/Tests/Cleanup.ps1
