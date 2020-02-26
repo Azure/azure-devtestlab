@@ -20,7 +20,7 @@ jobs:
 
     - name: Install Azure profile
       shell: pwsh
-      run: Install-Module AzureRM.profile
+      run: Install-Module AzureRM.profile -Force
 
     - name: Run Tests
       shell: pwsh
