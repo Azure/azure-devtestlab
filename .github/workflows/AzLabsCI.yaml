@@ -21,5 +21,4 @@ jobs:
         $PWord = ConvertTo-SecureString -String ${{ secrets.PRINCIPAL_PASSWORD }} -AsPlainText -Force
         $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $User, $PWord
         Connect-AzAccount -Credential $Credential -Tenant "72f988bf-86f1-41af-91ab-2d7cd011db47" -ServicePrincipal
-        Get-AzSubscription
-        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast-Schedule.tests.ps1 -EnableExit
+        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast-* -EnableExit
