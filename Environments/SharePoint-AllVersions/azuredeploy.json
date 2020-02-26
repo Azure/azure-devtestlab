@@ -1,5 +1,5 @@
 {
-  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
     "provisionSharePoint2019": {
@@ -291,7 +291,7 @@
     "vmSP2013": {
       "vmImagePublisher": "MicrosoftSharePoint",
       "vmImageOffer": "MicrosoftSharePointServer",
-      "vmImageSKU": "2013",
+      "vmImageSKU": "sp2013",
       "vmOSDiskName": "Disk-SP2013-OS",
       "vmVmSize": "[parameters('vmSPSize')]",
       "vmNicName": "[concat('NIC-', variables('generalSettings').vmSP2013Name, '-0')]",
@@ -302,7 +302,7 @@
     "vmSP2016": {
       "vmImagePublisher": "MicrosoftSharePoint",
       "vmImageOffer": "MicrosoftSharePointServer",
-      "vmImageSKU": "2016",
+      "vmImageSKU": "sp2016",
       "vmOSDiskName": "Disk-SP2016-OS",
       "vmVmSize": "[parameters('vmSPSize')]",
       "vmNicName": "[concat('NIC-', variables('generalSettings').vmSP2016Name, '-0')]",
@@ -313,7 +313,7 @@
     "vmSP2019": {
       "vmImagePublisher": "MicrosoftSharePoint",
       "vmImageOffer": "MicrosoftSharePointServer",
-      "vmImageSKU": "2019",
+      "vmImageSKU": "sp2019",
       "vmOSDiskName": "Disk-SP2019-OS",
       "vmVmSize": "[parameters('vmSPSize')]",
       "vmNicName": "[concat('NIC-', variables('generalSettings').vmSP2019Name, '-0')]",
