@@ -1,5 +1,10 @@
 # Change log for AzureRM template SharePoint-ADFS-DevTestLabs
 
+## February 2020 update
+
+* Fix deployment error caused by the new values of the SKU of SharePoint images, which changed from '2013' / '2016' / '2019' to 'sp2013' / 'sp2016' / 'sp2019'
+* Update the schema of deploymentTemplate.json to latest version
+
 ## November 2019 update
 
 * Remove configuration of AD CS if parameter ConfigureADFS is set to No, to speed up the deployment time of the template
