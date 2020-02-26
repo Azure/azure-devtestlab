@@ -19,7 +19,7 @@ jobs:
       run: |
         Install-Module Pester -Force
         Install-Module Az -Force
+        Enable-AzContextAutoSave
         Get-AzContext
-        Select-AzContext
         Get-AzSubscription
         Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast-Schedule.tests.ps1 -EnableExit
