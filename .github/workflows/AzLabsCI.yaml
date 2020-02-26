@@ -1,11 +1,21 @@
-on: [push]
+on:
+  schedule:
+    - cron: '* 2 * * * '
+
+  push:
+    paths:
+    - 'samples/ClassroomLabs/**'
+    - '.github/workflows/**'
 
 name: AllTests
 
 jobs:
 
   run-fast-tests:
-    runs-on: windows-latest
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
     
     - uses: actions/checkout@v2
