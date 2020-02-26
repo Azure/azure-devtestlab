@@ -49,8 +49,8 @@ jobs:
     - name: Execute steps
       shell: powershell
       run: |
-        Install-Module Pester -Force
-        Install-Module Az -Force
+        Install-Module Pester -Force -AllowClobber
+        Install-Module Az -Force -AllowClobber
         $User = "2075d471-a457-4e68-8723-6f3859c2360c"
         $PWord = ConvertTo-SecureString -String ${{ secrets.PRINCIPAL_PASSWORD }} -AsPlainText -Force
         $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $User, $PWord
