@@ -870,7 +870,7 @@
             "DCName": "[variables('generalSettings').vmDCName]",
             "SQLName": "[variables('generalSettings').vmSQLName]",
             "SQLAlias": "[variables('generalSettings').sqlAlias]",
-            "SharePointVersion": "[variables('vmSP2013').vmImageSKU]",
+            "SharePointVersion": "2013",
             "ConfigureADFS": "[if(equals(parameters('configureADFS'), 'Yes'), 1, 0)]"
           },
           "privacy": {
@@ -1039,7 +1039,7 @@
             "DCName": "[variables('generalSettings').vmDCName]",
             "SQLName": "[variables('generalSettings').vmSQLName]",
             "SQLAlias": "[variables('generalSettings').sqlAlias]",
-            "SharePointVersion": "[variables('vmSP2016').vmImageSKU]",
+            "SharePointVersion": "2016",
             "ConfigureADFS": "[if(equals(parameters('configureADFS'), 'Yes'), 1, 0)]"
           },
           "privacy": {
@@ -1208,7 +1208,7 @@
             "DCName": "[variables('generalSettings').vmDCName]",
             "SQLName": "[variables('generalSettings').vmSQLName]",
             "SQLAlias": "[variables('generalSettings').sqlAlias]",
-            "SharePointVersion": "[variables('vmSP2019').vmImageSKU]",
+            "SharePointVersion": "2019",
             "ConfigureADFS": "[if(equals(parameters('configureADFS'), 'Yes'), 1, 0)]"
           },
           "privacy": {
