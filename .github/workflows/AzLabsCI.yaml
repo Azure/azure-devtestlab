@@ -12,12 +12,13 @@ jobs:
 
     - uses: azure/login@v1
       with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        creds: ${{ secrets.AZURE_CREDENTIALS }} 
 
     - name: Execute steps
       shell: pwsh
       run: |
         Install-Module Pester -Force
         Install-Module Az -Force
+        az account show
         Get-AzSubscription
         Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast-Schedule.tests.ps1 -EnableExit
