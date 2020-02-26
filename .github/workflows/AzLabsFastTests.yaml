@@ -26,7 +26,7 @@ jobs:
       shell: pwsh
       run: |
         $PWord = ConvertTo-SecureString -String ${{ secrets.PRINCIPAL_PASSWORD }} -AsPlainText -Force
-        .github/workflows/RunTests.ps1 $Pword ./samples/ClassroomLabs/Modules/Library/Tests/Fast-*
+        .github/workflows/RunTests.ps1 -password $PWord -tests "Fast-*"
 
     - name: Cleanup
       if: always()
