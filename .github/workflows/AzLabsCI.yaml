@@ -13,6 +13,7 @@ jobs:
     - name: Enable Azure context autosave
       shell: pwsh
       run: |
+        Install-Module Az -Force
         Enable-AzContextAutosave
 
     - uses: azure/login@v1
@@ -23,6 +24,5 @@ jobs:
       shell: pwsh
       run: |
         Install-Module Pester -Force
-        Install-Module Az -Force
         Get-AzSubscription
         Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast-Schedule.tests.ps1 -EnableExit
