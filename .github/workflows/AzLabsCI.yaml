@@ -1,0 +1,23 @@
+on: [push]
+
+name: AzLabsCI
+
+jobs:
+
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - uses: actions/checkout@v2
+
+    - name: Install Pester
+      shell: pwsh
+      run: Install-Module Pester -Force
+
+    - name: Run Tests
+      shell: pwsh
+      run: Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast-Schedule.tests.ps1 -EnableExit
