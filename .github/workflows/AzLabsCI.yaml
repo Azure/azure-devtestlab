@@ -18,9 +18,9 @@ jobs:
       shell: pwsh
       run: Install-Module Pester -Force
 
-    - name: Install Azure profile
+    - name: Install Azure Powershell module
       shell: pwsh
-      run: Install-Module AzureRM.profile -Force
+      run: Install-Module Az -Force
 
     - name: Run Tests
       shell: pwsh
