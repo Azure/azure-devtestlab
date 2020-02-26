@@ -13,7 +13,7 @@ jobs:
     - name: Enable Azure context autosave
       shell: pwsh
       run: |
-        Enable-AzContextAutoSave
+        Enable-AzContextAutosave
 
     - uses: azure/login@v1
       with:
