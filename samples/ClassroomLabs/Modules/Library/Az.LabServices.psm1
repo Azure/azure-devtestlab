@@ -39,14 +39,17 @@ if ($justAz) {
     Enable-AzureRmContextAutosave -Scope CurrentUser -erroraction silentlycontinue
 }
 
-# We want to track usage of library, so adding GUID to user-agent at loading and removig it at unloading
-$libUserAgent = "pid-dec6e7d9-d150-405e-985c-feeecb83e9d5"
-[Microsoft.Azure.Common.Authentication.AzureSession]::ClientFactory.AddUserAgent($libUserAgent)
+# Inside Github actions environments it seems this type doesn't exits??
+$typeName = 'Microsoft.Azure.Common.Authentication.AzureSession'
+if($typeName -as [type]) {
+    # We want to track usage of library, so adding GUID to user-agent at loading and removig it at unloading
+    $libUserAgent = "pid-dec6e7d9-d150-405e-985c-feeecb83e9d5"
+    [Microsoft.Azure.Common.Authentication.AzureSession]::ClientFactory.AddUserAgent($libUserAgent)
 
-$MyInvocation.MyCommand.ScriptBlock.Module.OnRemove = {
-    [Microsoft.Azure.Common.Authentication.AzureSession]::ClientFactory.RemoveUserAgent($libUserAgent)
+    $MyInvocation.MyCommand.ScriptBlock.Module.OnRemove = {
+        [Microsoft.Azure.Common.Authentication.AzureSession]::ClientFactory.RemoveUserAgent($libUserAgent)
+    }
 }
-
 # The reason for using the following function and managing errors as done in the cmdlets below is described
 # at the link here: https://github.com/PoshCode/PowerShellPracticeAndStyle/issues/37#issuecomment-347257738
 # The scheme permits writing the cmdlet code assuming the code after an error is not executed,
