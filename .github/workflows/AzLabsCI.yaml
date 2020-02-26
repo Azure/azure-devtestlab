@@ -18,6 +18,10 @@ jobs:
       shell: pwsh
       run: Install-Module Pester -Force
 
+    - name: Install Azure profile
+      shell: pwsh
+      run: Install-Module AzureRM.profile
+
     - name: Run Tests
       shell: pwsh
       run: Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast-Schedule.tests.ps1 -EnableExit
