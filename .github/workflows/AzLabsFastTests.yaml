@@ -4,8 +4,11 @@ on:
   # See here: https://goobar.io/2019/12/07/manually-trigger-a-github-actions-workflow/
   repository_dispatch:
     types: run
-
   push:
+    paths:
+    - 'samples/ClassroomLabs/**'
+    - '.github/workflows/**'
+  pull_request:
     paths:
     - 'samples/ClassroomLabs/**'
     - '.github/workflows/**'
