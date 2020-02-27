@@ -50,10 +50,10 @@ jobs:
       run: |
         Install-Module Pester -Force
         Install-Module Az -Force -AllowClobber
-        $User = ${{ secrets.PRINCIPAL_USER }}
+        $User = "${{ secrets.PRINCIPAL_USER }}"
         $PWord = ConvertTo-SecureString -String ${{ secrets.PRINCIPAL_PASSWORD }} -AsPlainText -Force
         $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $User, $PWord
-        Connect-AzAccount -Credential $Credential -Tenant ${{ secrets.PRINCIPAL_TENANT }} -ServicePrincipal
+        Connect-AzAccount -Credential $Credential -Tenant "${{ secrets.PRINCIPAL_TENANT }}" -ServicePrincipal
         Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast-* -EnableExit
 
     - name: Cleanup
