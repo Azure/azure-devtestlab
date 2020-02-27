@@ -1,7 +1,9 @@
-
 on:
   schedule:
     - cron: '* 2 * * * '
+  # See here: https://goobar.io/2019/12/07/manually-trigger-a-github-actions-workflow/
+  repository_dispatch:
+    types: run
 
 name: AllTests
 
