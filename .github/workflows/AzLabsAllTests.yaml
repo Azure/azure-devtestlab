@@ -1,18 +1,14 @@
+
 on:
   schedule:
     - cron: '* 2 * * * '
 
-  push:
-    paths:
-    - 'samples/ClassroomLabs/**'
-    - '.github/workflows/**'
-
-name: FastTests
+name: AllTests
 
 jobs:
 
   # You cannot use a matrix to define a shell: https://github.community/t5/GitHub-Actions/Using-matrix-to-specify-shell-is-it-possible/m-p/39869
-  run-fast-tests-core:
+  run-all-tests-core:
     strategy:
       matrix:
         # MacOs is blocked by https://github.com/microsoft/azure-pipelines-tasks/issues/12030
@@ -31,15 +27,15 @@ jobs:
         $PWord = ConvertTo-SecureString -String ${{ secrets.PRINCIPAL_PASSWORD }} -AsPlainText -Force
         $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $User, $PWord
         Connect-AzAccount -Credential $Credential -Tenant ${{ secrets.PRINCIPAL_TENANT }} -ServicePrincipal
-        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast-* -EnableExit
+        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/* -EnableExit
 
     - name: Cleanup
       if: always()
       shell: pwsh
       run: |
         Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Cleanup.ps1 
-
-  run-fast-tests-powershell:
+        
+  run-all-tests-powershell:
     runs-on: windows-latest
     steps:
     
@@ -48,16 +44,10 @@ jobs:
     - name: Execute steps
       shell: powershell
       run: |
-        Install-Module Pester -Force
+        Install-Module Pester -Force -AllowClobber
         Install-Module Az -Force -AllowClobber
         $User = ${{ secrets.PRINCIPAL_USER }}
         $PWord = ConvertTo-SecureString -String ${{ secrets.PRINCIPAL_PASSWORD }} -AsPlainText -Force
         $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $User, $PWord
         Connect-AzAccount -Credential $Credential -Tenant ${{ secrets.PRINCIPAL_TENANT }} -ServicePrincipal
-        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast-* -EnableExit
-
-    - name: Cleanup
-      if: always()
-      shell: powershell
-      run: |
-        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Cleanup.ps1 
+        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/* -EnableExit
