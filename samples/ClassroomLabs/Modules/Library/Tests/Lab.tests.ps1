@@ -33,15 +33,14 @@ Describe 'Lab' {
         }
     }
 
-    It 'Can create a lab' {
+    # This should be split in two tests for create and set
+    It 'Can create or set a lab' {
                  
         $lab = $script:la | Get-AzLab -LabName $labName
             
         if ($lab) {
-            $lab = $script:la `
-            | New-AzLab -LabName $LabName -MaxUsers $maxUsers -UsageQuotaInHours $usageQuota -UserAccessMode $usageAMode -SharedPasswordEnabled:$shPsswd `
-            | Publish-AzLab
-            Write-Verbose "$LabName lab already exist. Republished."
+            $lab | Set-AzLab -LabName $LabName -UsageQuotaInHours $usageQuota -SharedPasswordEnabled:$shPsswd 
+            Write-Verbose "$LabName lab already exist. Change it."
         }
         else {
             $imgs = $script:la | Get-AzLabAccountGalleryImage
@@ -52,8 +51,7 @@ Describe 'Lab' {
             Write-Verbose "Image $imgName found."
                 
             $lab = $script:la `
-            | New-AzLab -LabName $LabName -MaxUsers $maxUsers -UsageQuotaInHours $usageQuota -UserAccessMode $usageAMode -SharedPasswordEnabled:$shPsswd `
-            | New-AzLabTemplateVM -Image $img -Size $size -Title $title -Description $descr -UserName $userName -Password $password -LinuxRdpEnabled:$linuxRdp `
+            | New-AzLab -LabName $LabName -Image $img -Size $size -UsageQuotaInHours $usageQuota -SharedPasswordEnabled:$shPsswd -UserName $userName -Password $password -LinuxRdpEnabled:$linuxRdp `
             | Publish-AzLab
             Write-Verbose "$LabName lab doesn't exist. Created it."
         }

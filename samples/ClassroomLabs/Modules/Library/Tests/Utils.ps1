@@ -73,8 +73,7 @@ function Get-FastLab {
         Write-Verbose "Image $imgName found."
             
         $lab = $la `
-        | New-AzLab -LabName $LabRealName -MaxUsers $maxUsers -UsageQuotaInHours $usageQuota -UserAccessMode $usageAMode -SharedPasswordEnabled:$shPsswd `
-        | New-AzLabTemplateVM -Image $img -Size $size -Title $title -Description $descr -UserName $userName -Password $password -LinuxRdpEnabled:$linuxRdp `
+        | New-AzLab -LabName $LabRealName -Image $img -Size $size -UsageQuotaInHours $usageQuota -UserName $userName -Password $password -LinuxRdpEnabled:$linuxRdp -SharedPasswordEnabled:$shPsswd `
         | Publish-AzLab
         Write-Verbose "$LaRealbName lab doesn't exist. Created it."
         return $lab
