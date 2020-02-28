@@ -338,7 +338,7 @@ function Enrich {
 
     process {
         foreach ($rs in $resource) {
-            if ($rs.id) {
+            if (($rs.PSobject.Properties.name -match "id")) {
                 $parts = $rs.id.Split('/')
                 $len = $parts.Count
 
@@ -620,18 +620,29 @@ function New-AzLab {
         [ValidateNotNullOrEmpty()]
         $LabName,
 
-        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Maximum number of users in lab (defaults to 5)")]
-        [int]
-        $MaxUsers = 5,
+        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Shared Image or Gallery image to use")]
+        [ValidateNotNullOrEmpty()]
+        $Image,
+
+        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Size for template VM")]
+        [ValidateNotNullOrEmpty()]
+        $Size,
+
+        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "User name if shared password is enabled")]
+        [string]
+        $UserName,
+
+        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Password if shared password is enabled")]
+        [string]
+        $Password,
+
+        [parameter(mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+        [switch]
+        $LinuxRdpEnabled = $false,
 
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Quota of hours x users (defaults to 40)")]
         [int]
         $UsageQuotaInHours = 40,
-
-        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Access mode for the lab (either Restricted or Open)")]
-        [ValidateSet('Restricted', 'Open')]
-        [string]
-        $UserAccessMode = 'Restricted',
 
         [parameter(mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [switch]
@@ -642,19 +653,29 @@ function New-AzLab {
     process {
         try {
             foreach ($la in $LabAccount) {
-                $uri = (ConvertToUri -resource $la) + "/labs/" + $LabName
+                $labAccountUri = (ConvertToUri -resource $la)
+                $createUri = $labAccountUri + "/createLab"
+                $labUri = $labAccountUri + "/labs/" + $LabName
+                $environmentSettingUri = $labUri + "/environmentsettings/default"
                 $sharedPassword = if ($SharedPasswordEnabled) { "Enabled" } else { "Disabled" }
+                $imageType = if ($image.id -match '/galleryimages/') { 'galleryImageResourceId' } else { 'sharedImageResourceId' }
+                if ($LinuxRdpEnabled) { $linuxRdpState = 'Enabled' } else { $linuxRdpState = 'Disabled' }
 
-                InvokeRest -Uri $uri -Method 'Put' -Body (@{
-                        location   = $LabAccount.location
-                        properties = @{
-                            maxUsersInLab         = $MaxUsers.ToString()
-                            usageQuota            = "PT$($UsageQuotaInHours.ToString())H"
-                            userAccessMode        = $UserAccessMode
-                            sharedPasswordEnabled = $sharedPassword
+                InvokeRest -Uri $createUri -Method 'Post' -Body (@{
+                        name = $LabName
+                        labParameters = @{
+                            $imageType = $image.id
+                            linuxRdpState = $linuxRdpState
+                            password = $Password
+                            username = $UserName
+                            userQuota = "PT$($UsageQuotaInHours.ToString())H"
+                            vmSize = $Size
+                            sharedPasswordState = $sharedPassword
                         }
                     } | ConvertTo-Json) | Out-Null
-                return WaitProvisioning -uri $uri -delaySec 60 -retryCount 120    
+
+                WaitProvisioning -uri $labUri -delaySec 60 -retryCount 120
+                return WaitProvisioning -uri $environmentSettingUri -delaySec 60 -retryCount 120    
             }
         }
         catch {
@@ -715,8 +736,23 @@ function Set-AzLab {
                         $false
                     }
                 }
-           
-                return New-AzLab -LabAccount $LabAccount -LabName $LabName -MaxUsers $mu -UsageQuotaInHours $uq -UserAccessMode $ua -SharedPasswordEnabled:$sp
+
+                # update lab
+                $uri = (ConvertToUri -resource $LabAccount) + "/labs/" + $LabName
+                $sharedPassword = if ($SharedPasswordEnabled) { "Enabled" } else { "Disabled" }
+
+                $l.properties.maxUsersInLab = $mu.ToString()
+                $l.properties.usageQuota = "PT$($uq.ToString())H"
+                $l.properties.userAccessMode = $ua
+                $l.properties.sharedPasswordEnabled = $sharedPassword
+
+                InvokeRest -Uri $uri -Method 'PUT' -Body (@{
+                    location   = $LabAccount.location
+                    properties = $l.properties 
+                } | ConvertTo-Json) | Out-Null
+                 
+                return WaitProvisioning -uri $uri -delaySec 60 -retryCount 120
+
             }
         }
         catch {
@@ -746,6 +782,8 @@ function Get-AzLabTemplateVM {
     return InvokeRest -Uri $uri -Method 'Get'
 }
 
+
+
 function Get-AzLabVmAgain($vm) {
     $uri = ConvertToUri -resource $vm
     return InvokeRest -Uri $uri -Method 'Get'
@@ -762,85 +800,44 @@ function Get-AzLabTemplateVM {
     return InvokeRest -Uri $uri -Method 'Get'
 }
 
-function New-AzLabTemplateVM {
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPlainTextForPassword", "", Scope = "Function")]
+function Set-AzLabTemplateVM {
     [CmdletBinding()]
     param(
-        [parameter(Mandatory = $true, HelpMessage = "Lab to create template VM into", ValueFromPipeline = $true)]
+        [parameter(Mandatory = $true, HelpMessage = "The Template VM to update.", ValueFromPipeline = $true)]
         [ValidateNotNullOrEmpty()]
-        $Lab,
-  
-        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Shared Image or Gallery image to use")]
-        [ValidateNotNullOrEmpty()]
-        $Image,
-
-        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Size for template VM")]
-        [ValidateSet('Small', 'Medium', 'MediumNested', 'Large', 'GPU')]
-        $Size,
+        $TemplateVm,
 
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Quota of hours x users (defaults to 40)")]
         [String]
-        $Title = "A test title",
+        $Title,
 
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Quota of hours x users (defaults to 40)")]
         [String]
-        $Description = "Template Description",
-
-        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "User name if shared password is enabled")]
-        [string]
-        $UserName,
-
-        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Password if shared password is enabled")]
-        [string]
-        $Password,
-
-        [parameter(mandatory = $false, ValueFromPipelineByPropertyName = $true)]
-        [switch]
-        $LinuxRdpEnabled = $false  
+        $Description
     )
   
     begin { . BeginPreamble }
     process {
         try {
-            foreach ($l in $Lab) {
+            foreach ($t in $TemplateVm) {
+                $uri = (ConvertToUri -resource $t)
 
-                $sizesHash = @{
-                    'Small'        = 'Basic'
-                    'Medium'       = 'Standard'
-                    'MediumNested' = 'Virtualization'
-                    'Large'        = 'Performance'
-                    'GPU'          = 'GPU'
+                if($PSBoundParameters.ContainsKey('Title')) {
+                    $t.properties | Add-Member -MemberType NoteProperty -Name "title" -Value $Title -Force
                 }
-                $sizeJson = $sizesHash[$Size]
 
-                $uri = (ConvertToUri -resource $l) + '/EnvironmentSettings/Default'
-
-                $imageType = if ($image.id -match '/galleryimages/') { 'galleryImageResourceId' } else { 'sharedImageResourceId' }
-
-                if ($LinuxRdpEnabled) { $linux = 'Enabled' } else { $linux = 'Disabled' }
+                if($PSBoundParameters.ContainsKey('Description')) {
+                    $t.properties | Add-Member -MemberType NoteProperty -Name "description" -Value $Description -Force
+                }
 
                 $body = @{
-                    location   = $l.location
-                    properties = @{
-                        title            = $title
-                        description      = $Description
-                        resourceSettings = @{
-                            $imageType  = $image.id
-                            size        = $sizeJson
-                            referenceVm = @{
-                                userName = $UserName
-                                password = $Password
-                            }
-                        }
-                        LinuxRdpEnabled  = $linux
-                    }
+                    location   = $t.location
+                    properties = $t.properties
                 }
                 $jsonBody = $body | ConvertTo-Json -Depth 10
                 Write-Verbose "BODY: $jsonBody"
-                InvokeRest -Uri $uri -Method 'Put' -Body $jsonBody | Out-Null
-                WaitProvisioning -uri $uri -delaySec 60 -retryCount 120 | Out-Null
-
-                return Get-AzLabAgain -lab $l
+                InvokeRest -Uri $uri -Method 'PUT' -Body $jsonBody | Out-Null
+                return WaitProvisioning -uri $uri -delaySec 60 -retryCount 120 | Out-Null
             }
         }
         catch {
@@ -1362,14 +1359,36 @@ function New-AzLabSchedule {
     end { }
 }
 
+function Get-AzLabAccountPricingAndAvailability {
+    param(
+        [parameter(Mandatory = $true, HelpMessage = "Lab Account to get shared images from", ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        $LabAccount 
+    )
+    begin { . BeginPreamble }
+    process {
+        try {
+            foreach ($la in $LabAccount) {
+                $uri = (ConvertToUri -resource $la) + "/GetPricingAndAvailability"
+
+                return InvokeRest -Uri $uri -Method 'POST'
+            }
+        }
+        catch {
+            Write-Error -ErrorRecord $_ -EA $callerEA
+        }
+    }
+    end { }
+}
+
 Export-ModuleMember -Function   Get-AzLabAccount,
                                 Get-AzLab,
                                 New-AzLab,
                                 Get-AzLabAccountSharedImage,
                                 Get-AzLabAccountGalleryImage,
                                 Remove-AzLab,
-                                New-AzLabTemplateVM,
                                 Get-AzLabTemplateVM,
+                                Set-AzLabTemplateVM,
                                 Publish-AzLab,
                                 Add-AzLabUser,
                                 Get-AzLabUser,
@@ -1387,4 +1406,5 @@ Export-ModuleMember -Function   Get-AzLabAccount,
                                 Stop-AzLabVm,
                                 Get-AzLabForVm,
                                 New-AzLabAccountSharedGallery,
-                                Remove-AzLabAccountSharedGallery
+                                Remove-AzLabAccountSharedGallery,
+                                Get-AzLabAccountPricingAndAvailability
