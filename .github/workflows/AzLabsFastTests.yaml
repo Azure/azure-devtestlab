@@ -1,0 +1,69 @@
+on:
+  schedule:
+    - cron: '* 2 * * * '
+  # See here: https://goobar.io/2019/12/07/manually-trigger-a-github-actions-workflow/
+  repository_dispatch:
+    types: run
+  push:
+    paths:
+    - 'samples/ClassroomLabs/**'
+    - '.github/workflows/**'
+  pull_request:
+    paths:
+    - 'samples/ClassroomLabs/**'
+    - '.github/workflows/**'
+
+name: FastTests
+
+jobs:
+
+  # You cannot use a matrix to define a shell: https://github.community/t5/GitHub-Actions/Using-matrix-to-specify-shell-is-it-possible/m-p/39869
+  run-fast-tests-core:
+    strategy:
+      matrix:
+        # MacOs is blocked by https://github.com/microsoft/azure-pipelines-tasks/issues/12030
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    
+    - uses: actions/checkout@v2
+
+    - name: Execute steps
+      shell: pwsh
+      run: |
+        Install-Module Pester -Force
+        Install-Module Az -Force
+        $User = "${{ secrets.PRINCIPAL_USER }}"
+        $PWord = ConvertTo-SecureString -String ${{ secrets.PRINCIPAL_PASSWORD }} -AsPlainText -Force
+        $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $User, $PWord
+        Connect-AzAccount -Credential $Credential -Tenant "${{ secrets.PRINCIPAL_TENANT }}" -ServicePrincipal
+        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast-* -EnableExit
+
+    - name: Cleanup
+      if: always()
+      shell: pwsh
+      run: |
+        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Cleanup.ps1 
+
+  run-fast-tests-powershell:
+    runs-on: windows-latest
+    steps:
+    
+    - uses: actions/checkout@v2
+
+    - name: Execute steps
+      shell: powershell
+      run: |
+        Install-Module Pester -Force
+        Install-Module Az -Force -AllowClobber
+        $User = "${{ secrets.PRINCIPAL_USER }}"
+        $PWord = ConvertTo-SecureString -String ${{ secrets.PRINCIPAL_PASSWORD }} -AsPlainText -Force
+        $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $User, $PWord
+        Connect-AzAccount -Credential $Credential -Tenant "${{ secrets.PRINCIPAL_TENANT }}" -ServicePrincipal
+        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast-* -EnableExit
+
+    - name: Cleanup
+      if: always()
+      shell: powershell
+      run: |
+        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Cleanup.ps1 
