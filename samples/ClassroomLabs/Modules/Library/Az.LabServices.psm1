@@ -338,7 +338,7 @@ function Enrich {
 
     process {
         foreach ($rs in $resource) {
-            if (($rs.PSobject.Properties.name -match "id")) {
+            if ($rs.PSobject.Properties.name -match "id") {
                 $parts = $rs.id.Split('/')
                 $len = $parts.Count
 
@@ -674,8 +674,9 @@ function New-AzLab {
                         }
                     } | ConvertTo-Json) | Out-Null
 
-                WaitProvisioning -uri $labUri -delaySec 60 -retryCount 120
-                return WaitProvisioning -uri $environmentSettingUri -delaySec 60 -retryCount 120    
+                $lab = WaitProvisioning -uri $labUri -delaySec 60 -retryCount 120
+                $templateVm = WaitProvisioning -uri $environmentSettingUri -delaySec 60 -retryCount 120    
+                return $lab
             }
         }
         catch {
