@@ -11,7 +11,7 @@ $maxUsers = 2
 $usageQuota = 30
 $usageAMode = 'Restricted'
 $shPsswd = $false
-$size = 'Medium'
+$size = 'Basic'
 $title = 'Advancing Differentiation Workshop'
 $descr = 'Bringing it to the 21st Century'
 $userName = 'test0000'
@@ -39,7 +39,7 @@ Describe 'Lab' {
         $lab = $script:la | Get-AzLab -LabName $labName
             
         if ($lab) {
-            $lab | Set-AzLab -LabName $LabName -UsageQuotaInHours $usageQuota -SharedPasswordEnabled:$shPsswd 
+            $lab | Set-AzLab -UsageQuotaInHours $usageQuota -SharedPasswordEnabled:$shPsswd 
             Write-Verbose "$LabName lab already exist. Change it."
         }
         else {
