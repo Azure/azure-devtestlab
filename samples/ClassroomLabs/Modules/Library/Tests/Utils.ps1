@@ -1,7 +1,8 @@
 Import-Module $PSScriptRoot\..\Az.LabServices.psm1
 
-$suffix = if(-not $IsCoreCLR) {"Powershell"} elseif($IsLinux) {"Linux"} elseif($IsMacOS) {"MacOS"} else {""}
-$rgName = 'AzLabsLibrary' + $suffix
+# $suffix = if(-not $IsCoreCLR) {"Powershell"} elseif($IsLinux) {"Linux"} elseif($IsMacOS) {"MacOS"} else {""}
+# $rgName = 'AzLabsLibrary' + $suffix
+$rgName = 'AzLabsLibrary'
 $rgLocation = 'West Europe'
 
 $labName = 'FastLab'
