@@ -2,19 +2,15 @@
 Param()
 Import-Module $PSScriptRoot\..\Az.LabServices.psm1
 
-$rgName     = 'AzLabsLibrary'
-$rgLocation = 'West Europe'
 $laName     = 'Temp' + (Get-Random)
 
 Describe 'Lab Account' {
         It 'Can create a Lab Account' {
 
-            if(-not (Get-AzResourceGroup -ResourceGroupName $rgName -EA SilentlyContinue)) {
-                New-AzResourceGroup -ResourceGroupName $rgName -Location $rgLocation | Out-null
-                Write-Verbose "$rgname resource group didn't exist. Created it."
-            }
+            $la = Get-FastResourceGroup 
+            $script:rgName = $la.ResourceGroupName
             
-            $la  = New-AzLabAccount -ResourceGroupName $rgName -LabAccountName $laName
+            $la  = New-AzLabAccount -ResourceGroupName $script:rgName -LabAccountName $laName
             Write-Verbose "$laName lab account created or found."
             
             $la | Should -Not -BeNullOrEmpty
@@ -29,7 +25,7 @@ Describe 'Lab Account' {
 
         It 'Can remove Lab Account' {
 
-            $la = Get-AzLabAccount -ResourceGroupName $rgName -LabAccountName $laName
+            $la = Get-AzLabAccount -ResourceGroupName $script:rgName -LabAccountName $laName
             $la | Remove-AzLabAccount
         }
 }

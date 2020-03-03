@@ -1,17 +1,15 @@
 Import-Module $PSScriptRoot\..\Az.LabServices.psm1
 
-$rgName = 'AzLabsLibrary'
+$suffix = if(-not $IsCoreCLR) {"Powershell"} elseif($IsLinux) {"Linux"} elseif($IsMacOS) {"MacOS"} else {""}
+$rgName = 'AzLabsLibrary' + $suffix
 $rgLocation = 'West Europe'
+
 $labName = 'FastLab'
 $laName = 'AzLabsLibrary-la'
 $imgName = 'CentOS-Based*'
-$maxUsers = 2
 $usageQuota = 30
-$usageAMode = 'Restricted'
 $shPsswd = $false
 $size = 'Basic'
-$title = 'Advancing Differentiation Workshop'
-$descr = 'Bringing it to the 21st Century'
 $userName = 'test0000'
 $password = 'Test000'
 
@@ -32,7 +30,8 @@ function Get-FastLabAccount {
     param([Switch]$RandomName = $false)
 
     # Creat RG, Lab Account and lab if not existing
-    Get-FastResourceGroup | Out-Null
+    $la = Get-FastResourceGroup 
+    $rgName = $la.ResourceGroupName
     
     if($RandomName) {
         $laRealName = 'Temp' + (Get-Random)
