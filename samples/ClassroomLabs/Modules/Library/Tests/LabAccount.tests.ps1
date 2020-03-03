@@ -2,6 +2,8 @@
 Param()
 Import-Module $PSScriptRoot\..\Az.LabServices.psm1
 
+. $PSScriptRoot\Utils.ps1
+
 $laName     = 'Temp' + (Get-Random)
 
 Describe 'Lab Account' {

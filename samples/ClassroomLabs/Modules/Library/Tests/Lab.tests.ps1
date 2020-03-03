@@ -2,6 +2,8 @@
 Param()
 Import-Module $PSScriptRoot\..\Az.LabServices.psm1
 
+. $PSScriptRoot\Utils.ps1
+
 $labName = 'TestLab' + (Get-Random)
 $imgName = 'CentOS-Based*'
 $usageQuota = 30
@@ -36,7 +38,7 @@ Describe 'Lab' {
             
         $lab | Should -Not -BeNullOrEmpty                   
     }
-    It 'Can set a lab' {
+    It 'Can set a lab' -Skip {
 
         $lab = $script:la | Get-AzLab -LabName $labName
         $lab | Set-AzLab -MaxUsers 3 -UsageQuotaInHours 10 -UserAccessMode 'Restricted' -SharedPasswordEnabled $true | Out-Null
