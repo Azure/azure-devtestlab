@@ -39,11 +39,11 @@ jobs:
         Connect-AzAccount -Credential $Credential -Tenant "${{ secrets.PRINCIPAL_TENANT }}" -ServicePrincipal
         Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/* -EnableExit
 
-    - name: Cleanup
-      if: always()
-      shell: pwsh
-      run: |
-        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Cleanup.ps1 
+    # - name: Cleanup
+    #   if: always()
+    #   shell: pwsh
+    #   run: |
+    #     Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Cleanup.ps1 
         
   run-all-tests-powershell:
     runs-on: windows-latest
