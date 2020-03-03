@@ -395,8 +395,9 @@ function New-AzLabAccount {
                 $body = @{
                     location = $rg.Location
                 } | ConvertTo-Json -Depth 10
-                InvokeRest -Uri $uri -Method "Put" -Body $body | Out-Null
-                return WaitProvisioning -uri $uri -delaySec 60 -retryCount 120
+                $lab = InvokeRest -Uri $uri -Method "Put" -Body $body
+                WaitProvisioning -uri $uri -delaySec 60 -retryCount 120 | Out-Null
+                return $lab
             }
         }
         catch {
@@ -675,7 +676,7 @@ function New-AzLab {
                     } | ConvertTo-Json) | Out-Null
 
                 $lab = WaitProvisioning -uri $labUri -delaySec 60 -retryCount 120
-                $templateVm = WaitProvisioning -uri $environmentSettingUri -delaySec 60 -retryCount 120 
+                WaitProvisioning -uri $environmentSettingUri -delaySec 60 -retryCount 120 | Out-Null
                 return $lab
             }
         }
@@ -747,13 +748,13 @@ function Set-AzLab {
                 $l.properties.userAccessMode = $ua
                 $l.properties.sharedPasswordEnabled = $sharedPassword
 
-                InvokeRest -Uri $uri -Method 'PUT' -Body (@{
+                $lab = InvokeRest -Uri $uri -Method 'PUT' -Body (@{
                     location   = $LabAccount.location
                     properties = $l.properties 
-                } | ConvertTo-Json) | Out-Null
+                } | ConvertTo-Json)
                  
-                return WaitProvisioning -uri $uri -delaySec 60 -retryCount 120
-
+                WaitProvisioning -uri $uri -delaySec 60 -retryCount 120
+                return $lab
             }
         }
         catch {
@@ -837,8 +838,9 @@ function Set-AzLabTemplateVM {
                 }
                 $jsonBody = $body | ConvertTo-Json -Depth 10
                 Write-Verbose "BODY: $jsonBody"
-                InvokeRest -Uri $uri -Method 'PUT' -Body $jsonBody | Out-Null
-                return WaitProvisioning -uri $uri -delaySec 60 -retryCount 120 | Out-Null
+                $lab = InvokeRest -Uri $uri -Method 'PUT' -Body $jsonBody
+                WaitProvisioning -uri $uri -delaySec 60 -retryCount 120 | Out-Null
+                return $lab
             }
         }
         catch {
