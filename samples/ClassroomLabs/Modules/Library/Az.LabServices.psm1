@@ -264,6 +264,8 @@ function InvokeRest($Uri, $Method, $Body, $params) {
     # Happens with Post commands ...
     if (-not $resObj) { return $resObj }
 
+    Write-Verbose "ResObj: $resObj"
+
     # Need to make it unique because the rest call returns duplicate ones (bug)
     if (Get-Member -inputobject $resObj -name "Value" -Membertype Properties) {
         return $resObj.Value | Sort-Object -Property id -Unique | Enrich
@@ -722,31 +724,27 @@ function Set-AzLab {
                 $LabName = $l.Name
                 $LabAccount = Get-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName
 
-                if ($PSBoundParameters.ContainsKey('MaxUsers')) {
+                Write-Verbose "Lab to update:\n$($lab | ConvertTo-Json)"
+                if ($PSBoundParameters.ContainsKey('MaxUsers') -or (-not (Get-Member -inputobject $l.properties -name "maxUsersInLab" -Membertype Properties))) {
                     $l.properties | Add-Member -MemberType NoteProperty -Name maxUsersInLab -Value $MaxUsers.ToString()  -force
                 }
-                if ($PSBoundParameters.ContainsKey('UserAccessMode')) {
+                if ($PSBoundParameters.ContainsKey('UserAccessMode') -or (-not (Get-Member -inputobject $l.properties -name "userAccessMode" -Membertype Properties))) {
                     $l.properties | Add-Member -MemberType NoteProperty -Name userAccessMode -Value $UserAccessMode  -force
                 }
-                if ($PSBoundParameters.ContainsKey('SharedPasswordEnabled')) {
+                if ($PSBoundParameters.ContainsKey('SharedPasswordEnabled') -or (-not (Get-Member -inputobject $l.properties -name "sharedPasswordEnabled" -Membertype Properties))) {
                     $sharedPassword = if ($SharedPasswordEnabled) { "Enabled" } else { "Disabled" }
                     $l.properties | Add-Member -MemberType NoteProperty -Name sharedPasswordEnabled -Value $sharedPassword  -force
                 }
-                if ($PSBoundParameters.ContainsKey('UsageQuotaInHours')) {
-                    $l.properties | Add-Member -MemberType NoteProperty -Name usageQuotaInHours -Value "$PT$($UsageQuotaInHours.ToString())H" -force
+                if ($PSBoundParameters.ContainsKey('UsageQuotaInHours') -or (-not (Get-Member -inputobject $l.properties -name "usageQuotaInHours" -Membertype Properties))) {
+                    $l.properties | Add-Member -MemberType NoteProperty -Name usageQuotaInHours -Value "PT$($UsageQuotaInHours.ToString())H" -force
                 }
 
 
                 # update lab
                 $uri = (ConvertToUri -resource $LabAccount) + "/labs/" + $LabName
 
-                $lab = InvokeRest -Uri $uri -Method 'PUT' -Body (@{
-                    location   = $LabAccount.location
-                    properties = $l.properties 
-                } | ConvertTo-Json)
-                 
-                WaitProvisioning -uri $uri -delaySec 60 -retryCount 120
-                return $lab
+                $lab = InvokeRest -Uri $uri -Method 'PUT' -Body ($l | ConvertTo-Json)
+                return WaitProvisioning -uri $uri -delaySec 60 -retryCount 120
             }
         }
         catch {

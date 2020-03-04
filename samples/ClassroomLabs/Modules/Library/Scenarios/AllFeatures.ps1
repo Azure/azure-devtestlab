@@ -13,11 +13,10 @@ $la  = New-AzLabAccount -ResourceGroupName $rgName -LabAccountName $acName
 $gim = ($la | Get-AzLabAccountGalleryImage)[0] # Pick the first image, also have a Get-AzLabAccountSharedImage
 
 $lab = $la `
-    | New-AzLab -LabName $LabName -MaxUsers 2 -UsageQuotaInHours 31 -UserAccessMode Restricted -SharedPasswordEnabled `
-    | New-AzLabTemplateVM -Image $gim -Size Medium -Title "New Gallery" -Description "New Description" -UserName test0000 -Password Test00000000 `
+    | New-AzLab -LabName $LabName -Image $gim -Size Basic -UsageQuotaInHours 31 -SharedPasswordEnabled -UserName test0000 -Password Test00000000 `
     | Publish-AzLab `
     | Add-AzLabUser -Emails @('lucabol@microsoft.com') `
-    | Set-AzLab -MaxUsers 3 -UsageQuotaInHours 20
+    | Set-AzLab -UsageQuotaInHours 20
 
 $user = $lab | Get-AzLabUser -Email 'lucabol*'
 $lab | Send-AzLabUserInvitationEmail -User $user -InvitationText 'Running tests'

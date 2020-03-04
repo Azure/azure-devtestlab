@@ -38,11 +38,19 @@ Describe 'Lab' {
             
         $lab | Should -Not -BeNullOrEmpty                   
     }
-    It 'Can set a lab' -Skip {
+    It 'Can set a lab' {
 
         $lab = $script:la | Get-AzLab -LabName $labName
-        $lab | Set-AzLab -MaxUsers 3 -UsageQuotaInHours 10 -UserAccessMode 'Restricted' -SharedPasswordEnabled $true | Out-Null
+        #TODO: Add MaxUsers when bug fixed
+        $lab | Set-AzLab -UsageQuotaInHours 10 -UserAccessMode 'Restricted' -SharedPasswordEnabled $true | Out-Null
         # Fails when get not OK return value
+    }
+    It 'Can set Title and description on template vm' {
+        $lab = $script:la | Get-AzLab -LabName $labName
+        $templateVm = $lab | Get-AzLabTemplateVM
+        $templateVm | Should -Not -BeNullOrEmpty                   
+           
+        $templateVm | Set-AzLabTemplateVM -Title "Test Title" -Description "Test Desc"
     }
 
     It 'Can query using wildcards' {

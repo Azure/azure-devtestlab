@@ -44,8 +44,7 @@ Write-Host "$laName lab account created or found."
 $lab = $la | Get-AzLab -LabName $labName
 
 if($lab) {
-    $lab | Set-AzLab -UsageQuotaInHours $usageQuota -SharedPasswordEnabled:$shPsswd `
-         | Publish-AzLab
+    $lab | Set-AzLab -UsageQuotaInHours $usageQuota -SharedPasswordEnabled:$shPsswd
     Write-Host "$LabName lab already exist. Republished."
 } else {
     $img = $la | Get-AzLabAccountGalleryImage | Where-Object {$_.name -like $imgName} | Select-Object -First 1
