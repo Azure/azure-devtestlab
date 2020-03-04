@@ -264,11 +264,12 @@ function InvokeRest($Uri, $Method, $Body, $params) {
     # Happens with Post commands ...
     if (-not $resObj) { return $resObj }
 
+    # Need to make it unique because the rest call returns duplicate ones (bug)
     if (Get-Member -inputobject $resObj -name "Value" -Membertype Properties) {
-        return $resObj.Value | Enrich
+        return $resObj.Value | Sort-Object -Property id -Unique | Enrich
     }
     else {
-        return $resObj | Enrich
+        return $resObj | Sort-Object -Property id -Unique | Enrich
     }
 }
 
@@ -698,18 +699,18 @@ function Set-AzLab {
         [int]
         $MaxUsers = 5,
 
-        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Quota of hours x users.")]
-        [int]
-        $UsageQuotaInHours = 40,
-
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Access mode for the lab (either Restricted or Open)")]
         [ValidateSet('Restricted', 'Open')]
         [string]
         $UserAccessMode = 'Restricted',
 
-        [parameter(mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [switch]
-        $SharedPasswordEnabled = $false 
+        $SharedPasswordEnabled = $false, 
+
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Quota of hours x users (defaults to 40)")]
+        [int]
+        $UsageQuotaInHours = 40
     )
   
     begin { . BeginPreamble }
@@ -721,32 +722,23 @@ function Set-AzLab {
                 $LabName = $l.Name
                 $LabAccount = Get-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName
 
-                $dateTime = ConvertFrom-ISO8601Duration -Duration $l.properties.usageQuota
-                Write-Verbose($dateTime)
+                if ($PSBoundParameters.ContainsKey('MaxUsers')) {
+                    $l.properties | Add-Member -MemberType NoteProperty -Name maxUsersInLab -Value $MaxUsers.ToString()  -force
+                }
+                if ($PSBoundParameters.ContainsKey('UserAccessMode')) {
+                    $l.properties | Add-Member -MemberType NoteProperty -Name userAccessMode -Value $UserAccessMode  -force
+                }
+                if ($PSBoundParameters.ContainsKey('SharedPasswordEnabled')) {
+                    $sharedPassword = if ($SharedPasswordEnabled) { "Enabled" } else { "Disabled" }
+                    $l.properties | Add-Member -MemberType NoteProperty -Name sharedPasswordEnabled -Value $sharedPassword  -force
+                }
+                if ($PSBoundParameters.ContainsKey('UsageQuotaInHours')) {
+                    $l.properties | Add-Member -MemberType NoteProperty -Name usageQuotaInHours -Value "$PT$($UsageQuotaInHours.ToString())H" -force
+                }
 
-                $mu = if ($PSBoundParameters.ContainsKey('MaxUsers')) { $MaxUsers } else { $l.properties.maxUsersInLab }
-                $uq = if ($PSBoundParameters.ContainsKey('UsageQuotaInHours')) { $UsageQuotaInHours } else { $dateTime.TotalHours }
-                $ua = if ($PSBoundParameters.ContainsKey('UserAccessMode')) { $UserAccessMode } else { $l.properties.userAccessMode }
-                $sp = if ($PSBoundParameters.ContainsKey('SharedPasswordEnabled')) {
-                    $SharedPasswordEnabled
-                }
-                else {
-                    if (Get-Member -inputobject $l.properties -name "sharedPasswordEnabled" -Membertype Properties) {
-                        $l.properties.sharedPasswordEnabled -eq 'Enabled'
-                    }
-                    else {
-                        $false
-                    }
-                }
 
                 # update lab
                 $uri = (ConvertToUri -resource $LabAccount) + "/labs/" + $LabName
-                $sharedPassword = if ($SharedPasswordEnabled) { "Enabled" } else { "Disabled" }
-
-                $l.properties.maxUsersInLab = $mu.ToString()
-                $l.properties.usageQuota = "PT$($uq.ToString())H"
-                $l.properties.userAccessMode = $ua
-                $l.properties.sharedPasswordEnabled = $sharedPassword
 
                 $lab = InvokeRest -Uri $uri -Method 'PUT' -Body (@{
                     location   = $LabAccount.location
