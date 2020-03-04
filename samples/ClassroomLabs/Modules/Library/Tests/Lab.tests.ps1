@@ -38,7 +38,7 @@ Describe 'Lab' {
             
         $lab | Should -Not -BeNullOrEmpty                   
     }
-    It 'Can set a lab' {
+    It 'Can set a lab' -Skip {
 
         $lab = $script:la | Get-AzLab -LabName $labName
         #TODO: Add MaxUsers when bug fixed
