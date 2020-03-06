@@ -41,9 +41,7 @@ Describe 'Lab' {
         $lab = $script:la | Get-AzLab -LabName $labName
         $lab | Should -Not -BeNullOrEmpty                   
 
-        #TODO: Add MaxUsers when bug fixed
-        $lab | Set-AzLab -UsageQuotaInHours 10 -UserAccessMode 'Restricted' -SharedPasswordEnabled | Out-Null
-        # Fails when get not OK return value
+        $lab | Set-AzLab -MaxUsers 3 -UsageQuotaInHours 10 -UserAccessMode 'Restricted' -SharedPasswordEnabled | Out-Null
     }
     It 'Can set Title and description on template vm' {
         $lab = $script:la | Get-AzLab -LabName $labName
