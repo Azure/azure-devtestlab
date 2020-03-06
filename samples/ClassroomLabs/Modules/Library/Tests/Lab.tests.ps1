@@ -42,7 +42,7 @@ Describe 'Lab' {
         $lab | Should -Not -BeNullOrEmpty                   
 
         #TODO: Add MaxUsers when bug fixed
-        $lab | Set-AzLab -UsageQuotaInHours 10 -UserAccessMode 'Restricted' -SharedPasswordEnabled $true | Out-Null
+        $lab | Set-AzLab -UsageQuotaInHours 10 -UserAccessMode 'Restricted' -SharedPasswordEnabled | Out-Null
         # Fails when get not OK return value
     }
     It 'Can set Title and description on template vm' {
