@@ -22,8 +22,6 @@ Describe 'Lab' {
     # This should be split in two tests for create and set
     It 'Can create a lab' {
                  
-        $lab = $script:la | Get-AzLab -LabName $labName
-            
         $imgs = $script:la | Get-AzLabAccountGalleryImage
         $imgs | Should -Not -Be $null
         # $imgs.Count | Should -BeGreaterThan 0
@@ -38,9 +36,11 @@ Describe 'Lab' {
             
         $lab | Should -Not -BeNullOrEmpty                   
     }
-    It 'Can set a lab' -Skip {
+    It 'Can set a lab' {
 
         $lab = $script:la | Get-AzLab -LabName $labName
+        $lab | Should -Not -BeNullOrEmpty                   
+
         #TODO: Add MaxUsers when bug fixed
         $lab | Set-AzLab -UsageQuotaInHours 10 -UserAccessMode 'Restricted' -SharedPasswordEnabled $true | Out-Null
         # Fails when get not OK return value
