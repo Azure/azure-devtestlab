@@ -4,7 +4,7 @@
     <img src="http://azuredeploy.net/deploybutton.png"/>
 </a>
 
-This template creates a new DevTest Lab with remoted desktop configuration settings.
+This template creates a new DevTest Lab with remote desktop configuration settings.
 
 The effect of setting these properties is that whenever a user clicks the "Connect" button on a Virtual Machine, the resulting generated RDP file will include the appropriate settings.  The available settings are:
 
