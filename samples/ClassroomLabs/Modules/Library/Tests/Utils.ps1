@@ -82,7 +82,7 @@ function Get-FastLab {
 function Get-FastGallery {
     [CmdletBinding()]
     param()
-    $allsg = Get-AzGallery
+    $allsg = Get-AzGallery -Name AzLabsTestGallery
     $allsg | Should -Not -BeNullOrEmpty
     $sg = $allsg `
          | Where-Object {$_.Name.StartsWith('AzLabsTestGallery')} `
