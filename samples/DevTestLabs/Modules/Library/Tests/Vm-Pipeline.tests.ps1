@@ -33,10 +33,8 @@ Describe 'VM Management' {
 
             Write-Verbose "Created VMs:"
             $createdVMs | Out-String | Write-Verbose
-            $createdVMs.Count | Should -Be 2
-
+ 
             Get-AzDtlVM -Lab $createdLabs[0]  | Measure-Object | Select-Object -ExpandProperty Count | Should -Be 2
-
             Get-AzDtlVM -Lab $createdLabs[1]  | Measure-Object | Select-Object -ExpandProperty Count | Should -Be 0
 
             # Stop VMs
