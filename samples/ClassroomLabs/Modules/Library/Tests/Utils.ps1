@@ -83,13 +83,12 @@ function Get-FastGallery {
     [CmdletBinding()]
     param()
     $allsg = Get-AzGallery
+    $allsg | Should -Not -BeNullOrEmpty
     $sg = $allsg `
          | Where-Object {$_.Name.StartsWith('AzLabsTestGallery')} `
          | Where-Object { (Get-AzGalleryImageDefinition -ResourceGroupName $_.ResourceGroupName -GalleryName $_.Name).Count -gt 0 }
-    if($sg) {
-        return $sg[0]
-    } else {
-        Write-Error "No shared image gallery with images exist in this subscription"
-    }
+
+    $sg | Should -Not -BeNullOrEmpty
+    return $sg[0]
 }
 
