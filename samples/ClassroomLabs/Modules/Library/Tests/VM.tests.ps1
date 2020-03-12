@@ -17,12 +17,14 @@ Describe 'VMs' {
         $script:lab | Remove-AzLab
     }
     
-    It 'Can start VM' -Skip {
-        $script:vm.Status | Should -Be 'Stopped'
+    It 'Can start VM' {
+        if($script:vm.Status -ne 'Stopped') {
+            $script:vm | Stop-AzLabVm
+        }
         $script:vm | Start-AzLabVm
         $started = $script:lab | Get-AzLabVm -Status 'Running'
-        $started.Count | Should -Be 1
-        $started[0].Name | Should -Be $script:vm.Name
+        $matched = $started | Where-Object Name -eq $script:vm.Name
+        $matched.Count | Should -Be 1
     }
 
     It 'Can stop VM' {

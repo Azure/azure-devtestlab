@@ -1,16 +1,16 @@
 Import-Module $PSScriptRoot\..\Az.LabServices.psm1
 
 $rgName = 'AzLabsLibrary'
-$rgLocation = 'West Europe'
+$rgLocation = 'West US'
 
 $labName = 'FastLab'
 $laName = 'AzLabsLibrary-la'
-$imgName = 'CentOS-Based*'
-$usageQuota = 30
-$shPsswd = $false
+$imgName = 'CentOS-based*'
+$usageQuota = 3000
+$shPsswd = $true
 $size = 'Basic'
 $userName = 'test0000'
-$password = 'Test000'
+$password = 'Test00000000'
 
 function Get-FastResourceGroup {
     [CmdletBinding()]
