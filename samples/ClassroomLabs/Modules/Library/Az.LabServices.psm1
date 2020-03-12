@@ -650,7 +650,11 @@ function New-AzLab {
 
         [parameter(mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [switch]
-        $SharedPasswordEnabled = $false 
+        $SharedPasswordEnabled = $false,
+
+        [parameter(mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+        [switch]
+        $SkipTemplateCreation = $false
     )
   
     begin { . BeginPreamble }
@@ -664,6 +668,7 @@ function New-AzLab {
                 $sharedPassword = if ($SharedPasswordEnabled) { "Enabled" } else { "Disabled" }
                 $imageType = if ($image.id -match '/galleryimages/') { 'galleryImageResourceId' } else { 'sharedImageResourceId' }
                 if ($LinuxRdpEnabled) { $linuxRdpState = 'Enabled' } else { $linuxRdpState = 'Disabled' }
+                if ($SkipTemplateCreation) { $hasTemplateVm = 'Disabled' } else { $hasTemplateVm = 'Enabled' }
 
                 InvokeRest -Uri $createUri -Method 'Post' -Body (@{
                         name = $LabName
@@ -675,6 +680,7 @@ function New-AzLab {
                             userQuota = "PT$($UsageQuotaInHours.ToString())H"
                             vmSize = $Size
                             sharedPasswordState = $sharedPassword
+                            templateVmState = $hasTemplateVm
                         }
                     } | ConvertTo-Json) | Out-Null
 
@@ -850,7 +856,7 @@ function Publish-AzLab {
     process {
         try {
             foreach ($l in $Lab) {
-                $uri = (ConvertToUri -resource $Lab) + '/EnvironmentSettings/Default'
+                $uri = (ConvertToUri -resource $Lab) + '/environmentsettings/default'
 
                 $publishUri = $uri + '/publish'
                 $publishBody = @{useExistingImage = $false } | ConvertTo-Json
