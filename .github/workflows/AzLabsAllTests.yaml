@@ -33,7 +33,7 @@ jobs:
         $PWord = ConvertTo-SecureString -String ${{ secrets.PRINCIPAL_PASSWORD }} -AsPlainText -Force
         $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $User, $PWord
         Connect-AzAccount -Credential $Credential -Tenant "${{ secrets.PRINCIPAL_TENANT }}" -ServicePrincipal
-        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast* -EnableExit
+        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/* -EnableExit
 
   run-all-tests-core-linux:
     runs-on: ubuntu-latest
@@ -50,7 +50,7 @@ jobs:
         $PWord = ConvertTo-SecureString -String ${{ secrets.PRINCIPAL_PASSWORD }} -AsPlainText -Force
         $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $User, $PWord
         Connect-AzAccount -Credential $Credential -Tenant "${{ secrets.PRINCIPAL_TENANT }}" -ServicePrincipal
-        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast* -EnableExit
+        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/* -EnableExit
 
   run-all-tests-powershell:
     runs-on: windows-latest
@@ -67,4 +67,4 @@ jobs:
         $PWord = ConvertTo-SecureString -String ${{ secrets.PRINCIPAL_PASSWORD }} -AsPlainText -Force
         $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $User, $PWord
         Connect-AzAccount -Credential $Credential -Tenant "${{ secrets.PRINCIPAL_TENANT }}" -ServicePrincipal
-        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast* -EnableExit
+        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/* -EnableExit
