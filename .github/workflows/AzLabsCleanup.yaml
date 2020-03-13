@@ -1,0 +1,26 @@
+on:
+  schedule:
+    - cron: '0 5 * * * '
+  repository_dispatch:
+    types: run
+
+name: Cleanup
+
+jobs:
+
+  cleanup:
+    runs-on: windows-latest
+    steps:
+    
+    - uses: actions/checkout@v2
+
+    - name: Execute steps
+      shell: powershell
+      run: |
+        Install-Module Pester -Force -AllowClobber
+        Install-Module Az -Force -AllowClobber
+        $User = "${{ secrets.PRINCIPAL_USER }}"
+        $PWord = ConvertTo-SecureString -String ${{ secrets.PRINCIPAL_PASSWORD }} -AsPlainText -Force
+        $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $User, $PWord
+        Connect-AzAccount -Credential $Credential -Tenant "${{ secrets.PRINCIPAL_TENANT }}" -ServicePrincipal
+        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Cleanup.ps1 

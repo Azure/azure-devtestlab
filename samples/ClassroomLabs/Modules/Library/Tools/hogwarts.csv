@@ -1,4 +1,4 @@
 ResourceGroupName,Location,LabAccountName,LabName,ImageName,MaxUsers,UsageQuota,UsageMode,SharedPassword,Size,Title,Descr,UserName,Password,LinuxRdp, Emails,Invitation,Schedules
-hogwarts-rg2,westeurope,Muggle,"History of Magic",CentOS-Based*,2,20,Restricted,false,Small,"History of Magic","Those who don't know history ...",test0000,Test00000000,true,"lucabol@microsoft.com;lucabol@microsoft.com", "History of Magic"
-hogwarts-rg2,westeurope,Wizardy,Transfiguration,CentOS-Based*,2,20,Restricted,false,Small,"Transfiguration","Who are you?",test0000,Test00000000,true,"lucabol@microsoft.com;lucabol@microsoft.com", "Transfiguration"
-hogwarts-rg2,westeurope,Wizardy,Charms,CentOS-Based*,2,20,Restricted,false,Small,"Charms","Encanted",test0000,Test00000000,true,"lucabol@microsoft.com;lucabol@microsoft.com", "Charms", charms
+hogwarts-rg2,westeurope,Muggle,"History of Magic",CentOS-Based*,2,20,Restricted,false,Basic,"History of Magic","Those who don't know history ...",test0000,Test00000000,true,"lucabol@microsoft.com;lucabol@microsoft.com", "History of Magic"
+hogwarts-rg2,westeurope,Wizardy,Transfiguration,CentOS-Based*,2,20,Restricted,false,Basic,"Transfiguration","Who are you?",test0000,Test00000000,true,"lucabol@microsoft.com;lucabol@microsoft.com", "Transfiguration"
+hogwarts-rg2,westeurope,Wizardy,Charms,CentOS-Based*,2,20,Restricted,false,Basic,"Charms","Encanted",test0000,Test00000000,true,"lucabol@microsoft.com;lucabol@microsoft.com", "Charms", charms

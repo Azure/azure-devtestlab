@@ -19,7 +19,7 @@ $maxUsers   = 2
 $usageQuota = 30
 $usageAMode = 'Restricted'
 $shPsswd    = $false
-$size       = 'Medium'
+$size       = 'Basic'
 $title      = 'Advancing Differentiation Workshop'
 $descr      = 'Bringing it to the 21st Century'
 $userName   = 'test0000'
@@ -44,18 +44,15 @@ Write-Host "$laName lab account created or found."
 $lab = $la | Get-AzLab -LabName $labName
 
 if($lab) {
-    $lab = $la `
-        | New-AzLab -LabName $LabName -MaxUsers $maxUsers -UsageQuotaInHours $usageQuota -UserAccessMode $usageAMode -SharedPasswordEnabled:$shPsswd `
-        | Publish-AzLab
+    $lab | Set-AzLab -UsageQuotaInHours $usageQuota -SharedPasswordEnabled:$shPsswd
     Write-Host "$LabName lab already exist. Republished."
 } else {
-    $img = $la | Get-AzLabAccountGalleryImage | Where-Object {$_.name -like $imgName}
+    $img = $la | Get-AzLabAccountGalleryImage | Where-Object {$_.name -like $imgName} | Select-Object -First 1
     if(-not $img -or $img.Count -ne 1) {Write-Error "$imgName pattern doesn't match just one image."}
     Write-Host "Image $imgName found."
     
     $lab = $la `
-        | New-AzLab -LabName $LabName -MaxUsers $maxUsers -UsageQuotaInHours $usageQuota -UserAccessMode $usageAMode -SharedPasswordEnabled:$shPsswd `
-        | New-AzLabTemplateVM -Image $img -Size $size -Title $title -Description $descr -UserName $userName -Password $password -LinuxRdpEnabled:$linuxRdp `
+        | New-AzLab -LabName $LabName -Image $img -Size $size -UserName $userName -Password $password -LinuxRdpEnabled:$linuxRdp -UsageQuotaInHours $usageQuota -SharedPasswordEnabled:$shPsswd `
         | Publish-AzLab
     Write-Host "$LabName lab doesn't exist. Created it."
 }
