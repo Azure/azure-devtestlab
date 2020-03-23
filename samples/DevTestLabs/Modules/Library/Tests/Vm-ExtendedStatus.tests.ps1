@@ -23,6 +23,11 @@ Describe  'Virtual Machine Tests' {
             # Create the lab
             $createdLab = $lab | New-AzDtlLab
 
+            # WORKAROUND for 1082372
+            $lab | ForEach-Object {
+                Set-AzResource -ResourceGroupName $_.ResourceGroupName -ResourceType 'Microsoft.DevTestLab/labs/users' -Name "$($_.Name)/@me" -ApiVersion 2018-10-15-preview -Force
+            }
+
             # Create VM in a lab
             $createdVM = $vm| Select-Object -Property @{N='Name'; E={$createdLab.Name}}, @{N='ResourceGroupName'; E={$createdLab.ResourceGroupName}}, VmName,Size,Claimable,Username,Password,OsType,Sku,Publisher,Offer | New-AzDtlVm
 

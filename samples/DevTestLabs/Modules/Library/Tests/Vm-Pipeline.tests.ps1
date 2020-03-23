@@ -22,6 +22,11 @@ Describe 'VM Management' {
 
             # Create the labs
             $createdLabs = $labs | New-AzDtlLab
+
+            # WORKAROUND for 1082372
+            $lab | ForEach-Object {
+                Set-AzResource -ResourceGroupName $_.ResourceGroupName -ResourceType 'Microsoft.DevTestLab/labs/users' -Name "$($_.Name)/@me" -ApiVersion 2018-10-15-preview -Force
+            }
             
             # Query Azure to get the created labs to make sure they really exist
             $createdLabs = $labs | Get-AzDtlLab
