@@ -50,6 +50,15 @@ Describe 'Lab' {
            
         $templateVm | Set-AzLabTemplateVM -Title "Test Title" -Description "Test Desc"
     }
+    It 'Can start and stop template vm' {
+        $lab = $script:la | Get-AzLab -LabName $labName
+        $templateVm = $lab | Get-AzLabTemplateVM
+        $templateVm | Should -Not -BeNullOrEmpty
+           
+        $templateVm = $templateVm | Stop-AzLabTemplateVm
+        $templateVm = $templateVm | Start-AzLabTemplateVm
+        $templateVm | Should -Not -BeNullOrEmpty
+    }
 
     It 'Can query using wildcards' {
         $script:la | Get-AzLab -LabName Fast* | Should -Not -BeNullOrEmpty

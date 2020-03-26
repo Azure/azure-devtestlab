@@ -331,6 +331,23 @@ function WaitStatusChange($uri, $delaySec, $retryCount, $params, $status) {
     }
     return $res
 }
+function WaitTemplateStatusChange($uri, $delaySec, $retryCount, $params, $status) {
+    Write-Verbose "Retrying $retryCount times every $delaySec seconds."
+
+    $tries = 0;
+    $res = InvokeRest -Uri $uri -Method 'Get' -params $params
+
+    while (-not ($res.properties.latestOperationResult.status -eq $status)) {
+        Write-Verbose "$tries : Status = $($res.properties.latestOperationResult.status)"
+        if (-not ($tries -lt $retryCount)) {
+            throw ("$retryCount retries of retrieving $uri with Status = $status failed")
+        }
+        Start-Sleep -Seconds $delaySec
+        $res = InvokeRest -Uri $uri -Method 'Get' -params $params
+        $tries += 1
+    }
+    return $res
+}
 
 # This function adds properties to the returned resource to make it more easily queryable and reportable
 function Enrich {
@@ -780,6 +797,52 @@ function Get-AzLabTemplateVM {
     return InvokeRest -Uri $uri -Method 'Get'
 }
 
+function Stop-AzLabTemplateVm {
+    param(
+        [parameter(Mandatory = $true, HelpMessage = "Template Vm to stop.", ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        $Vm
+
+    )
+    begin { . BeginPreamble }
+    process {
+        try {
+            foreach ($v in $vm) {
+                $baseUri = (ConvertToUri -resource $v)
+                $uri = $baseUri + '/stop'
+                InvokeRest -Uri $uri -Method 'Post' | Out-Null
+                return WaitTemplateStatusChange -uri $baseUri -delaySec 15 -retryCount 240 -status 'Succeeded'
+            }
+        }
+        catch {
+            Write-Error -ErrorRecord $_ -EA $callerEA
+        }
+    }
+    end { }
+}
+function Start-AzLabTemplateVm {
+    param(
+        [parameter(Mandatory = $true, HelpMessage = "Template Vm to stop.", ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        $Vm
+
+    )
+    begin { . BeginPreamble }
+    process {
+        try {
+            foreach ($v in $vm) {
+                $baseUri = (ConvertToUri -resource $v)
+                $uri = $baseUri + '/start'
+                InvokeRest -Uri $uri -Method 'Post' | Out-Null
+                return WaitTemplateStatusChange -uri $baseUri -delaySec 15 -retryCount 240 -status 'Succeeded'
+            }
+        }
+        catch {
+            Write-Error -ErrorRecord $_ -EA $callerEA
+        }
+    }
+    end { }
+}
 
 
 function Get-AzLabVmAgain($vm) {
@@ -1406,4 +1469,6 @@ Export-ModuleMember -Function   Get-AzLabAccount,
                                 Get-AzLabForVm,
                                 New-AzLabAccountSharedGallery,
                                 Remove-AzLabAccountSharedGallery,
-                                Get-AzLabAccountPricingAndAvailability
+                                Get-AzLabAccountPricingAndAvailability,
+                                Stop-AzLabTemplateVm,
+                                Start-AzLabTemplateVm 
