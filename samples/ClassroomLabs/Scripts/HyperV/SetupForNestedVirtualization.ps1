@@ -276,6 +276,12 @@ try {
         Write-Error "Found nat with name $natName, but InternalIPInterfaceAddressPrefix is not $ipAddressPrefix."
     }
     Write-Output "Nat found is $netNat"
+    #Make sure WinNat will start automatically so Hyper-V VMs will have internet connectivity.
+    Set-Service -Name WinNat -StartupType Automatic
+    if ($(Get-Service -Name WinNat | Select-Object -ExpandProperty StartType) -ne 'Automatic')
+    {
+        Write-Host "Unable to set WinNat service to Automatic.  Hyper-V virtual machines will not have internet connectivity when service is not running." -ForegroundColor Yellow
+    }  
 
     # Tell the user script is done.
     Write-Host -Object "Script completed." -ForegroundColor Green
