@@ -92,7 +92,7 @@ if($imageObject) {
                 Write-Host "Adding $Email as a Reader to the lab account"
                 New-AzRoleAssignment -ObjectId $userId -RoleDefinitionName 'Reader' -ResourceGroupName $rg.ResourceGroupName -ResourceName $labAcct.Name -ResourceType $labAcct.Type
                 Write-Host "Adding $Email as a Contributor to the lab"
-                New-AzRoleAssignment -ObjectId $userId -RoleDefinitionName 'Contributor' -ResourceGroupName $rg.ResourceGroupName -ResourceName $lab.Name -ResourceType $lab.Type
+                New-AzRoleAssignment -ObjectId $userId -RoleDefinitionName 'Contributor' -Scope $lab.id
             }
             else
             {
