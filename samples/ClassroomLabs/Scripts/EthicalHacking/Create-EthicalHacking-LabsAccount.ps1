@@ -43,8 +43,10 @@ trap {
 # Main execution block.
 #
 
-# Install AzLab module
-Import-Module ..\..\Modules\Library\Az.LabServices.psm1 -Force
+# Download AzLab module file, import, and then delete the file
+Invoke-WebRequest "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/ClassroomLabs/Modules/Library/Az.LabServices.psm1" -OutFile Az.LabServices.psm1
+Import-Module .\Az.LabServices.psm1 -Force
+Remove-Item $AzLabServicesFileName
 
 # Configure parameter names
 $rgName     = "$($ClassName)RG_" + (Get-Random)
@@ -63,49 +65,48 @@ $labAcct  = New-AzLabAccount -ResourceGroupName $rgName -LabAccountName $labAcct
 $imageName = "Windows Server 2019 Datacenter"
 Write-Host "Locating '$imageName' image for use in template virtual machine"
 $imageObject = $labAcct | Get-AzLabAccountGalleryImage | Where-Object -Property Name -EQ $imageName
-  
-# Only create lab if image type is found
-if($imageObject) {
 
-    # Create lab on the lab account
-    Write-Host "Creating $labName with '$($imageObject.Name)' image"
-    Write-Host "  Warning: Creating template vm may take up to 20 minutes." -ForegroundColor 'Yellow'
-    $lab = $labAcct | New-AzLab -LabName $labName -UserName $Username -Password $Password -SharedPasswordEnabled -UsageQuotaInHours 10 -Size "Virtualization" -Image $imageObject
-    Write-Host "Lab has been created. Credentials for VM template are '$Username' for the username and '$Password' for the password."
+if($null -eq $imageObject) {
+    Write-Error "Image '$imageName' was not found in the gallery images. No lab was created within lab account $labAcctName."
+    exit -1
+}
 
-    # If lab created, perform next configuration
-    if($lab) {
+# Create lab on the lab account
+Write-Host "Creating $labName with '$($imageObject.Name)' image"
+Write-Warning "  Warning: Creating template vm may take up to 20 minutes."
+$lab = $labAcct | New-AzLab -LabName $labName -UserName $Username -Password $Password -SharedPasswordEnabled -UsageQuotaInHours 10 -Size "Virtualization" -Image $imageObject
 
-        # Stop the VM image so that it is not costing the end user
-        Write-Host "Stop the template VM within $labName"
-        $labTemplateVM = Get-AzLabTemplateVM $lab
-        Stop-AzLabTemplateVm $labTemplateVM
+# If lab created, perform next configuration
+if($null -eq $lab) {
+    Write-Error "Lab failed to create."
+    exit -1
+}
 
-        # Give permissions to optional email address user
-        if ($Email) 
-        {
-            #grant access to labs if an educator email address was provided
-            Write-Host "Adding $Email access to lab $labName"
-            $userId = Get-AzADUser -UserPrincipalName $Email | Select-Object -expand Id
-            if($userId)
-            {
-                Write-Host "Adding $Email as a Reader to the lab account"
-                New-AzRoleAssignment -ObjectId $userId -RoleDefinitionName 'Reader' -ResourceGroupName $rg.ResourceGroupName -ResourceName $labAcct.Name -ResourceType $labAcct.Type
-                Write-Host "Adding $Email as a Contributor to the lab"
-                New-AzRoleAssignment -ObjectId $userId -RoleDefinitionName 'Contributor' -Scope $lab.id
-            }
-            else
-            {
-                Write-Host "$Email is NOT an user in your AAD" -ForegroundColor 'Red'
-            }
-        }
-        
-        Write-Host "Lab created!" -ForegroundColor 'Green'
+Write-Host "Lab has been created."
+
+# Stop the VM image so that it is not costing the end user
+Write-Host "Stopping the template VM within $labName"
+Write-Warning "  Warning: This could take some time to stop the template VM."
+$labTemplateVM = Get-AzLabTemplateVM $lab
+Stop-AzLabTemplateVm $labTemplateVM
+
+# Give permissions to optional email address user
+if ($Email) 
+{
+    #grant access to labs if an educator email address was provided
+    Write-Host "Adding $Email access to lab $labName"
+    $userId = Get-AzADUser -UserPrincipalName $Email | Select-Object -expand Id
+
+    if($null -eq $lab) {
+        Write-Warning "$Email is NOT an user in your AAD. Could not add permissions for this user to the lab account and lab."
     }
-    else {
-        Write-Host "Lab failed to create." -ForegroundColor 'Red'
+    else
+    {
+        Write-Host "Adding $Email as a Reader to the lab account"
+        New-AzRoleAssignment -ObjectId $userId -RoleDefinitionName 'Reader' -ResourceGroupName $rg.ResourceGroupName -ResourceName $labAcct.Name -ResourceType $labAcct.Type
+        Write-Host "Adding $Email as a Contributor to the lab"
+        New-AzRoleAssignment -ObjectId $userId -RoleDefinitionName 'Contributor' -Scope $lab.id
     }
-} 
-else {
-    Write-Host "Image '$imageName' was not found in the gallery images. No lab was created within lab account $labAcctName." -ForegroundColor 'Red'
-} 
+}
+
+Write-Host "Done!" -ForegroundColor 'Green'
