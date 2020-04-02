@@ -46,7 +46,7 @@ trap {
 # Download AzLab module file, import, and then delete the file
 Invoke-WebRequest "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/ClassroomLabs/Modules/Library/Az.LabServices.psm1" -OutFile Az.LabServices.psm1
 Import-Module .\Az.LabServices.psm1 -Force
-Remove-Item $AzLabServicesFileName
+Remove-Item .\Az.LabServices.psm1
 
 # Configure parameter names
 $rgName     = "$($ClassName)RG_" + (Get-Random)
@@ -97,7 +97,7 @@ if ($Email)
     Write-Host "Adding $Email access to lab $labName"
     $userId = Get-AzADUser -UserPrincipalName $Email | Select-Object -expand Id
 
-    if($null -eq $lab) {
+    if($null -eq $userId) {
         Write-Warning "$Email is NOT an user in your AAD. Could not add permissions for this user to the lab account and lab."
     }
     else
