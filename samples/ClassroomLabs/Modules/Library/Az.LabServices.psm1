@@ -1144,6 +1144,140 @@ function Get-AzLabVm {
     }
     end { }
 }
+# Decided on a separate function instead of adding a switch to Get-AzLabStudentVm as the concept of Status doesn't make sense.
+# It would create a situation when you could pass Status=Stopped and -Current at the same time.
+function Get-AzLabStudentCurrentVm {
+    [CmdletBinding()]
+    param()
+    try {
+        $callerEA = $ErrorActionPreference
+        $ErrorActionPreference = 'Stop'
+
+
+        if($IsLinux) {
+            $ipAddresses = [System.Net.NetworkInformation.NetworkInterface]::GetAllNetworkInterfaces() | Select-Object -ExpandProperty Addresses | Select-Object -ExpandProperty IpAddressToString 
+        } else {
+            $ipAddresses = Get-NetIPAddress | select -ExpandProperty IpAddress
+        }
+        Write-Verbose "Ip address(es) for the current machines: $($ipAddresses -join ', ')"
+
+        $studentLabVms = Get-AzLabStudentVm
+        $studentLabVms = $studentLabVms | Where-Object { $ipAddresses.Contains($_.virtualMachineDetails.privateIpAddress) }
+        Write-Verbose "Found lab virtual machines that also match local ip address for classes: $($($studentLabVms | Select-Object -ExpandProperty name) -join ', ')"
+        return $studentLabVms
+    }
+    catch {
+        Write-Error -ErrorRecord $_ -EA $callerEA
+    } finally {
+        $ErrorActionPreference = $callerEA
+    }
+}
+function InvokeStudentRest {
+    param([parameter()]$uri, [parameter()]$body = "")
+
+    $currentAzureContext = Get-AzContext
+    $profileClient = New-Object Microsoft.Azure.Commands.ResourceManager.Common.RMProfileClient([Microsoft.Azure.Commands.Common.Authentication.Abstractions.AzureRmProfileProvider]::Instance.Profile)
+    $token = $profileClient.AcquireAccessToken($currentAzureContext.Tenant.TenantId).AccessToken
+    if ($null -eq $token)
+    {
+        Write-Error "Unable to get authorization information."
+    }
+    $headers = @{
+        'Authorization' = "Bearer $token"
+    }
+
+    $fullUri = "$($uri)?$ApiVersion"
+    Write-debug $token
+    Write-Verbose $fullUri
+    Write-Verbose $body
+    return Invoke-RestMethod -Uri $fullUri -Method 'Post' -Headers $headers -Body $body -ContentType 'application/json'
+}
+function Get-AzLabStudentVm {
+    [CmdletBinding()]
+    param(
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "State of VM to retrieve")]
+        [ValidateSet('Starting', 'Running', 'Stopping', 'Stopped', 'Failed', 'Restarting', 'ApplyingArtifacts', 'UpgradingVmAgent', 'Creating', 'Deleting', 'Corrupted', 'Unknown', 'Any')]
+        $Status = 'Any'
+    )
+
+    # Cannot use the standard preamble and other utility functions in the library as certain variables are not present
+    # when connecting as a student (i.e. $PSCmdlet). I have not investigated the reasons deeply. Even AcquireAccessToken works differently.
+    # It must have something to do with different azure context types, but life is too short to figure all of that out.
+    # Instead replacing the preamble with just caching the errorAction and avoid using standard library APIs.
+    # Deeper thoughts could be spent in figuring out if we need separate APIs for students vs administrators.
+    try {
+        $callerEA = $ErrorActionPreference
+        $ErrorActionPreference = 'Stop'
+
+        $uri = "https://management.azure.com/providers/Microsoft.LabServices/users/NoUsername/listAllEnvironments"
+        $vms = InvokeStudentRest -uri $uri
+
+        if($vms -and (Get-Member -inputobject $vms -name "environments" -Membertype Properties)) {
+            $envs = $vms.environments
+            if ($Status -ne 'Any') {
+                $envs = $envs | Where-Object { $_.lastKnownPowerState -eq $Status }  
+            }
+            return $envs
+        } else {
+            return @()
+        }
+    }
+    catch {
+        Write-Error -ErrorRecord $_ -EA $callerEA
+    } finally {
+        $ErrorActionPreference = $callerEA
+    }
+}
+function Stop-AzLabStudentVm {
+    [CmdletBinding()]
+    param(
+        [parameter(Mandatory = $true, HelpMessage = "Vm to stop", ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        $studentVm
+    )
+    try {
+        $callerEA = $ErrorActionPreference
+        $ErrorActionPreference = 'Stop'
+
+        $uri = "https://management.azure.com/providers/Microsoft.LabServices/users/NoUsername/StopEnvironment"
+        $body = @{
+            'environmentId' = $studentVm.id
+        } | ConvertTo-Json
+
+        InvokeStudentRest -uri $uri -body $body
+    }
+    catch {
+        Write-Error -ErrorRecord $_ -EA $callerEA
+    } finally {
+        $ErrorActionPreference = $callerEA
+    }
+
+}
+function Start-AzLabStudentVm {
+    [CmdletBinding()]
+    param(
+        [parameter(Mandatory = $true, HelpMessage = "Vm to start", ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        $studentVm
+    )
+    try {
+        $callerEA = $ErrorActionPreference
+        $ErrorActionPreference = 'Stop'
+
+        $uri = "https://management.azure.com/providers/Microsoft.LabServices/users/NoUsername/StartEnvironment"
+        $body = @{
+            'environmentId' = $studentVm.id
+        } | ConvertTo-Json
+
+        InvokeStudentRest -uri $uri -body $body
+    }
+    catch {
+        Write-Error -ErrorRecord $_ -EA $callerEA
+    } finally {
+        $ErrorActionPreference = $callerEA
+    }
+
+}
 
 function Get-AzLabForVm {
     param(
@@ -1471,4 +1605,8 @@ Export-ModuleMember -Function   Get-AzLabAccount,
                                 Remove-AzLabAccountSharedGallery,
                                 Get-AzLabAccountPricingAndAvailability,
                                 Stop-AzLabTemplateVm,
-                                Start-AzLabTemplateVm 
+                                Start-AzLabTemplateVm,
+                                Get-AzLabStudentVm,
+                                Get-AzLabStudentCurrentVm,
+                                Stop-AzLabStudentVm,
+                                Start-AzLabStudentVm
