@@ -94,7 +94,7 @@ Stop-AzLabTemplateVm $labTemplateVM
 if ($Email) 
 {
     #grant access to labs if an educator email address was provided
-    Write-Host "Adding $Email access to lab $labName"
+    Write-Host "Retrieving user data for $Email"
     $userId = Get-AzADUser -UserPrincipalName $Email | Select-Object -expand Id
 
     if($null -eq $userId) {
