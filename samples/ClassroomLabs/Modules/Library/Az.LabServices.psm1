@@ -1154,10 +1154,10 @@ function Get-AzLabStudentCurrentVm {
         $ErrorActionPreference = 'Stop'
 
 
-        if($IsLinux) {
-            $ipAddresses = [System.Net.NetworkInformation.NetworkInterface]::GetAllNetworkInterfaces() | Select-Object -ExpandProperty Addresses | Select-Object -ExpandProperty IpAddressToString 
-        } else {
+        if($IsWindows -or $ENV:OS) {
             $ipAddresses = Get-NetIPAddress | select -ExpandProperty IpAddress
+        } else {
+            $ipAddresses = [System.Net.NetworkInformation.NetworkInterface]::GetAllNetworkInterfaces() | Select-Object -ExpandProperty Addresses | Select-Object -ExpandProperty IpAddressToString 
         }
         Write-Verbose "Ip address(es) for the current machines: $($ipAddresses -join ', ')"
 
