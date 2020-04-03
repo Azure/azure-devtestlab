@@ -1153,8 +1153,12 @@ function Get-AzLabStudentCurrentVm {
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
 
+        if($IsMacOS) {
+            Write-Error "Not supported on MAC"
+            Exit
+        }
 
-        if($IsWindows -or $ENV:OS) {
+        if($IsWindows) {
             $ipAddresses = Get-NetIPAddress | select -ExpandProperty IpAddress
         } else {
             $ipAddresses = [System.Net.NetworkInformation.NetworkInterface]::GetAllNetworkInterfaces() | Select-Object -ExpandProperty Addresses | Select-Object -ExpandProperty IpAddressToString 
