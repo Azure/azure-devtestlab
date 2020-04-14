@@ -1159,7 +1159,7 @@ function Get-AzLabStudentCurrentVm {
         }
 
         if($IsWindows) {
-            $ipAddresses = Get-NetIPAddress | select -ExpandProperty IpAddress
+            $ipAddresses = Get-NetIPAddress | Select-Object -ExpandProperty IpAddress
         } else {
             $ipAddresses = [System.Net.NetworkInformation.NetworkInterface]::GetAllNetworkInterfaces() | Select-Object -ExpandProperty Addresses | Select-Object -ExpandProperty IpAddressToString 
         }
@@ -1168,6 +1168,22 @@ function Get-AzLabStudentCurrentVm {
         $studentLabVms = Get-AzLabStudentVm
         $studentLabVms = $studentLabVms | Where-Object { $ipAddresses.Contains($_.virtualMachineDetails.privateIpAddress) }
         Write-Verbose "Found lab virtual machines that also match local ip address for classes: $($($studentLabVms | Select-Object -ExpandProperty name) -join ', ')"
+
+        try{
+            #Using Azure Compute Metadata service.  Using the tagsList property on the compute metadata to find the lab name
+            $tags = Invoke-RestMethod -Uri 'http://169.254.169.254/metadata/instance/compute/tagsList?api-version=2019-11-01' -Headers @{"Metadata"="true"} -TimeoutSec 5 
+            $labName = $tags | Where-Object name -eq 'LabName' | Select-Object -expand value
+            if ($labName){
+                Write-Verbose "Found lab name for current machine: $labName"
+                $studentLabVms = $studentLabVms | Where-Object {$_.Name -eq $labName}
+                Write-Verbose "Found lab virtual machines that also match lab name: $($($studentLabVms | Select-Object -ExpandProperty name) -join ', ')"
+            }else{
+                Write-Verbose "Unable to find lab name for current virtual machine."
+            }
+        }catch{
+            Write-Verbose "Unable to gather virtual machine metadata to determine lab name for virtual machine. "
+        }
+
         return $studentLabVms
     }
     catch {
