@@ -29,11 +29,11 @@ Windows Task Scheduler is used to automatically run this script when the student
     </Actions>
     ```
 1. Open Windows Task Scheduler, right-click on **Task Scheduler Library** and select **Import Task**.  Browse to the location of **Hortonworks-Scheduled-Task.xml** file and click **Open** to complete the import.
-   ![Windows Task Scheduler - Import](./task-scheduler.png)
+   ![Windows Task Scheduler - Import](./Task-Scheduler.png)
 1. Finally, test this task by:
    - Running the task within Windows Task Scheduler.  To do this, right-click on the task and select **Run**.
-      ![Windows Task Scheduler - Run](./run-task.png)
+      ![Windows Task Scheduler - Run](./Run-Task.png)
    - Disconnect from the template machine, restart it, and log in.  The task should automatically run when you log in.
   In both cases, you should see the PowerShell script run, the Docker containers start, and then the browser launch to http://localhost:1080.
-   ![PowerShell - Run](./powershell-run.png)
+   ![PowerShell - Run](./PowerShell-Run.png)
 1. After you have tested this on your template machine, you can now [publish](https://docs.microsoft.com/azure/lab-services/classroom-labs/how-to-create-manage-template#publish-the-template-vm) to create the students' machines.  Now, when your students log into their machines, they also will see the Docker containers automatically start and the browser open to http://localhost:1080.
