@@ -5,7 +5,7 @@ To provide students with an easy-to-use experience for a big data analytics clas
 
 Windows Task Scheduler is used to automatically run this script when the student logs into their VM.
 
-> [!NOTE] This script assumes that you have already installed Docker and deployed Hortonworks Data Platform.  Refer to the article on the [Big Data Analytics](https://docs.microsoft.com/azure/lab-services/classroom-labs/class-type-ethical-hacking) class type for more information.
+NOTE: This script assumes that you have already installed Docker and deployed Hortonworks Data Platform.  Refer to the article on the [Big Data Analytics](https://docs.microsoft.com/azure/lab-services/classroom-labs/class-type-ethical-hacking) class type for more information.
 
 ## Directions
 1. [Connect to the template machine](https://docs.microsoft.com/azure/lab-services/classroom-labs/how-to-create-manage-template#update-a-template-vm) for your class.
@@ -17,7 +17,7 @@ Windows Task Scheduler is used to automatically run this script when the student
 
           > Invoke-WebRequest "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/ClassroomLabs/BigDataAnalytics/Hortonworks-Scheduled-Task.xml" -OutFile Hortonworks-Scheduled-Task.xml
  
-    > [!WARNING] Ensure that you download the files to a directory location that does *not* include whitespace in the file path.  Whitespace can have negative side effects with Windows Task Scheduler.
+WARNING: Ensure that you download the files to a directory location that does *not* include whitespace in the file path.  Whitespace can have negative side effects with Windows Task Scheduler.
 1. Open the Windows Task Scheduler xml file (e.g. **Hortonworks-Scheduled-Task.xml**) and update it so that it points to the correct path of the PowerShell script (e.g. **Start-Hortonworks-DockerContainers.ps1**). For example, if you have downloaded both files to C:\BigDataAnalytics, update the following section in **Hortonworks-Scheduled-Task.xml**:
 
     ```xml
