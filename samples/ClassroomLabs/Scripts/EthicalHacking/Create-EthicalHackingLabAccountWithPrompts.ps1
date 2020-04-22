@@ -33,8 +33,8 @@ Import-Module Az
 Login-AzAccount 
 
 #Prompt user for necessary information
-$email = Read-Host "You’re email"
-$adminUserName = Read-Host "Machine user name"
+$email = Read-Host "Your email"
+$adminUsername = Read-Host "Machine username"
 $adminPassword = Read-Host "Machine password"
 $possibleLocations = Get-AzLocation | Where-Object Providers -contains 'Microsoft.LabServices' | Select-Object -expand Location   
 Write-Host "Possible location values are $($possibleLocations -join ',')"         
@@ -42,6 +42,6 @@ $location = Read-Host "Choose location from values listed above"
 
 #Run script that will actually create the lab account and lab for the ethical hacking class
 Invoke-WebRequest "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/ClassroomLabs/Scripts/EthicalHacking/Create-EthicalHacking-LabsAccount.ps1" -OutFile Create-EthicalHacking-LabsAccount.ps1
-./Create-EthicalHacking-LabsAccount.ps1 -Email $email -UserName $adminUserName -Password $adminPassword -Location $location
+./Create-EthicalHacking-LabsAccount.ps1 -Email $email -UserName $adminUsername -Password $adminPassword -Location $location
 
 Write-Host "Done!" -ForegroundColor 'Green'
