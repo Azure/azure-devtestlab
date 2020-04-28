@@ -92,6 +92,23 @@ function Install-HypervAndTools {
     [CmdletBinding()]
     param()
 
+    if (Get-RunningServerOperatingSystem) {
+        Install-HypervAndToolsServer
+    } else
+    {
+        Install-HypervAndToolsClient
+    }
+}
+
+<#
+.SYNOPSIS
+Enables Hyper-V role for server, including PowerShell cmdlets for Hyper-V and management tools.
+#>
+function Install-HypervAndToolsServer {
+    [CmdletBinding()]
+    param()
+
+    
     if ($null -eq $(Get-WindowsFeature -Name 'Hyper-V')) {
         Write-Error "This script only applies to machines that can run Hyper-V."
     }
@@ -107,6 +124,26 @@ function Install-HypervAndTools {
     if ($featureStatus.RestartNeeded -eq $true) {
         Write-Error "Restart required to finish installing the Hyper-V PowerShell Module.  Please restart and re-run this script."
     }
+}
+
+<#
+.SYNOPSIS
+Enables Hyper-V role for client (Win10), including PowerShell cmdlets for Hyper-V and management tools.
+#>
+function Install-HypervAndToolsClient {
+    [CmdletBinding()]
+    param()
+
+    
+    if ($null -eq $(Get-WindowsOptionalFeature -Online -FeatureName 'Microsoft-Hyper-V-All')) {
+        Write-Error "This script only applies to machines that can run Hyper-V."
+    }
+    else {
+        $roleInstallStatus = Enable-WindowsOptionalFeature -Online -FeatureName 'Microsoft-Hyper-V-All'
+        if ($roleInstallStatus.RestartNeeded) {
+            Write-Error "Restart required to finish installing the Hyper-V role .  Please restart and re-run this script."
+        }  
+    } 
 }
 
 <#
@@ -200,9 +237,6 @@ function Select-ResourceByProperty {
 #
 
 try {
-    # Verify that we are on a server os, not a client os
-    Write-Output "Verify server operating system."
-    if (-not (Get-RunningServerOperatingSystem)) { Write-Error "This script is designed to run on Windows Server." }
 
     # Check that script is being run with Administrator privilege.
     Write-Output "Verify running as administrator."
@@ -228,19 +262,22 @@ try {
     # Azure Static DNS Server IP
     $dnsServerIp = "168.63.129.16"
 
-    # Install DHCP so client vms will automatically get an IP address.
-    Write-Output "Installing DHCP, if needed."
-    Install-DHCP 
+    if (Get-RunningServerOperatingSystem) {
+        # Install DHCP so client vms will automatically get an IP address.
+        Write-Output "Installing DHCP, if needed."
+        Install-DHCP 
 
-    # Add scope for client vm ip address
-    $scopeName = "LabServicesDhcpScope"
-    $dhcpScope = Select-ResourceByProperty `
-        -PropertyName 'Name' -ExpectedPropertyValue $scopeName `
-        -List @(Get-DhcpServerV4Scope) `
-        -NewObjectScriptBlock { Add-DhcpServerv4Scope -name $scopeName -StartRange $startRangeForClientIps -EndRange $endRangeForClientIps -SubnetMask $subnetMaskForClientIps -State Active
-                                Set-DhcpServerV4OptionValue -DnsServer $dnsServerIp -Router $ipAddress
-                             }
-    Write-Output "Using $dhcpScope"
+        # Add scope for client vm ip address
+        $scopeName = "LabServicesDhcpScope"
+
+        $dhcpScope = Select-ResourceByProperty `
+            -PropertyName 'Name' -ExpectedPropertyValue $scopeName `
+            -List @(Get-DhcpServerV4Scope) `
+            -NewObjectScriptBlock { Add-DhcpServerv4Scope -name $scopeName -StartRange $startRangeForClientIps -EndRange $endRangeForClientIps -SubnetMask $subnetMaskForClientIps -State Active
+                                    Set-DhcpServerV4OptionValue -DnsServer $dnsServerIp -Router $ipAddress
+                                }
+        Write-Output "Using $dhcpScope"
+    }
 
     # Create Switch
     Write-Output "Setting up network for client virtual machines."
@@ -283,7 +320,14 @@ try {
         Write-Host "Unable to set WinNat service to Automatic.  Hyper-V virtual machines will not have internet connectivity when service is not running." -ForegroundColor Yellow
     }  
 
-    # Tell the user script is done.
+    # Tell the user that VMs will need to set their own IPs on Windows 10
+    # Link for Windows machines https://support.microsoft.com/en-us/help/15089/windows-change-tcp-ip-settings
+    if ($(Get-RunningServerOperatingSystem ) -eq $false) {
+        Write-Host -Object "DHCP Server is not supported on Windows 10. `
+        IP configuration will need to be done manually from within the VM itself `
+         - i.e. set IP address within range of NAT internal prefix, set default gateway IP address, set DNS server information." -ForegroundColor Yellow
+    }
+    # Tell the user script is done.    
     Write-Host -Object "Script completed." -ForegroundColor Green
 }
 finally {
