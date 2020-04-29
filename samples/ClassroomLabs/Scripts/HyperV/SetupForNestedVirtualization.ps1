@@ -325,7 +325,7 @@ try {
     if ($(Get-RunningServerOperatingSystem ) -eq $false) {
         Write-Host -Object "DHCP Server is not supported on Windows 10. `
         IP configuration will need to be done manually from within the VM itself `
-         - i.e. set IP address within range of NAT internal prefix, set default gateway IP address, set DNS server information." -ForegroundColor Yellow
+         - i.e. IP addresses for each Hyper-V VM. Address must be 192.168.0.4 and 192.168.0.254 with a subnet mask of 255.255.255.0. To use the Azure Dns use 168.63.129.16." -ForegroundColor Yellow
     }
     # Tell the user script is done.    
     Write-Host -Object "Script completed." -ForegroundColor Green
