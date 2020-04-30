@@ -1153,15 +1153,15 @@ function Get-AzLabStudentCurrentVm {
         $callerEA = $ErrorActionPreference
         $ErrorActionPreference = 'Stop'
 
-        if($IsMacOS) {
+        if($PSVersionTable.PSEdition -eq "Core" -and $IsMacOS) {
             Write-Error "Not supported on MAC"
             Exit
         }
 
-        if($IsWindows) {
-            $ipAddresses = Get-NetIPAddress | Select-Object -ExpandProperty IpAddress
-        } else {
+        if($PSVersionTable.PSEdition -eq "Core" -and $IsLinux) {
             $ipAddresses = [System.Net.NetworkInformation.NetworkInterface]::GetAllNetworkInterfaces() | Select-Object -ExpandProperty Addresses | Select-Object -ExpandProperty IpAddressToString 
+        } else {
+            $ipAddresses = Get-NetIPAddress | Select-Object -ExpandProperty IpAddress
         }
         Write-Verbose "Ip address(es) for the current machines: $($ipAddresses -join ', ')"
 
@@ -1195,7 +1195,7 @@ function Get-AzLabStudentCurrentVm {
 function InvokeStudentRest {
     param([parameter()]$uri, [parameter()]$body = "")
 
-    $currentAzureContext = Get-AzContext
+    $currentAzureContext = Get-AzureRmContext
     $profileClient = New-Object Microsoft.Azure.Commands.ResourceManager.Common.RMProfileClient([Microsoft.Azure.Commands.Common.Authentication.Abstractions.AzureRmProfileProvider]::Instance.Profile)
     $token = $profileClient.AcquireAccessToken($currentAzureContext.Tenant.TenantId).AccessToken
     if ($null -eq $token)
