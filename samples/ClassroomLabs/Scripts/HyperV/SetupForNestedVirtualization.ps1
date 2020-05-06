@@ -142,7 +142,14 @@ function Install-HypervAndToolsClient {
         $roleInstallStatus = Enable-WindowsOptionalFeature -Online -FeatureName 'Microsoft-Hyper-V-All'
         if ($roleInstallStatus.RestartNeeded) {
             Write-Error "Restart required to finish installing the Hyper-V role .  Please restart and re-run this script."
-        }  
+        }
+
+        $featureEnableStatus = Get-WmiObject -Class Win32_OptionalFeature -Filter "name='Microsoft-Hyper-V-Hypervisor'"
+        if ($featureEnableStatus.InstallState -ne 1) {
+            Write-Error "This script only applies to machines that can run Hyper-V."
+            goto(finally)
+        }
+
     } 
 }
 
@@ -277,55 +284,52 @@ try {
                                     Set-DhcpServerV4OptionValue -DnsServer $dnsServerIp -Router $ipAddress
                                 }
         Write-Output "Using $dhcpScope"
+    
+
+        # Create Switch
+        Write-Output "Setting up network for client virtual machines."
+        $switchName = "LabServicesSwitch"
+        $vmSwitch = Select-ResourceByProperty `
+            -PropertyName 'Name' -ExpectedPropertyValue $switchName `
+            -List (Get-VMSwitch -SwitchType Internal) `
+            -NewObjectScriptBlock { New-VMSwitch -Name $switchName -SwitchType Internal }
+        Write-Output "Using $vmSwitch"
+
+        # Get network adapter information
+        $netAdapter = Select-ResourceByProperty `
+            -PropertyName "Name" -ExpectedPropertyValue "*$switchName*"  `
+            -List @(Get-NetAdapter) `
+            -NewObjectScriptBlock { Write-Error "No Net Adapters found" } 
+        Write-Output "Using  $netAdapter"
+        Write-Output "Adapter found is $($netAdapter.ifAlias) and Interface Index is $($netAdapter.ifIndex)"
+
+        # Create IP Address 
+        $netIpAddr = Select-ResourceByProperty  `
+            -PropertyName 'IPAddress' -ExpectedPropertyValue $ipAddress `
+            -List @(Get-NetIPAddress) `
+            -NewObjectScriptBlock { New-NetIPAddress -IPAddress $ipAddress -PrefixLength $ipAddressPrefixRange -InterfaceIndex $netAdapter.ifIndex }
+        if (($netIpAddr.PrefixLength -ne $ipAddressPrefixRange) -or ($netIpAddr.InterfaceIndex -ne $netAdapter.ifIndex)) {
+            Write-Error "Found Net IP Address $netIpAddr, but prefix $ipAddressPrefix ifIndex not $($netAdapter.ifIndex)."
+        }
+        Write-Output "Net ip address found is $ipAddress"
+
+        # Create NAT
+        $natName = "LabServicesNat"
+        $netNat = Select-ResourceByProperty -PropertyName 'Name' -ExpectedPropertyValue $natName -List @(Get-NetNat) -NewObjectScriptBlock { New-NetNat -Name $natName -InternalIPInterfaceAddressPrefix $ipAddressPrefix }
+        if ($netNat.InternalIPInterfaceAddressPrefix -ne $ipAddressPrefix) {
+            Write-Error "Found nat with name $natName, but InternalIPInterfaceAddressPrefix is not $ipAddressPrefix."
+        }
+        Write-Output "Nat found is $netNat"
+        #Make sure WinNat will start automatically so Hyper-V VMs will have internet connectivity.
+        Set-Service -Name WinNat -StartupType Automatic
+        if ($(Get-Service -Name WinNat | Select-Object -ExpandProperty StartType) -ne 'Automatic')
+        {
+            Write-Host "Unable to set WinNat service to Automatic.  Hyper-V virtual machines will not have internet connectivity when service is not running." -ForegroundColor Yellow
+        }  
     }
-
-    # Create Switch
-    Write-Output "Setting up network for client virtual machines."
-    $switchName = "LabServicesSwitch"
-    $vmSwitch = Select-ResourceByProperty `
-        -PropertyName 'Name' -ExpectedPropertyValue $switchName `
-        -List (Get-VMSwitch -SwitchType Internal) `
-        -NewObjectScriptBlock { New-VMSwitch -Name $switchName -SwitchType Internal }
-    Write-Output "Using $vmSwitch"
-
-    # Get network adapter information
-    $netAdapter = Select-ResourceByProperty `
-        -PropertyName "Name" -ExpectedPropertyValue "*$switchName*"  `
-        -List @(Get-NetAdapter) `
-        -NewObjectScriptBlock { Write-Error "No Net Adapters found" } 
-    Write-Output "Using  $netAdapter"
-    Write-Output "Adapter found is $($netAdapter.ifAlias) and Interface Index is $($netAdapter.ifIndex)"
-
-    # Create IP Address 
-    $netIpAddr = Select-ResourceByProperty  `
-        -PropertyName 'IPAddress' -ExpectedPropertyValue $ipAddress `
-        -List @(Get-NetIPAddress) `
-        -NewObjectScriptBlock { New-NetIPAddress -IPAddress $ipAddress -PrefixLength $ipAddressPrefixRange -InterfaceIndex $netAdapter.ifIndex }
-    if (($netIpAddr.PrefixLength -ne $ipAddressPrefixRange) -or ($netIpAddr.InterfaceIndex -ne $netAdapter.ifIndex)) {
-        Write-Error "Found Net IP Address $netIpAddr, but prefix $ipAddressPrefix ifIndex not $($netAdapter.ifIndex)."
-    }
-    Write-Output "Net ip address found is $ipAddress"
-
-    # Create NAT
-    $natName = "LabServicesNat"
-    $netNat = Select-ResourceByProperty -PropertyName 'Name' -ExpectedPropertyValue $natName -List @(Get-NetNat) -NewObjectScriptBlock { New-NetNat -Name $natName -InternalIPInterfaceAddressPrefix $ipAddressPrefix }
-    if ($netNat.InternalIPInterfaceAddressPrefix -ne $ipAddressPrefix) {
-        Write-Error "Found nat with name $natName, but InternalIPInterfaceAddressPrefix is not $ipAddressPrefix."
-    }
-    Write-Output "Nat found is $netNat"
-    #Make sure WinNat will start automatically so Hyper-V VMs will have internet connectivity.
-    Set-Service -Name WinNat -StartupType Automatic
-    if ($(Get-Service -Name WinNat | Select-Object -ExpandProperty StartType) -ne 'Automatic')
-    {
-        Write-Host "Unable to set WinNat service to Automatic.  Hyper-V virtual machines will not have internet connectivity when service is not running." -ForegroundColor Yellow
-    }  
-
-    # Tell the user that VMs will need to set their own IPs on Windows 10
-    # Link for Windows machines https://support.microsoft.com/en-us/help/15089/windows-change-tcp-ip-settings
-    if ($(Get-RunningServerOperatingSystem ) -eq $false) {
+    else {
         Write-Host -Object "DHCP Server is not supported on Windows 10. `
-        IP configuration will need to be done manually from within the VM itself `
-         - i.e. IP addresses for each Hyper-V VM. Address must be 192.168.0.4 and 192.168.0.254 with a subnet mask of 255.255.255.0. To use the Azure Dns use 168.63.129.16." -ForegroundColor Yellow
+        Use 'Default Switch' for the Configure Networking connection." -ForegroundColor Yellow
     }
     # Tell the user script is done.    
     Write-Host -Object "Script completed." -ForegroundColor Green
