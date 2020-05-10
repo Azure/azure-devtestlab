@@ -786,17 +786,6 @@ function Get-AzLabAgain($lab) {
     return $labAccount | Get-AzLab -LabName $labName
 }
 
-function Get-AzLabTemplateVM {
-    param(
-        [parameter(Mandatory = $true, HelpMessage = "Lab to create template VM into", ValueFromPipeline = $true)]
-        [ValidateNotNullOrEmpty()]
-        $Lab
-    )
-
-    $uri = (ConvertToUri -resource $lab) + '/EnvironmentSettings/Default'
-    return InvokeRest -Uri $uri -Method 'Get'
-}
-
 function Stop-AzLabTemplateVm {
     param(
         [parameter(Mandatory = $true, HelpMessage = "Template Vm to stop.", ValueFromPipeline = $true)]
@@ -850,15 +839,28 @@ function Get-AzLabVmAgain($vm) {
     return InvokeRest -Uri $uri -Method 'Get'
 }
 
-function Get-AzLabTemplateVM {
+
+function Get-AzLabTemplateVm {
+    [CmdletBinding()]
     param(
-        [parameter(Mandatory = $true, HelpMessage = "Lab to create template VM into", ValueFromPipeline = $true)]
+        [parameter(Mandatory = $true, HelpMessage = "Lab to get Template VM from", ValueFromPipeline = $true)]
         [ValidateNotNullOrEmpty()]
         $Lab
     )
 
-    $uri = (ConvertToUri -resource $lab) + '/EnvironmentSettings/Default'
-    return InvokeRest -Uri $uri -Method 'Get'
+    begin { . BeginPreamble }
+    process {
+        try {
+            foreach ($l in $Lab) {
+                $uri = (ConvertToUri -resource $l) + '/EnvironmentSettings/Default'
+                InvokeRest -Uri $uri -Method 'Get'
+            }
+        }
+        catch {
+            Write-Error -ErrorRecord $_ -EA $callerEA
+        }
+    }
+    end { }
 }
 
 function Set-AzLabTemplateVM {
