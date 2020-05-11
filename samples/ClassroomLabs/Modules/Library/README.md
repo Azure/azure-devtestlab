@@ -34,7 +34,7 @@ More complex examples of usage are in the [Scenarios](./Scenarios) folder.
 
 ## Issues
 
-Log issues on the [DevTest Labs Issues page](https://github.com/Azure/azure-devtestlab/issues). Please put [AZ.LABSERVICES] in the title for easy scanning.
+Log issues on the [DevTest Labs Issues page](https://github.com/Azure/azure-devtestlab/issues). Please use the `Az.LabServices` label for the issue.
 
 ## Contributing
 
