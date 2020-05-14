@@ -30,13 +30,13 @@ Next, let’s walk through the high-level steps for configuring a lab that runs 
 
 ### Prepare the template VM
 
-1.	Create the lab.
-[Create your lab](https://docs.microsoft.com/azure/lab-services/classroom-labs/how-to-manage-classroom-labs#create-a-classroom-lab) – in this example, let’s use the following settings:
+1.	[Create your lab](https://docs.microsoft.com/azure/lab-services/classroom-labs/how-to-manage-classroom-labs#create-a-classroom-lab) – in this example, let’s use the following settings:
     -   Medium compute size (4 Cores, 7 GB RAM)
     -   Ubuntu Server 16.04 LTS
 
-1. Install Docker engine on the template VM.
-Once the lab is created, connect to the template VM using SSH.  Then, install [Docker engine](https://docs.docker.com/engine/install/) which is used to run and manage Docker containers on the VM.  For our example, you should follow the instructions for [installing the latest version of the Docker engine on Ubuntu](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository).
+1. Once the lab is created, connect to the template VM using SSH.  
+
+1.  Then, install [Docker engine](https://docs.docker.com/engine/install/) which is used to run and manage Docker containers on the VM.  For our example, you should follow the instructions for [installing the latest version of the Docker engine on Ubuntu](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository).
 
 ### Build a custom Docker Fedora image
 With Docker, you can use prebuilt images provided by Docker Hub and other container registries; or you can create your own custom container images.  In our example, we’ll build our own custom container image that:
