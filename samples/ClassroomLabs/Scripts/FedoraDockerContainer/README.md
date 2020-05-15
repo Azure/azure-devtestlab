@@ -18,8 +18,8 @@ However, Fedora does provide an [official Docker container image](https://hub.do
 ![Docker Diagram](./Images/DockerDiagram.png)
 
 The above diagram shows how this configured – here are key points:
--   Students can directly use SSH and a GUI desktop client (such as X2Go) to connect to the Docker container (e.g. Fedora) from their local machine.  This is made possible by:
-    -   Creating an SSH tunnel between the student’s machine.
+-   Students can directly use SSH and a GUI desktop client (such as X2Go) to connect to the Docker container (e.g. Fedora) from their local computer.  This is made possible by:
+    -   Creating an SSH tunnel between the student’s computer.
     -   Forwarding port 22 from the Docker container to the host lab VM.
 -   The student’s lab VM that hosts the Fedora Docker container uses Ubuntu.  Although you could use Windows as the host VM’s OS, Ubuntu is used in this configuration because it has a few advantages:
     -   Currently, to create Linux Docker containers on Windows hosts, this requires that you have Hyper-V enabled on the student’s VM which means you must use a [compute size](https://docs.microsoft.com/azure/lab-services/classroom-labs/administrator-guide#vm-sizing) that supports nested virtualization.  If you instead use a Linux distro as the host OS, you can use a smaller compute size.
@@ -105,7 +105,7 @@ Here are steps to build our custom Fedora container image.  These instructions a
 
 ### Connect from your local computer directly to the Docker container
 
-To connect directly from your local machine to the Docker container, you need to complete the following steps on your local computer.  These are the same steps that students would need to follow to connect from their local computer to the Fedora Docker container running on their lab VM:
+To connect directly from your local computer to the Docker container, you need to complete the following steps on your local computer.  These are the same steps that students would need to follow to connect from their local computer to the Fedora Docker container running on their lab VM:
 
 #### Install a remote desktop client
 
@@ -113,7 +113,7 @@ First, you need to install a remote desktop client on the local computer.  The r
 
 #### Create an SSH tunnel
 
-Next, you need to create an SSH tunnel between your local machine and the template VM (or student VM):
+Next, you need to create an SSH tunnel between your local computer and the template VM (or student VM):
 
 1. Ensure the VM is started.
    
@@ -123,7 +123,7 @@ Next, you need to create an SSH tunnel between your local machine and the templa
     ssh -p 12345 testuser@ml-lab-00000000-0000-0000-0000-000000000000.centralus.cloudapp.azure.com
     ```
 
-1.  On your local machine, open a terminal or command prompt.  Paste the SSH connection string and add **-L 2200:localhost:2200** into the command string, which creates a “tunnel” between your local machine and the template VM (or student VM).  The final command string should look like this:
+1.  On your local computer, open a terminal or command prompt.  Paste the SSH connection string and add **-L 2200:localhost:2200** into the command string, which creates a “tunnel” between your local computer and the template VM (or student VM).  The final command string should look like this:
 
     ``` bash
     ssh -p 12345 -L 2200:localhost:2200 testuser@ml-lab-00000000-0000-0000-0000-000000000000.centralus.cloudapp.azure.com
@@ -137,19 +137,19 @@ Next, you need to create an SSH tunnel between your local machine and the templa
 
 #### Connect to the Docker container using X2Go and SSH
 
-1.  Open the X2Go client on your local machine and create a new session using the following settings:
-      - Host: localhost
-      - Login: testuser
-      - SSH port: 2200
-      - Session type: XFCE
+1.  Open the X2Go client on your local computer and create a new session using the following settings:
+      - **Host**: localhost
+      - **Login**: testuser
+      - **SSH port**: 2200
+      - **Session type**: XFCE
 
     ![X2Go Session Preferences](./Images/X2GoSessionPreferences.png)
 
-1.  Click OK to create the session.  Next, click on your session in the right-hand pane.
+1.  Click **OK** to create the session.  Next, click on your session in the right-hand pane.
 
     ![X2Go New Session](./Images/X2GoNewSession.png)
 
-1. When prompted, enter the credentials to connect to the Docker container and click OK to start the GUI desktop session.  Remember that the credentials are based on what we configured in the entrypoint.sh file:
+1. When prompted, enter the credentials to connect to the Docker container and click **OK** to start the GUI desktop session.  Remember that the credentials are based on what we configured in the entrypoint.sh file:
    -   **login**: testuser
    -   **password**: Fedora#123
 
@@ -161,7 +161,7 @@ Next, you need to create an SSH tunnel between your local machine and the templa
    
     ![Fedora GUI Desktop](./Images/RemoteFedoraDesktop.png)
 
-    After following the above steps to set up your template VM, you can then publish your lab.  Students will be able to directly connect to the Fedora Docker container on their assigned VM by creating the SSH tunnel and then using a GUI desktop client, such as X2Go.  To do this, students will also need to follow the steps outlined in bullet #5 above on their local computer.
+    After following the above steps to set up your template VM, you can then publish your lab.  Students will be able to directly connect to the Fedora Docker container on their assigned VM by creating the SSH tunnel and then using a GUI desktop client, such as X2Go.  To do this, students will also need to follow the steps outlined above on their local computer.
 
 2.  Remember to stop your VM when you are done.
 
