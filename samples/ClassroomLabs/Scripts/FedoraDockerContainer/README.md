@@ -6,15 +6,15 @@ This sample walks through the high-level steps for configuring a lab that runs a
 ### Prepare the template VM
 
 1.	[Create your lab](https://docs.microsoft.com/azure/lab-services/classroom-labs/how-to-manage-classroom-labs#create-a-classroom-lab) – in this example, let’s use the following settings:
-    -   Medium compute size (4 Cores, 7 GB RAM)
+    -   Medium compute size (4 Cores, 8 GB RAM)
     -   Ubuntu Server 16.04 LTS
 
 1. Once the lab is created, connect to the template VM using SSH.  
 
-1.  Then, install [Docker engine](https://docs.docker.com/engine/install/) which is used to run and manage Docker containers on the VM.  For our example, you should follow the instructions for [installing the latest version of the Docker engine on Ubuntu](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository).
+1.  Then, install [Docker engine](https://docs.docker.com/engine/install/) which is used to run and manage Docker containers on the VM.  For this sample, you should follow the instructions for [installing the latest version of the Docker engine on Ubuntu](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository).
 
 ### Build a custom Docker Fedora image
-With Docker, you can use prebuilt images provided by Docker Hub and other container registries; or you can create your own custom container images.  In our example, we’ll build our own custom container image that:
+With Docker, you can use prebuilt images provided by Docker Hub and other container registries; or you can create your own custom container images.  In this sample, we’ll build our own custom container image that:
       
 -   Is based on the latest version of the [official Docker container image for Fedora](https://hub.docker.com/_/fedora).
 -   Installs SSH server package.
@@ -30,15 +30,15 @@ Here are steps to build our custom Fedora container image.  These instructions a
     curl -O https://github.com/Azure/azure-devtestlab/tree/master/samples/ClassroomLabs/Scripts/FedoraDockerContainer/Dockerfile -O https://github.com/Azure/azure-devtestlab/tree/master/samples/ClassroomLabs/Scripts/FedoraDockerContainer/entrypoint.sh
     ```
 
-    In our example, we’ll assume these files have been copied to a directory called docker_fedora:
+    In this sample, we’ll assume these files have been copied to a directory called **docker_fedora**:
 
     ![Docker file directory](./Images/DockerCmd1.png)
 
-    The Dockerfile is required to build the image and the entrypoint.sh script is executed when the container runs.  Also, notice that in the entrypoint.sh file, we have configured the credentials that you will use in later steps to connect using SSH and GUI remote desktop:
+    The Dockerfile is required to build the image and the entrypoint.sh script is executed when the container runs.  Also, notice that in the entrypoint.sh file, we have configured the credentials that you will use in later steps to connect using SSH and the GUI remote desktop:
       -   **login**: testuser
       -   **password**: Fedora#123
 
-1.  Next, we’ll need to change permissions on the entrypoint.sh file to ensure that it is executable (otherwise you will see a permission denied error when we try to run the container).  Do this by running the following command:
+2.  Next, we’ll need to change permissions on the entrypoint.sh file to ensure that it is executable (otherwise you will see a permission denied error when we try to run the container).  Do this by running the following command:
    
     ```bash
     sudo chmod +x entrypoint.sh
@@ -46,13 +46,13 @@ Here are steps to build our custom Fedora container image.  These instructions a
     > IMPORTANT: If you inadvertently skip this step, you will receive the following error when you attempt to run the container later on in the steps: **docker: Error response from daemon: OCI runtime create failed: container_linux.go:349: starting container process caused "exec: \"/entrypoint.sh\": permission denied": unknown.**  To correct this, you’ll need to change the permissions as shown above and rebuild the Fedora container image.
 >
 
-3.  Build the custom Fedora container image by running the following command – this will take several minutes to run since it will pull all the necessary packages to the template VM.  Also, ensure that the ‘.’ is included at the end of the command:
+1.  Build the custom Fedora container image by running the following command.  This will take several minutes to run since it will pull all the necessary packages to the template VM.  Also, ensure that the ‘.’ is included at the end of the command:
 
     ```bash
     sudo docker build --rm -t customfedora .
     ```
 
-1.  When the build is done, use the following command to verify that you have a Docker container image called customfedora:
+2.  When the build is done, use the following command to verify that you have a Docker container image called **customfedora**:
    
     ```bash
     sudo docker images
@@ -68,9 +68,9 @@ Here are steps to build our custom Fedora container image.  These instructions a
     sudo docker run --name fedora_container --restart always -d -p 2200:22 customfedora
     ```
 
-    > NOTE: The restart parameter is used to automatically restart the container whenever the container is stopped.  This will ensure that the container restarts whenever a student turns off\on their VM.
+    > NOTE: The restart parameter is used to automatically restart the container whenever the container is stopped.  This will ensure that the container restarts whenever a student stops\starts their VM.
 
-1.  Use the following command to verify that you have a running Docker container called fedora_container that forwards SSH port 22 on the Docker container to port 2200 on the host VM:
+1.  Use the following command to verify that you have a running Docker container called **fedora_container** that forwards SSH port 22 on the Docker container to port 2200 on the host VM:
    
     ```bash
     sudo docker ps
@@ -84,7 +84,7 @@ To connect directly from your local computer to the Docker container, you need t
 
 #### Install a remote desktop client
 
-First, you need to install a remote desktop client on the local computer.  The remote desktop client is used to connect to the GUI desktop of the Fedora Docker container.  For this example, we'll use [X2Go](https://github.com/Azure/azure-devtestlab/tree/master/samples/ClassroomLabs/Scripts/X2GoRemoteDesktop).
+First, you need to install a remote desktop client on the local computer.  The remote desktop client is used to connect to the GUI desktop of the Fedora Docker container.  For this sample, we'll use [X2Go](https://github.com/Azure/azure-devtestlab/tree/master/samples/ClassroomLabs/Scripts/X2GoRemoteDesktop).
 
 #### Create an SSH tunnel
 
@@ -92,7 +92,7 @@ Next, you need to create an SSH tunnel between your local computer and the templ
 
 1. Ensure the VM is started.
    
-1. Copy the SSH connection string for your template VM (or student VM)  Your connection string will look similar to this:
+1. Copy the SSH connection string for your template VM (or student VM).  Your connection string will look similar to this:
 
     ```bash
     ssh -p 12345 testuser@ml-lab-00000000-0000-0000-0000-000000000000.centralus.cloudapp.azure.com
@@ -104,7 +104,7 @@ Next, you need to create an SSH tunnel between your local computer and the templ
     ssh -p 12345 -L 2200:localhost:2200 testuser@ml-lab-00000000-0000-0000-0000-000000000000.centralus.cloudapp.azure.com
     ```
 
-    Hit Enter to run the command.  When prompted, provide your password to the template VM.  At this point, the tunnel should now be established.  Leave this command window open.
+    Hit **Enter** to run the command.  When prompted, provide your password to the template VM.  At this point, the tunnel should now be established.  Leave this command window open.
 
     > IMPORTANT: If you receive the following message, specify **yes** to continue: **The authenticity of host '[ml-lab-00000000-0000-0000-0000-000000000000.central.cloudapp.azure.com]:12345 ([52.191.16.234]:12345)' can't be established.
     ECDSA key fingerprint is SHA256:46MUVWAZ+gKvzUuReiIpfZrrlXACqL+6hrelT8UNT9U.
