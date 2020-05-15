@@ -165,5 +165,5 @@ Next, you need to create an SSH tunnel between your local computer and the templ
 
 2.  Remember to stop your VM when you are done.
 
-#### Next steps
+## Next steps
 This sample showed how you can use Docker images in your lab.  Although we showed using Fedora with Docker, the same idea can be applied to other types of Docker images.  If you choose to create custom Docker images, you may also want to look at how to back up your Docker images in [Azure Container Registry](https://azure.microsoft.com/services/container-registry/).  In addition, we encourage you to look at the [Big Data Analytics](https://docs.microsoft.com/azure/lab-services/classroom-labs/class-type-big-data-analytics) class type which shows another example of using Docker.
