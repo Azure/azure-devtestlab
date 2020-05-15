@@ -1,32 +1,7 @@
 # Introduction
-The Azure marketplace provides hundreds of Windows and Linux images that include a variety of common applications already preinstalled, such as SQL Server, Office, and more.  When you create your lab, you can select an image from the marketplace and then customize it further by installing additional software based on the unique needs for your class.  You can then export this custom image to the [Shared Image Gallery](https://docs.microsoft.com/azure/lab-services/classroom-labs/how-to-use-shared-image-gallery) so that you can reuse your image to create other labs.  This is the easiest approach for creating and reusing a custom image and is well-suited for most types of classes.
-Even with the wide selection of images in the marketplace and the ability to customize them, you may still run into scenarios where this doesn’t suit your needs.  
-
-One option is to use a Docker container image.  With this option, you have access to over [100,000 Docker container images from software vendors, open-source projects, and the community](https://hub.docker.com/).  Or you can choose to use custom Docker images that you create.
-
-This sample shows how to use a Docker container image in your lab.
-
-## Using Docker
-Using a Docker container image may be a suitable option when an image that you need isn’t currently available in the marketplace.  Let’s look at an example of this with a lab that needs to be created based on the Linux distro, Fedora.  Here are some things to note about Fedora:
-
-- Fedora isn’t currently an [officially endorsed distro by Azure](https://docs.microsoft.com/azure/virtual-machines/linux/endorsed-distros). 
-- A marketplace image for Fedora isn’t currently available for use with AzLabs.
-- It currently isn’t possible to create your own custom Fedora image using the VHD file approach mentioned in bullet #2 above.
-  
-However, Fedora does provide an [official Docker container image](https://hub.docker.com/_/fedora) that you can use to run Fedora within a Docker container on each student’s VM.  Each Docker container provides its own isolated environment for software applications to run inside.  Conceptually, Docker containers are like nested VMs and can be used to easily deploy and run a wide variety of software applications based on container images provided by [Docker Hub](https://www.docker.com/products/docker-hub) and other container registries.
-
-![Docker Diagram](./Images/DockerDiagram.png)
-
-The above diagram shows how this configured – here are key points:
--   Students can directly use SSH and a GUI desktop client (such as X2Go) to connect to the Docker container (e.g. Fedora) from their local computer.  This is made possible by:
-    -   Creating an SSH tunnel between the student’s computer.
-    -   Forwarding port 22 from the Docker container to the host lab VM.
--   The student’s lab VM that hosts the Fedora Docker container uses Ubuntu.  Although you could use Windows as the host VM’s OS, Ubuntu is used in this configuration because it has a few advantages:
-    -   Currently, to create Linux Docker containers on Windows hosts, this requires that you have Hyper-V enabled on the student’s VM which means you must use a [compute size](https://docs.microsoft.com/azure/lab-services/classroom-labs/administrator-guide#vm-sizing) that supports nested virtualization.  If you instead use a Linux distro as the host OS, you can use a smaller compute size.
-    -   AzLabs Azure Lab Services doesn’t currently open port 22 on Windows lab VMs.  This prevents creating an SSH tunnel so that students can directly connect to the Docker container on the lab VM.  Instead, students must first RDP to their lab VM to be able to access the Docker container if you use Windows as the host VM’s OS.
+This sample walks through the high-level steps for configuring a lab that runs a Fedora Docker container on the student’s lab VM.
 
 ## Directions
-Next, let’s walk through the high-level steps for configuring a lab that runs a Fedora Docker container on the student’s lab VM.
 
 ### Prepare the template VM
 
@@ -164,6 +139,3 @@ Next, you need to create an SSH tunnel between your local computer and the templ
     After following the above steps to set up your template VM, you can then publish your lab.  Students will be able to directly connect to the Fedora Docker container on their assigned VM by creating the SSH tunnel and then using a GUI desktop client, such as X2Go.  To do this, students will also need to follow the steps outlined above on their local computer.
 
 2.  Remember to stop your VM when you are done.
-
-## Next steps
-This sample showed how you can use Docker images in your lab.  Although we showed using Fedora with Docker, the same idea can be applied to other types of Docker images.  If you choose to create custom Docker images, you may also want to look at how to back up your Docker images in [Azure Container Registry](https://azure.microsoft.com/services/container-registry/).  In addition, we encourage you to look at the [Big Data Analytics](https://docs.microsoft.com/azure/lab-services/classroom-labs/class-type-big-data-analytics) class type which shows another example of using Docker.
