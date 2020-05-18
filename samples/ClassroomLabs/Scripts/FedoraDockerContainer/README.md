@@ -46,13 +46,13 @@ Here are steps to build our custom Fedora container image.  These instructions a
     > IMPORTANT: If you inadvertently skip this step, you will receive the following error when you attempt to run the container later on in the steps: **docker: Error response from daemon: OCI runtime create failed: container_linux.go:349: starting container process caused "exec: \"/entrypoint.sh\": permission denied": unknown.**  To correct this, you’ll need to change the permissions as shown above and rebuild the Fedora container image.
 >
 
-1.  Build the custom Fedora container image by running the following command.  This will take several minutes to run since it will pull all the necessary packages to the template VM.  Also, ensure that the ‘.’ is included at the end of the command:
+3.  Build the custom Fedora container image by running the following command.  This will take several minutes to run since it will pull all the necessary packages to the template VM.  Also, ensure that the ‘.’ is included at the end of the command:
 
     ```bash
     sudo docker build --rm -t customfedora .
     ```
 
-2.  When the build is done, use the following command to verify that you have a Docker container image called **customfedora**:
+4.  When the build is done, use the following command to verify that you have a Docker container image called **customfedora**:
    
     ```bash
     sudo docker images
