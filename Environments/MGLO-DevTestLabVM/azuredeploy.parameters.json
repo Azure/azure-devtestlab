@@ -1,22 +1,24 @@
-//try PR
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
-    "contentVersion": "1.0.0.0",
-    "parameters": {
-      "newVMName": {
-        "value": "DevOpsAgent-Aut"
-      },
-      "labName": {
-        "value": "dtl-developer-workstations"
-      },
-      "size": {
-        "value": "Standard_B4ms"
-      },
-      "userName": {
-        "value": "DevOps"
-      },
-      "password": {
-        "value": null
-      }
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "newVMName": {
+      "type": "string",
+      "defaultValue": "DevOpsAgent-Aut"
+    },
+    "labName": {
+      "type": "string",
+      "defaultValue": "dtl-developer-workstations"
+    },
+    "size": {
+      "type": "string",
+      "defaultValue": "Standard_B4ms"
+    },
+    "userName": {
+      "type": "string",
+      "defaultValue": "DevOps"
+    },
+    "password": {
+      "type": "securestring"
     }
   }

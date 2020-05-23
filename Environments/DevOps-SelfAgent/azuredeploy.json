@@ -1,0 +1,86 @@
+//Try PR+3
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "newVMName": {
+        "type": "string",
+        "defaultValue": "DevOpsAgent-Aut"
+      },
+      "labName": {
+        "type": "string",
+        "defaultValue": "dtl-developer-workstations"
+      },
+      "size": {
+        "type": "string",
+        "defaultValue": "Standard_B4ms"
+      },
+      "userName": {
+        "type": "string",
+        "defaultValue": "DevOps"
+      },
+      "password": {
+        "type": "securestring"
+      }
+    },
+    "variables": {
+      "labSubnetName": "snet-devtestlab",
+      "labVirtualNetworkId": "[resourceId('Microsoft.DevTestLab/labs/virtualnetworks', parameters('labName'), variables('labVirtualNetworkName'))]",
+      "labVirtualNetworkName": "az-np-westus2-usr-601-mglo-network-vnet",
+      "vmId": "[resourceId ('Microsoft.DevTestLab/labs/virtualmachines', parameters('labName'), parameters('newVMName'))]",
+      "vmName": "[concat(parameters('labName'), '/', parameters('newVMName'))]"
+    },
+    "resources": [
+      {
+        "apiVersion": "2018-10-15-preview",
+        "type": "Microsoft.DevTestLab/labs/virtualmachines",
+        "name": "[variables('vmName')]",
+        "location": "[resourceGroup().location]",
+        "properties": {
+          "labVirtualNetworkId": "[variables('labVirtualNetworkId')]",
+          "notes": "[smalldisk] Windows Server 2019 Datacenter",
+          "galleryImageReference": {
+            "offer": "WindowsServer",
+            "publisher": "MicrosoftWindowsServer",
+            "sku": "2019-Datacenter-smalldisk",
+            "osType": "Windows",
+            "version": "latest"
+          },
+          "size": "[parameters('size')]",
+          "userName": "[parameters('userName')]",
+          "password": "[parameters('password')]",
+          "isAuthenticationWithSshKey": false,
+          "artifacts": [
+            {
+              "artifactId": "[resourceId('Microsoft.DevTestLab/labs/artifactSources/artifacts', parameters('labName'), 'public repo', 'windows-chrome')]"
+            },
+            {
+              "artifactId": "[resourceId('Microsoft.DevTestLab/labs/artifactSources/artifacts', parameters('labName'), 'public repo', 'windows-git')]"
+            },
+            {
+              "artifactId": "[resourceId('Microsoft.DevTestLab/labs/artifactSources/artifacts', parameters('labName'), 'public repo', 'windows-selenium')]"
+            },
+            {
+              "artifactId": "[resourceId('Microsoft.DevTestLab/labs/artifactSources/artifacts', parameters('labName'), 'public repo', 'windows-powershell3')]"
+            },
+            {
+              "artifactId": "[resourceId('Microsoft.DevTestLab/labs/artifactSources/artifacts', parameters('labName'), 'public repo', 'windows-putty')]"
+            },
+            {
+              "artifactId": "[resourceId('Microsoft.DevTestLab/labs/artifactSources/artifacts', parameters('labName'), 'public repo', 'windows-vscode')]"
+            }
+          ],
+          "labSubnetName": "[variables('labSubnetName')]",
+          "disallowPublicIpAddress": true,
+          "storageType": "Standard",
+          "allowClaim": true
+        }
+      }
+    ],
+    "outputs": {
+      "labVMId": {
+        "type": "string",
+        "value": "[variables('vmId')]"
+      }
+    }
+  }

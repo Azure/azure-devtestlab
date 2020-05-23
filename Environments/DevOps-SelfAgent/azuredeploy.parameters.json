@@ -1,0 +1,22 @@
+//try PR
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "newVMName": {
+        "value": "DevOpsAgent-Aut"
+      },
+      "labName": {
+        "value": "dtl-developer-workstations"
+      },
+      "size": {
+        "value": "Standard_B4ms"
+      },
+      "userName": {
+        "value": "DevOps"
+      },
+      "password": {
+        "value": null
+      }
+    }
+  }
