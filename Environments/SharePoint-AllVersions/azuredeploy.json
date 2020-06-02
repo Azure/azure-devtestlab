@@ -557,6 +557,7 @@
       "location": "[resourceGroup().location]",
       "apiVersion": "2018-11-01",
       "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('vmDC').vmNicName)]",
         "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetPrivateName)]",
         "[resourceId('Microsoft.Network/publicIPAddresses', variables('vmSQL').vmPublicIPName)]"
       ],
@@ -711,6 +712,7 @@
       "location": "[resourceGroup().location]",
       "apiVersion": "2018-11-01",
       "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('vmDC').vmNicName)]",
         "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetPrivateName)]",
         "[resourceId('Microsoft.Network/publicIPAddresses', variables('vmSP2013').vmPublicIPName)]"
       ],
@@ -880,6 +882,7 @@
       "location": "[resourceGroup().location]",
       "apiVersion": "2018-11-01",
       "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('vmDC').vmNicName)]",
         "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetPrivateName)]",
         "[resourceId('Microsoft.Network/publicIPAddresses', variables('vmSP2016').vmPublicIPName)]"
       ],
@@ -1049,6 +1052,7 @@
       "location": "[resourceGroup().location]",
       "apiVersion": "2018-11-01",
       "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('vmDC').vmNicName)]",
         "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetPrivateName)]",
         "[resourceId('Microsoft.Network/publicIPAddresses', variables('vmSP2019').vmPublicIPName)]"
       ],
