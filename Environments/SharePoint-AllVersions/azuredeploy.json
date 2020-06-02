@@ -226,13 +226,7 @@
       "vNetPrivatePrefix": "10.0.0.0/16",
       "vNetPrivateSubnetDCName": "Subnet-1",
       "vNetPrivateSubnetDCPrefix": "10.0.1.0/24",
-      "vNetPrivateSubnetSQLName": "Subnet-2",
-      "vNetPrivateSubnetSQLPrefix": "10.0.2.0/24",
-      "vNetPrivateSubnetSPName": "Subnet-3",
-      "vNetPrivateSubnetSPPrefix": "10.0.3.0/24",
       "nsgDCVNetName": "NSG-VNet-DC",
-      "nsgSQLVNetName": "NSG-VNet-SQL",
-      "nsgSPVNetName": "NSG-VNet-SP",
       "vmDCPublicIPNicAssociation": {
         "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('vmDC').vmPublicIPName)]"
       },
@@ -358,38 +352,12 @@
       }
     },
     {
-      "apiVersion": "2018-11-01",
-      "type": "Microsoft.Network/networkSecurityGroups",
-      "name": "[variables('networkSettings').nsgSQLVNetName]",
-      "location": "[resourceGroup().location]",
-      "tags": {
-        "displayName": "[variables('networkSettings').nsgSQLVNetName]"
-      },
-      "properties": {
-        "securityRules": "[if(equals(parameters('addPublicIPAddressToEachVM'), 'Yes'), variables('networkSettings').nsgRuleAllowRdpPort, json('null'))]"
-      }
-    },
-    {
-      "apiVersion": "2018-11-01",
-      "type": "Microsoft.Network/networkSecurityGroups",
-      "name": "[variables('networkSettings').nsgSPVNetName]",
-      "location": "[resourceGroup().location]",
-      "tags": {
-        "displayName": "[variables('networkSettings').nsgSPVNetName]"
-      },
-      "properties": {
-        "securityRules": "[if(equals(parameters('addPublicIPAddressToEachVM'), 'Yes'), variables('networkSettings').nsgRuleAllowRdpPort, json('null'))]"
-      }
-    },
-    {
       "name": "[variables('networkSettings').vNetPrivateName]",
       "type": "Microsoft.Network/virtualNetworks",
       "location": "[resourceGroup().location]",
       "apiVersion": "2018-11-01",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSettings').nsgDCVNetName)]",
-        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSettings').nsgSQLVNetName)]",
-        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSettings').nsgSPVNetName)]"
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSettings').nsgDCVNetName)]"
       ],
       "tags": {
         "displayName": "[variables('networkSettings').vNetPrivateName]"
@@ -407,24 +375,6 @@
               "addressPrefix": "[variables('networkSettings').vNetPrivateSubnetDCPrefix]",
               "networkSecurityGroup": {
                 "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSettings').nsgDCVNetName)]"
-              }
-            }
-          },
-          {
-            "name": "[variables('networkSettings').vNetPrivateSubnetSQLName]",
-            "properties": {
-              "addressPrefix": "[variables('networkSettings').vNetPrivateSubnetSQLPrefix]",
-              "networkSecurityGroup": {
-                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSettings').nsgSQLVNetName)]"
-              }
-            }
-          },
-          {
-            "name": "[variables('networkSettings').vNetPrivateSubnetSPName]",
-            "properties": {
-              "addressPrefix": "[variables('networkSettings').vNetPrivateSubnetSPPrefix]",
-              "networkSecurityGroup": {
-                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSettings').nsgSPVNetName)]"
               }
             }
           }
@@ -620,7 +570,7 @@
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "subnet": {
-                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').vNetPrivateSubnetSQLName)]"
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').vNetPrivateSubnetDCName)]"
               },
               "publicIPAddress": "[if(equals(parameters('addPublicIPAddressToEachVM'), 'Yes'), variables('networkSettings').vmSQLPublicIPNicAssociation, json('null'))]"
             }
@@ -774,7 +724,7 @@
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "subnet": {
-                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').vNetPrivateSubnetSPName)]"
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').vNetPrivateSubnetDCName)]"
               },
               "publicIPAddress": "[if(equals(parameters('addPublicIPAddressToEachVM'), 'Yes'), variables('networkSettings').vmSP2013PublicIPNicAssociation, json('null'))]"
             }
@@ -943,7 +893,7 @@
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "subnet": {
-                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').vNetPrivateSubnetSPName)]"
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').vNetPrivateSubnetDCName)]"
               },
               "publicIPAddress": "[if(equals(parameters('addPublicIPAddressToEachVM'), 'Yes'), variables('networkSettings').vmSP2016PublicIPNicAssociation, json('null'))]"
             }
@@ -1112,7 +1062,7 @@
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "subnet": {
-                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').vNetPrivateSubnetSPName)]"
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').vNetPrivateSubnetDCName)]"
               },
               "publicIPAddress": "[if(equals(parameters('addPublicIPAddressToEachVM'), 'Yes'), variables('networkSettings').vmSP2019PublicIPNicAssociation, json('null'))]"
             }
