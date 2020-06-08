@@ -231,8 +231,6 @@
       "vNetPrivateSubnetSPName": "Subnet-3",
       "vNetPrivateSubnetSPPrefix": "10.1.3.0/24",
       "nsgDCVNetName": "NSG-VNet-DC",
-      "nsgSQLVNetName": "NSG-VNet-SQL",
-      "nsgSPVNetName": "NSG-VNet-SP",
       "vmDCPublicIPNicAssociation": {
         "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('vmDC').vmPublicIPName)]"
       },
@@ -358,38 +356,12 @@
       }
     },
     {
-      "apiVersion": "2018-11-01",
-      "type": "Microsoft.Network/networkSecurityGroups",
-      "name": "[variables('networkSettings').nsgSQLVNetName]",
-      "location": "[resourceGroup().location]",
-      "tags": {
-        "displayName": "[variables('networkSettings').nsgSQLVNetName]"
-      },
-      "properties": {
-        "securityRules": "[if(equals(parameters('addPublicIPAddressToEachVM'), 'Yes'), variables('networkSettings').nsgRuleAllowRdpPort, json('null'))]"
-      }
-    },
-    {
-      "apiVersion": "2018-11-01",
-      "type": "Microsoft.Network/networkSecurityGroups",
-      "name": "[variables('networkSettings').nsgSPVNetName]",
-      "location": "[resourceGroup().location]",
-      "tags": {
-        "displayName": "[variables('networkSettings').nsgSPVNetName]"
-      },
-      "properties": {
-        "securityRules": "[if(equals(parameters('addPublicIPAddressToEachVM'), 'Yes'), variables('networkSettings').nsgRuleAllowRdpPort, json('null'))]"
-      }
-    },
-    {
       "name": "[variables('networkSettings').vNetPrivateName]",
       "type": "Microsoft.Network/virtualNetworks",
       "location": "[resourceGroup().location]",
       "apiVersion": "2018-11-01",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSettings').nsgDCVNetName)]",
-        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSettings').nsgSQLVNetName)]",
-        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSettings').nsgSPVNetName)]"
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSettings').nsgDCVNetName)]"
       ],
       "tags": {
         "displayName": "[variables('networkSettings').vNetPrivateName]"
@@ -407,24 +379,6 @@
               "addressPrefix": "[variables('networkSettings').vNetPrivateSubnetDCPrefix]",
               "networkSecurityGroup": {
                 "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSettings').nsgDCVNetName)]"
-              }
-            }
-          },
-          {
-            "name": "[variables('networkSettings').vNetPrivateSubnetSQLName]",
-            "properties": {
-              "addressPrefix": "[variables('networkSettings').vNetPrivateSubnetSQLPrefix]",
-              "networkSecurityGroup": {
-                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSettings').nsgSQLVNetName)]"
-              }
-            }
-          },
-          {
-            "name": "[variables('networkSettings').vNetPrivateSubnetSPName]",
-            "properties": {
-              "addressPrefix": "[variables('networkSettings').vNetPrivateSubnetSPPrefix]",
-              "networkSecurityGroup": {
-                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSettings').nsgSPVNetName)]"
               }
             }
           }
@@ -607,6 +561,7 @@
       "location": "[resourceGroup().location]",
       "apiVersion": "2018-11-01",
       "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('vmDC').vmNicName)]",
         "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetPrivateName)]",
         "[resourceId('Microsoft.Network/publicIPAddresses', variables('vmSQL').vmPublicIPName)]"
       ],
@@ -620,7 +575,7 @@
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "subnet": {
-                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').vNetPrivateSubnetSQLName)]"
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').vNetPrivateSubnetDCName)]"
               },
               "publicIPAddress": "[if(equals(parameters('addPublicIPAddressToEachVM'), 'Yes'), variables('networkSettings').vmSQLPublicIPNicAssociation, json('null'))]"
             }
@@ -761,6 +716,7 @@
       "location": "[resourceGroup().location]",
       "apiVersion": "2018-11-01",
       "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('vmDC').vmNicName)]",
         "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetPrivateName)]",
         "[resourceId('Microsoft.Network/publicIPAddresses', variables('vmSP2013').vmPublicIPName)]"
       ],
@@ -774,7 +730,7 @@
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "subnet": {
-                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').vNetPrivateSubnetSPName)]"
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').vNetPrivateSubnetDCName)]"
               },
               "publicIPAddress": "[if(equals(parameters('addPublicIPAddressToEachVM'), 'Yes'), variables('networkSettings').vmSP2013PublicIPNicAssociation, json('null'))]"
             }
@@ -930,6 +886,7 @@
       "location": "[resourceGroup().location]",
       "apiVersion": "2018-11-01",
       "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('vmDC').vmNicName)]",
         "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetPrivateName)]",
         "[resourceId('Microsoft.Network/publicIPAddresses', variables('vmSP2016').vmPublicIPName)]"
       ],
@@ -943,7 +900,7 @@
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "subnet": {
-                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').vNetPrivateSubnetSPName)]"
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').vNetPrivateSubnetDCName)]"
               },
               "publicIPAddress": "[if(equals(parameters('addPublicIPAddressToEachVM'), 'Yes'), variables('networkSettings').vmSP2016PublicIPNicAssociation, json('null'))]"
             }
@@ -1099,6 +1056,7 @@
       "location": "[resourceGroup().location]",
       "apiVersion": "2018-11-01",
       "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('vmDC').vmNicName)]",
         "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetPrivateName)]",
         "[resourceId('Microsoft.Network/publicIPAddresses', variables('vmSP2019').vmPublicIPName)]"
       ],
@@ -1112,7 +1070,7 @@
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "subnet": {
-                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').vNetPrivateSubnetSPName)]"
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').vNetPrivateSubnetDCName)]"
               },
               "publicIPAddress": "[if(equals(parameters('addPublicIPAddressToEachVM'), 'Yes'), variables('networkSettings').vmSP2019PublicIPNicAssociation, json('null'))]"
             }
