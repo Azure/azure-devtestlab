@@ -1,0 +1,114 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+name: AdoPipelineTest-IMBOB$(Date:yyyy.MM.dd)$(Rev:.r)
+trigger: 
+- master
+
+variables:
+  PYTHONUNBUFFERED: 1
+  BB_V: -v6
+  BUILDSTRATEGY: Building;buildall
+  BB_SRC_ROOT: $(Agent.BuildDirectory)/bbsrc
+  BDF_DIR: $(Build.ArtifactStagingDirectory)/bdf
+  DIFFLOG_DIR: $(Build.ArtifactStagingDirectory)/difflog
+  SYMB_DIR: $(Build.ArtifactStagingDirectory)/symbols
+  
+jobs:
+- job: build
+  displayName: Build the Test Pipeline
+  timeoutInMinutes: 60
+  pool:
+    name: FirebugCI
+    demands: 'Agent.OS -equals Windows_NT'
+
+  steps:
+    ################################################################################################
+    # Build & Test
+    ################################################################################################
+
+    - task: bentleybootstrap@0
+      displayName: BentleyBootstrap
+      inputs:
+        streamname: pipelinetesting
+        srcroot: $(BB_SRC_ROOT)
+
+    - task: createsymlink@0
+      displayName: Link Git Repository
+      inputs:
+        linkPath: $(BB_SRC_ROOT)/AdoPipelineTesting
+        linkTarget: $(Build.SourcesDirectory)
+
+    - task: setenv@0
+      displayName: Set Environment Variables
+      inputs:
+        envVars: |
+          # Shared shell config
+          BSISRC=$(BB_SRC_ROOT)/
+          BSIOUT=$(Build.BinariesDirectory)/
+          
+          # Use a unique mspdbsrv.exe per-job to alleviate PDB write issues when an existing instance is killed based on uptime.
+          _MSPDBSRV_ENDPOINT_=$(Build.BuildId)
+
+    - task: BatchScript@1
+      displayName: Shared Shell
+      inputs:
+        filename: '$(BB_SRC_ROOT)/bsicommon/shell/SharedShellEnv.bat'
+        modifyEnvironment: true
+    
+    - task: setenv@0
+      displayName: Is for Release?
+      condition: and(succeeded(), in(variables['Build.Reason'], 'Manual', 'Schedule'), not(variables['NO_RELEASE']))
+      inputs:
+        envVars: |
+          IS_RELEASE=1
+    
+    - powershell: |
+        $verString = $([regex]::matches($env:BUILD_BUILDNUMBER, "\d+\.\d+\.\d+\.\d+")[0])
+        Write-Host "##vso[task.setvariable variable=BUILD_VERSION]$verString"
+        $v = $verString.Value.Split('.')
+        Write-Host "##vso[task.setvariable variable=REL_V]$($v[0].PadLeft(2, '0'))"
+        Write-Host "##vso[task.setvariable variable=MAJ_V]$($v[1].PadLeft(2, '0'))"
+        Write-Host "##vso[task.setvariable variable=MIN_V]$($v[2].PadLeft(2, '0'))"
+        Write-Host "##vso[task.setvariable variable=SUBMIN_V]$($v[3].PadLeft(2, '0'))"
+        Write-Host "##vso[task.setvariable variable=BSI_SIGNING_TOKEN]$($env:SIGNING_TOKEN_VALUE)"
+      displayName: Compute Version
+      condition: and(succeeded(), variables['IS_RELEASE'])
+      env:
+        SIGNING_TOKEN_VALUE: $(SIGNING_TOKEN_VALUE)
+
+    - script: bb $(BB_V) -s "$(BUILDSTRATEGY);SkipPull_AdoPipelineTest" pull
+      displayName: Pull
+      env: 
+        AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+
+    - task: CredScan@2
+      inputs:
+        verboseOutput: true
+
+    - script: bb $(BB_V) build --tmrbuild --noprompt
+      displayName: Build
+
+    - task: EmbedPdbSourceInfo@0
+      displayName: Embed Source URLs in PDBs
+      condition: and(succeeded(), variables['IS_RELEASE'])
+      inputs:
+        GitRoot: '$(Build.SourcesDirectory)'
+        OutRoot: '$(Build.BinariesDirectory)/Winx64/build'
+        SearchPattern: |
+          **/*.pdb
+          !**/objects.pdb
+          !**/*Test*/**/*
+        DestinationPath: $(SYMB_DIR)
+    
+    - script: bb $(BB_V) taglist -f $(BDF_DIR)/bdf.xml
+      displayName: Create BDF
+      condition: and(succeeded(), variables['IS_RELEASE'])
+
+    - publish: $(BDF_DIR)
+      displayName: Save BDF
+      condition: and(succeeded(), variables['IS_RELEASE'])
+      artifact: BDF
+
