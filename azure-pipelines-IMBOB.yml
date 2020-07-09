@@ -32,7 +32,7 @@ jobs:
     - task: bentleybootstrap@0
       displayName: BentleyBootstrap
       inputs:
-        streamname: pipelinetesting
+        streamname: BuildingNickel
         srcroot: $(BB_SRC_ROOT)
 
     - task: createsymlink@0
