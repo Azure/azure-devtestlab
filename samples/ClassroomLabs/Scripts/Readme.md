@@ -8,3 +8,4 @@ This folder contains scripts to help set up classes in Azure Lab Services.
 4. [EthicalHacking](./EthicalHacking/): creates and setup an Azure Lab Services lab account that is configured to run an [ethical hacking class](https://docs.microsoft.com/en-us/azure/lab-services/classroom-labs/class-type-ethical-hacking).
 5. [HyperV](./HyperV/): helps preparing a template virtual machine for a classroom lab to use Hyper-V nested virtualization.
 6. [X2GoRemoteDesktop](./X2GoRemoteDesktop/): These scripts install the X2Go server and client for the selected Linux desktop environment (MATE, XFCE4, or Xubuntu) on your Linux lab VM. 
+7. [ActiveDirectoryJoin](./ActiveDirectoryJoin): These scripts will join the lab VMs to the domain.
