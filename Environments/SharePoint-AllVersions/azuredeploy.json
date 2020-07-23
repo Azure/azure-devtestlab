@@ -2,6 +2,13 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Location for all resources."
+      }
+    },
     "provisionSharePoint2019": {
       "type": "string",
       "defaultValue": "Yes",
@@ -224,15 +231,15 @@
     "networkSettings": {
       "vNetPrivateName": "[concat(resourceGroup().name, '-vnet')]",
       "vNetPrivatePrefix": "10.1.0.0/16",
-      "vNetPrivateSubnetDCName": "Subnet-1",
-      "vNetPrivateSubnetDCPrefix": "10.1.1.0/24",
-      "vNetPrivateSubnetSQLName": "Subnet-2",
-      "vNetPrivateSubnetSQLPrefix": "10.1.2.0/24",
-      "vNetPrivateSubnetSPName": "Subnet-3",
-      "vNetPrivateSubnetSPPrefix": "10.1.3.0/24",
-      "nsgDCVNetName": "NSG-VNet-DC",
-      "nsgSQLVNetName": "NSG-VNet-SQL",
-      "nsgSPVNetName": "NSG-VNet-SP",
+      "subnetDCName": "Subnet-DC",
+      "subnetDCPrefix": "10.1.1.0/24",
+      "subnetSQLName": "Subnet-SQL",
+      "subnetSQLPrefix": "10.1.2.0/24",
+      "subnetSPName": "Subnet-SP",
+      "subnetSPPrefix": "10.1.3.0/24",
+      "nsgSubnetDCName": "NSG-Subnet-DC",
+      "nsgSubnetSQLName": "NSG-Subnet-SQL",
+      "nsgSubnetSPName": "NSG-Subnet-SP",
       "vmDCPublicIPNicAssociation": {
         "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('vmDC').vmPublicIPName)]"
       },
@@ -279,8 +286,8 @@
     },
     "vmSQL": {
       "vmImagePublisher": "MicrosoftSQLServer",
-      "vmImageOffer": "SQL2017-WS2016",
-      "vmImageSKU": "SQLDEV",
+      "vmImageOffer": "sql2019-ws2019",
+      "vmImageSKU": "sqldev",
       "vmOSDiskName": "Disk-SQL-OS",
       "vmVmSize": "[parameters('vmSQLSize')]",
       "vmNicName": "[concat('NIC-', variables('generalSettings').vmSQLName, '-0')]",
@@ -346,36 +353,36 @@
   },
   "resources": [
     {
-      "apiVersion": "2018-11-01",
+      "apiVersion": "2019-09-01",
       "type": "Microsoft.Network/networkSecurityGroups",
-      "name": "[variables('networkSettings').nsgDCVNetName]",
+      "name": "[variables('networkSettings').nsgSubnetDCName]",
       "location": "[resourceGroup().location]",
       "tags": {
-        "displayName": "[variables('networkSettings').nsgDCVNetName]"
+        "displayName": "[variables('networkSettings').nsgSubnetDCName]"
       },
       "properties": {
         "securityRules": "[if(equals(parameters('addPublicIPAddressToEachVM'), 'Yes'), variables('networkSettings').nsgRuleAllowRdpPort, json('null'))]"
       }
     },
     {
-      "apiVersion": "2018-11-01",
+      "apiVersion": "2019-09-01",
       "type": "Microsoft.Network/networkSecurityGroups",
-      "name": "[variables('networkSettings').nsgSQLVNetName]",
+      "name": "[variables('networkSettings').nsgSubnetSQLName]",
       "location": "[resourceGroup().location]",
       "tags": {
-        "displayName": "[variables('networkSettings').nsgSQLVNetName]"
+        "displayName": "[variables('networkSettings').nsgSubnetSQLName]"
       },
       "properties": {
         "securityRules": "[if(equals(parameters('addPublicIPAddressToEachVM'), 'Yes'), variables('networkSettings').nsgRuleAllowRdpPort, json('null'))]"
       }
     },
     {
-      "apiVersion": "2018-11-01",
+      "apiVersion": "2019-09-01",
       "type": "Microsoft.Network/networkSecurityGroups",
-      "name": "[variables('networkSettings').nsgSPVNetName]",
+      "name": "[variables('networkSettings').nsgSubnetSPName]",
       "location": "[resourceGroup().location]",
       "tags": {
-        "displayName": "[variables('networkSettings').nsgSPVNetName]"
+        "displayName": "[variables('networkSettings').nsgSubnetSPName]"
       },
       "properties": {
         "securityRules": "[if(equals(parameters('addPublicIPAddressToEachVM'), 'Yes'), variables('networkSettings').nsgRuleAllowRdpPort, json('null'))]"
@@ -385,11 +392,11 @@
       "name": "[variables('networkSettings').vNetPrivateName]",
       "type": "Microsoft.Network/virtualNetworks",
       "location": "[resourceGroup().location]",
-      "apiVersion": "2018-11-01",
+      "apiVersion": "2020-05-01",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSettings').nsgDCVNetName)]",
-        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSettings').nsgSQLVNetName)]",
-        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSettings').nsgSPVNetName)]"
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSettings').nsgSubnetDCName)]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSettings').nsgSubnetSQLName)]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSettings').nsgSubnetSPName)]"
       ],
       "tags": {
         "displayName": "[variables('networkSettings').vNetPrivateName]"
@@ -402,29 +409,29 @@
         },
         "subnets": [
           {
-            "name": "[variables('networkSettings').vNetPrivateSubnetDCName]",
+            "name": "[variables('networkSettings').subnetDCName]",
             "properties": {
-              "addressPrefix": "[variables('networkSettings').vNetPrivateSubnetDCPrefix]",
+              "addressPrefix": "[variables('networkSettings').subnetDCPrefix]",
               "networkSecurityGroup": {
-                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSettings').nsgDCVNetName)]"
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSettings').nsgSubnetDCName)]"
               }
             }
           },
           {
-            "name": "[variables('networkSettings').vNetPrivateSubnetSQLName]",
+            "name": "[variables('networkSettings').subnetSQLName]",
             "properties": {
-              "addressPrefix": "[variables('networkSettings').vNetPrivateSubnetSQLPrefix]",
+              "addressPrefix": "[variables('networkSettings').subnetSQLPrefix]",
               "networkSecurityGroup": {
-                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSettings').nsgSQLVNetName)]"
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSettings').nsgSubnetSQLName)]"
               }
             }
           },
           {
-            "name": "[variables('networkSettings').vNetPrivateSubnetSPName]",
+            "name": "[variables('networkSettings').subnetSPName]",
             "properties": {
-              "addressPrefix": "[variables('networkSettings').vNetPrivateSubnetSPPrefix]",
+              "addressPrefix": "[variables('networkSettings').subnetSPPrefix]",
               "networkSecurityGroup": {
-                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSettings').nsgSPVNetName)]"
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSettings').nsgSubnetSPName)]"
               }
             }
           }
@@ -436,7 +443,7 @@
       "name": "[variables('vmDC').vmPublicIPName]",
       "type": "Microsoft.Network/publicIPAddresses",
       "location": "[resourceGroup().location]",
-      "apiVersion": "2019-06-01",
+      "apiVersion": "2019-09-01",
       "tags": {
         "displayName": "[variables('vmDC').vmPublicIPName]"
       },
@@ -455,7 +462,7 @@
       "name": "[variables('vmDC').vmNicName]",
       "type": "Microsoft.Network/networkInterfaces",
       "location": "[resourceGroup().location]",
-      "apiVersion": "2018-11-01",
+      "apiVersion": "2019-09-01",
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetPrivateName)]",
         "[resourceId('Microsoft.Network/publicIPAddresses', variables('vmDC').vmPublicIPName)]"
@@ -471,7 +478,7 @@
               "privateIPAllocationMethod": "Static",
               "privateIPAddress": "[variables('vmDC').nicPrivateIPAddress]",
               "subnet": {
-                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').vNetPrivateSubnetDCName)]"
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').subnetDCName)]"
               },
               "publicIPAddress": "[if(equals(parameters('addPublicIPAddressToEachVM'), 'Yes'), variables('networkSettings').vmDCPublicIPNicAssociation, json('null'))]"
             }
@@ -483,7 +490,7 @@
       "name": "[variables('generalSettings').vmDCName]",
       "type": "Microsoft.Compute/virtualMachines",
       "location": "[resourceGroup().location]",
-      "apiVersion": "2019-03-01",
+      "apiVersion": "2019-12-01",
       "dependsOn": [
         "[resourceId('Microsoft.Network/networkInterfaces', variables('vmDC').vmNicName)]"
       ],
@@ -536,7 +543,7 @@
           "name": "ConfigureDCVM",
           "type": "extensions",
           "location": "[resourceGroup().location]",
-          "apiVersion": "2019-03-01",
+          "apiVersion": "2019-12-01",
           "dependsOn": [
             "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmDCName)]"
           ],
@@ -586,7 +593,7 @@
       "name": "[variables('vmSQL').vmPublicIPName]",
       "type": "Microsoft.Network/publicIPAddresses",
       "location": "[resourceGroup().location]",
-      "apiVersion": "2019-06-01",
+      "apiVersion": "2019-09-01",
       "tags": {
         "displayName": "[variables('vmSQL').vmPublicIPName]"
       },
@@ -605,7 +612,7 @@
       "name": "[variables('vmSQL').vmNicName]",
       "type": "Microsoft.Network/networkInterfaces",
       "location": "[resourceGroup().location]",
-      "apiVersion": "2018-11-01",
+      "apiVersion": "2019-09-01",
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetPrivateName)]",
         "[resourceId('Microsoft.Network/publicIPAddresses', variables('vmSQL').vmPublicIPName)]"
@@ -620,7 +627,7 @@
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "subnet": {
-                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').vNetPrivateSubnetSQLName)]"
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').subnetSQLName)]"
               },
               "publicIPAddress": "[if(equals(parameters('addPublicIPAddressToEachVM'), 'Yes'), variables('networkSettings').vmSQLPublicIPNicAssociation, json('null'))]"
             }
@@ -632,7 +639,7 @@
       "name": "[variables('generalSettings').vmSQLName]",
       "type": "Microsoft.Compute/virtualMachines",
       "location": "[resourceGroup().location]",
-      "apiVersion": "2019-03-01",
+      "apiVersion": "2019-12-01",
       "dependsOn": [
         "[resourceId('Microsoft.Network/networkInterfaces', variables('vmSQL').vmNicName)]"
       ],
@@ -686,7 +693,7 @@
       "name": "[concat(variables('generalSettings').vmSQLName, '/ConfigureSQLVM')]",
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "location": "[resourceGroup().location]",
-      "apiVersion": "2019-03-01",
+      "apiVersion": "2019-12-01",
       "dependsOn": [
         "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmDCName)]",
         "[resourceId('Microsoft.Compute/virtualMachines/extensions', variables('generalSettings').vmDCName, 'ConfigureDCVM')]",
@@ -739,7 +746,7 @@
       "name": "[variables('vmSP2013').vmPublicIPName]",
       "type": "Microsoft.Network/publicIPAddresses",
       "location": "[resourceGroup().location]",
-      "apiVersion": "2019-06-01",
+      "apiVersion": "2019-09-01",
       "tags": {
         "displayName": "[variables('vmSP2013').vmPublicIPName]"
       },
@@ -759,7 +766,7 @@
       "name": "[variables('vmSP2013').vmNicName]",
       "type": "Microsoft.Network/networkInterfaces",
       "location": "[resourceGroup().location]",
-      "apiVersion": "2018-11-01",
+      "apiVersion": "2019-09-01",
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetPrivateName)]",
         "[resourceId('Microsoft.Network/publicIPAddresses', variables('vmSP2013').vmPublicIPName)]"
@@ -774,7 +781,7 @@
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "subnet": {
-                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').vNetPrivateSubnetSPName)]"
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').subnetSPName)]"
               },
               "publicIPAddress": "[if(equals(parameters('addPublicIPAddressToEachVM'), 'Yes'), variables('networkSettings').vmSP2013PublicIPNicAssociation, json('null'))]"
             }
@@ -787,7 +794,7 @@
       "name": "[variables('generalSettings').vmSP2013Name]",
       "type": "Microsoft.Compute/virtualMachines",
       "location": "[resourceGroup().location]",
-      "apiVersion": "2019-03-01",
+      "apiVersion": "2019-12-01",
       "dependsOn": [
         "[resourceId('Microsoft.Network/networkInterfaces', variables('vmSP2013').vmNicName)]"
       ],
@@ -842,7 +849,7 @@
       "name": "[concat(variables('generalSettings').vmSP2013Name, '/ConfigureSPVM')]",
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "location": "[resourceGroup().location]",
-      "apiVersion": "2019-03-01",
+      "apiVersion": "2019-12-01",
       "dependsOn": [
         "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmDCName)]",
         "[resourceId('Microsoft.Compute/virtualMachines/extensions', variables('generalSettings').vmDCName, 'ConfigureDCVM')]",
@@ -908,7 +915,7 @@
       "name": "[variables('vmSP2016').vmPublicIPName]",
       "type": "Microsoft.Network/publicIPAddresses",
       "location": "[resourceGroup().location]",
-      "apiVersion": "2019-06-01",
+      "apiVersion": "2019-09-01",
       "tags": {
         "displayName": "[variables('vmSP2016').vmPublicIPName]"
       },
@@ -928,7 +935,7 @@
       "name": "[variables('vmSP2016').vmNicName]",
       "type": "Microsoft.Network/networkInterfaces",
       "location": "[resourceGroup().location]",
-      "apiVersion": "2018-11-01",
+      "apiVersion": "2019-09-01",
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetPrivateName)]",
         "[resourceId('Microsoft.Network/publicIPAddresses', variables('vmSP2016').vmPublicIPName)]"
@@ -943,7 +950,7 @@
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "subnet": {
-                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').vNetPrivateSubnetSPName)]"
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').subnetSPName)]"
               },
               "publicIPAddress": "[if(equals(parameters('addPublicIPAddressToEachVM'), 'Yes'), variables('networkSettings').vmSP2016PublicIPNicAssociation, json('null'))]"
             }
@@ -956,7 +963,7 @@
       "name": "[variables('generalSettings').vmSP2016Name]",
       "type": "Microsoft.Compute/virtualMachines",
       "location": "[resourceGroup().location]",
-      "apiVersion": "2019-03-01",
+      "apiVersion": "2019-12-01",
       "dependsOn": [
         "[resourceId('Microsoft.Network/networkInterfaces', variables('vmSP2016').vmNicName)]"
       ],
@@ -1011,7 +1018,7 @@
       "name": "[concat(variables('generalSettings').vmSP2016Name, '/ConfigureSPVM')]",
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "location": "[resourceGroup().location]",
-      "apiVersion": "2019-03-01",
+      "apiVersion": "2019-12-01",
       "dependsOn": [
         "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmDCName)]",
         "[resourceId('Microsoft.Compute/virtualMachines/extensions', variables('generalSettings').vmDCName, 'ConfigureDCVM')]",
@@ -1077,7 +1084,7 @@
       "name": "[variables('vmSP2019').vmPublicIPName]",
       "type": "Microsoft.Network/publicIPAddresses",
       "location": "[resourceGroup().location]",
-      "apiVersion": "2019-06-01",
+      "apiVersion": "2019-09-01",
       "tags": {
         "displayName": "[variables('vmSP2019').vmPublicIPName]"
       },
@@ -1097,7 +1104,7 @@
       "name": "[variables('vmSP2019').vmNicName]",
       "type": "Microsoft.Network/networkInterfaces",
       "location": "[resourceGroup().location]",
-      "apiVersion": "2018-11-01",
+      "apiVersion": "2019-09-01",
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetPrivateName)]",
         "[resourceId('Microsoft.Network/publicIPAddresses', variables('vmSP2019').vmPublicIPName)]"
@@ -1112,7 +1119,7 @@
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "subnet": {
-                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').vNetPrivateSubnetSPName)]"
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').subnetSPName)]"
               },
               "publicIPAddress": "[if(equals(parameters('addPublicIPAddressToEachVM'), 'Yes'), variables('networkSettings').vmSP2019PublicIPNicAssociation, json('null'))]"
             }
@@ -1125,7 +1132,7 @@
       "name": "[variables('generalSettings').vmSP2019Name]",
       "type": "Microsoft.Compute/virtualMachines",
       "location": "[resourceGroup().location]",
-      "apiVersion": "2019-03-01",
+      "apiVersion": "2019-12-01",
       "dependsOn": [
         "[resourceId('Microsoft.Network/networkInterfaces', variables('vmSP2019').vmNicName)]"
       ],
@@ -1180,7 +1187,7 @@
       "name": "[concat(variables('generalSettings').vmSP2019Name, '/ConfigureSPVM')]",
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "location": "[resourceGroup().location]",
-      "apiVersion": "2019-03-01",
+      "apiVersion": "2019-12-01",
       "dependsOn": [
         "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmDCName)]",
         "[resourceId('Microsoft.Compute/virtualMachines/extensions', variables('generalSettings').vmDCName, 'ConfigureDCVM')]",
@@ -1243,15 +1250,103 @@
     },
     {
       "condition": "[equals(parameters('addAzureBastion'), 'Yes')]",
+      "apiVersion": "2019-09-01",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "NSG-Subnet-AzureBastion",
+      "location": "[parameters('location')]",
+      "tags": {
+        "displayName": "NSG-Subnet-AzureBastion"
+      },
+      "properties": {
+        "securityRules": [
+          {
+            "name": "allow-443-internet",
+            "properties": {
+              "description": "Allow 443 Internet",
+              "direction": "Inbound",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "Internet",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 120
+            }
+          },
+          {
+            "name": "allow-443-gatewaymanager",
+            "properties": {
+              "description": "Allow 443 GatewayManager ",
+              "direction": "Inbound",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "GatewayManager",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 130
+            }
+          },
+          {
+            "name": "allow-rdp-outbound",
+            "properties": {
+              "description": "Allow RDP Outbound ",
+              "direction": "Outbound",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 120
+            }
+          },
+          {
+            "name": "allow-ssh-outbound",
+            "properties": {
+              "description": "Allow SSH Outbound",
+              "direction": "Outbound",
+              "protocol": "*",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "access": "Allow",
+              "priority": 121
+            }
+          },
+          {
+            "name": "allow-azurecloud-outbound",
+            "properties": {
+              "description": "Allow AzureCloud Outbound ",
+              "direction": "Outbound",
+              "protocol": "TCP",
+              "sourcePortRange": "*",
+              "destinationPortRange": "443",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "AzureCloud",
+              "access": "Allow",
+              "priority": 130
+            }
+          }
+          ]
+      }
+    },
+    {
+      "condition": "[equals(parameters('addAzureBastion'), 'Yes')]",
       "type": "Microsoft.Network/virtualNetworks/subnets",
       "name": "[concat(variables('networkSettings').vNetPrivateName, '/', 'AzureBastionSubnet')]",
       "apiVersion": "2019-04-01",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetPrivateName)]"
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetPrivateName)]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', 'NSG-Subnet-AzureBastion')]"
       ],
       "properties": {
-        "addressPrefix": "[variables('azureBastion').subnetPrefix]"
+        "addressPrefix": "[variables('azureBastion').subnetPrefix]",
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', 'NSG-Subnet-AzureBastion')]"
+        }
       }
     },
     {
@@ -1259,7 +1354,7 @@
       "name": "PublicIP-Bastion",
       "type": "Microsoft.Network/publicIPAddresses",
       "location": "[resourceGroup().location]",
-      "apiVersion": "2019-06-01",
+      "apiVersion": "2019-09-01",
       "tags": {
         "displayName": "PublicIP-Bastion"
       },
