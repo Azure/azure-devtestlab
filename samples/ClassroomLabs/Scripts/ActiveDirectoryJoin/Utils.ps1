@@ -75,7 +75,7 @@ function Write-LogFile {
     $Line = "$TimeStamp - $Message"
     Add-content -Path $Logfile -Value $Line -ErrorAction SilentlyContinue
 
-    Write-Output "Message: '$Message' has been logged to file: $LogFile"
+    Write-Output "$Message"
 }
 
 function Register-ScheduledScriptTask {

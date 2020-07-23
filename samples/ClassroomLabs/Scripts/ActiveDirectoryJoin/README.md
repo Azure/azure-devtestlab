@@ -97,6 +97,8 @@ Checks the device is Azure AD joined. If so, it enrolls the VM to Intune using t
 
 **Note**: Applies only to Hybrid AD joined devices. Student must be assigned a valid Intune license. Other requirements for Intune can be found [here](https://docs.microsoft.com/en-us/windows/client-management/mdm/enroll-a-windows-10-device-automatically-using-group-policy#verify-auto-enrollment-requirements-and-settings). 
 
+**Note**: This script requires the domain joined user to be logged in to the VM.  It will execute on login and try to enroll into MDM every five minutes for a day.
+
 ### ***Set-AzLabADVms (optional)***
 Optional script to be run from the Template VM. It spins up all the VMs leaving enough time for the domain join scripts to be executed before shutting down the VMs.
 
@@ -111,3 +113,12 @@ Optional script to be run from the Template VM.  The script will change the lab 
 - The domain join happens at the first boot of the Student VM. Approximately 2-3 minutes are required for the scripts to execute.
 - Both unclaimed and claimed VMs are joined to the AD domain. For claimed VMs, students can use their university credentials. They can still use the local account credentials if professors provide those credentials.
 - At Lab creation, enabling the option **Use same password for all virtual machines** is preferable. This way, students are not prompted to pick a new password and can use straightaway their university credentials.
+
+## Debugging
+
+### What if a VM isn't domain joined?
+If the VM isn't domain joined, each script creates an execution log file that is stored in the same location as the scripts to review messages and errors.  These log files are named after the script that is run and the date.  The log file will contain information about execution and any error messages to help pinpoint the issue.
+#### Possible errors
+- Exception calling "AcquireAccessToken" with "1" argument(s): "multiple_matching_tokens_detected: The cache contains multiple tokens satisfying the requirements. Call AcquireToken again providing more arguments
+    - Try Clear-AzContext and Connect-AzAccount -Subscription "your Subscription Id"
+  

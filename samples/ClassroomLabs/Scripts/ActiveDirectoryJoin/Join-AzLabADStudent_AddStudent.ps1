@@ -123,13 +123,17 @@ try {
         $student = $lab | Get-AzLabUserForCurrentVm -Vm $studentVm
         Write-LogFile "VM '$env:COMPUTERNAME' has been claimed by student '$($student.properties.email)'"
     
-        Write-LogFile "Trying to add student '$($student.properties.email)' to the Remote Desktop Users group"
+        Write-LogFile "Trying to add student '$($student.properties.email)' to the Remote Desktop Users group."
         
         $computerDomain = (Get-WmiObject Win32_ComputerSystem).Domain
         $username = $student.properties.email.Split("@")[0]
         $domainUser = "$computerDomain\$username"
 
+        Write-LogFile "Trying to add student $domainUser to Remote Desktop Users group."
+
         $rdpGroupMembers = Get-LocalGroupMember "Remote Desktop Users"
+        Write-LogFile "Checking student against existing RD Users group."
+
         foreach ($rdpMember in $rdpGroupMembers) {
             
             if ($rdpMember.Name.Split("\")[1] -ieq $username) {
@@ -139,6 +143,8 @@ try {
                 exit
             }
         }
+
+        Write-LogFile "Student does not exist in the Remote Desktop Users group."
 
         Add-LocalGroupMember -Group "Remote Desktop Users" -Member $domainUser
 
@@ -152,7 +158,8 @@ try {
 
         # https://docs.microsoft.com/en-us/windows/client-management/mdm/enroll-a-windows-10-device-automatically-using-group-policy
         # Instead than pulling the MDM Enrollment Task from the AD Controller GPO, we create one programatically
-
+        
+        Write-LogFile "Setting up MDM Enrollment Task."
         $MDMTaskName = "Schedule created by enrollment client for automatically enrolling in MDM from AAD"
         $MDMScriptPath = Join-Path (Resolve-Path .\).Path $JoinAzLabADStudentEnrollMDMScriptName
 
