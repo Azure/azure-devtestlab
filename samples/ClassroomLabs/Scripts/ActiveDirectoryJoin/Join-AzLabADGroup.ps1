@@ -1,16 +1,31 @@
-<#
+﻿<#
 The MIT License (MIT)
 Copyright (c) Microsoft Corporation  
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.  
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
 .SYNOPSIS
-This script is part of the scripts chain for joining a student VM to an Active Directory domain. It enroll the computer to the MDM service.
-TODO Ideally this can be abstracted based on the MDM Service, e.g Intune (on-cloud) vs SCCM (on-prem)
+This script is to add the device to a specific AD group
+
 .LINK https://docs.microsoft.com/en-us/azure/lab-services/classroom-labs/how-to-connect-peer-virtual-network
 .EXAMPLE
-. ".\Join-AzLabADStudent_IntuneEnrollment.ps1"
+. ".\Join-AzLabADStudent_AddToADGroup.ps1"
 #>
+
+[CmdletBinding()]
+param(
+    [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Domain User (e.g. CONTOSO\frbona or frbona@contoso.com). It must have permissions to add computers to the domain.")]
+    [ValidateNotNullOrEmpty()]
+    [string] $DomainUser = "vmuser@contosolabuniversity.com",
+
+    [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Password of the Domain User.")]
+    [ValidateNotNullOrEmpty()]
+    [string] $DomainPassword = "VirtualMachineUser6.,.",
+    
+    [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Specific AD Group.")]
+    [string]$ADGroup = "Computer Science 101 Lab"
+
+)
 
 ###################################################################################################
 
@@ -23,7 +38,7 @@ try {
 
     . ".\Utils.ps1"
     
-    Write-LogFile "Trying to enroll the device into the MDM service"
+    Write-LogFile "Trying to add the device into an AD Group"
 
     $adJoinStatus = Get-AzureADJoinStatus
     $azureAdJoined = ($adJoinStatus | Where-Object { $_.State -eq "AzureAdJoined" } | Select-Object -First 1).Status
@@ -37,26 +52,25 @@ try {
     $tenantName = ($adJoinStatus | Where-Object { $_.State -eq "TenantName" } | Select-Object -First 1).Status
     Write-LogFile "Device is Azure AD Joined to the tenant $tenantName"
 
-    # Check whether the AzureAdPrt token has been requested.
-    # Without the token we cannot proceed with the Intune enrollment.
-    # The whole token acquisition process documented here: https://jairocadena.com/2016/01/18/how-domain-join-is-different-in-windows-10-with-azure-ad/
     
     $azureAdPrt = ($adJoinStatus | Where-Object { $_.State -eq "AzureAdPrt" } | Select-Object -First 1).Status
-
-    # Check if the device has Personal Refresh token
     if ($azureAdPrt -ine "YES") {
         $username = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
-        Write-LogFile "Device enroll into MDM. User does not have AzureADPrt (personal refresh token). Current user $username"
-        #exit
-        Join-DeviceMDM -UseAADDeviceCredential
+        Write-LogFile "Unable to enroll into MDM. User does not have AzureADPrt (personal refresh token). Current user $username"
+        exit
     }
-    else {
+    
+    #Write-LogFile "Trying to enroll the device into the MDM service"
+    #Join-DeviceMDM
 
-        Write-LogFile "Trying to enroll the device into the MDM service"
-        Join-DeviceMDM
-    }
-
-
+    Write-LogFile "*****Get Device ****"
+    #$device = ($adJoinStatus | Where-Object { $_.State -eq "DeviceId" } | Select-Object -First 1).Status
+    $objectId = (Get-AzureADDevice -SearchString $env:COMPUTERNAME | Select-Object -First 1).ObjectId
+    Write-LogFile "**** Device: $device ****"
+    $group = (Get-AzureADGroup -SearchString $ADGroup | Select-Object -First 1).ObjectId
+    Write-LogFile "**** Group: $group ****"
+    Add-AzureADGroupMember -ObjectId $group -RefObjectId $device
+    Write-LogFile "**** After Add ****"
 }
 catch
 {
