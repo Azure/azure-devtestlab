@@ -21,8 +21,6 @@ Password of the Local User.
 Password of the Domain User.
 .PARAMETER OUPath
 Organization Unit path (optional)
-.PARAMETER EnrollMDM
-Whether to enroll the VMs to Intune (for Hybrid AD only).
 .NOTES
 .EXAMPLE
 . ".\Join-AzLabADTemplate.ps1" `
@@ -33,7 +31,7 @@ Whether to enroll the VMs to Intune (for Hybrid AD only).
     -LocalPassword 'localPassword' `
     -DomainPassword 'domainPassword `
     -OUPath 'OU=testOU,DC=domain,DC=Domain,DC=com'
-    -EnrollMDM
+
 #>
 
 [CmdletBinding()]
@@ -68,7 +66,7 @@ param(
 
     [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Whether to enroll the VMs to Intune (for Hybrid AD only)")]
     [switch]
-    $EnrollMDM = $false
+    $EnrollMDM = $false #This option does not function as expected.
 )
 
 ###################################################################################################
