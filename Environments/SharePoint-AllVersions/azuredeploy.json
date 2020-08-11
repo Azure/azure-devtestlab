@@ -103,7 +103,7 @@
     },
     "vmSQLSize": {
       "type": "string",
-      "defaultValue": "Standard_E2as_v4",
+      "defaultValue": "Standard_E2ds_v4",
       "metadata": {
         "description": "Size of the SQL VM"
       }
@@ -122,7 +122,7 @@
     },
     "vmSPSize": {
       "type": "string",
-      "defaultValue": "Standard_E2as_v4",
+      "defaultValue": "Standard_E2ds_v4",
       "metadata": {
         "description": "Size of the SharePoint VM"
       }

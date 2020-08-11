@@ -6,7 +6,7 @@
 
 This template deploys SharePoint 2019, 2016 and 2013. Each SharePoint version is independent and may or may not be deployed, depending on your needs.  
 A DC is provisioned and configured with ADFS and ADCS (both are optional), and a unique SQL Server is provisioned for all SharePoint farms.  
-Each SharePoint farm a lightweight configuration to provision quickly: 1 web application with 1 site collection, using Windows NTLM on Default zone, and optionally ADFS on Intranet zone.
+Each SharePoint farm has a lightweight configuration to provision quickly: 1 web application with 1 site collection, using Windows NTLM on Default zone, and optionally ADFS on Intranet zone.
 
 All subnets are protected by a Network Security Group with rules that restrict network access. You can connect to virtual machines using:
 
@@ -16,8 +16,8 @@ All subnets are protected by a Network Security Group with rules that restrict n
 By default, virtual machines use standard storage and are sized with a good balance between cost and performance:
 
 * Virtual machine size for DC: [Standard_DS2_v2](https://docs.microsoft.com/en-us/azure/virtual-machines/dv2-dsv2-series) / Standard_LRS (2 CPU / 7 GiB RAM)
-* Virtual machine size for SQL Server: [Standard_E2as_v4](https://docs.microsoft.com/en-us/azure/virtual-machines/eav4-easv4-series) / Standard_LRS (2 CPU / 16 GiB RAM)
-* Virtual machine size for SharePoint: [Standard_E2as_v4](https://docs.microsoft.com/en-us/azure/virtual-machines/eav4-easv4-series) / Standard_LRS (2 CPU / 16 GiB RAM)
+* Virtual machine size for SQL Server: [Standard_E2ds_v4](https://docs.microsoft.com/en-us/azure/virtual-machines/edv4-edsv4-series) / Standard_LRS (2 CPU / 16 GiB RAM)
+* Virtual machine size for SharePoint: [Standard_E2ds_v4](https://docs.microsoft.com/en-us/azure/virtual-machines/edv4-edsv4-series) / Standard_LRS (2 CPU / 16 GiB RAM)
 
 If you wish to get better performance, I recommended the following sizes / storage account types:
 
