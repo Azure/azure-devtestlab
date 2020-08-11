@@ -1,5 +1,12 @@
 # Change log for AzureRM template SharePoint-ADFS-DevTestLabs
 
+## August 2020 update
+
+* Update VM sizes to more recent, powerful and cheaper ones (prices per month in West US as of 2020-08-11):
+  - DC: from [Standard_F4](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes-previous-gen?toc=/azure/virtual-machines/linux/toc.json&bc=/azure/virtual-machines/linux/breadcrumb/toc.json) ($316.09) to [Standard_DS2_v2](https://docs.microsoft.com/en-us/azure/virtual-machines/dv2-dsv2-series) ($183.96)
+  - SQL: from [Standard_D2_v2](https://docs.microsoft.com/en-us/azure/virtual-machines/dv2-dsv2-series) ($183.96) to [Standard_E2as_v4](https://docs.microsoft.com/en-us/azure/virtual-machines/eav4-easv4-series) ($169.36)
+  - SPL: from [Standard_D11_v2](https://docs.microsoft.com/en-us/azure/virtual-machines/dv2-dsv2-series-memory) ($192.72) to [Standard_E2as_v4](https://docs.microsoft.com/en-us/azure/virtual-machines/eav4-easv4-series) ($169.36)
+
 ## July 2020 update
 
 * Update SQL to SQL Server 2019 on Windows Server 2019
