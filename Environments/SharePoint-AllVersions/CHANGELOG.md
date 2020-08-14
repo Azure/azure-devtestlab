@@ -1,5 +1,10 @@
 # Change log for AzureRM template SharePoint-ADFS-DevTestLabs
 
+## August 2020 update 2
+
+* Fix timeout issue / DSC not resuming after VM reboot: Update dependencies of DSC extensions of SP and SQL, so they no longer depend on DSC of DC
+* Replace DSC module xActiveDirectory with ActiveDirectoryDsc 6.0.1
+
 ## August 2020 update
 
 * Update VM sizes to more recent, powerful and cheaper ones (prices per month in West US as of 2020-08-11):
