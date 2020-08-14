@@ -9,7 +9,7 @@
         [Parameter(Mandatory)] [Boolean]$ConfigureADFS
     )
 
-    Import-DscResource -ModuleName xActiveDirectory, NetworkingDsc, xPSDesiredStateConfiguration, ActiveDirectoryCSDsc, CertificateDsc, cADFS, xDnsServer, ComputerManagementDsc
+    Import-DscResource -ModuleName ActiveDirectoryDsc, NetworkingDsc, xPSDesiredStateConfiguration, ActiveDirectoryCSDsc, CertificateDsc, cADFS, xDnsServer, ComputerManagementDsc
     [String] $DomainNetbiosName = (Get-NetBIOSName -DomainFQDN $DomainFQDN)
     [System.Management.Automation.PSCredential] $DomainCredsNetbios = New-Object System.Management.Automation.PSCredential ("${DomainNetbiosName}\$($Admincreds.UserName)", $Admincreds.Password)
     [System.Management.Automation.PSCredential] $AdfsSvcCredsQualified = New-Object System.Management.Automation.PSCredential ("${DomainNetbiosName}\$($AdfsSvcCreds.UserName)", $AdfsSvcCreds.Password)
@@ -51,48 +51,57 @@
             DependsOn = "[WindowsFeature]DNS"
         }
 
-        xADDomain FirstDS
+        ADDomain FirstDS
         {
-            DomainName = $DomainFQDN
-            DomainAdministratorCredential = $DomainCredsNetbios
+            DomainName                    = $DomainFQDN
+            Credential                    = $DomainCredsNetbios
             SafemodeAdministratorPassword = $DomainCredsNetbios
-            DatabasePath = "C:\NTDS"
-            LogPath = "C:\NTDS"
-            SysvolPath = "C:\SYSVOL"
-            DependsOn = "[DnsServerAddress]DnsServerAddress"
+            DatabasePath                  = "C:\NTDS"
+            LogPath                       = "C:\NTDS"
+            SysvolPath                    = "C:\SYSVOL"
+            DependsOn                     = "[DnsServerAddress]DnsServerAddress"
         }
 
-        PendingReboot Reboot1
+        # PendingReboot Reboot1
+        # {
+        #     Name = "RebootServer"
+        #     DependsOn = "[ADDomain]FirstDS"
+        # }
+        
+        WaitForADDomain ADDomainReady
         {
-            Name = "RebootServer"
-            DependsOn = "[xADDomain]FirstDS"
-        }       
+            DomainName              = $DomainFQDN
+            WaitTimeout             = 300
+            RestartCount            = 3
+            Credential              = $DomainCredsNetbios
+            WaitForValidCredentials = $true
+            DependsOn               = "[ADDomain]FirstDS"
+        }
 
         #**********************************************************
         # Misc: Set email of AD domain admin and add remote AD tools
         #**********************************************************
-        xADUser SetEmailOfDomainAdmin
+        ADUser SetEmailOfDomainAdmin
         {
-            DomainAdministratorCredential = $DomainCredsNetbios
             DomainName = $DomainFQDN
             UserName = $Admincreds.UserName
-            Password = $Admincreds
+            # Password = $Admincreds
             EmailAddress = $Admincreds.UserName + "@" + $DomainFQDN
-            PasswordAuthentication = 'Negotiate'
+            # PasswordAuthentication = 'Negotiate'
             Ensure = "Present"
             PasswordNeverExpires = $true
-            DependsOn = "[PendingReboot]Reboot1"
+            DependsOn = "[WaitForADDomain]ADDomainReady"
         }
 
-        WindowsFeature AddADFeature1    { Name = "RSAT-ADLDS";          Ensure = "Present"; DependsOn = "[PendingReboot]Reboot1" }
-        WindowsFeature AddADFeature2    { Name = "RSAT-ADDS-Tools";     Ensure = "Present"; DependsOn = "[PendingReboot]Reboot1" }
+        WindowsFeature AddADFeature1    { Name = "RSAT-ADLDS";          Ensure = "Present"; DependsOn = "[WaitForADDomain]ADDomainReady" }
+        WindowsFeature AddADFeature2    { Name = "RSAT-ADDS-Tools";     Ensure = "Present"; DependsOn = "[WaitForADDomain]ADDomainReady" }
 
         if ($ConfigureADFS -eq $true) {
             #**********************************************************
             # Configure AD CS
             #**********************************************************
-            WindowsFeature AddCertAuthority       { Name = "ADCS-Cert-Authority"; Ensure = "Present"; DependsOn = "[PendingReboot]Reboot1" }
-            WindowsFeature AddADCSManagementTools { Name = "RSAT-ADCS-Mgmt";      Ensure = "Present"; DependsOn = "[PendingReboot]Reboot1" }
+            WindowsFeature AddCertAuthority       { Name = "ADCS-Cert-Authority"; Ensure = "Present"; DependsOn = "[WaitForADDomain]ADDomainReady" }
+            WindowsFeature AddADCSManagementTools { Name = "RSAT-ADCS-Mgmt";      Ensure = "Present"; DependsOn = "[WaitForADDomain]ADDomainReady" }
             ADCSCertificationAuthority ADCS
             {
                 IsSingleInstance = "Yes"
@@ -165,9 +174,8 @@
                 DependsOn = '[WaitForCertificateServices]WaitAfterADCSProvisioning'
             }
 
-            xADUser CreateAdfsSvcAccount
+            ADUser CreateAdfsSvcAccount
             {
-                DomainAdministratorCredential = $DomainCredsNetbios
                 DomainName = $DomainFQDN
                 UserName = $AdfsSvcCreds.UserName
                 Password = $AdfsSvcCreds
@@ -184,7 +192,7 @@
                 MembersToInclude= $AdfsSvcCredsQualified.UserName
                 Credential = $DomainCredsNetbios    
                 PsDscRunAsCredential = $DomainCredsNetbios
-                DependsOn = "[xADUser]CreateAdfsSvcAccount"
+                DependsOn = "[ADUser]CreateAdfsSvcAccount"
             }
 
             WindowsFeature AddADFS { Name = "ADFS-Federation"; Ensure = "Present"; DependsOn = "[Group]AddAdfsSvcAccountToDomainAdminsGroup" }
@@ -195,7 +203,7 @@
                 Target = $PrivateIP
                 Type = "ARecord"
                 Ensure = "Present"
-                DependsOn = "[PendingReboot]Reboot1"
+                DependsOn = "[WaitForADDomain]ADDomainReady"
             }
 
             cADFSFarm CreateADFSFarm
@@ -315,10 +323,10 @@ help ConfigureDCVM
 $Admincreds = Get-Credential -Credential "yvand"
 $AdfsSvcCreds = Get-Credential -Credential "adfssvc"
 $DomainFQDN = "contoso.local"
-$PrivateIP = "10.0.1.4"
+$PrivateIP = "10.1.1.4"
 $ConfigureADFS = $false
 
-$outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.80.0.0\DSCWork\ConfigureDCVM.0\ConfigureDCVM"
+$outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.80.0.3\DSCWork\ConfigureDCVM.0\ConfigureDCVM"
 ConfigureDCVM -Admincreds $Admincreds -AdfsSvcCreds $AdfsSvcCreds -DomainFQDN $DomainFQDN -PrivateIP $PrivateIP -ConfigureADFS $ConfigureADFS -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
 Set-DscLocalConfigurationManager -Path $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force

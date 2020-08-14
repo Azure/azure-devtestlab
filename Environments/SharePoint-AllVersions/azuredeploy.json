@@ -193,10 +193,10 @@
     },
     "_artifactsLocation": {
       "type": "string",
+      "defaultValue": "https://github.com/Azure/azure-devtestlab/raw/master/Environments/SharePoint-AllVersions",
       "metadata": {
         "description": "The base URI where artifacts required by this template are located. When the template is deployed using the accompanying scripts, a private location in the subscription will be used and this value will be automatically generated."
-      },
-      "defaultValue": "https://github.com/Azure/azure-devtestlab/raw/master/Environments/SharePoint-AllVersions"
+      }
     },
     "_artifactsLocationSasToken": {
       "type": "securestring",
@@ -207,6 +207,7 @@
     }
   },
   "variables": {
+    "_artifactsLocationWithTrailingSlash": "[concat(parameters('_artifactsLocation'), '/')]",
     "generalSettings": {
       "vmDCName": "DC",
       "vmSQLName": "SQL",
@@ -329,19 +330,19 @@
       "shutdownResourceName": "[concat('shutdown-computevm-', variables('generalSettings').vmSP2019Name)]"
     },
     "dscConfigureDCVM": {
-      "scriptFileUri": "[concat(parameters('_artifactsLocation'), '/dsc/ConfigureDCVM.zip', parameters('_artifactsLocationSasToken'))]",
+      "scriptFileUri": "[uri(variables('_artifactsLocationWithTrailingSlash'), concat('dsc/ConfigureDCVM.zip', parameters('_artifactsLocationSasToken')))]",
       "script": "ConfigureDCVM.ps1",
       "function": "ConfigureDCVM",
       "forceUpdateTag": "1.0"
     },
     "dscConfigureSQLVM": {
-      "scriptFileUri": "[concat(parameters('_artifactsLocation'), '/dsc/ConfigureSQLVM.zip', parameters('_artifactsLocationSasToken'))]",
+      "scriptFileUri": "[uri(variables('_artifactsLocationWithTrailingSlash'), concat('dsc/ConfigureSQLVM.zip', parameters('_artifactsLocationSasToken')))]",
       "script": "ConfigureSQLVM.ps1",
       "function": "ConfigureSQLVM",
       "forceUpdateTag": "1.0"
     },
     "dscConfigureSPVM": {
-      "scriptFileUri": "[concat(parameters('_artifactsLocation'), '/dsc/ConfigureSPVM.zip', parameters('_artifactsLocationSasToken'))]",
+      "scriptFileUri": "[uri(variables('_artifactsLocationWithTrailingSlash'), concat('dsc/ConfigureSPVM.zip', parameters('_artifactsLocationSasToken')))]",
       "script": "ConfigureSPVM.ps1",
       "function": "ConfigureSPVM",
       "forceUpdateTag": "1.0"
@@ -695,8 +696,6 @@
       "location": "[resourceGroup().location]",
       "apiVersion": "2019-12-01",
       "dependsOn": [
-        "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmDCName)]",
-        "[resourceId('Microsoft.Compute/virtualMachines/extensions', variables('generalSettings').vmDCName, 'ConfigureDCVM')]",
         "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmSQLName)]"
       ],
       "tags": {
@@ -851,8 +850,6 @@
       "location": "[resourceGroup().location]",
       "apiVersion": "2019-12-01",
       "dependsOn": [
-        "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmDCName)]",
-        "[resourceId('Microsoft.Compute/virtualMachines/extensions', variables('generalSettings').vmDCName, 'ConfigureDCVM')]",
         "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmSP2013Name)]"
       ],
       "tags": {
@@ -1020,9 +1017,7 @@
       "location": "[resourceGroup().location]",
       "apiVersion": "2019-12-01",
       "dependsOn": [
-        "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmDCName)]",
-        "[resourceId('Microsoft.Compute/virtualMachines/extensions', variables('generalSettings').vmDCName, 'ConfigureDCVM')]",
-        "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmSP2013Name)]"
+        "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmSP2016Name)]"
       ],
       "tags": {
         "displayName": "[concat(variables('generalSettings').vmSP2016Name, '/ConfigureSPVM')]"
@@ -1189,8 +1184,6 @@
       "location": "[resourceGroup().location]",
       "apiVersion": "2019-12-01",
       "dependsOn": [
-        "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmDCName)]",
-        "[resourceId('Microsoft.Compute/virtualMachines/extensions', variables('generalSettings').vmDCName, 'ConfigureDCVM')]",
         "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmSP2019Name)]"
       ],
       "tags": {
