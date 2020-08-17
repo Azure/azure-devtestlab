@@ -27,30 +27,13 @@
             RebootNodeIfNeeded = $true
         }
 
+        #**********************************************************
+        # Create AD domain
+        #**********************************************************
         WindowsFeature ADDS { Name = "AD-Domain-Services"; Ensure = "Present" }
-        WindowsFeature DNS  { Name = "DNS"; Ensure = "Present" }
-
-        Script script1
-        {
-            SetScript =  {
-                Set-DnsServerDiagnostics -All $true
-                Write-Verbose -Verbose "Enabling DNS client diagnostics" 
-            }
-            GetScript =  { @{} }
-            TestScript = { $false }
-            DependsOn = "[WindowsFeature]DNS"
-        }
-
-        WindowsFeature DnsTools { Name = "RSAT-DNS-Server"; Ensure = "Present" }
-
-        DnsServerAddress DnsServerAddress 
-        {
-            Address        = '127.0.0.1' 
-            InterfaceAlias = $InterfaceAlias
-            AddressFamily  = 'IPv4'
-            DependsOn = "[WindowsFeature]DNS"
-        }
-
+        WindowsFeature DNS  { Name = "DNS";                Ensure = "Present" }
+        DnsServerAddress SetDNS { Address = '127.0.0.1' ; InterfaceAlias = $InterfaceAlias; AddressFamily  = 'IPv4' }
+        
         ADDomain FirstDS
         {
             DomainName                    = $DomainFQDN
@@ -59,15 +42,15 @@
             DatabasePath                  = "C:\NTDS"
             LogPath                       = "C:\NTDS"
             SysvolPath                    = "C:\SYSVOL"
-            DependsOn                     = "[DnsServerAddress]DnsServerAddress"
+            DependsOn                     = "[DnsServerAddress]SetDNS"
         }
 
-        # PendingReboot Reboot1
-        # {
-        #     Name = "RebootServer"
-        #     DependsOn = "[ADDomain]FirstDS"
-        # }
-        
+        PendingReboot RebootAfterADDomainSignal
+        {
+            Name      = "RebootAfterADDomainSignal"
+            DependsOn = "[ADDomain]FirstDS"
+        }
+
         WaitForADDomain ADDomainReady
         {
             DomainName              = $DomainFQDN
@@ -75,45 +58,37 @@
             RestartCount            = 3
             Credential              = $DomainCredsNetbios
             WaitForValidCredentials = $true
-            DependsOn               = "[ADDomain]FirstDS"
+            DependsOn               = "[PendingReboot]RebootAfterADDomainSignal"
         }
 
         #**********************************************************
-        # Misc: Set email of AD domain admin and add remote AD tools
+        # Configuration needed by SharePoint farm
         #**********************************************************
         ADUser SetEmailOfDomainAdmin
         {
-            DomainName = $DomainFQDN
-            UserName = $Admincreds.UserName
-            # Password = $Admincreds
-            EmailAddress = $Admincreds.UserName + "@" + $DomainFQDN
-            # PasswordAuthentication = 'Negotiate'
-            Ensure = "Present"
+            DomainName           = $DomainFQDN
+            UserName             = $Admincreds.UserName
+            EmailAddress         = "$($Admincreds.UserName)@$DomainFQDN"
             PasswordNeverExpires = $true
-            DependsOn = "[WaitForADDomain]ADDomainReady"
+            Ensure               = "Present"
+            DependsOn            = "[WaitForADDomain]ADDomainReady"
         }
-
-        WindowsFeature AddADFeature1    { Name = "RSAT-ADLDS";          Ensure = "Present"; DependsOn = "[WaitForADDomain]ADDomainReady" }
-        WindowsFeature AddADFeature2    { Name = "RSAT-ADDS-Tools";     Ensure = "Present"; DependsOn = "[WaitForADDomain]ADDomainReady" }
 
         if ($ConfigureADFS -eq $true) {
             #**********************************************************
             # Configure AD CS
             #**********************************************************
-            WindowsFeature AddCertAuthority       { Name = "ADCS-Cert-Authority"; Ensure = "Present"; DependsOn = "[WaitForADDomain]ADDomainReady" }
-            WindowsFeature AddADCSManagementTools { Name = "RSAT-ADCS-Mgmt";      Ensure = "Present"; DependsOn = "[WaitForADDomain]ADDomainReady" }
+            WindowsFeature AddADCSFeature       { Name = "ADCS-Cert-Authority"; Ensure = "Present"; DependsOn = "[WaitForADDomain]ADDomainReady" }
+
             ADCSCertificationAuthority ADCS
             {
                 IsSingleInstance = "Yes"
                 CAType = "EnterpriseRootCA"
                 Ensure = "Present"
                 Credential = $DomainCredsNetbios
-                DependsOn = "[WindowsFeature]AddCertAuthority"
+                DependsOn = "[WindowsFeature]AddADCSFeature"
             }
-
-            #**********************************************************
-            # Configure AD FS
-            #**********************************************************
+           
             WaitForCertificateServices WaitAfterADCSProvisioning
             {
                 CAServerFQDN = "$ComputerName.$DomainFQDN"
@@ -122,6 +97,9 @@
                 PsDscRunAsCredential = $DomainCredsNetbios
             }
 
+            #**********************************************************
+            # Configure AD FS
+            #**********************************************************
             CertReq ADFSSiteCert
             {
                 CARootName                = "$DomainNetbiosName-$ComputerName-CA"
@@ -135,7 +113,7 @@
                 KeyUsage                  = '0xa0'
                 CertificateTemplate       = 'WebServer'
                 AutoRenew                 = $true
-                SubjectAltName            = "dns=certauth.$ADFSSiteName.$DomainFQDN&dns=$ADFSSiteName.$DomainFQDN"
+                SubjectAltName            = "dns=certauth.$ADFSSiteName.$DomainFQDN&dns=$ADFSSiteName.$DomainFQDN&dns=enterpriseregistration.$DomainFQDN"
                 Credential                = $DomainCredsNetbios
                 DependsOn = '[WaitForCertificateServices]WaitAfterADCSProvisioning'
             }
@@ -174,6 +152,35 @@
                 DependsOn = '[WaitForCertificateServices]WaitAfterADCSProvisioning'
             }
 
+            xScript ExportCertificates
+            {
+                SetScript = 
+                {
+                    Write-Verbose -Message "Exporting the public key of the ADFS signing certifiacte and its issuer..."
+                    $ADFSSiteName = $using:ADFSSiteName
+                    $destinationPath = "C:\Setup"
+                    $adfsSigningCertFileName = "ADFS Signing.cer"
+                    $adfsSigningIssuerCertFileName = "ADFS Signing issuer.cer"
+                    New-Item $destinationPath -Type directory -ErrorAction SilentlyContinue
+
+                    $signingCert = Get-ChildItem -Path "cert:\LocalMachine\My\" -DnsName "$ADFSSiteName.Signing"
+                    $signingCert| Export-Certificate -FilePath ([System.IO.Path]::Combine($destinationPath, $adfsSigningCertFileName))
+                    Get-ChildItem -Path "cert:\LocalMachine\Root\"| Where-Object{$_.Subject -eq  $signingCert.Issuer}| Select-Object -First 1| Export-Certificate -FilePath ([System.IO.Path]::Combine($destinationPath, $adfsSigningIssuerCertFileName))
+                    Write-Verbose -Message "Public key of the ADFS signing certifiacte and its issuer successfully exported"
+                }
+                GetScript =  
+                {
+                    # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
+                    return @{ "Result" = "false" }
+                }
+                TestScript = 
+                {
+                    # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
+                return $false
+                }
+                DependsOn = "[CertReq]ADFSSiteCert", "[CertReq]ADFSSigningCert", "[CertReq]ADFSDecryptionCert"
+            }
+
             ADUser CreateAdfsSvcAccount
             {
                 DomainName = $DomainFQDN
@@ -197,11 +204,23 @@
 
             WindowsFeature AddADFS { Name = "ADFS-Federation"; Ensure = "Present"; DependsOn = "[Group]AddAdfsSvcAccountToDomainAdminsGroup" }
 
-            xDnsRecord AddADFSHostDNS {
+            xDnsRecord AddADFSHostDNS
+            {
                 Name = $ADFSSiteName
                 Zone = $DomainFQDN
                 Target = $PrivateIP
                 Type = "ARecord"
+                Ensure = "Present"
+                DependsOn = "[WaitForADDomain]ADDomainReady"
+            }
+
+            # https://docs.microsoft.com/en-us/windows-server/identity/ad-fs/deployment/configure-corporate-dns-for-the-federation-service-and-drs
+            xDnsRecord AddADFSDevideRegistrationAlias
+            {
+                Name = "enterpriseregistration"
+                Zone = $DomainFQDN
+                Target = "$ComputerName.$DomainFQDN"
+                Type = "CName"
                 Ensure = "Present"
                 DependsOn = "[WaitForADDomain]ADDomainReady"
             }
@@ -246,36 +265,12 @@ param = c.Value);
                 PsDscRunAsCredential = $DomainCredsNetbios
                 DependsOn = "[cADFSFarm]CreateADFSFarm"
             }
-
-            xScript ExportCertificates
-            {
-                SetScript = 
-                {
-                    Write-Verbose -Message "Exporting the public key of the ADFS signing certifiacte and its issuer..."
-                    $ADFSSiteName = $using:ADFSSiteName
-                    $destinationPath = "C:\Setup"
-                    $adfsSigningCertFileName = "ADFS Signing.cer"
-                    $adfsSigningIssuerCertFileName = "ADFS Signing issuer.cer"
-                    New-Item $destinationPath -Type directory -ErrorAction SilentlyContinue
-
-                    $signingCert = Get-ChildItem -Path "cert:\LocalMachine\My\" -DnsName "$ADFSSiteName.Signing"
-                    $signingCert| Export-Certificate -FilePath ([System.IO.Path]::Combine($destinationPath, $adfsSigningCertFileName))
-                    Get-ChildItem -Path "cert:\LocalMachine\Root\"| Where-Object{$_.Subject -eq  $signingCert.Issuer}| Select-Object -First 1| Export-Certificate -FilePath ([System.IO.Path]::Combine($destinationPath, $adfsSigningIssuerCertFileName))
-                    Write-Verbose -Message "Public key of the ADFS signing certifiacte and its issuer successfully exported"
-                }
-                GetScript =  
-                {
-                    # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
-                    return @{ "Result" = "false" }
-                }
-                TestScript = 
-                {
-                    # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
-                return $false
-                }
-                DependsOn = "[CertReq]ADFSSiteCert", "[CertReq]ADFSSigningCert", "[CertReq]ADFSDecryptionCert"
-            }
         }
+
+        WindowsFeature AddADFeature1 { Name = "RSAT-ADLDS";       Ensure = "Present"; }
+        WindowsFeature AddADFeature2 { Name = "RSAT-ADDS-Tools";  Ensure = "Present"; }
+        WindowsFeature DnsTools      { Name = "RSAT-DNS-Server";  Ensure = "Present"; }
+        WindowsFeature AddADCSManagementTools { Name = "RSAT-ADCS-Mgmt";      Ensure = "Present"; }
     }
 }
 
