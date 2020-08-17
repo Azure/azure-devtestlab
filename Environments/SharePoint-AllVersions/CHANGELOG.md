@@ -1,5 +1,9 @@
 # Change log for AzureRM template SharePoint-ADFS-DevTestLabs
 
+## August 2020 update 3
+
+* Update DSC configuration of all VMs to make deployment much more reliable after the change to fix the time out issue
+
 ## August 2020 update 2
 
 * Fix timeout issue / DSC not resuming after VM reboot: Update dependencies of DSC extensions of SP and SQL, so they no longer depend on DSC of DC

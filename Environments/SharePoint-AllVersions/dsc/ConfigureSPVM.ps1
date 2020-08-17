@@ -41,14 +41,32 @@ configuration ConfigureSPVM
         }
 
         #**********************************************************
-        # Initialization of VM
+        # Initialization of VM - Do as much work as possible before waiting on AD domain to be available
         #**********************************************************
         WindowsFeature ADTools  { Name = "RSAT-AD-Tools";      Ensure = "Present"; }
         WindowsFeature ADPS     { Name = "RSAT-AD-PowerShell"; Ensure = "Present"; }
         WindowsFeature DnsTools { Name = "RSAT-DNS-Server";    Ensure = "Present"; }
-        DnsServerAddress DnsServerAddress { Address = $DNSServer; InterfaceAlias = $InterfaceAlias; AddressFamily  = 'IPv4' }
-        # xCredSSP CredSSPServer { Ensure = "Present"; Role = "Server"; DependsOn = "[DnsServerAddress]DnsServerAddress" }
-        # xCredSSP CredSSPClient { Ensure = "Present"; Role = "Client"; DelegateComputers = "*.$DomainFQDN", "localhost"; DependsOn = "[xCredSSP]CredSSPServer" }
+        DnsServerAddress SetDNS { Address = $DNSServer; InterfaceAlias = $InterfaceAlias; AddressFamily  = 'IPv4' }
+
+        # IIS cleanup
+        xWebAppPool RemoveDotNet2Pool         { Name = ".NET v2.0";            Ensure = "Absent"; }
+        xWebAppPool RemoveDotNet2ClassicPool  { Name = ".NET v2.0 Classic";    Ensure = "Absent"; }
+        xWebAppPool RemoveDotNet45Pool        { Name = ".NET v4.5";            Ensure = "Absent"; }
+        xWebAppPool RemoveDotNet45ClassicPool { Name = ".NET v4.5 Classic";    Ensure = "Absent"; }
+        xWebAppPool RemoveClassicDotNetPool   { Name = "Classic .NET AppPool"; Ensure = "Absent"; }
+        xWebAppPool RemoveDefaultAppPool      { Name = "DefaultAppPool";       Ensure = "Absent"; }
+        xWebSite    RemoveDefaultWebSite      { Name = "Default Web Site";     Ensure = "Absent"; PhysicalPath = "C:\inetpub\wwwroot"; }
+
+        # Allow sign-in on HTTPS sites when site host name is different than the machine name: https://support.microsoft.com/en-us/help/926642
+        Registry DisableLoopBackCheck
+        {
+            Key       = "HKLM:\System\CurrentControlSet\Control\Lsa"
+            ValueName = "DisableLoopbackCheck"
+            ValueData = "1"
+            ValueType = "Dword"
+            Ensure    = "Present"
+            DependsOn = "[PendingReboot]RebootOnComputerSignal"
+        }
 
         # Properly enable TLS 1.2 as documented in https://docs.microsoft.com/en-us/azure/active-directory/manage-apps/application-proxy-add-on-premises-application
         # It's a best practice, and mandatory with Windows 2012 R2 (SharePoint 2013) to allow xRemoteFile to download releases from GitHub: https://github.com/PowerShell/xPSDesiredStateConfiguration/issues/405           
@@ -106,107 +124,93 @@ configuration ConfigureSPVM
             Ensure                      = 'Present'
         }#>
 
+        SqlAlias AddSqlAlias
+        {
+            Ensure               = "Present"
+            Name                 = $SQLAlias
+            ServerName           = $SQLName
+            Protocol             = "TCP"
+            TcpPort              = 1433
+            #PsDscRunAsCredential = $DomainAdminCredsQualified
+            #DependsOn            = "[File]AccountsProvisioned"
+        }
+
         #**********************************************************
         # Join AD forest
         #**********************************************************
         WaitForADDomain DscForestWait
         {
             DomainName              = $DomainFQDN
-            WaitTimeout             = 600
+            WaitTimeout             = 1200
             RestartCount            = 2
             WaitForValidCredentials = $True
             PsDscRunAsCredential    = $DomainAdminCredsQualified
-            # DependsOn               = "[xCredSSP]CredSSPClient"
-            DependsOn               = "[DnsServerAddress]DnsServerAddress"
+            DependsOn               = "[DnsServerAddress]SetDNS"
         }
-
-        # # Quick an,d dirty workaround for error in [Computer]DomainJoin, that fails with this error otherwise: [ERROR] The WS-Management service cannot process the request. The WMI service or the WMI provider returned an unknown error: HRESULT 0x80041033 
-        # xScript RebootBeforeJoinDomain
-        # {
-        #     # If the TestScript returns $false, DSC executes the SetScript to bring the node back to the desired state
-        #     TestScript = {
-        #         return (Test-Path HKLM:\SOFTWARE\SPDSCConfigForceRebootKey\RebootBeforeJoinDomain)
-        #     }
-        #     SetScript = {
-        #         New-Item -Path HKLM:\SOFTWARE\SPDSCConfigForceRebootKey\RebootBeforeJoinDomain -Force
-        #         $global:DSCMachineStatus = 1
-        #     }
-        #     GetScript = { }
-        #     PsDscRunAsCredential = $DomainAdminCredsQualified
-        #     DependsOn = "[WaitForADDomain]DscForestWait"
-        # }
-
-        # PendingReboot RebootRebootBeforeJoinDomain
-        # {
-        #     Name             = "RebootRebootBeforeJoinDomain"
-        #     SkipCcmClientSDK = $true
-        #     DependsOn        = "[xScript]RebootBeforeJoinDomain"
-        # }
+        
+        # WaitForADDomain sets reboot signal only if WaitForADDomain did not find domain within "WaitTimeout" secs
+        PendingReboot RebootOnWaitForADDomainSignal
+        {
+            Name             = "RebootOnWaitForADDomainSignal"
+            SkipCcmClientSDK = $true
+            DependsOn        = "[WaitForADDomain]DscForestWait"
+        }
 
         Computer DomainJoin
         {
             Name       = $ComputerName
             DomainName = $DomainFQDN
             Credential = $DomainAdminCredsQualified
-            # DependsOn = "[PendingReboot]RebootRebootBeforeJoinDomain"
-            DependsOn = "[WaitForADDomain]DscForestWait"
+            DependsOn  = "[PendingReboot]RebootOnWaitForADDomainSignal"
         }
 
-        PendingReboot RebootAfterJoinedDomain
+        PendingReboot RebootOnComputerSignal
         {
-            Name             = "RebootAfterJoinedDomain"
+            Name             = "RebootOnComputerSignal"
             SkipCcmClientSDK = $true
             DependsOn        = "[Computer]DomainJoin"
         }
         
-        xScript CreateWSManSPNsIfNeeded
-        {
-            SetScript =
-            {
-                # A few times, deployment failed because of this error:
-                # "The WinRM client cannot process the request. A computer policy does not allow the delegation of the user credentials to the target computer because the computer is not trusted."
-                # The root cause was that SPNs WSMAN/SP and WSMAN/sp.contoso.local were missing in computer account contoso\SP
-                # Those SPNs are created by WSMan when it (re)starts
-                # Restarting service causes an error, so creates SPNs manually instead
-                # Restart-Service winrm
+        # This script might fix an issue that occured because VM did not reboot after it joined the domain.
+        # xScript CreateWSManSPNsIfNeeded
+        # {
+        #     SetScript =
+        #     {
+        #         # A few times, deployment failed because of this error:
+        #         # "The WinRM client cannot process the request. A computer policy does not allow the delegation of the user credentials to the target computer because the computer is not trusted."
+        #         # The root cause was that SPNs WSMAN/SP and WSMAN/sp.contoso.local were missing in computer account contoso\SP
+        #         # Those SPNs are created by WSMan when it (re)starts
+        #         # Restarting service causes an error, so creates SPNs manually instead
+        #         # Restart-Service winrm
 
-                # Create SPNs WSMAN/SP and WSMAN/sp.contoso.local
-                $domainFQDN = $using:DomainFQDN
-                $computerName = $using:ComputerName
-                Write-Verbose -Message "Adding SPNs 'WSMAN/$computerName' and 'WSMAN/$computerName.$domainFQDN' to computer '$computerName'"
-                setspn.exe -S "WSMAN/$computerName" "$computerName"
-                setspn.exe -S "WSMAN/$computerName.$domainFQDN" "$computerName"
-            }
-            GetScript = { return @{ "Result" = "false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
-            TestScript = 
-            {
-                $computerName = $using:ComputerName
-                $samAccountName = "$computerName$"
-                if ((Get-ADComputer -Filter {(SamAccountName -eq $samAccountName)} -Property serviceprincipalname | Select-Object serviceprincipalname | Where-Object {$_.ServicePrincipalName -like "WSMAN/$computerName"}) -ne $null) {
-                    # SPN is present
-                    return $true
-                }
-                else {
-                    # SPN is missing and must be created
-                    return $false
-                }
-            }
-            DependsOn = "[PendingReboot]RebootAfterJoinedDomain"
-        }
+        #         # Create SPNs WSMAN/SP and WSMAN/sp.contoso.local
+        #         $domainFQDN = $using:DomainFQDN
+        #         $computerName = $using:ComputerName
+        #         Write-Verbose -Message "Adding SPNs 'WSMAN/$computerName' and 'WSMAN/$computerName.$domainFQDN' to computer '$computerName'"
+        #         setspn.exe -S "WSMAN/$computerName" "$computerName"
+        #         setspn.exe -S "WSMAN/$computerName.$domainFQDN" "$computerName"
+        #     }
+        #     GetScript = { return @{ "Result" = "false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
+        #     TestScript = 
+        #     {
+        #         $computerName = $using:ComputerName
+        #         $samAccountName = "$computerName$"
+        #         if ((Get-ADComputer -Filter {(SamAccountName -eq $samAccountName)} -Property serviceprincipalname | Select-Object serviceprincipalname | Where-Object {$_.ServicePrincipalName -like "WSMAN/$computerName"}) -ne $null) {
+        #             # SPN is present
+        #             return $true
+        #         }
+        #         else {
+        #             # SPN is missing and must be created
+        #             return $false
+        #         }
+        #     }
+        #     DependsOn = "[PendingReboot]RebootOnComputerSignal"
+        # }
 
         #**********************************************************
-        # Do some cleanup and preparation for SharePoint
+        # Do SharePoint pre-reqs that require membership in AD domain
         #**********************************************************
-        Registry DisableLoopBackCheck
-        {
-            Key       = "HKLM:\System\CurrentControlSet\Control\Lsa"
-            ValueName = "DisableLoopbackCheck"
-            ValueData = "1"
-            ValueType = "Dword"
-            Ensure    = "Present"
-            DependsOn ="[PendingReboot]RebootAfterJoinedDomain"
-        }
-
+        # Create DNS entries used by SharePoint
         xDnsRecord AddTrustedSiteDNS
         {
             Name                 = $SPTrustedSitesName
@@ -216,16 +220,8 @@ configuration ConfigureSPVM
             Type                 = "CName"
             Ensure               = "Present"
             PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn            = "[PendingReboot]RebootAfterJoinedDomain"
+            DependsOn            = "[PendingReboot]RebootOnComputerSignal"
         }
-
-        xWebAppPool RemoveDotNet2Pool         { Name = ".NET v2.0";            Ensure = "Absent"; DependsOn = "[PendingReboot]RebootAfterJoinedDomain"}
-        xWebAppPool RemoveDotNet2ClassicPool  { Name = ".NET v2.0 Classic";    Ensure = "Absent"; DependsOn = "[PendingReboot]RebootAfterJoinedDomain"}
-        xWebAppPool RemoveDotNet45Pool        { Name = ".NET v4.5";            Ensure = "Absent"; DependsOn = "[PendingReboot]RebootAfterJoinedDomain"}
-        xWebAppPool RemoveDotNet45ClassicPool { Name = ".NET v4.5 Classic";    Ensure = "Absent"; DependsOn = "[PendingReboot]RebootAfterJoinedDomain"}
-        xWebAppPool RemoveClassicDotNetPool   { Name = "Classic .NET AppPool"; Ensure = "Absent"; DependsOn = "[PendingReboot]RebootAfterJoinedDomain"}
-        xWebAppPool RemoveDefaultAppPool      { Name = "DefaultAppPool";       Ensure = "Absent"; DependsOn = "[PendingReboot]RebootAfterJoinedDomain"}
-        xWebSite    RemoveDefaultWebSite      { Name = "Default Web Site";     Ensure = "Absent"; PhysicalPath = "C:\inetpub\wwwroot"; DependsOn = "[PendingReboot]RebootAfterJoinedDomain"}
 
         #**********************************************************
         # Provision required accounts for SharePoint
@@ -238,7 +234,7 @@ configuration ConfigureSPVM
             PasswordNeverExpires          = $true
             Ensure                        = "Present"
             PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn                     = "[PendingReboot]RebootAfterJoinedDomain"
+            DependsOn                     = "[PendingReboot]RebootOnComputerSignal"
         }        
 
         ADUser CreateSParmAccount
@@ -249,7 +245,7 @@ configuration ConfigureSPVM
             PasswordNeverExpires          = $true
             Ensure                        = "Present"
             PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn                     = "[PendingReboot]RebootAfterJoinedDomain"
+            DependsOn                     = "[PendingReboot]RebootOnComputerSignal"
         }
 
         Group AddSPSetupAccountToAdminGroup
@@ -270,7 +266,7 @@ configuration ConfigureSPVM
             PasswordNeverExpires          = $true
             Ensure                        = "Present"
             PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn                     = "[PendingReboot]RebootAfterJoinedDomain"
+            DependsOn                     = "[PendingReboot]RebootOnComputerSignal"
         }
 
         File AccountsProvisioned
@@ -281,17 +277,6 @@ configuration ConfigureSPVM
             Force                = $true
             PsDscRunAsCredential = $SPSetupCredential
             DependsOn            = "[Group]AddSPSetupAccountToAdminGroup", "[ADUser]CreateSParmAccount", "[ADUser]CreateSPAppPoolAccount"
-        }
-
-        SqlAlias AddSqlAlias
-        {
-            Ensure               = "Present"
-            Name                 = $SQLAlias
-            ServerName           = $SQLName
-            Protocol             = "TCP"
-            TcpPort              = 1433
-            PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn            = "[File]AccountsProvisioned"
         }
 
         xScript WaitForSQL
@@ -319,7 +304,7 @@ configuration ConfigureSPVM
             GetScript            = { return @{ "Result" = "false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
             TestScript           = { return $false } # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
             PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn            = "[SqlAlias]AddSqlAlias"
+            DependsOn            = "[SqlAlias]AddSqlAlias", "[File]AccountsProvisioned"
         }
 
         #**********************************************************
@@ -390,6 +375,7 @@ configuration ConfigureSPVM
         }
 
         if ($ConfigureADFS -eq $true) {
+            # Delay this operation significantly, so that DC has time to generate and copy the certificates
             File CopyCertificatesFromDC
             {
                 Ensure          = "Present"
@@ -398,7 +384,7 @@ configuration ConfigureSPVM
                 SourcePath      = "$DCSetupPath"
                 DestinationPath = "$SetupPath\Certificates"
                 Credential      = $DomainAdminCredsQualified
-                DependsOn       = "[PendingReboot]RebootAfterJoinedDomain"
+                DependsOn       = "[PendingReboot]RebootOnComputerSignal"
             }
 
             SPTrustedRootAuthority TrustRootCA
@@ -445,7 +431,7 @@ configuration ConfigureSPVM
                 }
                 GetScript            = { return @{ "Result" = "false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
                 TestScript           = { return $false }
-                DependsOn            = "[PendingReboot]RebootAfterJoinedDomain"
+                DependsOn            = "[PendingReboot]RebootOnComputerSignal"
                 PsDscRunAsCredential = $DomainAdminCredsQualified
             }
 
@@ -519,8 +505,8 @@ configuration ConfigureSPVM
                 Url                  = "http://$SPTrustedSitesName/"
                 OwnerAlias           = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
                 SecondaryOwnerAlias  = "i:05.t|$DomainFQDN|$($DomainAdminCreds.UserName)@$DomainFQDN"
-                Name                 = "Blank site"
-                Template             = "STS#1"
+                Name                 = "Team site"
+                Template             = "STS#0"
                 PsDscRunAsCredential = $SPSetupCredsQualified
                 DependsOn            = "[SPWebApplication]MainWebApp"
             }
@@ -543,8 +529,8 @@ configuration ConfigureSPVM
             {
                 Url                  = "http://$SPTrustedSitesName/"
                 OwnerAlias           = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
-                Name                 = "Blank site"
-                Template             = "STS#1"
+                Name                 = "Team site"
+                Template             = "STS#0"
                 PsDscRunAsCredential = $SPSetupCredsQualified
                 DependsOn            = "[SPWebApplication]MainWebApp"
             }
