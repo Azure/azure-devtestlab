@@ -1,5 +1,9 @@
 # Change log for AzureRM template SharePoint-ADFS-DevTestLabs
 
+## August 2020-08-18 update
+
+* Revert SP and SQL to old VM sizes due to issues with Edsv4-series in "East US" since today (they fail to start)
+
 ## August 2020 update 3
 
 * Update DSC configuration of all VMs to make deployment much more reliable after the change to fix the time out issue
