@@ -22,7 +22,7 @@
         "serverName": "[toLower(concat(variables('resourceNamePrefix'), '-', take(uniqueString(resourceGroup().id), 6), '-db'))]",
         "databaseName": "[concat('db', uniqueString(resourceGroup().id, variables('siteName')))]",        
         "databaseVersion": "9.6",
-        "databaseDTU": 100,
+        "databaseDTU": 2,
         "databaseSkuName": "GP_Gen5_2",
         "databaseSkuSizeMB": 51200,
         "databaseSkuTier": "GeneralPurpose"
