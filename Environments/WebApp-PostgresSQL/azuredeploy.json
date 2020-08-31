@@ -76,7 +76,7 @@
         {
             "name": "[variables('serverName')]",
             "type": "Microsoft.DBforPostgreSQL/servers",
-            "apiVersion": "2017-04-30-preview",
+            "apiVersion": "2017-12-01",
             "location": "[resourceGroup().location]",
             "kind": "",
             "properties": {
