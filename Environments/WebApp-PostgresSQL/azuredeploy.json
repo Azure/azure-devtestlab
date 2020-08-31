@@ -25,7 +25,7 @@
         "databaseDTU": 100,
         "databaseSkuName": "PostgreSQLB100",
         "databaseSkuSizeMB": 51200,
-        "databaseSkuTier": "Basic"
+        "databaseSkuTier": "GeneralPurpose"
     },
     "resources": [
         {
