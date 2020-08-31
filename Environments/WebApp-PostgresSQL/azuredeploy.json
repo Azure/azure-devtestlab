@@ -96,7 +96,7 @@
                 {
                     "name": "[concat(variables('serverName'),'-firewall')]",
                     "type": "firewallrules",
-                    "apiVersion": "2016-02-01-privatepreview",
+                    "apiVersion": "2017-12-01",
                     "location": "[resourceGroup().location]",
                     "dependsOn": [
                         "[concat('Microsoft.DBforPostgreSQL/servers/', variables('serverName'))]"
@@ -109,7 +109,7 @@
                 {
                     "name": "[variables('databaseName')]",
                     "type": "databases",
-                    "apiVersion": "2016-02-01-privatepreview",
+                    "apiVersion": "2017-12-01",
                     "location": "[resourceGroup().location]",
                     "dependsOn": [
                         "[concat('Microsoft.DBforPostgreSQL/servers/', variables('serverName'))]"
