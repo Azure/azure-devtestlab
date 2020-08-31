@@ -90,7 +90,7 @@
                 "tier": "[variables('databaseSkuTier')]",
                 "capacity": "[variables('databaseDTU')]",
                 "size": "[variables('databaseSkuSizeMB')]",
-                "family": "SkuFamily"
+                "family": "Gen5"
             },
             "resources": [
                 {
