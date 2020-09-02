@@ -110,6 +110,7 @@ $init = {
         $lab = $la | Get-AzLab -LabName $LabName
 
         if ($lab) {
+            # TODO: cannot set max users
             $lab = $lab | Set-AzLab -UsageQuotaInHours $UsageQuota -UserAccessMode $UsageMode  -SharedPasswordEnabled:$SharedPassword
             Write-Host "$LabName lab already exist. Republished."
         }
@@ -126,7 +127,8 @@ $init = {
             | New-AzLab -LabName $LabName -Image $img -Size $Size -UserName $UserName -Password $Password -LinuxRdpEnabled:$LinuxRdp -UsageQuotaInHours $UsageQuota `
                 -idleGracePeriod $idleGracePeriod -idleOsGracePeriod $idleOsGracePeriod -idleNoConnectGracePeriod $idleNoConnectGracePeriod `
             | Publish-AzLab `
-            | Set-AzLab -MaxUsers $MaxUsers -UserAccessMode $UsageMode -SharedPasswordEnabled:$SharedPassword
+            | Set-AzLab -MaxUsers $MaxUsers -UserAccessMode $UsageMode -SharedPasswordEnabled:$SharedPassword `
+                -idleGracePeriod $idleGracePeriod -idleOsGracePeriod $idleOsGracePeriod -idleNoConnectGracePeriod $idleNoConnectGracePeriod
 
             Write-Host "$LabName lab doesn't exist. Created it."
         }
