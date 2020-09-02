@@ -714,6 +714,7 @@ function New-AzLab {
                             sharedPasswordState = $sharedPassword
                             templateVmState = $hasTemplateVm
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
                             
@@ -733,12 +734,18 @@ function New-AzLab {
                             vmSize = $Size
                             sharedPasswordState = $sharedPassword
                             templateVmState = $hasTemplateVm
+=======
+>>>>>>> a150df7... Minneapolis Public Schools updates
                             idleShutdownMode = $idleShutdownMode
                             idleGracePeriod = "PT$($idleGracePeriod.ToString())M"
                             enableDisconnectOnIdle = $enableDisconnectOnIdle
                             idleOsGracePeriod = "PT$($idleOsGracePeriod.ToString())M"
                             enableNoConnectShutdown = $enableNoConnectShutdown
                             idleNoConnectGracePeriod = "PT$($idleNoConnectGracePeriod.ToString())M"
+<<<<<<< HEAD
+=======
+
+>>>>>>> a150df7... Minneapolis Public Schools updates
                         }
                     } | ConvertTo-Json) | Out-Null
                 }
@@ -777,7 +784,19 @@ function Set-AzLab {
 
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Quota of hours x users (defaults to 40)")]
         [int]
-        $UsageQuotaInHours = 40
+        $UsageQuotaInHours = 40,
+
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Idle Shutdown Grace Period (0 is off)")]
+        [int]
+        $idleGracePeriod = 15,
+
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Disconnect on Idle Grace Period (0 is off)")]
+        [int]
+        $idleOsGracePeriod = 0,
+
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Shutdown on No Connect Grace Period (0 is off)")]
+        [int]
+        $idleNoConnectGracePeriod = 15
     )
   
     begin { . BeginPreamble }
@@ -804,9 +823,40 @@ function Set-AzLab {
                     $l.properties | Add-Member -MemberType NoteProperty -Name usageQuotaInHours -Value "PT$($UsageQuotaInHours.ToString())H" -force
                 }
 <<<<<<< HEAD
+<<<<<<< HEAD
                
 =======
 >>>>>>> a92c0d9... Updates for non-Windows VMs
+=======
+                if ($PSBoundParameters.ContainsKey('idleGracePeriod') -or (-not (Get-Member -inputobject $l.properties -name "idleGracePeriod" -Membertype Properties))) {
+                    if ($idleGracePeriod -eq 0) {
+                        $l.properties | Add-Member -MemberType NoteProperty -Name idleShutdownMode -Value "None" -force
+                        $l.properties | Add-Member -MemberType NoteProperty -Name idleGracePeriod -Value "PT$($idleGracePeriod.ToString())M" -force
+                    } else {
+                        $l.properties | Add-Member -MemberType NoteProperty -Name idleShutdownMode -Value "OnDisconnect" -force
+                        $l.properties | Add-Member -MemberType NoteProperty -Name idleGracePeriod -Value "PT$($idleGracePeriod.ToString())M" -force
+                    }
+                }
+                if ($PSBoundParameters.ContainsKey('idleOsGracePeriod') -or (-not (Get-Member -inputobject $l.properties -name "idleOsGracePeriod" -Membertype Properties))) {
+                    if ($idleGracePeriod -eq 0) {
+                        $l.properties | Add-Member -MemberType NoteProperty -Name enableDisconnectOnIdle -Value "Disabled" -force
+                        $l.properties | Add-Member -MemberType NoteProperty -Name idleOsGracePeriod -Value "PT$($idleOsGracePeriod.ToString())M" -force
+                    } else {
+                        $l.properties | Add-Member -MemberType NoteProperty -Name enableDisconnectOnIdle -Value "Enabled" -force
+                        $l.properties | Add-Member -MemberType NoteProperty -Name idleOsGracePeriod -Value "PT$($idleOsGracePeriod.ToString())M" -force
+                    }
+                }
+                if ($PSBoundParameters.ContainsKey('idleNoConnectGracePeriod') -or (-not (Get-Member -inputobject $l.properties -name "idleNoConnectGracePeriod" -Membertype Properties))) {
+                    if ($idleGracePeriod -eq 0) {
+                        $l.properties | Add-Member -MemberType NoteProperty -Name enableNoConnectShutdown -Value "Disabled" -force
+                        $l.properties | Add-Member -MemberType NoteProperty -Name idleNoConnectGracePeriod -Value "PT$($idleNoConnectGracePeriod.ToString())M" -force
+                    } else {
+                        $l.properties | Add-Member -MemberType NoteProperty -Name enableNoConnectShutdown -Value "Enabled" -force
+                        $l.properties | Add-Member -MemberType NoteProperty -Name idleNoConnectGracePeriod -Value "PT$($idleNoConnectGracePeriod.ToString())M" -force
+                    }
+                }
+
+>>>>>>> a150df7... Minneapolis Public Schools updates
                 # update lab
                 $uri = (ConvertToUri -resource $LabAccount) + "/labs/" + $LabName
 
