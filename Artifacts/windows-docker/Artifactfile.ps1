@@ -121,7 +121,7 @@ function Test-NestedVirtualizationSupport
     # CAUTION !!!
     # There's no reliable way other than using the VMSize to identify support for nested virtualization yet!
 
-    return [bool] ($vmSize -match "Standard_[D|E]{1}\d{1,2}[s]?_v3")
+    return [bool] ($vmSize -match "Standard_[D|E]{1}\d{1,2}[d]?[s]?_v[3|4]")
 }
 
 function Get-TempPassword
@@ -284,6 +284,10 @@ try
         if ($productType -eq 1)
         {
             # Windows 10
+            if ((Get-WindowsOptionalFeature -Online -FeatureName containers | select -ExpandProperty State) -eq "Disabled")
+            {
+                Enable-WindowsOptionalFeature -Online -FeatureName containers -All -NoRestart
+            }
             if ((Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V | select -ExpandProperty State) -eq "Disabled")
             {
                 Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All -NoRestart
@@ -294,7 +298,7 @@ try
             # Windows Server 2016
             if ((Get-WindowsFeature -Name Hyper-V | select -ExpandProperty InstallState) -eq "Available")
             {
-                Install-WindowsFeature –Name Hyper-V -IncludeManagementTools | Out-Null
+                Install-WindowsFeature -Name Hyper-V -IncludeManagementTools | Out-Null
             }
         }
 
