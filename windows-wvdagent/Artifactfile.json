@@ -1,0 +1,25 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+    "title": "Install Windows Virtual Desktop Agent",
+    "publisher": "Microsoft",
+    "description": "Install Windows Virtual Desktop Agent along with Windows Virtual Desktop Bootloader",
+    "tags": [
+        "Windows",
+        "Virtual",
+        "Desktop",
+        "wvd",
+        "agent",
+        "bootloader"
+    ],
+    "targetOsType": "Windows",
+    "parameters": {
+        "HostPoolRegistrationkey": {
+            "type": "string",
+            "displayName": "WVD Host Pool Registration key",
+            "description": "Windows Virtual Desktop Host Pool Registration key."
+        }
+    },
+    "runCommand": {
+        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./install-wvd-agent.ps1 -HostPoolRegistrationkey ''', parameters('HostPoolRegistrationkey'), '''')]"
+    }
+}
