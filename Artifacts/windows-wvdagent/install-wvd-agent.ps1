@@ -6,7 +6,7 @@
 [CmdletBinding()]
 param(
     # Windows Virtual Desktop Host Pool Registration key.
-    [securestring] $HostPoolRegistrationkey
+    [string] $HostPoolRegistrationkey
 )
 
 ###################################################################################################
@@ -90,8 +90,7 @@ function Install-Bootloader
 {
     [CmdletBinding()]
     param(
-        [string] $ChocoExePath,
-        [securestring] $HostPoolRegistrationkey
+        [string] $ChocoExePath
     )
         $expression = "$ChocoExePath install -y -f --acceptlicense --no-progress --stoponfirstfailure wvd-boot-loader --pre"
         Invoke-ExpressionImpl -Expression $expression
@@ -102,7 +101,7 @@ function Install-Agent
     [CmdletBinding()]
     param(
         [string] $ChocoExePath,
-        [securestring] $HostPoolRegistrationkey
+        [string] $HostPoolRegistrationkey
     )
         $expression = "$ChocoExePath install -y -f --acceptlicense --no-progress --stoponfirstfailure wvd-agent --params=""'/REGISTRATIONTOKEN:$($HostPoolRegistrationkey)'"" --pre"
         Invoke-ExpressionImpl -Expression $expression
