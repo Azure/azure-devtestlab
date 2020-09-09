@@ -1030,7 +1030,7 @@ function Remove-AzDtlVm {
   process {
     try {
       foreach($v in $Vm) {
-        Remove-AzureRmResource -ResourceId $vm.ResourceId -Force
+        Remove-AzureRmResource -ResourceId $v.ResourceId -Force
       }
     } catch {
       Write-Error -ErrorRecord $_ -EA $callerEA
@@ -1464,6 +1464,15 @@ function New-AzDtlVm {
     [string]
     $Size,
 
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="Storage type to use for virtual machine (i.e. Standard, StandardSSD, Premium).")]
+    [Validateset('Standard', 'StandardSSD', 'Premium')]
+    [string]
+    $StorageType,
+
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="The notes of the virtual machine.")]
+    [string]
+    $Notes = "",
+
     [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true, HelpMessage="This is a claimable VM.")]
     [Switch]
     $Claimable,
@@ -1491,20 +1500,24 @@ function New-AzDtlVm {
     $LabSubnetName = "",
 
     [parameter(Mandatory=$true,HelpMessage="User Name.", ValueFromPipelineByPropertyName = $true, ParameterSetName ='SSHCustom')]
+    [parameter(Mandatory=$true,HelpMessage="User Name.", ValueFromPipelineByPropertyName = $true, ParameterSetName ='SSHSIG')]
     [parameter(Mandatory=$true,HelpMessage="User Name.", ValueFromPipelineByPropertyName = $true, ParameterSetName ='SSHGallery')]
     [parameter(Mandatory=$false,HelpMessage="User Name.", ValueFromPipelineByPropertyName = $true, ParameterSetName ='PasswordCustom')]
+    [parameter(Mandatory=$false,HelpMessage="User Name.", ValueFromPipelineByPropertyName = $true, ParameterSetName ='PasswordSIG')]
     [parameter(Mandatory=$true,HelpMessage="User Name.", ValueFromPipelineByPropertyName = $true, ParameterSetName ='PasswordGallery')]
     [ValidateNotNullOrEmpty()]
     [string]
     $UserName = $null,
 
     [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true,HelpMessage="Password.", ParameterSetName ='PasswordCustom')]
+    [parameter(Mandatory=$false, ValueFromPipelineByPropertyName = $true,HelpMessage="Password.", ParameterSetName ='PasswordSIG')]
     [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Password.", ParameterSetName ='PasswordGallery')]
     [ValidateNotNullOrEmpty()]
     [string] # We should support key vault retrival at some point
     $Password = $null,
 
     [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="SSH Key.", ParameterSetName ='SSHCustom')]
+    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="SSH Key.", ParameterSetName ='SSHSIG')]
     [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="SSH Key.", ParameterSetName ='SSHGallery')]
     [ValidateNotNullOrEmpty()]
     [string]
@@ -1515,6 +1528,12 @@ function New-AzDtlVm {
     [ValidateNotNullOrEmpty()]
     [Object]
     $CustomImage,
+
+    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Name of custom image to use or customImage object.", ParameterSetName ='SSHSIG')]
+    [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Name of custom image to use or customImage object.", ParameterSetName ='PasswordSIG')]
+    [ValidateNotNullOrEmpty()]
+    [Object]
+    $SharedImageGalleryImage,
 
     [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Name of Sku.", ParameterSetName ='SSHGallery')]
     [parameter(Mandatory=$true, ValueFromPipelineByPropertyName = $true,HelpMessage="Name of Sku.", ParameterSetName ='PasswordGallery')]
@@ -1581,6 +1600,10 @@ function New-AzDtlVm {
         $p = $t.resources.properties
         $p | Add-Member -Name 'size' -Value $Size -MemberType NoteProperty
 
+        if($StorageType) {$p | Add-Member -Name 'storageType' -Value $StorageType -MemberType NoteProperty}
+        
+        if($Notes) {$p | Add-Member -Name 'notes' -Value $Notes -MemberType NoteProperty}
+
         if($Claimable) {$p | Add-Member -Name 'allowClaim' -Value $True -MemberType NoteProperty}
 
         # In the next two -force is needed because the property already exist in json with a different value
@@ -1626,6 +1649,61 @@ function New-AzDtlVm {
             throw "CustomImage $CustomImage is not a string and not an object with a ResourceId property."
           }
           $p | Add-Member -Name 'customImageId' -Value $imageId -MemberType NoteProperty
+        }
+
+        if ($SharedImageGalleryImage) {
+            if ($SharedImageGalleryImage -is [string]) {
+                $SigImageString = $SharedImageGalleryImage
+            }
+            elseif ($SharedImageGalleryImage.Id) {
+                $SigImageString = $SharedImageGalleryImage.Id
+            }
+            else {
+                throw "SharedImageGalleryImage is not a string and not an object with an Id property."
+            }
+
+            # The image name MUST have at least 1 slash (contains the SIG Gallery & Image definition name)
+            if (-not $SigImageString.Contains("/")) {
+                throw "SharedImageGalleryImage must have at least one '/' in the format SharedImageGallery/ImageDefinitionName"
+            }
+
+            # We could have a variety of formats, we basically need the image name
+            # If the string ends in a version, take the string right before, otherwise the name is the last string
+            $b = $null
+            if ([System.Version]::TryParse(($SigImageString.Split("/") | Select -Last 1), [ref]$b)) {
+                # Ends in a version number, let's check the string before
+                if (($SigImageString.Split("/") | Select -Last 2 | Select -First 1) -eq "versions") {
+                    # We have a full resource id, let's get the name & Shared Image Gallery name
+                    $SigImageName = $SigImageString.Split("/") | Select -Last 3 | Select -First 1
+                    $SigGalleryName = $SigImageString.Split("/") | Select -Last 5 | Select -First 1
+                }
+                else {
+                    # we have the gallery & name & version, but not a full resource Id
+                    $SigImageName = $SigImageString.Split("/") | Select -Last 2 | Select -First 1
+                    $SigGalleryName = $SigImageString.Split("/") | Select -Last 3 | Select -First 1
+                }
+            }
+            else {
+                # Doesn't end in a version number - this is an image definition
+                if (($SigImageString.Split("/") | Select -Last 2 | Select -First 1) -eq "images") {
+                    # We have a full resource id, let's get the name & Shared Image Gallery name
+                    $SigImageName = $SigImageString.Split("/") | Select -Last 1
+                    $SigGalleryName = $SigImageString.Split("/") | Select -Last 3 | Select -First 1
+                }
+                else {
+                    # we have the gallery & name, but not a full resource Id
+                    $SigImageName = $SigImageString.Split("/") | Select -Last 1
+                    $SigGalleryName = $SigImageString.Split("/") | Select -Last 2 | Select -First 1
+                }
+               
+            }
+
+            $SubscriptionID = (Get-AzureRmContext).Subscription.Id
+            $imageId = "/subscriptions/$SubscriptionID/ResourceGroups/$ResourceGroupName/providers/Microsoft.DevTestLab/labs/$Name/sharedgalleries/$SigGalleryName/sharedimages/$SigImageName"
+            Write-Verbose "Using Shared Image Gallery $SigGalleryName/$SigImageName with resource id $imageId"
+
+            $p | Add-Member -Name 'sharedImageId' -Value $imageId -MemberType NoteProperty
+
         }
 
         if($Sku -or $Publisher -or $Offer) {

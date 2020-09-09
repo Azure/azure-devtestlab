@@ -1,0 +1,70 @@
+on:
+  schedule:
+    - cron: '0 2 * * * '
+  # See here: https://goobar.io/2019/12/07/manually-trigger-a-github-actions-workflow/
+  repository_dispatch:
+    types: run
+  push:
+    paths:
+    - 'samples/ClassroomLabs/**'
+    - '.github/workflows/**'
+  pull_request:
+    paths:
+    - 'samples/ClassroomLabs/**'
+    - '.github/workflows/**'
+
+name: AllTests
+
+jobs:
+
+  # You cannot use a matrix to define a shell: https://github.community/t5/GitHub-Actions/Using-matrix-to-specify-shell-is-it-possible/m-p/39869
+  run-all-tests-core-win:
+    runs-on: windows-latest
+    steps:
+    
+    - uses: actions/checkout@v2
+
+    - name: Execute steps
+      shell: pwsh
+      run: |
+        Install-Module Pester -Force -AllowClobber
+        Install-Module Az -Force -AllowClobber
+        $User = "${{ secrets.PRINCIPAL_USER }}"
+        $PWord = ConvertTo-SecureString -String ${{ secrets.PRINCIPAL_PASSWORD }} -AsPlainText -Force
+        $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $User, $PWord
+        Connect-AzAccount -Credential $Credential -Tenant "${{ secrets.PRINCIPAL_TENANT }}" -ServicePrincipal
+        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/* -EnableExit
+
+  run-all-tests-core-linux:
+    runs-on: ubuntu-latest
+    steps:
+    
+    - uses: actions/checkout@v2
+
+    - name: Execute steps
+      shell: pwsh
+      run: |
+        Install-Module Pester -Force
+        Install-Module Az -Force
+        $User = "${{ secrets.PRINCIPAL_USER }}"
+        $PWord = ConvertTo-SecureString -String ${{ secrets.PRINCIPAL_PASSWORD }} -AsPlainText -Force
+        $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $User, $PWord
+        Connect-AzAccount -Credential $Credential -Tenant "${{ secrets.PRINCIPAL_TENANT }}" -ServicePrincipal
+        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/* -EnableExit
+
+  run-all-tests-powershell:
+    runs-on: windows-latest
+    steps:
+    
+    - uses: actions/checkout@v2
+
+    - name: Execute steps
+      shell: powershell
+      run: |
+        Install-Module Pester -Force -AllowClobber
+        Install-Module Az -Force -AllowClobber
+        $User = "${{ secrets.PRINCIPAL_USER }}"
+        $PWord = ConvertTo-SecureString -String ${{ secrets.PRINCIPAL_PASSWORD }} -AsPlainText -Force
+        $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $User, $PWord
+        Connect-AzAccount -Credential $Credential -Tenant "${{ secrets.PRINCIPAL_TENANT }}" -ServicePrincipal
+        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/* -EnableExit

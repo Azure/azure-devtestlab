@@ -22,10 +22,10 @@
         "serverName": "[toLower(concat(variables('resourceNamePrefix'), '-', take(uniqueString(resourceGroup().id), 6), '-db'))]",
         "databaseName": "[concat('db', uniqueString(resourceGroup().id, variables('siteName')))]",        
         "databaseVersion": "9.6",
-        "databaseDTU": 100,
-        "databaseSkuName": "PostgreSQLB100",
+        "databaseDTU": 2,
+        "databaseSkuName": "GP_Gen5_2",
         "databaseSkuSizeMB": 51200,
-        "databaseSkuTier": "Basic"
+        "databaseSkuTier": "GeneralPurpose"
     },
     "resources": [
         {
@@ -76,7 +76,7 @@
         {
             "name": "[variables('serverName')]",
             "type": "Microsoft.DBforPostgreSQL/servers",
-            "apiVersion": "2017-04-30-preview",
+            "apiVersion": "2017-12-01",
             "location": "[resourceGroup().location]",
             "kind": "",
             "properties": {
@@ -90,13 +90,13 @@
                 "tier": "[variables('databaseSkuTier')]",
                 "capacity": "[variables('databaseDTU')]",
                 "size": "[variables('databaseSkuSizeMB')]",
-                "family": "SkuFamily"
+                "family": "Gen5"
             },
             "resources": [
                 {
                     "name": "[concat(variables('serverName'),'-firewall')]",
                     "type": "firewallrules",
-                    "apiVersion": "2016-02-01-privatepreview",
+                    "apiVersion": "2017-12-01",
                     "location": "[resourceGroup().location]",
                     "dependsOn": [
                         "[concat('Microsoft.DBforPostgreSQL/servers/', variables('serverName'))]"
@@ -109,7 +109,7 @@
                 {
                     "name": "[variables('databaseName')]",
                     "type": "databases",
-                    "apiVersion": "2016-02-01-privatepreview",
+                    "apiVersion": "2017-12-01",
                     "location": "[resourceGroup().location]",
                     "dependsOn": [
                         "[concat('Microsoft.DBforPostgreSQL/servers/', variables('serverName'))]"

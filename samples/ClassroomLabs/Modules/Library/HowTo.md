@@ -55,20 +55,19 @@ Then create a new lab account in the resource group
 $la = New-AzLabAccount -ResourceGroupName DtlPS1 -LabAccountName TestAzLab
 ```
 
-Then create a new lab in the lab account. The parameters should be self-explanatory as they closely resemble the equally named parameters in the Azure Labs UI.
-
-```powershell
-$lab = $la | New-AzLab -LabName MyLab -MaxUsers 2 -UsageQuotaInHours 20 -UserAccessMode Restricted -SharedPasswordEnabled
-```
-
-Once the lab is created, we need to add a template VM to it. A template VM needs an image to be based on. The whole process is exemplified below:
+We then need to find an image to base the lab on.
 
 ```powershell
 $img = $la | Get-AzLabAccountGalleryImage | Where-Object {$_.name -like 'CentOS-Based*'}
-$lab = $lab | New-AzLabTemplateVM -Image $img -Size 'Small' -Title 'My lab title' -Description 'My descr' -UserName 'Test0000' -Password 'test00000000' -LinuxRdpEnabled
 ```
 
 Notice that you can also get the image from a shared gallery, by calling the `Get-AzLabAccountSharedImage` function instead of `Get-AzLabAccountGalleryImage`.
+
+Once we have an image, we can create a new lab in the lab account. The parameters should be self-explanatory as they closely resemble the equally named parameters in the Azure Labs UI.
+
+```powershell
+$lab = $la | New-AzLab -LabName MyLab -Image $img -Size Basic -UsageQuotaInHours 20 -SharedPasswordEnabled -UserName 'Test0000' -Password 'test00000000' -LinuxRdpEnabled
+```
 
 Once all of the above is done, you can finally publish the lab:
 

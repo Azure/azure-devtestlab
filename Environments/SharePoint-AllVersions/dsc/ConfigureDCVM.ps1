@@ -9,7 +9,7 @@
         [Parameter(Mandatory)] [Boolean]$ConfigureADFS
     )
 
-    Import-DscResource -ModuleName xActiveDirectory, NetworkingDsc, xPSDesiredStateConfiguration, ActiveDirectoryCSDsc, CertificateDsc, cADFS, xDnsServer, ComputerManagementDsc
+    Import-DscResource -ModuleName ActiveDirectoryDsc, NetworkingDsc, xPSDesiredStateConfiguration, ActiveDirectoryCSDsc, CertificateDsc, cADFS, xDnsServer, ComputerManagementDsc
     [String] $DomainNetbiosName = (Get-NetBIOSName -DomainFQDN $DomainFQDN)
     [System.Management.Automation.PSCredential] $DomainCredsNetbios = New-Object System.Management.Automation.PSCredential ("${DomainNetbiosName}\$($Admincreds.UserName)", $Admincreds.Password)
     [System.Management.Automation.PSCredential] $AdfsSvcCredsQualified = New-Object System.Management.Automation.PSCredential ("${DomainNetbiosName}\$($AdfsSvcCreds.UserName)", $AdfsSvcCreds.Password)
@@ -27,84 +27,68 @@
             RebootNodeIfNeeded = $true
         }
 
+        #**********************************************************
+        # Create AD domain
+        #**********************************************************
         WindowsFeature ADDS { Name = "AD-Domain-Services"; Ensure = "Present" }
-        WindowsFeature DNS  { Name = "DNS"; Ensure = "Present" }
-
-        Script script1
+        WindowsFeature DNS  { Name = "DNS";                Ensure = "Present" }
+        DnsServerAddress SetDNS { Address = '127.0.0.1' ; InterfaceAlias = $InterfaceAlias; AddressFamily  = 'IPv4' }
+        
+        ADDomain FirstDS
         {
-            SetScript =  {
-                Set-DnsServerDiagnostics -All $true
-                Write-Verbose -Verbose "Enabling DNS client diagnostics" 
-            }
-            GetScript =  { @{} }
-            TestScript = { $false }
-            DependsOn = "[WindowsFeature]DNS"
-        }
-
-        WindowsFeature DnsTools { Name = "RSAT-DNS-Server"; Ensure = "Present" }
-
-        DnsServerAddress DnsServerAddress 
-        {
-            Address        = '127.0.0.1' 
-            InterfaceAlias = $InterfaceAlias
-            AddressFamily  = 'IPv4'
-            DependsOn = "[WindowsFeature]DNS"
-        }
-
-        xADDomain FirstDS
-        {
-            DomainName = $DomainFQDN
-            DomainAdministratorCredential = $DomainCredsNetbios
+            DomainName                    = $DomainFQDN
+            Credential                    = $DomainCredsNetbios
             SafemodeAdministratorPassword = $DomainCredsNetbios
-            DatabasePath = "C:\NTDS"
-            LogPath = "C:\NTDS"
-            SysvolPath = "C:\SYSVOL"
-            DependsOn = "[DnsServerAddress]DnsServerAddress"
+            DatabasePath                  = "C:\NTDS"
+            LogPath                       = "C:\NTDS"
+            SysvolPath                    = "C:\SYSVOL"
+            DependsOn                     = "[DnsServerAddress]SetDNS"
         }
 
-        PendingReboot Reboot1
+        PendingReboot RebootAfterADDomainSignal
         {
-            Name = "RebootServer"
-            DependsOn = "[xADDomain]FirstDS"
-        }       
+            Name      = "RebootAfterADDomainSignal"
+            DependsOn = "[ADDomain]FirstDS"
+        }
+
+        WaitForADDomain ADDomainReady
+        {
+            DomainName              = $DomainFQDN
+            WaitTimeout             = 300
+            RestartCount            = 3
+            Credential              = $DomainCredsNetbios
+            WaitForValidCredentials = $true
+            DependsOn               = "[PendingReboot]RebootAfterADDomainSignal"
+        }
 
         #**********************************************************
-        # Misc: Set email of AD domain admin and add remote AD tools
+        # Configuration needed by SharePoint farm
         #**********************************************************
-        xADUser SetEmailOfDomainAdmin
+        ADUser SetEmailOfDomainAdmin
         {
-            DomainAdministratorCredential = $DomainCredsNetbios
-            DomainName = $DomainFQDN
-            UserName = $Admincreds.UserName
-            Password = $Admincreds
-            EmailAddress = $Admincreds.UserName + "@" + $DomainFQDN
-            PasswordAuthentication = 'Negotiate'
-            Ensure = "Present"
+            DomainName           = $DomainFQDN
+            UserName             = $Admincreds.UserName
+            EmailAddress         = "$($Admincreds.UserName)@$DomainFQDN"
             PasswordNeverExpires = $true
-            DependsOn = "[PendingReboot]Reboot1"
+            Ensure               = "Present"
+            DependsOn            = "[WaitForADDomain]ADDomainReady"
         }
-
-        WindowsFeature AddADFeature1    { Name = "RSAT-ADLDS";          Ensure = "Present"; DependsOn = "[PendingReboot]Reboot1" }
-        WindowsFeature AddADFeature2    { Name = "RSAT-ADDS-Tools";     Ensure = "Present"; DependsOn = "[PendingReboot]Reboot1" }
 
         if ($ConfigureADFS -eq $true) {
             #**********************************************************
             # Configure AD CS
             #**********************************************************
-            WindowsFeature AddCertAuthority       { Name = "ADCS-Cert-Authority"; Ensure = "Present"; DependsOn = "[PendingReboot]Reboot1" }
-            WindowsFeature AddADCSManagementTools { Name = "RSAT-ADCS-Mgmt";      Ensure = "Present"; DependsOn = "[PendingReboot]Reboot1" }
+            WindowsFeature AddADCSFeature       { Name = "ADCS-Cert-Authority"; Ensure = "Present"; DependsOn = "[WaitForADDomain]ADDomainReady" }
+
             ADCSCertificationAuthority ADCS
             {
                 IsSingleInstance = "Yes"
                 CAType = "EnterpriseRootCA"
                 Ensure = "Present"
                 Credential = $DomainCredsNetbios
-                DependsOn = "[WindowsFeature]AddCertAuthority"
+                DependsOn = "[WindowsFeature]AddADCSFeature"
             }
-
-            #**********************************************************
-            # Configure AD FS
-            #**********************************************************
+           
             WaitForCertificateServices WaitAfterADCSProvisioning
             {
                 CAServerFQDN = "$ComputerName.$DomainFQDN"
@@ -113,6 +97,9 @@
                 PsDscRunAsCredential = $DomainCredsNetbios
             }
 
+            #**********************************************************
+            # Configure AD FS
+            #**********************************************************
             CertReq ADFSSiteCert
             {
                 CARootName                = "$DomainNetbiosName-$ComputerName-CA"
@@ -126,7 +113,7 @@
                 KeyUsage                  = '0xa0'
                 CertificateTemplate       = 'WebServer'
                 AutoRenew                 = $true
-                SubjectAltName            = "dns=certauth.$ADFSSiteName.$DomainFQDN&dns=$ADFSSiteName.$DomainFQDN"
+                SubjectAltName            = "dns=certauth.$ADFSSiteName.$DomainFQDN&dns=$ADFSSiteName.$DomainFQDN&dns=enterpriseregistration.$DomainFQDN"
                 Credential                = $DomainCredsNetbios
                 DependsOn = '[WaitForCertificateServices]WaitAfterADCSProvisioning'
             }
@@ -165,9 +152,37 @@
                 DependsOn = '[WaitForCertificateServices]WaitAfterADCSProvisioning'
             }
 
-            xADUser CreateAdfsSvcAccount
+            xScript ExportCertificates
             {
-                DomainAdministratorCredential = $DomainCredsNetbios
+                SetScript = 
+                {
+                    Write-Verbose -Message "Exporting the public key of the ADFS signing certifiacte and its issuer..."
+                    $ADFSSiteName = $using:ADFSSiteName
+                    $destinationPath = "C:\Setup"
+                    $adfsSigningCertFileName = "ADFS Signing.cer"
+                    $adfsSigningIssuerCertFileName = "ADFS Signing issuer.cer"
+                    New-Item $destinationPath -Type directory -ErrorAction SilentlyContinue
+
+                    $signingCert = Get-ChildItem -Path "cert:\LocalMachine\My\" -DnsName "$ADFSSiteName.Signing"
+                    $signingCert| Export-Certificate -FilePath ([System.IO.Path]::Combine($destinationPath, $adfsSigningCertFileName))
+                    Get-ChildItem -Path "cert:\LocalMachine\Root\"| Where-Object{$_.Subject -eq  $signingCert.Issuer}| Select-Object -First 1| Export-Certificate -FilePath ([System.IO.Path]::Combine($destinationPath, $adfsSigningIssuerCertFileName))
+                    Write-Verbose -Message "Public key of the ADFS signing certifiacte and its issuer successfully exported"
+                }
+                GetScript =  
+                {
+                    # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
+                    return @{ "Result" = "false" }
+                }
+                TestScript = 
+                {
+                    # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
+                return $false
+                }
+                DependsOn = "[CertReq]ADFSSiteCert", "[CertReq]ADFSSigningCert", "[CertReq]ADFSDecryptionCert"
+            }
+
+            ADUser CreateAdfsSvcAccount
+            {
                 DomainName = $DomainFQDN
                 UserName = $AdfsSvcCreds.UserName
                 Password = $AdfsSvcCreds
@@ -184,18 +199,30 @@
                 MembersToInclude= $AdfsSvcCredsQualified.UserName
                 Credential = $DomainCredsNetbios    
                 PsDscRunAsCredential = $DomainCredsNetbios
-                DependsOn = "[xADUser]CreateAdfsSvcAccount"
+                DependsOn = "[ADUser]CreateAdfsSvcAccount"
             }
 
             WindowsFeature AddADFS { Name = "ADFS-Federation"; Ensure = "Present"; DependsOn = "[Group]AddAdfsSvcAccountToDomainAdminsGroup" }
 
-            xDnsRecord AddADFSHostDNS {
+            xDnsRecord AddADFSHostDNS
+            {
                 Name = $ADFSSiteName
                 Zone = $DomainFQDN
                 Target = $PrivateIP
                 Type = "ARecord"
                 Ensure = "Present"
-                DependsOn = "[PendingReboot]Reboot1"
+                DependsOn = "[WaitForADDomain]ADDomainReady"
+            }
+
+            # https://docs.microsoft.com/en-us/windows-server/identity/ad-fs/deployment/configure-corporate-dns-for-the-federation-service-and-drs
+            xDnsRecord AddADFSDevideRegistrationAlias
+            {
+                Name = "enterpriseregistration"
+                Zone = $DomainFQDN
+                Target = "$ComputerName.$DomainFQDN"
+                Type = "CName"
+                Ensure = "Present"
+                DependsOn = "[WaitForADDomain]ADDomainReady"
             }
 
             cADFSFarm CreateADFSFarm
@@ -238,36 +265,12 @@ param = c.Value);
                 PsDscRunAsCredential = $DomainCredsNetbios
                 DependsOn = "[cADFSFarm]CreateADFSFarm"
             }
-
-            xScript ExportCertificates
-            {
-                SetScript = 
-                {
-                    Write-Verbose -Message "Exporting the public key of the ADFS signing certifiacte and its issuer..."
-                    $ADFSSiteName = $using:ADFSSiteName
-                    $destinationPath = "C:\Setup"
-                    $adfsSigningCertFileName = "ADFS Signing.cer"
-                    $adfsSigningIssuerCertFileName = "ADFS Signing issuer.cer"
-                    New-Item $destinationPath -Type directory -ErrorAction SilentlyContinue
-
-                    $signingCert = Get-ChildItem -Path "cert:\LocalMachine\My\" -DnsName "$ADFSSiteName.Signing"
-                    $signingCert| Export-Certificate -FilePath ([System.IO.Path]::Combine($destinationPath, $adfsSigningCertFileName))
-                    Get-ChildItem -Path "cert:\LocalMachine\Root\"| Where-Object{$_.Subject -eq  $signingCert.Issuer}| Select-Object -First 1| Export-Certificate -FilePath ([System.IO.Path]::Combine($destinationPath, $adfsSigningIssuerCertFileName))
-                    Write-Verbose -Message "Public key of the ADFS signing certifiacte and its issuer successfully exported"
-                }
-                GetScript =  
-                {
-                    # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
-                    return @{ "Result" = "false" }
-                }
-                TestScript = 
-                {
-                    # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
-                return $false
-                }
-                DependsOn = "[CertReq]ADFSSiteCert", "[CertReq]ADFSSigningCert", "[CertReq]ADFSDecryptionCert"
-            }
         }
+
+        WindowsFeature AddADFeature1 { Name = "RSAT-ADLDS";       Ensure = "Present"; }
+        WindowsFeature AddADFeature2 { Name = "RSAT-ADDS-Tools";  Ensure = "Present"; }
+        WindowsFeature DnsTools      { Name = "RSAT-DNS-Server";  Ensure = "Present"; }
+        WindowsFeature AddADCSManagementTools { Name = "RSAT-ADCS-Mgmt";      Ensure = "Present"; }
     }
 }
 
@@ -315,10 +318,10 @@ help ConfigureDCVM
 $Admincreds = Get-Credential -Credential "yvand"
 $AdfsSvcCreds = Get-Credential -Credential "adfssvc"
 $DomainFQDN = "contoso.local"
-$PrivateIP = "10.0.1.4"
+$PrivateIP = "10.1.1.4"
 $ConfigureADFS = $false
 
-$outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.80.0.0\DSCWork\ConfigureDCVM.0\ConfigureDCVM"
+$outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.80.0.3\DSCWork\ConfigureDCVM.0\ConfigureDCVM"
 ConfigureDCVM -Admincreds $Admincreds -AdfsSvcCreds $AdfsSvcCreds -DomainFQDN $DomainFQDN -PrivateIP $PrivateIP -ConfigureADFS $ConfigureADFS -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
 Set-DscLocalConfigurationManager -Path $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force

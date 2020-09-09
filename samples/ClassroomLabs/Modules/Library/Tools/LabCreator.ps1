@@ -5,7 +5,7 @@ param(
     $CsvConfigFile
 )
 
-Import-Module ../Az.LabServices.psm1
+Import-Module ../Az.LabServices.psm1 -Force
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -52,7 +52,6 @@ $init = {
             $SharedPassword,
 
             [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-            [ValidateSet('Small', 'Medium', 'MediumNested', 'Large', 'GPU')]
             $Size,
 
             [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
@@ -94,9 +93,8 @@ $init = {
         $lab = $la | Get-AzLab -LabName $LabName
 
         if ($lab) {
-            $lab = $la `
-            | New-AzLab -LabName $LabName -MaxUsers $maxUsers -UsageQuotaInHours $usageQuota -UserAccessMode $UsageMode -SharedPasswordEnabled:$SharedPassword `
-            | Publish-AzLab
+            # TODO: cannot set max users
+            $lab = $lab | Set-AzLab -UsageQuotaInHours $usageQuota -UserAccessMode $UsageMode  -SharedPasswordEnabled:$SharedPassword
             Write-Host "$LabName lab already exist. Republished."
         }
         else {
@@ -108,20 +106,22 @@ $init = {
             }
             Write-Host "Image $ImageName found."
     
+            #TODO: cannot set maxUsers
             $lab = $la `
-            | New-AzLab -LabName $LabName -MaxUsers $maxUsers -UsageQuotaInHours $usageQuota -UserAccessMode $UsageMode -SharedPasswordEnabled:$SharedPassword `
-            | New-AzLabTemplateVM -Image $img -Size $size -Title $title -Description $descr -UserName $userName -Password $password -LinuxRdpEnabled:$linuxRdp `
-            | Publish-AzLab
+            | New-AzLab -LabName $LabName -Image $img -Size $size -UserName $userName -Password $password -LinuxRdpEnabled:$linuxRdp `
+            | Publish-AzLab `
+            | Set-AzLab -UsageQuotaInHours $usageQuota -UserAccessMode $UsageMode  -SharedPasswordEnabled:$SharedPassword `
+
             Write-Host "$LabName lab doesn't exist. Created it."
         }
 
-        $lab | Add-AzLabUser -Emails $emails | Out-Null
+        $lab = $lab | Add-AzLabUser -Emails $emails
         $users = $lab | Get-AzLabUser
         $users | ForEach-Object { $lab | Send-AzLabUserInvitationEmail -User $_ -InvitationText $invitation } | Out-Null
         Write-Host "Added Users: $emails."
 
         if ($Schedules) {
-            $schedules | ForEach-Object { $_ | New-AzLabSchedule -Lab $lab } | Out-Null
+            $Schedules | ForEach-Object { $_ | New-AzLabSchedule -Lab $lab } | Out-Null
             Write-Host "Added all schedules."
         }
     }
@@ -202,12 +202,14 @@ function New-AzLabMultiple {
         # Really?? It got to be the lines below? Doing a ForEach doesn't work ...
         $input.movenext() | Out-Null
         $obj = $input.current[0]
+        Write-Verbose "object inside the newazmultiple block $obj"
         $obj | New-AzLabSingle
     }
 
     Write-Host "Starting creation of all labs in parallel. Can take a while."
 
     $jobs = $ConfigObject | ForEach-Object {
+        Write-Verbose "From config: $_"
         Start-Job  -InitializationScript $init -ScriptBlock $block -ArgumentList $PSScriptRoot -InputObject $_ -Name $_.LabName
     }
 

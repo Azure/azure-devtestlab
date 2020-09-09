@@ -92,6 +92,23 @@ function Install-HypervAndTools {
     [CmdletBinding()]
     param()
 
+    if (Get-RunningServerOperatingSystem) {
+        Install-HypervAndToolsServer
+    } else
+    {
+        Install-HypervAndToolsClient
+    }
+}
+
+<#
+.SYNOPSIS
+Enables Hyper-V role for server, including PowerShell cmdlets for Hyper-V and management tools.
+#>
+function Install-HypervAndToolsServer {
+    [CmdletBinding()]
+    param()
+
+    
     if ($null -eq $(Get-WindowsFeature -Name 'Hyper-V')) {
         Write-Error "This script only applies to machines that can run Hyper-V."
     }
@@ -107,6 +124,33 @@ function Install-HypervAndTools {
     if ($featureStatus.RestartNeeded -eq $true) {
         Write-Error "Restart required to finish installing the Hyper-V PowerShell Module.  Please restart and re-run this script."
     }
+}
+
+<#
+.SYNOPSIS
+Enables Hyper-V role for client (Win10), including PowerShell cmdlets for Hyper-V and management tools.
+#>
+function Install-HypervAndToolsClient {
+    [CmdletBinding()]
+    param()
+
+    
+    if ($null -eq $(Get-WindowsOptionalFeature -Online -FeatureName 'Microsoft-Hyper-V-All')) {
+        Write-Error "This script only applies to machines that can run Hyper-V."
+    }
+    else {
+        $roleInstallStatus = Enable-WindowsOptionalFeature -Online -FeatureName 'Microsoft-Hyper-V-All'
+        if ($roleInstallStatus.RestartNeeded) {
+            Write-Error "Restart required to finish installing the Hyper-V role .  Please restart and re-run this script."
+        }
+
+        $featureEnableStatus = Get-WmiObject -Class Win32_OptionalFeature -Filter "name='Microsoft-Hyper-V-Hypervisor'"
+        if ($featureEnableStatus.InstallState -ne 1) {
+            Write-Error "This script only applies to machines that can run Hyper-V."
+            goto(finally)
+        }
+
+    } 
 }
 
 <#
@@ -200,9 +244,6 @@ function Select-ResourceByProperty {
 #
 
 try {
-    # Verify that we are on a server os, not a client os
-    Write-Output "Verify server operating system."
-    if (-not (Get-RunningServerOperatingSystem)) { Write-Error "This script is designed to run on Windows Server." }
 
     # Check that script is being run with Administrator privilege.
     Write-Output "Verify running as administrator."
@@ -228,56 +269,69 @@ try {
     # Azure Static DNS Server IP
     $dnsServerIp = "168.63.129.16"
 
-    # Install DHCP so client vms will automatically get an IP address.
-    Write-Output "Installing DHCP, if needed."
-    Install-DHCP 
+    if (Get-RunningServerOperatingSystem) {
+        # Install DHCP so client vms will automatically get an IP address.
+        Write-Output "Installing DHCP, if needed."
+        Install-DHCP 
 
-    # Add scope for client vm ip address
-    $scopeName = "LabServicesDhcpScope"
-    $dhcpScope = Select-ResourceByProperty `
-        -PropertyName 'Name' -ExpectedPropertyValue $scopeName `
-        -List @(Get-DhcpServerV4Scope) `
-        -NewObjectScriptBlock { Add-DhcpServerv4Scope -name $scopeName -StartRange $startRangeForClientIps -EndRange $endRangeForClientIps -SubnetMask $subnetMaskForClientIps -State Active
-                                Set-DhcpServerV4OptionValue -DnsServer $dnsServerIp -Router $ipAddress
-                             }
-    Write-Output "Using $dhcpScope"
+        # Add scope for client vm ip address
+        $scopeName = "LabServicesDhcpScope"
 
-    # Create Switch
-    Write-Output "Setting up network for client virtual machines."
-    $switchName = "LabServicesSwitch"
-    $vmSwitch = Select-ResourceByProperty `
-        -PropertyName 'Name' -ExpectedPropertyValue $switchName `
-        -List (Get-VMSwitch -SwitchType Internal) `
-        -NewObjectScriptBlock { New-VMSwitch -Name $switchName -SwitchType Internal }
-    Write-Output "Using $vmSwitch"
+        $dhcpScope = Select-ResourceByProperty `
+            -PropertyName 'Name' -ExpectedPropertyValue $scopeName `
+            -List @(Get-DhcpServerV4Scope) `
+            -NewObjectScriptBlock { Add-DhcpServerv4Scope -name $scopeName -StartRange $startRangeForClientIps -EndRange $endRangeForClientIps -SubnetMask $subnetMaskForClientIps -State Active
+                                    Set-DhcpServerV4OptionValue -DnsServer $dnsServerIp -Router $ipAddress
+                                }
+        Write-Output "Using $dhcpScope"
+    
 
-    # Get network adapter information
-    $netAdapter = Select-ResourceByProperty `
-        -PropertyName "Name" -ExpectedPropertyValue "*$switchName*"  `
-        -List @(Get-NetAdapter) `
-        -NewObjectScriptBlock { Write-Error "No Net Adapters found" } 
-    Write-Output "Using  $netAdapter"
-    Write-Output "Adapter found is $($netAdapter.ifAlias) and Interface Index is $($netAdapter.ifIndex)"
+        # Create Switch
+        Write-Output "Setting up network for client virtual machines."
+        $switchName = "LabServicesSwitch"
+        $vmSwitch = Select-ResourceByProperty `
+            -PropertyName 'Name' -ExpectedPropertyValue $switchName `
+            -List (Get-VMSwitch -SwitchType Internal) `
+            -NewObjectScriptBlock { New-VMSwitch -Name $switchName -SwitchType Internal }
+        Write-Output "Using $vmSwitch"
 
-    # Create IP Address 
-    $netIpAddr = Select-ResourceByProperty  `
-        -PropertyName 'IPAddress' -ExpectedPropertyValue $ipAddress `
-        -List @(Get-NetIPAddress) `
-        -NewObjectScriptBlock { New-NetIPAddress -IPAddress $ipAddress -PrefixLength $ipAddressPrefixRange -InterfaceIndex $netAdapter.ifIndex }
-    if (($netIpAddr.PrefixLength -ne $ipAddressPrefixRange) -or ($netIpAddr.InterfaceIndex -ne $netAdapter.ifIndex)) {
-        Write-Error "Found Net IP Address $netIpAddr, but prefix $ipAddressPrefix ifIndex not $($netAdapter.ifIndex)."
+        # Get network adapter information
+        $netAdapter = Select-ResourceByProperty `
+            -PropertyName "Name" -ExpectedPropertyValue "*$switchName*"  `
+            -List @(Get-NetAdapter) `
+            -NewObjectScriptBlock { Write-Error "No Net Adapters found" } 
+        Write-Output "Using  $netAdapter"
+        Write-Output "Adapter found is $($netAdapter.ifAlias) and Interface Index is $($netAdapter.ifIndex)"
+
+        # Create IP Address 
+        $netIpAddr = Select-ResourceByProperty  `
+            -PropertyName 'IPAddress' -ExpectedPropertyValue $ipAddress `
+            -List @(Get-NetIPAddress) `
+            -NewObjectScriptBlock { New-NetIPAddress -IPAddress $ipAddress -PrefixLength $ipAddressPrefixRange -InterfaceIndex $netAdapter.ifIndex }
+        if (($netIpAddr.PrefixLength -ne $ipAddressPrefixRange) -or ($netIpAddr.InterfaceIndex -ne $netAdapter.ifIndex)) {
+            Write-Error "Found Net IP Address $netIpAddr, but prefix $ipAddressPrefix ifIndex not $($netAdapter.ifIndex)."
+        }
+        Write-Output "Net ip address found is $ipAddress"
+
+        # Create NAT
+        $natName = "LabServicesNat"
+        $netNat = Select-ResourceByProperty -PropertyName 'Name' -ExpectedPropertyValue $natName -List @(Get-NetNat) -NewObjectScriptBlock { New-NetNat -Name $natName -InternalIPInterfaceAddressPrefix $ipAddressPrefix }
+        if ($netNat.InternalIPInterfaceAddressPrefix -ne $ipAddressPrefix) {
+            Write-Error "Found nat with name $natName, but InternalIPInterfaceAddressPrefix is not $ipAddressPrefix."
+        }
+        Write-Output "Nat found is $netNat"
+        #Make sure WinNat will start automatically so Hyper-V VMs will have internet connectivity.
+        Set-Service -Name WinNat -StartupType Automatic
+        if ($(Get-Service -Name WinNat | Select-Object -ExpandProperty StartType) -ne 'Automatic')
+        {
+            Write-Host "Unable to set WinNat service to Automatic.  Hyper-V virtual machines will not have internet connectivity when service is not running." -ForegroundColor Yellow
+        }  
     }
-    Write-Output "Net ip address found is $ipAddress"
-
-    # Create NAT
-    $natName = "LabServicesNat"
-    $netNat = Select-ResourceByProperty -PropertyName 'Name' -ExpectedPropertyValue $natName -List @(Get-NetNat) -NewObjectScriptBlock { New-NetNat -Name $natName -InternalIPInterfaceAddressPrefix $ipAddressPrefix }
-    if ($netNat.InternalIPInterfaceAddressPrefix -ne $ipAddressPrefix) {
-        Write-Error "Found nat with name $natName, but InternalIPInterfaceAddressPrefix is not $ipAddressPrefix."
+    else {
+        Write-Host -Object "DHCP Server is not supported on Windows 10. `
+        Use 'Default Switch' for the Configure Networking connection." -ForegroundColor Yellow
     }
-    Write-Output "Nat found is $netNat"
-
-    # Tell the user script is done.
+    # Tell the user script is done.    
     Write-Host -Object "Script completed." -ForegroundColor Green
 }
 finally {

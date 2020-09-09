@@ -2,8 +2,8 @@
 This script will help prepare your template virtual machine for a classroom lab to use Hyper-V nested virtualization.
 
 ## Notes
-- This script is written for Windows Server OSes, not for Windows Client OSes.
 - Script must be executed using administrator privileges.
+- If running this script on a client O.S. like Windows 10 which does not support DHCP Server, use the "Default Switch" in the network settings.
 
 # Directions
 1. Connect to template machine for your class.

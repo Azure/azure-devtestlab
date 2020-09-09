@@ -257,7 +257,7 @@ function Get-KaliLinuxVmcxFile {
   
     Write-Host "Downloading compressed file with  Kali Linux image."
     #Download page is https://www.offensive-security.com/kali-linux-vm-vmware-virtualbox-image-download/
-    $kaliLinux7ZipFile = Get-WebFile -DownloadUrl 'https://images.offensive-security.com/virtual-images/kali-linux-2019.3-hyperv-amd64.7z' -TargetFilePath $(Join-Path $env:TEMP 'KaliLinuxZip.7z') -SkipIfAlreadyExists $true
+    $kaliLinux7ZipFile = Get-WebFile -DownloadUrl 'https://images.offensive-security.com/virtual-images/kali-linux-2019.4-hyperv.zip' -TargetFilePath $(Join-Path $env:TEMP 'KaliLinuxZip.7z') -SkipIfAlreadyExists $true
  
     Write-Host "Extracting Kali Linux Hyper-V files from compressed file."
     $sevenZipExe = Join-Path $env:ProgramFiles '7-zip\7z.exe'

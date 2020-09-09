@@ -4,13 +4,13 @@ Param()
 Import-Module $PSScriptRoot\..\Az.DevTestLabs2.psm1 -Verbose:$false
 
 $labs = @(
-    [pscustomobject]@{Name=('DtlLibrary-Vm-' + (Get-Random)); ResourceGroupName=('DtlLibrary-VmRg-' + (Get-Random)); Location='westus'},
-    [pscustomobject]@{Name=('DtlLibrary-Vm-' + (Get-Random)); ResourceGroupName=('DtlLibrary-VmRg-' + (Get-Random)); Location='eastus'}
+    [pscustomobject]@{Name=('DtlLibrary-VmPipeline-' + (Get-Random)); ResourceGroupName=('DtlLibrary-VmPipelineRg-' + (Get-Random)); Location='westus'},
+    [pscustomobject]@{Name=('DtlLibrary-VmPipeline-' + (Get-Random)); ResourceGroupName=('DtlLibrary-VmPipelineRg-' + (Get-Random)); Location='eastus'}
 )
 
 $vms = @(
-    [pscustomobject]@{VmName=('Vm-' + (Get-Random)); Size='Standard_A4_v2'; UserName='bob'; Password='aPassword341341'; OsType='Windows'; Sku='2012-R2-Datacenter'; Publisher='MicrosoftWindowsServer'; Offer='WindowsServer'}
-    [pscustomobject]@{VmName=('Vm-' + (Get-Random)); Size='Standard_A4_v2'; UserName='bob'; Password='aPassword341341'; OsType='Windows'; Sku='2012-R2-Datacenter'; Publisher='MicrosoftWindowsServer'; Offer='WindowsServer'}
+    [pscustomobject]@{VmName=('Vm-' + (Get-Random)); Size='Standard_B4ms'; UserName='bob'; Password='aPassword341341'; OsType='Windows'; Sku='2012-R2-Datacenter'; Publisher='MicrosoftWindowsServer'; Offer='WindowsServer'}
+    [pscustomobject]@{VmName=('Vm-' + (Get-Random)); Size='Standard_B4ms'; UserName='bob'; Password='aPassword341341'; OsType='Windows'; Sku='2012-R2-Datacenter'; Publisher='MicrosoftWindowsServer'; Offer='WindowsServer'}
 )
 
 Describe 'VM Management' {
@@ -23,14 +23,23 @@ Describe 'VM Management' {
             # Create the labs
             $createdLabs = $labs | New-AzDtlLab
 
+            # WORKAROUND for 1082372
+            $labs | ForEach-Object {
+                Set-AzResource -ResourceGroupName $_.ResourceGroupName -ResourceType 'Microsoft.DevTestLab/labs/users' -Name "$($_.Name)/@me" -ApiVersion 2018-10-15-preview -Force
+            }
+            
+            # Query Azure to get the created labs to make sure they really exist
+            $createdLabs = $labs | Get-AzDtlLab
+            $createdLabs.Count | Should -Be 2
+
             # Create VMs in a lab
             $createdVMs = $vms| Select-Object -Property @{N='Name'; E={$createdLabs[0].Name}}, @{N='ResourceGroupName'; E={$createdLabs[0].ResourceGroupName}}, VmName,Size,Claimable,Username,Password,OsType,Sku,Publisher,Offer | New-AzDtlVm
+            $createdVMs = Get-AzDtlVm -Lab $createdLabs[0]
+
             Write-Verbose "Created VMs:"
             $createdVMs | Out-String | Write-Verbose
-            $createdVMs.Count | Should -Be 2
-
+ 
             Get-AzDtlVM -Lab $createdLabs[0]  | Measure-Object | Select-Object -ExpandProperty Count | Should -Be 2
-
             Get-AzDtlVM -Lab $createdLabs[1]  | Measure-Object | Select-Object -ExpandProperty Count | Should -Be 0
 
             # Stop VMs

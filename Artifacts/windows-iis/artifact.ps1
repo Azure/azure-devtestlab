@@ -23,8 +23,8 @@ if ($winVerString -like 'Microsoft Windows Server 2008 R2*' -or $winVerString -l
         Write-Error ('Failed to import IIS. Exit code is ' + $pkgMgrProcess.ExitCode.ToString())
     }
 }
-elseif ($winVerString -like 'Microsoft Windows Server 2016*'){
-    Write-Output 'Installing IIS on Windows Server 2016'
+elseif ($winVerString -like 'Microsoft Windows Server 2016*' -or $winVerString -like 'Microsoft Windows Server 2019*'){
+    Write-Output 'Installing IIS on Windows Server 2016 or 2019'
     Install-WindowsFeature -name Web-Server -IncludeManagementTools
 }
 elseif ($winVerString -like 'Microsoft Windows 10*' -or $winVerString -like 'Microsoft Windows 8.1*'){

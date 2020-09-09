@@ -1,19 +1,16 @@
 Import-Module $PSScriptRoot\..\Az.LabServices.psm1
 
 $rgName = 'AzLabsLibrary'
-$rgLocation = 'West Europe'
+$rgLocation = 'West US'
+
 $labName = 'FastLab'
 $laName = 'AzLabsLibrary-la'
-$imgName = 'CentOS-Based*'
-$maxUsers = 2
-$usageQuota = 30
-$usageAMode = 'Restricted'
-$shPsswd = $false
-$size = 'Medium'
-$title = 'Advancing Differentiation Workshop'
-$descr = 'Bringing it to the 21st Century'
+$imgName = 'CentOS-based*'
+$usageQuota = 3000
+$shPsswd = $true
+$size = 'Basic'
 $userName = 'test0000'
-$password = 'Test000'
+$password = 'Test00000000'
 
 function Get-FastResourceGroup {
     [CmdletBinding()]
@@ -32,7 +29,8 @@ function Get-FastLabAccount {
     param([Switch]$RandomName = $false)
 
     # Creat RG, Lab Account and lab if not existing
-    Get-FastResourceGroup | Out-Null
+    $la = Get-FastResourceGroup 
+    $rgName = $la.ResourceGroupName
     
     if($RandomName) {
         $laRealName = 'Temp' + (Get-Random)
@@ -73,8 +71,7 @@ function Get-FastLab {
         Write-Verbose "Image $imgName found."
             
         $lab = $la `
-        | New-AzLab -LabName $LabRealName -MaxUsers $maxUsers -UsageQuotaInHours $usageQuota -UserAccessMode $usageAMode -SharedPasswordEnabled:$shPsswd `
-        | New-AzLabTemplateVM -Image $img -Size $size -Title $title -Description $descr -UserName $userName -Password $password -LinuxRdpEnabled:$linuxRdp `
+        | New-AzLab -LabName $LabRealName -Image $img -Size $size -UsageQuotaInHours $usageQuota -UserName $userName -Password $password -LinuxRdpEnabled:$linuxRdp -SharedPasswordEnabled:$shPsswd `
         | Publish-AzLab
         Write-Verbose "$LaRealbName lab doesn't exist. Created it."
         return $lab
@@ -86,13 +83,12 @@ function Get-FastGallery {
     [CmdletBinding()]
     param()
     $allsg = Get-AzGallery
+    $allsg | Should -Not -BeNullOrEmpty
     $sg = $allsg `
          | Where-Object {$_.Name.StartsWith('AzLabsTestGallery')} `
          | Where-Object { (Get-AzGalleryImageDefinition -ResourceGroupName $_.ResourceGroupName -GalleryName $_.Name).Count -gt 0 }
-    if($sg) {
-        return $sg[0]
-    } else {
-        Write-Error "No shared image gallery with images exist in this subscription"
-    }
+
+    $sg | Should -Not -BeNullOrEmpty
+    return $sg[0]
 }
 

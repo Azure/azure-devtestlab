@@ -1,38 +1,43 @@
 {
-    "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
-    "title": "Create Domain",
-    "description": "Create an AD Domain in a new Forest",
-    "publisher": "Roger Zander",
-    "tags": [
-        "Windows",
-        "Domain",
-        "AD"
-    ],
-    "iconUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/Artifacts/windows-CreateDomain/createDomain.png",
-    "targetOsType": "Windows",
-    "parameters": {
-        "DomainName": {
-            "type": "string",
-            "displayName": "Domain NetBIOS Name",
-            "description": "NetBIOS Name of the Domain",
-            "defaultValue": "contoso",
-            "allowEmpty": false
-        },
-        "DomainFQDN": {
-            "type": "string",
-            "displayName": "FQDN Name of the Domain",
-            "description": "DNS Domain Name",
-            "defaultValue": "contoso.com",
-            "allowEmpty": false
-        },
-        "SafeModePW": {
-            "type": "securestring",
-            "displayName": "Recovery Password",
-            "description": "Safe Mode Admin Password",
-            "allowEmpty": false
-        }
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+  "title": "Create Domain",
+  "description": "Create an AD Domain in a new Forest",
+  "publisher": "Roger Zander",
+  "tags": [
+    "Windows",
+    "Domain",
+    "AD"
+  ],
+  "iconUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/Artifacts/windows-CreateDomain/createDomain.png",
+  "targetOsType": "Windows",
+  "parameters": {
+    "DomainName": {
+      "type": "string",
+      "displayName": "Domain NetBIOS Name",
+      "description": "NetBIOS Name of the Domain",
+      "defaultValue": "contoso",
+      "allowEmpty": false
     },
-    "runCommand": {
-        "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File SetupDomain.ps1', ' -DomainName ', parameters('DomainName'), ' -DomainFQDN ', parameters('DomainFQDN'), ' -SafeModePW \"', parameters('SafeModePW'), '\"')]"
+    "DomainFQDN": {
+      "type": "string",
+      "displayName": "FQDN Name of the Domain",
+      "description": "DNS Domain Name",
+      "defaultValue": "contoso.com",
+      "allowEmpty": false
+    },
+    "SafeModePW": {
+      "type": "securestring",
+      "displayName": "Recovery Password",
+      "description": "Safe Mode Admin Password",
+      "allowEmpty": false
     }
+  },
+  "runCommand": {
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass -File SetupDomain.ps1', ' -DomainName ', parameters('DomainName'), ' -DomainFQDN ', parameters('DomainFQDN'), ' -SafeModePW \"', parameters('SafeModePW'), '\"')]"
+  },
+  "postDeployActions": [
+    {
+      "action": "restart"
+    }
+  ]
 }

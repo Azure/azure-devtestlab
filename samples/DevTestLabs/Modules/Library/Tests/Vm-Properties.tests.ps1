@@ -4,11 +4,11 @@ Param()
 Import-Module $PSScriptRoot\..\Az.DevTestLabs2.psm1 -Verbose:$false
 
 $lab = @(
-    [pscustomobject]@{Name=('DtlLibrary-Vm-' + (Get-Random)); ResourceGroupName=('DtlLibrary-VmRg-' + (Get-Random)); Location='westus'}
+    [pscustomobject]@{Name=('DtlLibrary-VmProperties-' + (Get-Random)); ResourceGroupName=('DtlLibrary-VmProperties-rg-' + (Get-Random)); Location='westus'}
 )
 
 $vm = @(
-    [pscustomobject]@{VmName=('Vm-' + (Get-Random)); Size='Standard_A4_v2'; UserName='bob'; Password='aPassword341341'; OsType='Windows'; Sku='2012-R2-Datacenter'; Publisher='MicrosoftWindowsServer'; Offer='WindowsServer'}
+    [pscustomobject]@{VmName=('Vm-' + (Get-Random)); Size='Standard_B4ms'; UserName='bob'; Password='aPassword341341'; OsType='Windows'; Sku='2012-R2-Datacenter'; Publisher='MicrosoftWindowsServer'; Offer='WindowsServer'}
 )
 
 Describe 'Virtual Machine Management' {
@@ -21,6 +21,17 @@ Describe 'Virtual Machine Management' {
 
             # Create the lab
             $createdLab = $lab | New-AzDtlLab
+
+            # WORKAROUND for 1082372
+            $lab | ForEach-Object {
+                Set-AzResource -ResourceGroupName $_.ResourceGroupName -ResourceType 'Microsoft.DevTestLab/labs/users' -Name "$($_.Name)/@me" -ApiVersion 2018-10-15-preview -Force
+            }
+            
+            Write-Verbose "Original Lab Object:"
+            $lab | Out-String | Write-Verbose
+
+            Write-Verbose "Created Lab:"
+            $createdLab | Out-String | Write-Verbose
 
             # Create a VM in the lab
             $vm | Select-Object -Property @{N='Name'; E={$createdLab.Name}}, @{N='ResourceGroupName'; E={$createdLab.ResourceGroupName}}, VmName,Size,Claimable,Username,Password,OsType,Sku,Publisher,Offer | New-AzDtlVm

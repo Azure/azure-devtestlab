@@ -18,11 +18,11 @@ if ($pesterModule.Version.Major -lt 4 -or $pesterModule.version.Minor -lt 8) {
     Install-Module -Name Pester -Force -Scope CurrentUser
 }
 
-$threadModule = Get-Module -ListAvailable | Where-Object {$_.Name -eq "ThreadJob"} | Sort-Object -Descending Version | Select-Object -First 1
-if (-not $threadModule) {
-    Write-Output "Don't have a version of ThreadJob module locally, installing from PSGallery"
-    Install-Module -Name ThreadJob -Force -Scope CurrentUser
-}
+#$threadModule = Get-Module -ListAvailable | Where-Object {$_.Name -eq "ThreadJob"} | Sort-Object -Descending Version | Select-Object -First 1
+#if (-not $threadModule) {
+#    Write-Output "Don't have a version of ThreadJob module locally, installing from PSGallery"
+#    Install-Module -Name ThreadJob -Force -Scope CurrentUser
+#}
 
 $invokePesterScriptBlock = {
     param($testScript, $PSScriptRoot, $VerboseTests)
@@ -63,8 +63,15 @@ else {
     $jobs = @()
 
     $TestScripts | ForEach-Object {
-        $jobs += Start-Job -Script $invokePesterScriptBlock -ArgumentList $_, $PSScriptRoot, $VerboseTests
+        $jobName = Split-Path $_ -leaf
+        $jobs += Start-Job -Script $invokePesterScriptBlock -ArgumentList $_, $PSScriptRoot, $VerboseTests -Name $jobName
+        # Delay between starting jobs so all the 'setup' doesn't happen at the same time
+        Start-Sleep -Seconds 60
     }
 
-    $jobs | Receive-Job -Wait
+    # Write the output one at a time
+    $jobs | ForEach-Object {
+        Receive-Job -Job $_ -Wait
+        Remove-Job -Job $_
+    }
 }
