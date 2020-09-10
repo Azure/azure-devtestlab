@@ -1,4 +1,4 @@
-# Change log for AzureRM template SharePoint-ADFS-DevTestLabs
+# Change log for AzureRM template SharePoint-AllVersions
 
 ## September 2020 update
 
