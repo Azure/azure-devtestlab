@@ -1,5 +1,9 @@
 # Change log for AzureRM template SharePoint-ADFS-DevTestLabs
 
+## September 2020 update
+
+* Ensure compliance with policy CASG-DenyNSGRule100Allow
+
 ## August 2020-08-18 update
 
 * Revert SP and SQL to old VM sizes due to issues with Edsv4-series in "East US" since today (they fail to start)
