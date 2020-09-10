@@ -1,4 +1,10 @@
-# Change log for AzureRM template SharePoint-ADFS-DevTestLabs
+# Change log for AzureRM template SharePoint-AllVersions
+
+## September 2020 update
+
+* Many modifications on DSC scripts to improve their reliability, readability and consistency
+* Create default SharePoint security groups on team site
+* Ensure compliance with policy CASG-DenyNSGRule100Allow
 
 ## August 2020-08-18 update
 
