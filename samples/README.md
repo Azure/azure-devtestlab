@@ -22,6 +22,8 @@ A curated list of link with interesting information about Lab Services
   * [Devry University](https://techcommunity.microsoft.com/t5/azure-lab-services/customer-story-remote-hands-on-learning-with-azure-lab-services/ba-p/1329879)
   * [Edit Cowan University](https://educationblog.microsoft.com/en-au/2019/07/edith-cowan-university-tears-down-learning-barriers-with-azure-lab-services/)
   * [Victoria University](https://educationblog.microsoft.com/en-au/2020/02/victoria-university-builds-work-ready-graduates-streamlines-learning-with-azure-lab-services/)
+  * [Bicocca University](https://customers.microsoft.com/en-us/story/773188-universita-milano-bicocca-azure-education-italy-en)
+  * [Cagliari University](https://customers.microsoft.com/en-us/story/776202-university-cagliary-azure-education-italy-en)
 * [The Blog](https://techcommunity.microsoft.com/t5/azure-lab-services/bg-p/AzureLabServicesBlog) - In depth articles, user stories and news.
   * [Nested Virtualization Tips](https://techcommunity.microsoft.com/t5/azure-lab-services/nested-virtualization-tips/ba-p/1534323) - How to best set up nested virtualization for lab VMs
   * [Connecting to on premise network](https://techcommunity.microsoft.com/t5/azure-lab-services/connecting-to-on-premise-networks/ba-p/1381569) - Use network peering to your intranet.
