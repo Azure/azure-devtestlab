@@ -1,5 +1,11 @@
 # Change log for Azure template for SharePoint 2019 / 2016 / 2013
 
+## September 2020 update
+
+* Many modifications on DSC scripts to improve their reliability, readability and consistency
+* Create default SharePoint security groups on team site
+* Ensure compliance with policy CASG-DenyNSGRule100Allow
+
 ## August 2020 update
 
 * Fix timeout issue / DSC not resuming after VM reboot: Update dependencies of DSC extensions of SP and SQL, so they no longer depend on DSC of DC

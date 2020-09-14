@@ -31,11 +31,11 @@
         #**********************************************************
         # Create AD domain
         #**********************************************************
-        WindowsFeature ADDS { Name = "AD-Domain-Services"; Ensure = "Present" }
-        WindowsFeature DNS  { Name = "DNS";                Ensure = "Present" }
+        WindowsFeature AddADDS { Name = "AD-Domain-Services"; Ensure = "Present" }
+        WindowsFeature AddDNS  { Name = "DNS";                Ensure = "Present" }
         DnsServerAddress SetDNS { Address = '127.0.0.1' ; InterfaceAlias = $InterfaceAlias; AddressFamily  = 'IPv4' }
 
-        ADDomain FirstDS
+        ADDomain CreateADForest
         {
             DomainName                    = $DomainFQDN
             Credential                    = $DomainCredsNetbios
@@ -43,23 +43,23 @@
             DatabasePath                  = "C:\NTDS"
             LogPath                       = "C:\NTDS"
             SysvolPath                    = "C:\SYSVOL"
-            DependsOn                     = "[DnsServerAddress]SetDNS"
+            DependsOn                     = "[DnsServerAddress]SetDNS", "[WindowsFeature]AddADDS"
         }
 
-        PendingReboot RebootAfterADDomainSignal
+        PendingReboot RebootOnSignalFromCreateADForest
         {
-            Name      = "RebootAfterADDomainSignal"
-            DependsOn = "[ADDomain]FirstDS"
+            Name      = "RebootOnSignalFromCreateADForest"
+            DependsOn = "[ADDomain]CreateADForest"
         }
 
-        WaitForADDomain ADDomainReady
+        WaitForADDomain WaitForDCReady
         {
             DomainName              = $DomainFQDN
             WaitTimeout             = 300
             RestartCount            = 3
             Credential              = $DomainCredsNetbios
             WaitForValidCredentials = $true
-            DependsOn               = "[PendingReboot]RebootAfterADDomainSignal"
+            DependsOn               = "[PendingReboot]RebootOnSignalFromCreateADForest"
         }
         
         #**********************************************************
@@ -69,14 +69,14 @@
         {
             Name      = $AppDomainFQDN
             Ensure    = "Present"
-            DependsOn = "[WaitForADDomain]ADDomainReady"
+            DependsOn = "[WaitForADDomain]WaitForDCReady"
         }
 
         xDnsServerPrimaryZone CreateAppsIntranetDnsZone
         {
             Name      = $AppDomainIntranetFQDN
             Ensure    = "Present"
-            DependsOn = "[WaitForADDomain]ADDomainReady"
+            DependsOn = "[WaitForADDomain]WaitForDCReady"
         }
 
         ADUser SetEmailOfDomainAdmin
@@ -86,15 +86,15 @@
             EmailAddress         = "$($Admincreds.UserName)@$DomainFQDN"
             PasswordNeverExpires = $true
             Ensure               = "Present"
-            DependsOn            = "[WaitForADDomain]ADDomainReady"
+            DependsOn            = "[WaitForADDomain]WaitForDCReady"
         }
 
         #**********************************************************
         # Configure AD CS
         #**********************************************************
-        WindowsFeature AddADCSFeature { Name = "ADCS-Cert-Authority"; Ensure = "Present"; DependsOn = "[WaitForADDomain]ADDomainReady" }
+        WindowsFeature AddADCSFeature { Name = "ADCS-Cert-Authority"; Ensure = "Present"; DependsOn = "[WaitForADDomain]WaitForDCReady" }
         
-        ADCSCertificationAuthority ADCS
+        ADCSCertificationAuthority CreateADCSAuthority
         {
             IsSingleInstance = "Yes"
             CAType           = "EnterpriseRootCA"
@@ -107,14 +107,14 @@
         {
             CAServerFQDN         = "$ComputerName.$DomainFQDN"
             CARootName           = "$DomainNetbiosName-$ComputerName-CA"
-            DependsOn            = '[ADCSCertificationAuthority]ADCS'
+            DependsOn            = '[ADCSCertificationAuthority]CreateADCSAuthority'
             PsDscRunAsCredential = $DomainCredsNetbios
         }
 
         #**********************************************************
         # Configure AD FS
         #**********************************************************
-        CertReq ADFSSiteCert
+        CertReq GenerateADFSSiteCertificate
         {
             CARootName                = "$DomainNetbiosName-$ComputerName-CA"
             CAServerFQDN              = "$ComputerName.$DomainFQDN"
@@ -132,7 +132,7 @@
             DependsOn                 = '[WaitForCertificateServices]WaitAfterADCSProvisioning'
         }
 
-        CertReq ADFSSigningCert
+        CertReq GenerateADFSSigningCertificate
         {
             CARootName                = "$DomainNetbiosName-$ComputerName-CA"
             CAServerFQDN              = "$ComputerName.$DomainFQDN"
@@ -149,7 +149,7 @@
             DependsOn                 = '[WaitForCertificateServices]WaitAfterADCSProvisioning'
         }
 
-        CertReq ADFSDecryptionCert
+        CertReq GenerateADFSDecryptionCertificate
         {
             CARootName                = "$DomainNetbiosName-$ComputerName-CA"
             CAServerFQDN              = "$ComputerName.$DomainFQDN"
@@ -190,7 +190,7 @@
                 # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
                return $false
             }
-            DependsOn = "[CertReq]ADFSSiteCert", "[CertReq]ADFSSigningCert", "[CertReq]ADFSDecryptionCert"
+            DependsOn = "[CertReq]GenerateADFSSiteCertificate", "[CertReq]GenerateADFSSigningCertificate", "[CertReq]GenerateADFSDecryptionCertificate"
         }
 
         ADUser CreateAdfsSvcAccount
@@ -201,7 +201,7 @@
             PasswordAuthentication = 'Negotiate'
             PasswordNeverExpires   = $true
             Ensure                 = "Present"
-            DependsOn              = "[CertReq]ADFSSiteCert", "[CertReq]ADFSSigningCert", "[CertReq]ADFSDecryptionCert"
+            DependsOn              = "[CertReq]GenerateADFSSiteCertificate", "[CertReq]GenerateADFSSigningCertificate", "[CertReq]GenerateADFSDecryptionCertificate"
         }
 
         Group AddAdfsSvcAccountToDomainAdminsGroup
@@ -221,7 +221,7 @@
             Target = $PrivateIP
             Type = "ARecord"
             Ensure = "Present"
-            DependsOn = "[WaitForADDomain]ADDomainReady"
+            DependsOn = "[WaitForADDomain]WaitForDCReady"
         }
 
         # https://docs.microsoft.com/en-us/windows-server/identity/ad-fs/deployment/configure-corporate-dns-for-the-federation-service-and-drs
@@ -231,7 +231,7 @@
             Target = "$ComputerName.$DomainFQDN"
             Type = "CName"
             Ensure = "Present"
-            DependsOn = "[WaitForADDomain]ADDomainReady"
+            DependsOn = "[WaitForADDomain]WaitForDCReady"
         }
 
         # Since 2019-10, DSC regularly fails at cADFSFarm CreateADFSFarm with error below, but I don't know why or how to fix it.
@@ -280,10 +280,11 @@ param = c.Value);
             DependsOn = "[cADFSFarm]CreateADFSFarm"
         }
 
-        WindowsFeature AddADFeature1 { Name = "RSAT-ADLDS";       Ensure = "Present"; }
-        WindowsFeature AddADFeature2 { Name = "RSAT-ADDS-Tools";  Ensure = "Present"; }
-        WindowsFeature DnsTools      { Name = "RSAT-DNS-Server";  Ensure = "Present"; }
-        WindowsFeature AddADCSManagementTools { Name = "RSAT-ADCS-Mgmt";      Ensure = "Present"; }
+        WindowsFeature AddADTools             { Name = "RSAT-AD-Tools";      Ensure = "Present"; }
+        WindowsFeature AddADPowerShell        { Name = "RSAT-AD-PowerShell"; Ensure = "Present"; }
+        WindowsFeature AddDnsTools            { Name = "RSAT-DNS-Server";    Ensure = "Present"; }
+        WindowsFeature AddADLDS               { Name = "RSAT-ADLDS";         Ensure = "Present"; }
+        WindowsFeature AddADCSManagementTools { Name = "RSAT-ADCS-Mgmt";     Ensure = "Present"; }
     }
 }
 

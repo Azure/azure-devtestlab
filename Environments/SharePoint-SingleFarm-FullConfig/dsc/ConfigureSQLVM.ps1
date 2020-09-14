@@ -31,8 +31,8 @@ configuration ConfigureSQLVM
         #**********************************************************
         # Initialization of VM - Do as much work as possible before waiting on AD domain to be available
         #**********************************************************
-        WindowsFeature ADTools  { Name = "RSAT-AD-Tools";      Ensure = "Present"; }
-        WindowsFeature ADPS     { Name = "RSAT-AD-PowerShell"; Ensure = "Present"; }
+        WindowsFeature AddADTools      { Name = "RSAT-AD-Tools";      Ensure = "Present"; }
+        WindowsFeature AddADPowerShell { Name = "RSAT-AD-PowerShell"; Ensure = "Present"; }
         
         DnsServerAddress SetDNS { Address = $DNSServer; InterfaceAlias = $InterfaceAlias; AddressFamily  = 'IPv4' }
         
@@ -42,7 +42,7 @@ configuration ConfigureSQLVM
         # Join AD forest
         #**********************************************************
         # If WaitForADDomain does not find the domain whtin "WaitTimeout" secs, it will signar a restart to DSC engine "RestartCount" times
-        WaitForADDomain DscForestWait
+        WaitForADDomain WaitForDCReady
         {
             DomainName              = $DomainFQDN
             WaitTimeout             = 1200
@@ -53,26 +53,26 @@ configuration ConfigureSQLVM
         }
 
         # WaitForADDomain sets reboot signal only if WaitForADDomain did not find domain within "WaitTimeout" secs
-        PendingReboot RebootOnWaitForADDomainSignal
+        PendingReboot RebootOnSignalFromWaitForDCReady
         {
-            Name             = "RebootOnWaitForADDomainSignal"
+            Name             = "RebootOnSignalFromWaitForDCReady"
             SkipCcmClientSDK = $true
-            DependsOn        = "[WaitForADDomain]DscForestWait"
+            DependsOn        = "[WaitForADDomain]WaitForDCReady"
         }
 
-        Computer DomainJoin
+        Computer JoinDomain
         {
             Name       = $ComputerName
             DomainName = $DomainFQDN
             Credential = $DomainAdminCredsQualified
-            DependsOn  = "[PendingReboot]RebootOnWaitForADDomainSignal"
+            DependsOn  = "[PendingReboot]RebootOnSignalFromWaitForDCReady"
         }
 
-        PendingReboot RebootOnComputerSignal
+        PendingReboot RebootOnSignalFromJoinDomain
         {
-            Name             = "RebootOnComputerSignal"
+            Name             = "RebootOnSignalFromJoinDomain"
             SkipCcmClientSDK = $true
-            DependsOn        = "[Computer]DomainJoin"
+            DependsOn        = "[Computer]JoinDomain"
         }
 
         #**********************************************************
@@ -86,10 +86,10 @@ configuration ConfigureSQLVM
             PasswordNeverExpires = $true
             Ensure               = "Present"
             PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn            = "[PendingReboot]RebootOnComputerSignal"
+            DependsOn            = "[PendingReboot]RebootOnSignalFromJoinDomain"
         }
 
-        ADServicePrincipalName SqlSvcSPN1
+        ADServicePrincipalName SetSqlSvcSPN1
         {
             ServicePrincipalName = "MSSQLSvc/$ComputerName.$($DomainFQDN):1433"
             Account              = $SqlSvcCreds.UserName
@@ -98,7 +98,7 @@ configuration ConfigureSQLVM
             DependsOn            = "[ADUser]CreateSqlSvcAccount"
         }
 
-        ADServicePrincipalName SqlSvcSPN2
+        ADServicePrincipalName SetSqlSvcSPN2
         {
             ServicePrincipalName = "MSSQLSvc/$ComputerName.$DomainFQDN"
             Account              = $SqlSvcCreds.UserName
@@ -107,7 +107,7 @@ configuration ConfigureSQLVM
             DependsOn            = "[ADUser]CreateSqlSvcAccount"
         }
 
-        ADServicePrincipalName SqlSvcSPN3
+        ADServicePrincipalName SetSqlSvcSPN3
         {
             ServicePrincipalName = "MSSQLSvc/$($ComputerName):1433"
             Account              = $SqlSvcCreds.UserName
@@ -116,13 +116,42 @@ configuration ConfigureSQLVM
             DependsOn            = "[ADUser]CreateSqlSvcAccount"
         }
 
-        ADServicePrincipalName SqlSvcSPN4
+        ADServicePrincipalName SetSqlSvcSPN4
         {
             ServicePrincipalName = "MSSQLSvc/$ComputerName"
             Account              = $SqlSvcCreds.UserName
             PsDscRunAsCredential = $DomainAdminCredsQualified
             Ensure               = "Present"
             DependsOn            = "[ADUser]CreateSqlSvcAccount"
+        }
+
+        # Tentative fix on random error on resources SqlServiceAccount/SqlLogin after computer joined domain (although SqlMaxDop Test succeeds):
+        # Error on SqlServiceAccount: System.InvalidOperationException: Unable to set the service account for SQL on MSSQLSERVER. Message  ---> System.Management.Automation.MethodInvocationException: Exception calling "SetServiceAccount" with "2" argument(s): "Set service account failed. "
+        # Error on SqlLogin: System.InvalidOperationException: Failed to connect to SQL instance 'SQL'. (SQLCOMMON0019) ---> System.Management.Automation.MethodInvocationException: Exception calling "Connect" with "0" argument(s): "Failed to connect to server SQL.
+        # It would imply that somehow, SQL Server does not start upon computer restart
+        xScript EnsureSQLServiceStarted
+        {
+            SetScript = 
+            {
+                Start-Service -Name "MSSQLSERVER"
+            }
+            GetScript =  
+            {
+                # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
+                return @{ "Result" = "false" }
+            }
+            TestScript = 
+            {
+                # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
+				$service = Get-Service -Name "MSSQLSERVER" | Select-Object Status
+                if ($service.Status -like 'Running') {
+                    $true
+                } else {
+                    $false
+                }
+            }
+            DependsOn            = "[PendingReboot]RebootOnSignalFromJoinDomain"
+            PsDscRunAsCredential = $DomainAdminCredsQualified
         }
 
         SqlServiceAccount SetSqlInstanceServiceAccount
@@ -132,7 +161,7 @@ configuration ConfigureSQLVM
             ServiceType    = "DatabaseEngine"
             ServiceAccount = $SQLCredsQualified
             RestartService = $true
-            DependsOn      = "[ADServicePrincipalName]SqlSvcSPN1", "[ADServicePrincipalName]SqlSvcSPN2", "[ADServicePrincipalName]SqlSvcSPN3", "[ADServicePrincipalName]SqlSvcSPN4"
+            DependsOn      = "[xScript]EnsureSQLServiceStarted", "[ADServicePrincipalName]SetSqlSvcSPN1", "[ADServicePrincipalName]SetSqlSvcSPN2", "[ADServicePrincipalName]SetSqlSvcSPN3", "[ADServicePrincipalName]SetSqlSvcSPN4"
         }
 
         SqlLogin AddDomainAdminLogin
@@ -142,7 +171,7 @@ configuration ConfigureSQLVM
             ServerName   = $ComputerName
             InstanceName = "MSSQLSERVER"
             LoginType    = "WindowsUser"
-            DependsOn    = "[PendingReboot]RebootOnComputerSignal"
+            DependsOn    = "[PendingReboot]RebootOnSignalFromJoinDomain"
         }
 
         ADUser CreateSPSetupAccount
@@ -153,7 +182,7 @@ configuration ConfigureSQLVM
             PasswordNeverExpires = $true
             PsDscRunAsCredential = $DomainAdminCredsQualified
             Ensure               = "Present"
-            DependsOn            = "[PendingReboot]RebootOnComputerSignal"
+            DependsOn            = "[PendingReboot]RebootOnSignalFromJoinDomain"
         }
 
         SqlLogin AddSPSetupLogin
@@ -197,7 +226,7 @@ configuration ConfigureSQLVM
         }
 
         # Open port on the firewall only when everything is ready, as SharePoint DSC is testing it to start creating the farm
-        Firewall DatabaseEngineFirewallRule
+        Firewall AddDatabaseEngineFirewallRule
         {
             Direction   = "Inbound"
             Name        = "SQL-Server-Database-Engine-TCP-In"
@@ -264,10 +293,10 @@ help ConfigureSQLVM
 $DomainAdminCreds = Get-Credential -Credential "yvand"
 $SqlSvcCreds = Get-Credential -Credential "sqlsvc"
 $SPSetupCreds = Get-Credential -Credential "spsetup"
-$DNSServer = "10.1.1.4"
+$DNSServer = "10.0.1.4"
 $DomainFQDN = "contoso.local"
 
-$outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.80.0.3\DSCWork\ConfigureSQLVM.0\ConfigureSQLVM"
+$outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.80.1.0\DSCWork\ConfigureSQLVM.0\ConfigureSQLVM"
 ConfigureSQLVM -DNSServer $DNSServer -DomainFQDN $DomainFQDN -DomainAdminCreds $DomainAdminCreds -SqlSvcCreds $SqlSvcCreds -SPSetupCreds $SPSetupCreds -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
 
