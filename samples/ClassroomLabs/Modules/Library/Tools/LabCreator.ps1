@@ -6,6 +6,7 @@ param(
 )
 
 Import-Module ../Az.LabServices.psm1 -Force
+Install-Module -Name ThreadJob -Force
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -176,7 +177,7 @@ function New-Accounts {
     Write-Host "Starting lab accounts creation in parallel. Can take a while."
     $jobs = @()
     $lacs | ForEach-Object {
-        $jobs += Start-Job -ScriptBlock $block -ArgumentList $PSScriptRoot, $_.ResourceGroupName, $_.LabAccountName -Name $_.LabAccountName
+        $jobs += Start-ThreadJob -ScriptBlock $block -ArgumentList $PSScriptRoot, $_.ResourceGroupName, $_.LabAccountName -Name $_.LabAccountName
     }
 
     $hours = 1
@@ -210,7 +211,7 @@ function New-AzLabMultiple {
 
     $jobs = $ConfigObject | ForEach-Object {
         Write-Verbose "From config: $_"
-        Start-Job  -InitializationScript $init -ScriptBlock $block -ArgumentList $PSScriptRoot -InputObject $_ -Name $_.LabName
+        Start-ThreadJob  -InitializationScript $init -ScriptBlock $block -ArgumentList $PSScriptRoot -InputObject $_ -Name $_.LabName
     }
 
     $hours = 2
