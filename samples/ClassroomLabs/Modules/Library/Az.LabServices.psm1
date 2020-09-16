@@ -415,6 +415,7 @@ function New-AzLabAccount {
                 $body = @{
                     location = $rg.Location
                 } | ConvertTo-Json -Depth 10
+                Write-Verbose "Creating Lab Account $LabAccountName REST call."
                 $lab = InvokeRest -Uri $uri -Method "Put" -Body $body
                 WaitProvisioning -uri $uri -delaySec 60 -retryCount 120 | Out-Null
                 return $lab
@@ -694,13 +695,30 @@ function New-AzLab {
                 $environmentSettingUri = $labUri + "/environmentsettings/default"
                 $sharedPassword = if ($SharedPasswordEnabled) { "Enabled" } else { "Disabled" }
                 $imageType = if ($image.id -match '/galleryimages/') { 'galleryImageResourceId' } else { 'sharedImageResourceId' }
-                if ($LinuxRdpEnabled) { $linuxRdpState = 'Enabled' } else { $linuxRdpState = 'Disabled' }
+                if ($LinuxRdpEnabled) {$linuxRdpState = 'Enabled'} else { $linuxRdpState = 'Disabled' }
                 if ($SkipTemplateCreation) { $hasTemplateVm = 'Disabled' } else { $hasTemplateVm = 'Enabled' }
                 if ($idleGracePeriod -eq 0) {$idleShutdownMode = "None"} else {$idleShutdownMode = "OnDisconnect"}
                 if ($idleOsGracePeriod -eq 0) {$enableDisconnectOnIdle = "Disabled"} else {$enableDisconnectOnIdle = "Enabled"}
                 if ($idleNoConnectGracePeriod -eq 0) {$enableNoConnectShutdown = "Disabled"} else {$enableNoConnectShutdown = "Enabled"}
 
+                if ($LinuxRdpEnabled) {
                 InvokeRest -Uri $createUri -Method 'Post' -Body (@{
+                        name = $LabName
+                        labParameters = @{
+                            $imageType = $image.id
+                            linuxRdpState = $linuxRdpState
+                            password = $Password
+                            username = $UserName
+                            userQuota = "PT$($UsageQuotaInHours.ToString())H"
+                            vmSize = $Size
+                            sharedPasswordState = $sharedPassword
+                            templateVmState = $hasTemplateVm
+                            
+                        }
+                    } | ConvertTo-Json) | Out-Null
+                } else {
+
+                    InvokeRest -Uri $createUri -Method 'Post' -Body (@{
                         name = $LabName
                         labParameters = @{
                             $imageType = $image.id
@@ -717,9 +735,9 @@ function New-AzLab {
                             idleOsGracePeriod = "PT$($idleOsGracePeriod.ToString())M"
                             enableNoConnectShutdown = $enableNoConnectShutdown
                             idleNoConnectGracePeriod = "PT$($idleNoConnectGracePeriod.ToString())M"
-
                         }
                     } | ConvertTo-Json) | Out-Null
+                }
 
                 $lab = WaitProvisioning -uri $labUri -delaySec 60 -retryCount 120
                 WaitProvisioning -uri $environmentSettingUri -delaySec 60 -retryCount 120 | Out-Null
@@ -755,19 +773,7 @@ function Set-AzLab {
 
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Quota of hours x users (defaults to 40)")]
         [int]
-        $UsageQuotaInHours = 40,
-
-        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Idle Shutdown Grace Period (0 is off)")]
-        [int]
-        $idleGracePeriod = 15,
-
-        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Disconnect on Idle Grace Period (0 is off)")]
-        [int]
-        $idleOsGracePeriod = 0,
-
-        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Shutdown on No Connect Grace Period (0 is off)")]
-        [int]
-        $idleNoConnectGracePeriod = 15
+        $UsageQuotaInHours = 40
     )
   
     begin { . BeginPreamble }
@@ -793,34 +799,6 @@ function Set-AzLab {
                 if ($PSBoundParameters.ContainsKey('UsageQuotaInHours') -or (-not (Get-Member -inputobject $l.properties -name "usageQuotaInHours" -Membertype Properties))) {
                     $l.properties | Add-Member -MemberType NoteProperty -Name usageQuotaInHours -Value "PT$($UsageQuotaInHours.ToString())H" -force
                 }
-                if ($PSBoundParameters.ContainsKey('idleGracePeriod') -or (-not (Get-Member -inputobject $l.properties -name "idleGracePeriod" -Membertype Properties))) {
-                    if ($idleGracePeriod -eq 0) {
-                        $l.properties | Add-Member -MemberType NoteProperty -Name idleShutdownMode -Value "None" -force
-                        $l.properties | Add-Member -MemberType NoteProperty -Name idleGracePeriod -Value "PT$($idleGracePeriod.ToString())M" -force
-                    } else {
-                        $l.properties | Add-Member -MemberType NoteProperty -Name idleShutdownMode -Value "OnDisconnect" -force
-                        $l.properties | Add-Member -MemberType NoteProperty -Name idleGracePeriod -Value "PT$($idleGracePeriod.ToString())M" -force
-                    }
-                }
-                if ($PSBoundParameters.ContainsKey('idleOsGracePeriod') -or (-not (Get-Member -inputobject $l.properties -name "idleOsGracePeriod" -Membertype Properties))) {
-                    if ($idleGracePeriod -eq 0) {
-                        $l.properties | Add-Member -MemberType NoteProperty -Name enableDisconnectOnIdle -Value "Disabled" -force
-                        $l.properties | Add-Member -MemberType NoteProperty -Name idleOsGracePeriod -Value "PT$($idleOsGracePeriod.ToString())M" -force
-                    } else {
-                        $l.properties | Add-Member -MemberType NoteProperty -Name enableDisconnectOnIdle -Value "Enabled" -force
-                        $l.properties | Add-Member -MemberType NoteProperty -Name idleOsGracePeriod -Value "PT$($idleOsGracePeriod.ToString())M" -force
-                    }
-                }
-                if ($PSBoundParameters.ContainsKey('idleNoConnectGracePeriod') -or (-not (Get-Member -inputobject $l.properties -name "idleNoConnectGracePeriod" -Membertype Properties))) {
-                    if ($idleGracePeriod -eq 0) {
-                        $l.properties | Add-Member -MemberType NoteProperty -Name enableNoConnectShutdown -Value "Disabled" -force
-                        $l.properties | Add-Member -MemberType NoteProperty -Name idleNoConnectGracePeriod -Value "PT$($idleNoConnectGracePeriod.ToString())M" -force
-                    } else {
-                        $l.properties | Add-Member -MemberType NoteProperty -Name enableNoConnectShutdown -Value "Enabled" -force
-                        $l.properties | Add-Member -MemberType NoteProperty -Name idleNoConnectGracePeriod -Value "PT$($idleNoConnectGracePeriod.ToString())M" -force
-                    }
-                }
-
                 # update lab
                 $uri = (ConvertToUri -resource $LabAccount) + "/labs/" + $LabName
 
