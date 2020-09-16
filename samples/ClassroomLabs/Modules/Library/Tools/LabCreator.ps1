@@ -110,8 +110,7 @@ $init = {
         $lab = $la | Get-AzLab -LabName $LabName
 
         if ($lab) {
-            # TODO: cannot set max users
-            $lab = $lab | Set-AzLab -UsageQuotaInHours $UsageQuota -UserAccessMode $UsageMode  -SharedPasswordEnabled:$SharedPassword
+            $lab = $lab | Set-AzLab -MaxUsers $MaxUsers -UsageQuotaInHours $UsageQuota -UserAccessMode $UsageMode  -SharedPasswordEnabled:$SharedPassword
             Write-Host "$LabName lab already exist. Republished."
         }
         else {
