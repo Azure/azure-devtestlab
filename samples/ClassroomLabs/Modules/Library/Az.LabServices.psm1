@@ -774,19 +774,7 @@ function Set-AzLab {
 
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Quota of hours x users (defaults to 40)")]
         [int]
-        $UsageQuotaInHours = 40,
-
-        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Idle Shutdown Grace Period (0 is off)")]
-        [int]
-        $idleGracePeriod = 15,
-
-        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Disconnect on Idle Grace Period (0 is off)")]
-        [int]
-        $idleOsGracePeriod = 0,
-
-        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Shutdown on No Connect Grace Period (0 is off)")]
-        [int]
-        $idleNoConnectGracePeriod = 15
+        $UsageQuotaInHours = 40
     )
   
     begin { . BeginPreamble }
