@@ -680,6 +680,7 @@ function New-AzLab {
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Shutdown on No Connect Grace Period (0 is off)")]
         [int]
         $idleNoConnectGracePeriod = 15,
+        
         [parameter(mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [switch]
         $SkipTemplateCreation = $false
@@ -696,7 +697,7 @@ function New-AzLab {
                 $sharedPassword = if ($SharedPasswordEnabled) { "Enabled" } else { "Disabled" }
                 $imageType = if ($image.id -match '/galleryimages/') { 'galleryImageResourceId' } else { 'sharedImageResourceId' }
                 if ($LinuxRdpEnabled) {$linuxRdpState = 'Enabled'} else { $linuxRdpState = 'Disabled' }
-                if ($SkipTemplateCreation) { $hasTemplateVm = 'Disabled' } else { $hasTemplateVm = 'Enabled' }
+                if ($SkipTemplateCreation) {$hasTemplateVm = 'Disabled' } else { $hasTemplateVm = 'Enabled' }
                 if ($idleGracePeriod -eq 0) {$idleShutdownMode = "None"} else {$idleShutdownMode = "OnDisconnect"}
                 if ($idleOsGracePeriod -eq 0) {$enableDisconnectOnIdle = "Disabled"} else {$enableDisconnectOnIdle = "Enabled"}
                 if ($idleNoConnectGracePeriod -eq 0) {$enableNoConnectShutdown = "Disabled"} else {$enableNoConnectShutdown = "Enabled"}
@@ -773,19 +774,7 @@ function Set-AzLab {
 
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Quota of hours x users (defaults to 40)")]
         [int]
-        $UsageQuotaInHours = 40,
-
-        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Idle Shutdown Grace Period (0 is off)")]
-        [int]
-        $idleGracePeriod = 15,
-
-        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Disconnect on Idle Grace Period (0 is off)")]
-        [int]
-        $idleOsGracePeriod = 0,
-
-        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Shutdown on No Connect Grace Period (0 is off)")]
-        [int]
-        $idleNoConnectGracePeriod = 15
+        $UsageQuotaInHours = 40
     )
   
     begin { . BeginPreamble }
