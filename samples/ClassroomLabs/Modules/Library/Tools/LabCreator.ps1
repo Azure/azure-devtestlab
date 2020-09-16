@@ -110,7 +110,6 @@ $init = {
         $lab = $la | Get-AzLab -LabName $LabName
 
         if ($lab) {
-            # TODO: cannot set max users
             $lab = $lab | Set-AzLab -UsageQuotaInHours $UsageQuota -UserAccessMode $UsageMode  -SharedPasswordEnabled:$SharedPassword
             Write-Host "$LabName lab already exist. Republished."
         }
@@ -127,8 +126,7 @@ $init = {
             | New-AzLab -LabName $LabName -Image $img -Size $Size -UserName $UserName -Password $Password -LinuxRdpEnabled:$LinuxRdp -UsageQuotaInHours $UsageQuota `
                 -idleGracePeriod $idleGracePeriod -idleOsGracePeriod $idleOsGracePeriod -idleNoConnectGracePeriod $idleNoConnectGracePeriod `
             | Publish-AzLab `
-            | Set-AzLab -MaxUsers $MaxUsers -UserAccessMode $UsageMode -SharedPasswordEnabled:$SharedPassword `
-                -idleGracePeriod $idleGracePeriod -idleOsGracePeriod $idleOsGracePeriod -idleNoConnectGracePeriod $idleNoConnectGracePeriod
+            | Set-AzLab -MaxUsers $MaxUsers -UserAccessMode $UsageMode -SharedPasswordEnabled:$SharedPassword
 
             Write-Host "$LabName lab doesn't exist. Created it."
         }
@@ -275,6 +273,6 @@ Write-Verbose ($labs | ConvertTo-Json -Depth 10 | Out-String)
 
 # Needs to create resources in this order, aka parallelize in these three groups, otherwise we get contentions:
 # i.e. different jobs trying to create the same common resource (RG or lab account)
-#New-ResourceGroups  -ConfigObject $labs
-#New-Accounts        -ConfigObject $labs
+New-ResourceGroups  -ConfigObject $labs
+New-Accounts        -ConfigObject $labs
 New-AzLabMultiple   -ConfigObject $labs

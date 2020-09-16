@@ -695,7 +695,7 @@ function New-AzLab {
                 $environmentSettingUri = $labUri + "/environmentsettings/default"
                 $sharedPassword = if ($SharedPasswordEnabled) { "Enabled" } else { "Disabled" }
                 $imageType = if ($image.id -match '/galleryimages/') { 'galleryImageResourceId' } else { 'sharedImageResourceId' }
-                if ($LinuxRdpEnabled) { $linuxRdpState = 'Enabled' } else { $linuxRdpState = 'Disabled' }
+                if ($LinuxRdpEnabled) {$linuxRdpState = 'Enabled'} else { $linuxRdpState = 'Disabled' }
                 if ($SkipTemplateCreation) { $hasTemplateVm = 'Disabled' } else { $hasTemplateVm = 'Enabled' }
                 if ($idleGracePeriod -eq 0) {$idleShutdownMode = "None"} else {$idleShutdownMode = "OnDisconnect"}
                 if ($idleOsGracePeriod -eq 0) {$enableDisconnectOnIdle = "Disabled"} else {$enableDisconnectOnIdle = "Enabled"}
@@ -713,7 +713,11 @@ function New-AzLab {
                             vmSize = $Size
                             sharedPasswordState = $sharedPassword
                             templateVmState = $hasTemplateVm
+<<<<<<< HEAD
 
+=======
+                            
+>>>>>>> a92c0d9... Updates for non-Windows VMs
                         }
                     } | ConvertTo-Json) | Out-Null
                 } else {
@@ -773,19 +777,7 @@ function Set-AzLab {
 
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Quota of hours x users (defaults to 40)")]
         [int]
-        $UsageQuotaInHours = 40,
-
-        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Idle Shutdown Grace Period (0 is off)")]
-        [int]
-        $idleGracePeriod = 15,
-
-        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Disconnect on Idle Grace Period (0 is off)")]
-        [int]
-        $idleOsGracePeriod = 0,
-
-        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Shutdown on No Connect Grace Period (0 is off)")]
-        [int]
-        $idleNoConnectGracePeriod = 15
+        $UsageQuotaInHours = 40
     )
   
     begin { . BeginPreamble }
@@ -811,7 +803,10 @@ function Set-AzLab {
                 if ($PSBoundParameters.ContainsKey('UsageQuotaInHours') -or (-not (Get-Member -inputobject $l.properties -name "usageQuotaInHours" -Membertype Properties))) {
                     $l.properties | Add-Member -MemberType NoteProperty -Name usageQuotaInHours -Value "PT$($UsageQuotaInHours.ToString())H" -force
                 }
+<<<<<<< HEAD
                
+=======
+>>>>>>> a92c0d9... Updates for non-Windows VMs
                 # update lab
                 $uri = (ConvertToUri -resource $LabAccount) + "/labs/" + $LabName
 
