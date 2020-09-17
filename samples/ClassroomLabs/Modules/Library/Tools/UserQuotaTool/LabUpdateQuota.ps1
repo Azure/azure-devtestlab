@@ -41,7 +41,6 @@ $init = {
         $lab = $la | Get-AzLab -LabName $LabName
 
         $users = $lab | Get-AzLabUser 
-        Write-Verbose ""
         $currentQuota = Get-Hours($lab.properties.usageQuota)
 
         foreach ($user in $users) {
