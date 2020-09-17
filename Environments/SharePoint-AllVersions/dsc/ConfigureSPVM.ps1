@@ -16,7 +16,7 @@ configuration ConfigureSPVM
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPPassphraseCreds
     )
 
-    Import-DscResource -ModuleName ComputerManagementDsc, NetworkingDsc, ActiveDirectoryDsc, xWebAdministration, SharePointDsc, xPSDesiredStateConfiguration, xDnsServer, CertificateDsc, SqlServerDsc
+    Import-DscResource -ModuleName ComputerManagementDsc, NetworkingDsc, ActiveDirectoryDsc, xCredSSP, xWebAdministration, SharePointDsc, xPSDesiredStateConfiguration, xDnsServer, CertificateDsc, SqlServerDsc
 
     [String] $DomainNetbiosName = (Get-NetBIOSName -DomainFQDN $DomainFQDN)
     $Interface = Get-NetAdapter| Where-Object Name -Like "Ethernet*"| Select-Object -First 1
@@ -47,6 +47,10 @@ configuration ConfigureSPVM
         WindowsFeature AddADPowerShell { Name = "RSAT-AD-PowerShell"; Ensure = "Present"; }
         WindowsFeature AddDnsTools     { Name = "RSAT-DNS-Server";    Ensure = "Present"; }
         DnsServerAddress SetDNS { Address = $DNSServer; InterfaceAlias = $InterfaceAlias; AddressFamily  = 'IPv4' }
+
+        # xCredSSP is required forSharePointDsc resources SPUserProfileServiceApp and SPDistributedCacheService
+        xCredSSP CredSSPServer { Ensure = "Present"; Role = "Server"; DependsOn = "[DnsServerAddress]SetDNS" }
+        xCredSSP CredSSPClient { Ensure = "Present"; Role = "Client"; DelegateComputers = "*.$DomainFQDN", "localhost"; DependsOn = "[xCredSSP]CredSSPServer" }
 
         # IIS cleanup
         xWebAppPool RemoveDotNet2Pool         { Name = ".NET v2.0";            Ensure = "Absent"; }
@@ -130,6 +134,39 @@ configuration ConfigureSPVM
             ServerName           = $SQLName
             Protocol             = "TCP"
             TcpPort              = 1433
+        }
+
+        xScript DisableIESecurity
+        {
+            TestScript = {
+                return $false   # If TestScript returns $false, DSC executes the SetScript to bring the node back to the desired state
+            }
+            SetScript = {
+                # Source: https://stackoverflow.com/questions/9368305/disable-ie-security-on-windows-server-via-powershell
+                $AdminKey = "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A7-37EF-4b3f-8CFC-4F3A74704073}"
+                #$UserKey = "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A8-37EF-4b3f-8CFC-4F3A74704073}"
+                Set-ItemProperty -Path $AdminKey -Name "IsInstalled" -Value 0
+                #Set-ItemProperty -Path $UserKey -Name "IsInstalled" -Value 0
+
+                if ($false -eq (Test-Path -Path "HKLM:\Software\Policies\Microsoft\Internet Explorer")) {
+                    New-Item -Path "HKLM:\Software\Policies\Microsoft" -Name "Internet Explorer"
+                }
+
+                # Disable the first run wizard of IE
+                $ieFirstRunKey = "HKLM:\Software\Policies\Microsoft\Internet Explorer\Main"
+                if ($false -eq (Test-Path -Path $ieFirstRunKey)) {
+                    New-Item -Path "HKLM:\Software\Policies\Microsoft\Internet Explorer" -Name "Main"
+                }
+                Set-ItemProperty -Path $ieFirstRunKey -Name "DisableFirstRunCustomize" -Value 1
+                
+                # Set new tabs to open "about:blank" in IE
+                $ieNewTabKey = "HKLM:\Software\Policies\Microsoft\Internet Explorer\TabbedBrowsing"
+                if ($false -eq (Test-Path -Path $ieNewTabKey)) {
+                    New-Item -Path "HKLM:\Software\Policies\Microsoft\Internet Explorer" -Name "TabbedBrowsing"
+                }
+                Set-ItemProperty -Path $ieNewTabKey -Name "NewTabPageShow" -Value 0
+            }
+            GetScript = { }
         }
 
         #**********************************************************
@@ -323,6 +360,17 @@ configuration ConfigureSPVM
             IsSingleInstance          = "Yes"
             Ensure                    = "Present"
             DependsOn                 = "[xScript]WaitForSQL"
+        }
+
+        SPDistributedCacheService EnableDistributedCache
+        {
+            Name                 = "AppFabricCachingService"
+            CacheSizeInMB        = 2000
+            CreateFirewallRules  = $true
+            ServiceAccount       = $SPFarmCredsQualified.UserName
+            InstallAccount       = $SPSetupCredsQualified
+            Ensure               = "Present"
+            DependsOn            = "[SPFarm]CreateSPFarm"
         }
 
         SPManagedAccount CreateSPAppPoolManagedAccount
