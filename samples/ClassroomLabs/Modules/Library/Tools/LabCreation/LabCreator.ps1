@@ -5,7 +5,8 @@ param(
     $CsvConfigFile
 )
 
-Import-Module ../Az.LabServices.psm1 -Force
+#Import-Module ../../Az.LabServices.psm1 -Force
+Import-Module '../../Az.LabServices.psm1' -Force #$modulePath -Force
 Install-Module -Name ThreadJob -Force
 
 Set-StrictMode -Version Latest
@@ -167,8 +168,8 @@ function New-Accounts {
         Set-StrictMode -Version Latest
         $ErrorActionPreference = 'Stop'
         
-        $modulePath = Join-Path $path '..' 'Az.LabServices.psm1'
-        Import-Module $modulePath
+        #$modulePath = Join-Path $path '../..' 'Az.LabServices.psm1'
+        Import-Module '../../Az.LabServices.psm1' -Force #$modulePath -Force
 
         New-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName | Out-Null
         Write-Host "$LabAccountName lab account created or found."
@@ -198,8 +199,9 @@ function New-AzLabMultiple {
         Set-StrictMode -Version Latest
         $ErrorActionPreference = 'Stop'
         
-        $modulePath = Join-Path $path '..' 'Az.LabServices.psm1'
-        Import-Module $modulePath
+        #$modulePath = Join-Path $path '..' 'Az.LabServices.psm1'
+        Import-Module '../../Az.LabServices.psm1' -Force #$modulePath -Force
+        #Import-Module $modulePath
         # Really?? It got to be the lines below? Doing a ForEach doesn't work ...
         $input.movenext() | Out-Null
         $obj = $input.current[0]

@@ -6,10 +6,14 @@ function Get-Hours {
         $RawTimeSpan
     )
 
+    [int] $day = 0
+    [int] $hour = 0
+
     if($RawTimeSpan.Contains("D")) 
                 {
-                    $day = $RawTimeSpan.TrimStart("PT").Split("D")[0]
-                    $rest = $RawTimeSpan.TrimStart("PT").Split("D")[1]
+                    $day = $RawTimeSpan.TrimStart("P").Split("DT")[0]
+
+                    $rest = $RawTimeSpan.TrimStart("P").Split("DT")[1]
                 } 
             else 
                 {

@@ -5,8 +5,9 @@ param(
     $CsvConfigFile
 )
 
-Import-Module .\Az.LabServices.psm1 -Force
-Import-Module .\Quota.psm1 -Force
+Import-Module ..\Az.LabServices.psm1 -Force
+Import-Module '../../Az.LabServices.psm1' -Force
+Import-Module './Quota.psm1' -Force
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -40,7 +41,7 @@ $init = {
         $lab = $la | Get-AzLab -LabName $LabName
 
         $users = $lab | Get-AzLabUser 
-
+        Write-Verbose ""
         $currentQuota = Get-Hours($lab.properties.usageQuota)
 
         foreach ($user in $users) {
@@ -82,10 +83,8 @@ function Update-AzLabMultiple {
         Set-StrictMode -Version Latest
         $ErrorActionPreference = 'Stop'
         
-        #$modulePath = Join-Path $path '.' 'Az.LabServices.psm1'
-        #Import-Module #$modulePath
-        Import-Module .\Az.LabServices.psm1 -Force
-        Import-Module .\Quota.psm1 -Force
+        Import-Module '../../Az.LabServices.psm1' -Force
+        Import-Module './Quota.psm1' -Force
         # Really?? It got to be the lines below? Doing a ForEach doesn't work ...
         $input.movenext() | Out-Null
         $obj = $input.current[0]

@@ -1,0 +1,4 @@
+ResourceGroupName,LabAccountName,LabName,AddEmails,RemoveEmails,Invitation
+RBest_MPS,RBest_MPS,"History of Magic",students1add,
+RBest_MPS,RBest_MPS,"Dark Arts",students2Add,Students1Remove
+RBest_MPS,RBest_MPS,BBB,students2Add,
