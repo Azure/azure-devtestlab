@@ -759,7 +759,7 @@ function Set-AzLab {
                     $l.properties | Add-Member -MemberType NoteProperty -Name sharedPasswordEnabled -Value $sharedPassword  -force
                 }
                 if ($PSBoundParameters.ContainsKey('UsageQuotaInHours') -or (-not (Get-Member -inputobject $l.properties -name "usageQuotaInHours" -Membertype Properties))) {
-                    $l.properties | Add-Member -MemberType NoteProperty -Name usageQuotaInHours -Value "PT$($UsageQuotaInHours.ToString())H" -force
+                    $l.properties | Add-Member -MemberType NoteProperty -Name usageQuota -Value "PT$($UsageQuotaInHours.ToString())H" -force
                 }
 
 
