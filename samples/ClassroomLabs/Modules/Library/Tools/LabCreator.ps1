@@ -2,7 +2,11 @@
 param(
     [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
     [string]
-    $CsvConfigFile
+    $CsvConfigFile,
+
+    [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+    [int]
+    $ThrottleLimit = 5
 )
 
 Import-Module ../Az.LabServices.psm1 -Force
@@ -177,7 +181,7 @@ function New-Accounts {
     Write-Host "Starting lab accounts creation in parallel. Can take a while."
     $jobs = @()
     $lacs | ForEach-Object {
-        $jobs += Start-ThreadJob -ScriptBlock $block -ArgumentList $PSScriptRoot, $_.ResourceGroupName, $_.LabAccountName -Name $_.LabAccountName
+        $jobs += Start-ThreadJob -ScriptBlock $block -ArgumentList $PSScriptRoot, $_.ResourceGroupName, $_.LabAccountName -Name $_.LabAccountName -ThrottleLimit $ThrottleLimit
     }
 
     $hours = 1
@@ -211,7 +215,7 @@ function New-AzLabMultiple {
 
     $jobs = $ConfigObject | ForEach-Object {
         Write-Verbose "From config: $_"
-        Start-ThreadJob  -InitializationScript $init -ScriptBlock $block -ArgumentList $PSScriptRoot -InputObject $_ -Name $_.LabName
+        Start-ThreadJob  -InitializationScript $init -ScriptBlock $block -ArgumentList $PSScriptRoot -InputObject $_ -Name $_.LabName -ThrottleLimit $ThrottleLimit
     }
 
     $hours = 2
