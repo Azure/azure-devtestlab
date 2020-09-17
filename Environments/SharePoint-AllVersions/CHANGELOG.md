@@ -5,6 +5,8 @@
 * Re-add creation of SPDistributedCacheService
 * Re-add xCredSSP configuration
 * Disable IE Enhanced Security Configuration (ESC) on SharePoint VMs
+* Disable the first run wizard of IE on SharePoint VMs
+* Set new tabs to open "about:blank" in IE on SharePoint VMs
 
 ## September 2020 update
 
