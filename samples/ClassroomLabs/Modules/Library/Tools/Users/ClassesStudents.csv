@@ -1,0 +1,3 @@
+ResourceGroupName,LabAccountName,LabName,AddEmails,RemoveEmails,Invitation
+MPSgroup,MPSAcct,ScienceLab,students1add,Students1Remove,
+MPSGroup,MPSAcct,EconomicsLab,students2Add,,"Welcome to Economics Lab"

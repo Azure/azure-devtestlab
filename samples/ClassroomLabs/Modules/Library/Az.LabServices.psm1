@@ -680,6 +680,7 @@ function New-AzLab {
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Shutdown on No Connect Grace Period (0 is off)")]
         [int]
         $idleNoConnectGracePeriod = 15,
+        
         [parameter(mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [switch]
         $SkipTemplateCreation = $false
@@ -696,7 +697,7 @@ function New-AzLab {
                 $sharedPassword = if ($SharedPasswordEnabled) { "Enabled" } else { "Disabled" }
                 $imageType = if ($image.id -match '/galleryimages/') { 'galleryImageResourceId' } else { 'sharedImageResourceId' }
                 if ($LinuxRdpEnabled) {$linuxRdpState = 'Enabled'} else { $linuxRdpState = 'Disabled' }
-                if ($SkipTemplateCreation) { $hasTemplateVm = 'Disabled' } else { $hasTemplateVm = 'Enabled' }
+                if ($SkipTemplateCreation) {$hasTemplateVm = 'Disabled' } else { $hasTemplateVm = 'Enabled' }
                 if ($idleGracePeriod -eq 0) {$idleShutdownMode = "None"} else {$idleShutdownMode = "OnDisconnect"}
                 if ($idleOsGracePeriod -eq 0) {$enableDisconnectOnIdle = "Disabled"} else {$enableDisconnectOnIdle = "Enabled"}
                 if ($idleNoConnectGracePeriod -eq 0) {$enableNoConnectShutdown = "Disabled"} else {$enableNoConnectShutdown = "Enabled"}
@@ -713,6 +714,7 @@ function New-AzLab {
                             vmSize = $Size
                             sharedPasswordState = $sharedPassword
                             templateVmState = $hasTemplateVm
+                            
                         }
                     } | ConvertTo-Json) | Out-Null
                 } else {
@@ -798,7 +800,6 @@ function Set-AzLab {
                 if ($PSBoundParameters.ContainsKey('UsageQuotaInHours') -or (-not (Get-Member -inputobject $l.properties -name "usageQuotaInHours" -Membertype Properties))) {
                     $l.properties | Add-Member -MemberType NoteProperty -Name usageQuotaInHours -Value "PT$($UsageQuotaInHours.ToString())H" -force
                 }
-
                 # update lab
                 $uri = (ConvertToUri -resource $LabAccount) + "/labs/" + $LabName
 
