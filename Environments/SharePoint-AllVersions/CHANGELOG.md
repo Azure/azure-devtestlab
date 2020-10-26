@@ -1,4 +1,17 @@
-# Change log for AzureRM template SharePoint-AllVersions-LightConfig
+# Change log for AzureRM template SharePoint-AllVersions
+
+## Enhancements & bug-fixes - Published in October 13, 2020
+
+* Install Edge Chromium in SharePoint VMs through Chocolatey
+* Install Notepad++ in SharePoint VMs through Chocolatey
+* Install Fiddler in SharePoint VMs through Chocolatey
+* Install ULS Viewer in SharePoint VMs through Chocolatey
+* Define the list of all possible values for the time zone parameter vmsTimeZone
+* Use a unique location for custom registry keys
+* Update DSC module SharePointDSC from 4.2 to 4.3
+* Update DSC module NetworkingDsc from 8.0 to 8.1
+* Update DSC module ActiveDirectoryCSDsc from 4.1 to 5.0
+* Update DSC module xWebAdministration from 3.1.1 to 3.2
 
 ## Enhancements & bug-fixes - Published in September 17, 2020
 
