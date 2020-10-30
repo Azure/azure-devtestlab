@@ -2,7 +2,9 @@
 Param()
 Import-Module $PSScriptRoot\..\Az.LabServices.psm1
 
-. $PSScriptRoot\Utils.ps1
+#. $PSScriptRoot\Utils.ps1
+Import-Module $PSScriptRoot\Utils.psm1
+Write-Verbose "Loading Utils.psm1"
 
 $rg  = Get-FastResourceGroup
 $la  = Get-FastLabAccount
