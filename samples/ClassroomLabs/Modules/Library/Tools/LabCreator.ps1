@@ -79,11 +79,23 @@ $init = {
             [bool]
             $LinuxRdp,
 
-            [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
             [string[]]
             $Emails,
 
-            [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+            [int]
+            $idleGracePeriod,
+
+            [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+            [int]
+            $idleOsGracePeriod,
+
+            [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+            [int]
+            $idleNoConnectGracePeriod,
+            
+            [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
             [string]
             $Invitation,
 
@@ -98,8 +110,7 @@ $init = {
         $lab = $la | Get-AzLab -LabName $LabName
 
         if ($lab) {
-            # TODO: cannot set max users
-            $lab = $lab | Set-AzLab -UsageQuotaInHours $usageQuota -UserAccessMode $UsageMode  -SharedPasswordEnabled:$SharedPassword
+            $lab = $lab | Set-AzLab -MaxUsers $MaxUsers -UsageQuotaInHours $UsageQuota -UserAccessMode $UsageMode  -SharedPasswordEnabled:$SharedPassword
             Write-Host "$LabName lab already exist. Republished."
         }
         else {
@@ -111,19 +122,25 @@ $init = {
             }
             Write-Host "Image $ImageName found."
     
-            #TODO: cannot set maxUsers
             $lab = $la `
-            | New-AzLab -LabName $LabName -Image $img -Size $size -UserName $userName -Password $password -LinuxRdpEnabled:$linuxRdp `
+            | New-AzLab -LabName $LabName -Image $img -Size $Size -UserName $UserName -Password $Password -LinuxRdpEnabled:$LinuxRdp -UsageQuotaInHours $UsageQuota `
+                -idleGracePeriod $idleGracePeriod -idleOsGracePeriod $idleOsGracePeriod -idleNoConnectGracePeriod $idleNoConnectGracePeriod `
             | Publish-AzLab `
-            | Set-AzLab -UsageQuotaInHours $usageQuota -UserAccessMode $UsageMode  -SharedPasswordEnabled:$SharedPassword `
+            | Set-AzLab -MaxUsers $MaxUsers -UserAccessMode $UsageMode -SharedPasswordEnabled:$SharedPassword
 
             Write-Host "$LabName lab doesn't exist. Created it."
         }
 
-        $lab = $lab | Add-AzLabUser -Emails $emails
-        $users = $lab | Get-AzLabUser
-        $users | ForEach-Object { $lab | Send-AzLabUserInvitationEmail -User $_ -InvitationText $invitation } | Out-Null
-        Write-Host "Added Users: $emails."
+        #Section to send out invitation emails 
+        if ($Emails) {
+
+            $lab = $lab | Add-AzLabUser -Emails $Emails
+            if ($Invitation) {
+                $users = $lab | Get-AzLabUser
+                $users | ForEach-Object { $lab | Send-AzLabUserInvitationEmail -User $_ -InvitationText $invitation } | Out-Null
+                Write-Host "Added Users: $Emails."
+            }
+        }
 
         if ($Schedules) {
             $Schedules | ForEach-Object { $_ | New-AzLabSchedule -Lab $lab } | Out-Null
@@ -174,7 +191,9 @@ function New-Accounts {
         $modulePath = Join-Path $path '..' 'Az.LabServices.psm1'
         Import-Module $modulePath
 
-        New-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName | Out-Null
+        if ((Get-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName) -eq $null ){
+            New-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName | Out-Null
+        }
         Write-Host "$LabAccountName lab account created or found."
     }
     
@@ -239,7 +258,9 @@ $labs = Import-Csv -Path $CsvConfigFile
 Write-Verbose ($labs | Format-Table | Out-String)
 
 $labs | ForEach-Object {
-    $_.Emails = ($_.Emails.Split(';')).Trim()
+    if ($_.Emails) {
+        $_.Emails = ($_.Emails.Split(';')).Trim()
+    }
     $_.LinuxRdp = [System.Convert]::ToBoolean($_.LinuxRdp)
     $_.SharedPassword = [System.Convert]::ToBoolean($_.SharedPassword)
     if ($_.Schedules) {
