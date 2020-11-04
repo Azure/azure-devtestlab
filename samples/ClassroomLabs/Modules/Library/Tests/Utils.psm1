@@ -49,7 +49,7 @@ function Get-FastLabAccount {
     if (-not $la) {
         Write-Verbose "Get-FastLabAccount: Creating new lab account."
         $la = New-AzLabAccount -ResourceGroupName $rgName -LabAccountName $laRealName
-        Write-Hose "$laRealName lab account created."                
+        Write-Host "$laRealName lab account created."                
     }
     return $la
 }
