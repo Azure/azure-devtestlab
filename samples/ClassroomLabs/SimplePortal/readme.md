@@ -1,0 +1,1 @@
+Simple Portal Sample for Azure Lab Services
