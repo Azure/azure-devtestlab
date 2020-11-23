@@ -1,4 +1,38 @@
-# Change log for Azure template for SharePoint 2019 / 2016 / 2013
+# Change log for Azure template for SharePoint-SingleFarm-FullConfig
+
+## Enhancements & bug-fixes - Published in October 13, 2020
+
+* Set FrontEnd VMs with SharePoint MinRole Front-End on SharePoint versions that support MinRoles configuration
+* Increase max numberOfAdditionalFrontEnd from 3 to 4
+* Install Edge Chromium in SharePoint VM and Front-End VMs through Chocolatey
+* Install Notepad++ in SharePoint VM and Front-End VMs through Chocolatey
+* Install 7-zip in SharePoint VM and Front-End VMs through Chocolatey
+* Install Fiddler in SharePoint VM and Front-End VMs through Chocolatey
+* Install ULS Viewer in SharePoint VM and Front-End VMs through Chocolatey
+* Install Chrome in Front-End VMs through Chocolatey
+* Install Everything in Front-End VM through Chocolatey
+* Define the list of all possible values for the time zone parameter vmsTimeZone
+* Update WaitToAvoidServersJoiningFarmSimultaneously to ensure it runs only 1 time, and updated the delay from 60 to 90 secs to improve reliability
+* Use a unique location for custom registry keys
+* Update parameters passed to ConfigureFE
+* Update DSC module SharePointDSC from 4.2 to 4.3
+* Update DSC module NetworkingDsc from 8.0 to 8.1
+* Update DSC module ActiveDirectoryCSDsc from 4.1 to 5.0
+* Update DSC module xWebAdministration from 3.1.1 to 3.2
+
+## Enhancements & bug-fixes - Published in October 2, 2020
+
+* Replace parameter addFrontEndToFarm with numberOfAdditionalFrontEnd
+* Add parameter numberOfAdditionalFrontEnd to set between 0 to 3 FE VMs to add to SharePoint farm
+* Customize resource ComputerManagementDsc.Computer to trigger reboot of SharePoint VMs without error
+
+## Enhancements & bug-fixes - Published in September 18, 2020
+
+* Run SPDistributedCacheService as farm account instead of a different service account
+* Disable IE Enhanced Security Configuration (ESC) on SharePoint VMs
+* Disable the first run wizard of IE on SharePoint VMs
+* Set new tabs to open "about:blank" in IE on SharePoint VMs
+* Move resources to avoid error on ExtendMainWebApp
 
 ## September 2020 update
 
