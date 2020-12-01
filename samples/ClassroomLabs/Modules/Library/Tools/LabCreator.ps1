@@ -59,6 +59,10 @@ $init = {
             [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
             $Size,
 
+            [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+            [bool]
+            $GpuDriverEnabled,
+
             [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
             [string]
             $Title,
@@ -75,7 +79,7 @@ $init = {
             [string]
             $Password,
 
-            [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
             [bool]
             $LinuxRdp,
 
@@ -106,7 +110,6 @@ $init = {
         Write-Host "Start creation of $LabName"
 
         $la = Get-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName
-
         $lab = $la | Get-AzLab -LabName $LabName
 
         if ($lab) {
@@ -116,14 +119,18 @@ $init = {
         else {
             # Try to load shared image and then gallery image
             $img = $la | Get-AzLabAccountSharedImage | Where-Object { $_.name -like $ImageName }
+
             if(-not $img) {
                 $img = $la | Get-AzLabAccountGalleryImage | Where-Object { $_.name -like $ImageName }
-                if (-not $img -or $img.Count -ne 1) { Write-Error "$ImageName pattern doesn't match just one gallery image." }
+      
+                if (-not $img -or @($img).Count -ne 1) { Write-Error "$ImageName pattern doesn't match just one gallery image." }
             }
             Write-Host "Image $ImageName found."
+
+            Write-Host "Linux $LinuxRdp***"
     
             $lab = $la `
-            | New-AzLab -LabName $LabName -Image $img -Size $Size -UserName $UserName -Password $Password -LinuxRdpEnabled:$LinuxRdp -UsageQuotaInHours $UsageQuota `
+            | New-AzLab -LabName $LabName -Image $img -Size $Size -UserName $UserName -Password $Password -LinuxRdpEnabled:$LinuxRdp -InstallGpuDriverEnabled:$GpuDriverEnabled -UsageQuotaInHours $UsageQuota `
                 -idleGracePeriod $idleGracePeriod -idleOsGracePeriod $idleOsGracePeriod -idleNoConnectGracePeriod $idleNoConnectGracePeriod `
             | Publish-AzLab `
             | Set-AzLab -MaxUsers $MaxUsers -UserAccessMode $UsageMode -SharedPasswordEnabled:$SharedPassword
@@ -187,8 +194,8 @@ function New-Accounts {
 
         Set-StrictMode -Version Latest
         $ErrorActionPreference = 'Stop'
-        
-        $modulePath = Join-Path $path '..' 'Az.LabServices.psm1'
+
+        $modulePath = Join-Path $path '..\Az.LabServices.psm1'
         Import-Module $modulePath
 
         if ((Get-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName) -eq $null ){
@@ -220,12 +227,14 @@ function New-AzLabMultiple {
 
         Set-StrictMode -Version Latest
         $ErrorActionPreference = 'Stop'
-        
-        $modulePath = Join-Path $path '..' 'Az.LabServices.psm1'
+
+        $modulePath = Join-Path $path '..\Az.LabServices.psm1'
         Import-Module $modulePath
         # Really?? It got to be the lines below? Doing a ForEach doesn't work ...
         $input.movenext() | Out-Null
+     
         $obj = $input.current[0]
+
         Write-Verbose "object inside the newazmultiple block $obj"
         $obj | New-AzLabSingle
     }
@@ -261,7 +270,15 @@ $labs | ForEach-Object {
     if ($_.Emails) {
         $_.Emails = ($_.Emails.Split(';')).Trim()
     }
-    $_.LinuxRdp = [System.Convert]::ToBoolean($_.LinuxRdp)
+
+    if (Get-Member -InputObject $_ -Name 'GpuDriverEnabled') {
+        $_.GpuDriverEnabled = [System.Convert]::ToBoolean($_.GpuDriverEnabled)
+    }
+
+    if (Get-Member -InputObject $_ -Name 'LinuxRdp') {
+        $_.LinuxRdp = [System.Convert]::ToBoolean($_.LinuxRdp)
+    }
+
     $_.SharedPassword = [System.Convert]::ToBoolean($_.SharedPassword)
     if ($_.Schedules) {
         Write-Host "Setting schedules for $($_.LabName)"
