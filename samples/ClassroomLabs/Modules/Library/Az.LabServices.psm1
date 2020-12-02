@@ -649,6 +649,10 @@ function New-AzLab {
         [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Size for template VM")]
         [ValidateNotNullOrEmpty()]
         $Size,
+            
+        [parameter(mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+        [switch]
+        $InstallGpuDriverEnabled = $false,
 
         [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "User name if shared password is enabled")]
         [string]
@@ -669,6 +673,7 @@ function New-AzLab {
         [parameter(mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [switch]
         $SharedPasswordEnabled = $false,
+
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Idle Shutdown Grace Period (0 is off)")]
         [int]
         $idleGracePeriod = 15,
@@ -697,6 +702,7 @@ function New-AzLab {
                 $sharedPassword = if ($SharedPasswordEnabled) { "Enabled" } else { "Disabled" }
                 $imageType = if ($image.id -match '/galleryimages/') { 'galleryImageResourceId' } else { 'sharedImageResourceId' }
                 if ($LinuxRdpEnabled) {$linuxRdpState = 'Enabled'} else { $linuxRdpState = 'Disabled' }
+                if ($InstallGpuDriverEnabled) {$gpuDriverState = 'Enabled'} else { $gpuDriverState = 'Disabled' }
                 if ($SkipTemplateCreation) {$hasTemplateVm = 'Disabled' } else { $hasTemplateVm = 'Enabled' }
                 if ($idleGracePeriod -eq 0) {$idleShutdownMode = "None"} else {$idleShutdownMode = "OnDisconnect"}
                 if ($idleOsGracePeriod -eq 0) {$enableDisconnectOnIdle = "Disabled"} else {$enableDisconnectOnIdle = "Enabled"}
@@ -714,7 +720,7 @@ function New-AzLab {
                             vmSize = $Size
                             sharedPasswordState = $sharedPassword
                             templateVmState = $hasTemplateVm
-                            
+                            installGpuDriverEnabled = $gpuDriverState
                         }
                     } | ConvertTo-Json) | Out-Null
                 } else {
@@ -736,6 +742,7 @@ function New-AzLab {
                             idleOsGracePeriod = "PT$($idleOsGracePeriod.ToString())M"
                             enableNoConnectShutdown = $enableNoConnectShutdown
                             idleNoConnectGracePeriod = "PT$($idleNoConnectGracePeriod.ToString())M"
+                            installGpuDriverEnabled = $gpuDriverState
                         }
                     } | ConvertTo-Json) | Out-Null
                 }
