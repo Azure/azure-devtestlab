@@ -334,7 +334,7 @@
     },
     "_artifactsLocation": {
       "type": "string",
-      "defaultValue": "https://github.com/Yvand/AzureRM-Templates/raw/master/Templates/DTL-SharePoint-AllVersions-light",
+      "defaultValue": "https://github.com/Azure/azure-devtestlab/raw/master/Environments/SharePoint-AllVersions",
       "metadata": {
         "description": "The base URI where artifacts required by this template are located. When the template is deployed using the accompanying scripts, a private location in the subscription will be used and this value will be automatically generated."
       }
@@ -645,7 +645,7 @@
         },
         "osProfile": {
           "computerName": "[variables('generalSettings').vmDCName]",
-          "adminUsername": "[parameters('adminUsername')]",
+          "adminUsername": "[parameters('adminUserName')]",
           "adminPassword": "[parameters('adminPassword')]",
           "windowsConfiguration": {
             "timeZone": "[parameters('vmsTimeZone')]",
@@ -717,7 +717,7 @@
             "protectedSettings": {
               "configurationArguments": {
                 "AdminCreds": {
-                  "UserName": "[parameters('adminUsername')]",
+                  "UserName": "[parameters('adminUserName')]",
                   "Password": "[parameters('adminPassword')]"
                 },
                 "AdfsSvcCreds": {
@@ -866,7 +866,7 @@
         "protectedSettings": {
           "configurationArguments": {
             "DomainAdminCreds": {
-              "UserName": "[parameters('adminUsername')]",
+              "UserName": "[parameters('adminUserName')]",
               "Password": "[parameters('adminPassword')]"
             },
             "SqlSvcCreds": {
@@ -1025,7 +1025,7 @@
         "protectedSettings": {
           "configurationArguments": {
             "DomainAdminCreds": {
-              "UserName": "[parameters('adminUsername')]",
+              "UserName": "[parameters('adminUserName')]",
               "Password": "[parameters('adminPassword')]"
             },
             "SPSetupCreds": {
@@ -1192,7 +1192,7 @@
         "protectedSettings": {
           "configurationArguments": {
             "DomainAdminCreds": {
-              "UserName": "[parameters('adminUsername')]",
+              "UserName": "[parameters('adminUserName')]",
               "Password": "[parameters('adminPassword')]"
             },
             "SPSetupCreds": {
@@ -1359,7 +1359,7 @@
         "protectedSettings": {
           "configurationArguments": {
             "DomainAdminCreds": {
-              "UserName": "[parameters('adminUsername')]",
+              "UserName": "[parameters('adminUserName')]",
               "Password": "[parameters('adminPassword')]"
             },
             "SPSetupCreds": {
