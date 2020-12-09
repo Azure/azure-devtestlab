@@ -181,7 +181,6 @@ configuration ConfigureSPVM
         {
             Name                 = "microsoft-edge"
             Ensure               = "Present"
-            Version              =  83.0.478.61
             DependsOn            = "[cChocoInstaller]InstallChoco"
         }
 
@@ -189,7 +188,13 @@ configuration ConfigureSPVM
         {
             Name                 = "notepadplusplus.install"
             Ensure               = "Present"
-            Version              =  7.9
+            DependsOn            = "[cChocoInstaller]InstallChoco"
+        }
+
+        cChocoPackageInstaller Install7zip
+        {
+            Name                 = "7zip.install"
+            Ensure               = "Present"
             DependsOn            = "[cChocoInstaller]InstallChoco"
         }
 
@@ -203,7 +208,7 @@ configuration ConfigureSPVM
             WaitTimeout             = 1200
             RestartCount            = 2
             WaitForValidCredentials = $True
-            PsDscRunAsCredential    = $DomainAdminCredsQualified
+            Credential              = $DomainAdminCredsQualified
             DependsOn               = "[DnsServerAddress]SetDNS"
         }
         
@@ -325,8 +330,27 @@ configuration ConfigureSPVM
             Password                      = $SPAppPoolCreds
             PasswordNeverExpires          = $true
             Ensure                        = "Present"
-            PsDscRunAsCredential = $DomainAdminCredsQualified
+            PsDscRunAsCredential          = $DomainAdminCredsQualified
             DependsOn                     = "[PendingReboot]RebootOnSignalFromJoinDomain"
+        }
+
+        # Since this DSC may run on multiple SP servers, each with a diferent SPN (spsites201x), SPN cannot be set in ADUser.ServicePrincipalNames because each config removes the SPNs of the previous one
+        ADServicePrincipalName SetSPAppPoolSPN1
+        {
+            ServicePrincipalName = "HTTP/$SPTrustedSitesName.$DomainFQDN"
+            Account              = $SPAppPoolCreds.UserName
+            Ensure               = "Present"
+            PsDscRunAsCredential = $DomainAdminCredsQualified
+            DependsOn            = "[ADUser]CreateSPAppPoolAccount"
+        }
+
+        ADServicePrincipalName SetSPAppPoolSPN2
+        {
+            ServicePrincipalName = "HTTP/$SPTrustedSitesName"
+            Account              = $SPAppPoolCreds.UserName
+            Ensure               = "Present"
+            PsDscRunAsCredential = $DomainAdminCredsQualified
+            DependsOn            = "[ADUser]CreateSPAppPoolAccount"
         }
 
         File AccountsProvisioned
@@ -343,8 +367,8 @@ configuration ConfigureSPVM
         cChocoPackageInstaller InstallFiddler
         {
             Name                 = "fiddler"
+            Version              =  5.0.20204.45441
             Ensure               = "Present"
-            Version              =  5.0.20202.18177
             PsDscRunAsCredential = $DomainAdminCredsQualified
             DependsOn            = "[cChocoInstaller]InstallChoco", "[PendingReboot]RebootOnSignalFromJoinDomain"
         }
@@ -505,7 +529,7 @@ configuration ConfigureSPVM
                 )
                 SigningCertificateFilePath   = "$SetupPath\Certificates\ADFS Signing.cer"
                 #ClaimProviderName           = "" # Should not be set if there is none
-                #ProviderSignOutUri          = "https://adfs.$DomainFQDN/adfs/ls/"
+                ProviderSignOutUri          = "https://adfs.$DomainFQDN/adfs/ls/"
                 UseWReplyParameter           = $true
                 Ensure                       = "Present"
                 DependsOn                    = "[SPFarm]CreateSPFarm"
@@ -674,7 +698,7 @@ $SQLAlias = "SQLAlias"
 $SharePointVersion = "2019"
 $ConfigureADFS = $false
 
-$outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.80.0.3\DSCWork\ConfigureSPVM.0\ConfigureSPVM"
+$outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.80.2.0\DSCWork\ConfigureSPVM.0\ConfigureSPVM"
 ConfigureSPVM -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPAppPoolCreds $SPAppPoolCreds -SPPassphraseCreds $SPPassphraseCreds -DNSServer $DNSServer -DomainFQDN $DomainFQDN -DCName $DCName -SQLName $SQLName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -ConfigureADFS $ConfigureADFS -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
 Set-DscLocalConfigurationManager -Path $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
