@@ -1,4 +1,15 @@
-# Change log for AzureRM template SharePoint-AllVersions
+# Change log for Azure DevTest Labs template SharePoint-AllVersions
+
+## Enhancements & bug-fixes - Published in December 10, 2020
+
+* Update Chocolatey packages Edge, Notepad++ and Fiddler to their latest version
+* Install 7-zip through Chocolatey
+* Remove ADFS service account from Administrators group
+* Fix the duplicate SPN issue on MSSQLSvc service, which was on both the SQL computer and the SQL service account
+* Set the SPN of SharePoint sites on the SharePoint application pool account
+* Set property ProviderSignOutUri on resource SPTrustedIdentityTokenIssuer
+* Change default size of SP and SQL VMs to Standard_E2ds_v4
+* Update DSC module SqlServerDsc from 14.2.1 to 15.0
 
 ## Enhancements & bug-fixes - Published in October 13, 2020
 

@@ -186,23 +186,13 @@
                 DomainName = $DomainFQDN
                 UserName = $AdfsSvcCreds.UserName
                 Password = $AdfsSvcCreds
-                Ensure = "Present"
                 PasswordAuthentication = 'Negotiate'
                 PasswordNeverExpires = $true
+                Ensure = "Present"
                 DependsOn = "[CertReq]GenerateADFSSiteCertificate", "[CertReq]GenerateADFSSigningCertificate", "[CertReq]GenerateADFSDecryptionCertificate"
             }
 
-            Group AddAdfsSvcAccountToDomainAdminsGroup
-            {
-                GroupName='Administrators'   
-                Ensure= 'Present'             
-                MembersToInclude= $AdfsSvcCredsQualified.UserName
-                Credential = $DomainCredsNetbios    
-                PsDscRunAsCredential = $DomainCredsNetbios
-                DependsOn = "[ADUser]CreateAdfsSvcAccount"
-            }
-
-            WindowsFeature AddADFS { Name = "ADFS-Federation"; Ensure = "Present"; DependsOn = "[Group]AddAdfsSvcAccountToDomainAdminsGroup" }
+            WindowsFeature AddADFS { Name = "ADFS-Federation"; Ensure = "Present"; DependsOn = "[ADUser]CreateAdfsSvcAccount" }
 
             xDnsRecord AddADFSHostDNS
             {
