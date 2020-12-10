@@ -4,6 +4,7 @@
 
 * Update Chocolatey packages Edge, Notepad++ and Fiddler to their latest version
 * Install 7-zip through Chocolatey
+* Remove ADFS service account from Administrators group
 * Fix the duplicate SPN issue on MSSQLSvc service, which was on both the SQL computer and the SQL service account
 * Set the SPN of SharePoint sites on the SharePoint application pool account
 * Set property ProviderSignOutUri on resource SPTrustedIdentityTokenIssuer
