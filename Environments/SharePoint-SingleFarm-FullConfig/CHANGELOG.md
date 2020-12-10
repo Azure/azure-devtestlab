@@ -1,4 +1,14 @@
-# Change log for Azure template for SharePoint-SingleFarm-FullConfig
+# Change log for Azure DevTest Labs template SharePoint-SingleFarm-FullConfig
+
+## Enhancements & bug-fixes - Published in December 10, 2020
+
+* Update all Chocolatey packages to their latest version
+* Remove ADFS service account from Administrators group
+* Fix the duplicate SPN issue on MSSQLSvc service, which was on both the SQL computer and the SQL service account
+* Set the SPN of SharePoint sites on the SharePoint application pool account
+* Set property ProviderSignOutUri on resource SPTrustedIdentityTokenIssuer
+* Change default size of SP and SQL VMs to Standard_E2ds_v4
+* Update DSC module SqlServerDsc from 14.2.1 to 15.0
 
 ## Enhancements & bug-fixes - Published in October 13, 2020
 
@@ -33,6 +43,7 @@
 * Disable the first run wizard of IE on SharePoint VMs
 * Set new tabs to open "about:blank" in IE on SharePoint VMs
 * Move resources to avoid error on ExtendMainWebApp
+* Remove customization of SPDiagnosticLoggingSettings
 
 ## September 2020 update
 
