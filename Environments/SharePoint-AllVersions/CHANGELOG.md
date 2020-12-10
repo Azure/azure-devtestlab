@@ -1,6 +1,6 @@
 # Change log for Azure DevTest Labs template SharePoint-AllVersions
 
-## Enhancements & bug-fixes - Published in December 09, 2020
+## Enhancements & bug-fixes - Published in December 10, 2020
 
 * Update Chocolatey packages Edge, Notepad++ and Fiddler to their latest version
 * Install 7-zip through Chocolatey
