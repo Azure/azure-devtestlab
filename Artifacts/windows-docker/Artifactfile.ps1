@@ -1,4 +1,4 @@
-﻿#
+#
 # Optional parameters to this script file.
 #
 
@@ -12,7 +12,27 @@ param(
 )
 
 ###################################################################################################
-[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+#
+# PowerShell configurations
+#
+
+# NOTE: Because the $ErrorActionPreference is "Stop", this script will stop on first failure.
+#       This is necessary to ensure we capture errors inside the try-catch-finally block.
+$ErrorActionPreference = "Stop"
+
+# Hide any progress bars, due to downloads and installs of remote components.
+$ProgressPreference = "SilentlyContinue"
+
+# Ensure we force use of TLS 1.2 for all downloads.
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+# Discard any collected errors from a previous execution.
+$Error.Clear()
+
+# Allow certian operations, like downloading files, to execute.
+Set-ExecutionPolicy Bypass -Scope Process -Force
+
+###################################################################################################
 #
 # Functions used in this script.
 #
@@ -238,17 +258,6 @@ function Invoke-ChocolateyPackageInstaller
 }
 
 ###################################################################################################
-
-#
-# PowerShell configurations
-#
-
-# NOTE: Because the $ErrorActionPreference is "Stop", this script will stop on first failure.
-#       This is necessary to ensure we capture errors inside the try-catch-finally block.
-$ErrorActionPreference = "Stop"
-
-###################################################################################################
-
 #
 # Main execution block.
 #
