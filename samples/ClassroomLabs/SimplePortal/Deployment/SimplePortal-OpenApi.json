@@ -1,0 +1,198 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "title": "SimplePortal",
+        "description": "",
+        "version": "1.0"
+    },
+    "paths": {
+        "/classes": {
+            "get": {
+                "summary": "classes",
+                "description": "Get all ClassTemplates",
+                "operationId": "5fc55055a9fb498c9e70f6f3",
+                "responses": {
+                    "200": {
+                        "description": null
+                    }
+                }
+            }
+        },
+        "/classes/create": {
+            "post": {
+                "summary": "classes/create",
+                "operationId": "5fc550553c31e1464ca1da6f",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateClassJson"
+                            },
+                            "example": {
+                                "classCode": "CS101",
+                                "labName": "CS101-8",
+                                "userName": "AdminUser",
+                                "password": "******"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": null
+                    }
+                }
+            }
+        },
+        "/classes/{classCode}": {
+            "get": {
+                "summary": "classes/{classCode}",
+                "operationId": "class-by-code",
+                "parameters": [
+                    {
+                        "name": "classCode",
+                        "in": "path",
+                        "description": "Code of class.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": null
+                    }
+                }
+            }
+        },
+        "/classtemplates": {
+            "get": {
+                "summary": "classtemplates",
+                "operationId": "classtemplates",
+                "responses": {
+                    "200": {
+                        "description": null
+                    }
+                }
+            },
+            "post": {
+                "summary": "classtemplates",
+                "operationId": "classtemplates-create",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateClassTemplateJSon"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": null
+                    }
+                }
+            }
+        },
+        "/classtemplates/{classCode}": {
+            "delete": {
+                "summary": "classtemplates",
+                "operationId": "del-classtemplates",
+                "parameters": [
+                    {
+                        "name": "classCode",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": null
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "CreateClassJson": {
+                "type": "object",
+                "properties": {
+                    "classCode": {
+                        "type": "string"
+                    },
+                    "labName": {
+                        "type": "string"
+                    },
+                    "userName": {
+                        "type": "string"
+                    },
+                    "password": {
+                        "type": "string"
+                    }
+                },
+                "example": {
+                    "classCode": "CS101",
+                    "labName": "CS101-8",
+                    "userName": "AdminUser",
+                    "password": "***"
+                }
+            },
+            "CreateClassTemplateJSon": {
+                "type": "object",
+                "properties": {
+                    "classCode": {
+                        "type": "string"
+                    },
+                    "department": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "templateId": {
+                        "type": "string"
+                    },
+                    "labAccountId": {
+                        "type": "string"
+                    },
+                    "size": {
+                        "type": "string"
+                    }
+                },
+                "example": {
+                    "classCode": "CS101",
+                    "department": "ComputerScience",
+                    "description": "Introduction to Computer Science",
+                    "templateId": "/subscriptions/11111111-1111-1111-1111-111111111111/resourcegroups/rg-name/providers/microsoft.labservices/labaccounts/la-name/galleryimages/windows server 2019 datacenter",
+                    "labAccountId": "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-name/providers/Microsoft.LabServices/labaccounts/la-name",
+                    "size": "Basic"
+                }
+            }
+        },
+        "securitySchemes": {
+            "apiKeyHeader": {
+                "type": "apiKey",
+                "name": "Ocp-Apim-Subscription-Key",
+                "in": "header"
+            },
+            "apiKeyQuery": {
+                "type": "apiKey",
+                "name": "subscription-key",
+                "in": "query"
+            }
+        }
+    },
+    "security": [
+        {
+            "apiKeyHeader": []
+        },
+        {
+            "apiKeyQuery": []
+        }
+    ]
+}
