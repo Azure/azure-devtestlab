@@ -84,10 +84,10 @@ async function getCredentials(forTesting?: boolean): Promise<any> {
         credentials = response.credentials;
     }
     else {
-        const connectedServiceName: string = tl.getInput('ConnectedServiceName', true);
-        const spId = tl.getEndpointAuthorizationParameter(connectedServiceName, 'ServicePrincipalId', false);
-        const spKey = tl.getEndpointAuthorizationParameter(connectedServiceName, 'ServicePrincipalKey', false);
-        const tenantId = tl.getEndpointAuthorizationParameter(connectedServiceName, 'TenantId', false);
+        const connectedServiceName: string = String(tl.getInput('ConnectedServiceName', true));
+        const spId: string = String(tl.getEndpointAuthorizationParameter(connectedServiceName, 'ServicePrincipalId', false));
+        const spKey: string = String(tl.getEndpointAuthorizationParameter(connectedServiceName, 'ServicePrincipalKey', false));
+        const tenantId: string = String(tl.getEndpointAuthorizationParameter(connectedServiceName, 'TenantId', false));
 
         tl.debug(`ResourceUtil: Login using ConnectedServiceName '${connectedServiceName}'.`);
         credentials = await msRestNodeAuth.loginWithServicePrincipalSecret(spId, spKey, tenantId);

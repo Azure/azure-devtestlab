@@ -106,8 +106,8 @@ function getInputData(ciName?: string, test?: boolean): CreateCiTaskInputData {
             windowsOsState: data.windowsOsState
         };
     } else {
-        const connectedServiceName: string = tl.getInput('ConnectedServiceName', true);
-        const osType: string = tl.getInput('OSType', true)
+        const connectedServiceName: string = String(tl.getInput('ConnectedServiceName', true));
+        const osType: string = String(tl.getInput('OSType', true));
 
         let author = process.env.RELEASE_RELEASENAME;
         let authorType = 'release';
@@ -130,15 +130,15 @@ function getInputData(ciName?: string, test?: boolean): CreateCiTaskInputData {
 
         inputData = {
             author: author,
-            ciName: tl.getInput('NewCustomImageName', true),
+            ciName: String(tl.getInput('NewCustomImageName', true)),
             connectedServiceName: connectedServiceName,
             description: description,
-            labId: tl.getInput('LabId', true),
-            labVmId: tl.getInput('LabVmId', true),
-            linuxOsState: tl.getInput('LinuxOsState', equalsIgnoreCase(osType, 'Linux')),
+            labId: String(tl.getInput('LabId', true)),
+            labVmId: String(tl.getInput('LabVmId', true)),
+            linuxOsState: String(tl.getInput('LinuxOsState', equalsIgnoreCase(osType, 'Linux'))),
             osType: osType,
             subscriptionId: tl.getEndpointDataParameter(connectedServiceName, 'SubscriptionId', true),
-            windowsOsState: tl.getInput('WindowsOsState', equalsIgnoreCase(osType, 'Windows'))
+            windowsOsState: String(tl.getInput('WindowsOsState', equalsIgnoreCase(osType, 'Windows')))
         };
     }
 

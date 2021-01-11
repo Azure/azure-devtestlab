@@ -70,23 +70,23 @@ function getInputData(envName?: string, test?: boolean): CreateOrUpdateEnvTaskIn
             templateId: data.templateId
         };
     } else {
-        const connectedServiceName: string = tl.getInput('ConnectedServiceName', true);
+        const connectedServiceName: string = String(tl.getInput('ConnectedServiceName', true));
 
         inputData = {
             connectedServiceName: connectedServiceName,
             envId: '',
-            envName: tl.getInput('EnvironmentName', true),
+            envName: String(tl.getInput('EnvironmentName', true)),
             exportEnvTemplate: tl.getBoolInput('ExportEnvironmentTemplate'),
-            exportEnvTemplateLocation: tl.getInput('ExportEnvironmentTemplateLocation'),
-            envTemplateLocationVariable: tl.getInput('EnvironmentTemplateLocationVariable'),
-            envTemplateSasTokenVariable: tl.getInput('EnvironmentTemplateSasTokenVariable'),
-            labId: tl.getInput('LabId', true),
+            exportEnvTemplateLocation: String(tl.getInput('ExportEnvironmentTemplateLocation')),
+            envTemplateLocationVariable: String(tl.getInput('EnvironmentTemplateLocationVariable')),
+            envTemplateSasTokenVariable: String(tl.getInput('EnvironmentTemplateSasTokenVariable')),
+            labId: String(tl.getInput('LabId', true)),
             outputTemplateVariables: tl.getBoolInput('OutputTemplateVariables'),
-            parametersFile: tl.getInput('ParametersFile', false),
-            parameterOverrides: tl.getInput('ParameterOverrides', false),
+            parametersFile: String(tl.getInput('ParametersFile', false)),
+            parameterOverrides: String(tl.getInput('ParameterOverrides', false)),
             subscriptionId: tl.getEndpointDataParameter(connectedServiceName, 'SubscriptionId', true),
             templateFile: '',
-            templateId: tl.getInput('TemplateId', true)
+            templateId: String(tl.getInput('TemplateId', true))
         };
     }
 
@@ -122,7 +122,7 @@ async function run(envName?: string, test?: boolean): Promise<void> {
 
         await createEnvironment(clients.dtl, inputData);
 
-        const envRgId: string = tl.getVariable('environmentResourceGroupId');
+        const envRgId: string = String(tl.getVariable('environmentResourceGroupId'));
         if (envRgId) {
             if (inputData.outputTemplateVariables) {
                 const response: ResourcesGetByIdResponse = await clients.arm.resources.getById(inputData.templateId, '2016-05-15');
@@ -130,8 +130,8 @@ async function run(envName?: string, test?: boolean): Promise<void> {
             }
 
             if (inputData.exportEnvTemplate) {
-                const envTemplateLocation: string = tl.getVariable(inputData.envTemplateLocationVariable);
-                const envTemplateSasToken: string = tl.getVariable(inputData.envTemplateSasTokenVariable);
+                const envTemplateLocation: string = String(tl.getVariable(inputData.envTemplateLocationVariable));
+                const envTemplateSasToken: string = String(tl.getVariable(inputData.envTemplateSasTokenVariable));
                 await envutil.exportEnvironmentTemplate(inputData.exportEnvTemplateLocation, envTemplateLocation, envTemplateSasToken);
             }
         }
