@@ -61,9 +61,9 @@ async function run(id?: string, test?: boolean): Promise<void> {
             subscriptionId = data.subscriptionId;
             ciId = id ? id : data.ciId;
         } else {
-            const connectedServiceName: string = tl.getInput('ConnectedServiceName', true);
+            const connectedServiceName: string = String(tl.getInput('ConnectedServiceName', true));
             subscriptionId = tl.getEndpointDataParameter(connectedServiceName, 'SubscriptionId', true);
-            ciId = tl.getInput('CustomImageId', true);
+            ciId = String(tl.getInput('CustomImageId', true));
         }
 
         const ciName: string = resutil.getLabResourceName(ciId, 'customimages');
