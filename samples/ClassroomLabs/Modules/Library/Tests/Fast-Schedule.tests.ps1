@@ -1,8 +1,11 @@
 [cmdletbinding()]
 Param()
-Import-Module $PSScriptRoot\..\Az.LabServices.psm1
+Write-Verbose "PSScriptRoot $PSScriptRoot"
+Import-Module $PSScriptRoot\..\Az.LabServices.psm1 -Force
 
-. $PSScriptRoot\Utils.ps1
+#. $PSScriptRoot\Utils.ps1
+Import-Module $PSScriptRoot\Utils.psm1 -Force
+Write-Verbose "Loading Utils.psm1"
 
 
 # Here the test is made multi-thread safe by making sure to examine and delete just the objects that were created inside the test

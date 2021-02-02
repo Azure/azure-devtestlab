@@ -2,10 +2,15 @@
 param(
     [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
     [string]
-    $CsvConfigFile
+    $CsvConfigFile,
+
+    [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+    [int]
+    $ThrottleLimit = 5
 )
 
 Import-Module ../Az.LabServices.psm1 -Force
+Install-Module -Name ThreadJob -Force
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -54,6 +59,10 @@ $init = {
             [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
             $Size,
 
+            [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+            [bool]
+            $GpuDriverEnabled,
+
             [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
             [string]
             $Title,
@@ -70,15 +79,27 @@ $init = {
             [string]
             $Password,
 
-            [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
             [bool]
             $LinuxRdp,
 
-            [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
             [string[]]
             $Emails,
 
-            [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+            [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+            [int]
+            $idleGracePeriod,
+
+            [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+            [int]
+            $idleOsGracePeriod,
+
+            [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+            [int]
+            $idleNoConnectGracePeriod,
+            
+            [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
             [string]
             $Invitation,
 
@@ -89,36 +110,44 @@ $init = {
         Write-Host "Start creation of $LabName"
 
         $la = Get-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName
-
         $lab = $la | Get-AzLab -LabName $LabName
 
         if ($lab) {
-            # TODO: cannot set max users
-            $lab = $lab | Set-AzLab -UsageQuotaInHours $usageQuota -UserAccessMode $UsageMode  -SharedPasswordEnabled:$SharedPassword
+            $lab = $lab | Set-AzLab -MaxUsers $MaxUsers -UsageQuotaInHours $UsageQuota -UserAccessMode $UsageMode  -SharedPasswordEnabled:$SharedPassword
             Write-Host "$LabName lab already exist. Republished."
         }
         else {
             # Try to load shared image and then gallery image
             $img = $la | Get-AzLabAccountSharedImage | Where-Object { $_.name -like $ImageName }
+
             if(-not $img) {
                 $img = $la | Get-AzLabAccountGalleryImage | Where-Object { $_.name -like $ImageName }
-                if (-not $img -or $img.Count -ne 1) { Write-Error "$ImageName pattern doesn't match just one gallery image." }
+      
+                if (-not $img -or @($img).Count -ne 1) { Write-Error "$ImageName pattern doesn't match just one gallery image." }
             }
             Write-Host "Image $ImageName found."
+
+            Write-Host "Linux $LinuxRdp***"
     
-            #TODO: cannot set maxUsers
             $lab = $la `
-            | New-AzLab -LabName $LabName -Image $img -Size $size -UserName $userName -Password $password -LinuxRdpEnabled:$linuxRdp `
+            | New-AzLab -LabName $LabName -Image $img -Size $Size -UserName $UserName -Password $Password -LinuxRdpEnabled:$LinuxRdp -InstallGpuDriverEnabled:$GpuDriverEnabled -UsageQuotaInHours $UsageQuota `
+                -idleGracePeriod $idleGracePeriod -idleOsGracePeriod $idleOsGracePeriod -idleNoConnectGracePeriod $idleNoConnectGracePeriod `
             | Publish-AzLab `
-            | Set-AzLab -UsageQuotaInHours $usageQuota -UserAccessMode $UsageMode  -SharedPasswordEnabled:$SharedPassword `
+            | Set-AzLab -MaxUsers $MaxUsers -UserAccessMode $UsageMode -SharedPasswordEnabled:$SharedPassword
 
             Write-Host "$LabName lab doesn't exist. Created it."
         }
 
-        $lab = $lab | Add-AzLabUser -Emails $emails
-        $users = $lab | Get-AzLabUser
-        $users | ForEach-Object { $lab | Send-AzLabUserInvitationEmail -User $_ -InvitationText $invitation } | Out-Null
-        Write-Host "Added Users: $emails."
+        #Section to send out invitation emails 
+        if ($Emails) {
+
+            $lab = $lab | Add-AzLabUser -Emails $Emails
+            if ($Invitation) {
+                $users = $lab | Get-AzLabUser
+                $users | ForEach-Object { $lab | Send-AzLabUserInvitationEmail -User $_ -InvitationText $invitation } | Out-Null
+                Write-Host "Added Users: $Emails."
+            }
+        }
 
         if ($Schedules) {
             $Schedules | ForEach-Object { $_ | New-AzLabSchedule -Lab $lab } | Out-Null
@@ -165,18 +194,20 @@ function New-Accounts {
 
         Set-StrictMode -Version Latest
         $ErrorActionPreference = 'Stop'
-        
-        $modulePath = Join-Path $path '..' 'Az.LabServices.psm1'
+
+        $modulePath = Join-Path $path '..\Az.LabServices.psm1'
         Import-Module $modulePath
 
-        New-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName | Out-Null
+        if ((Get-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName) -eq $null ){
+            New-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName | Out-Null
+        }
         Write-Host "$LabAccountName lab account created or found."
     }
     
     Write-Host "Starting lab accounts creation in parallel. Can take a while."
     $jobs = @()
     $lacs | ForEach-Object {
-        $jobs += Start-Job -ScriptBlock $block -ArgumentList $PSScriptRoot, $_.ResourceGroupName, $_.LabAccountName -Name $_.LabAccountName
+        $jobs += Start-ThreadJob -ScriptBlock $block -ArgumentList $PSScriptRoot, $_.ResourceGroupName, $_.LabAccountName -Name $_.LabAccountName -ThrottleLimit $ThrottleLimit
     }
 
     $hours = 1
@@ -196,12 +227,14 @@ function New-AzLabMultiple {
 
         Set-StrictMode -Version Latest
         $ErrorActionPreference = 'Stop'
-        
-        $modulePath = Join-Path $path '..' 'Az.LabServices.psm1'
+
+        $modulePath = Join-Path $path '..\Az.LabServices.psm1'
         Import-Module $modulePath
         # Really?? It got to be the lines below? Doing a ForEach doesn't work ...
         $input.movenext() | Out-Null
+     
         $obj = $input.current[0]
+
         Write-Verbose "object inside the newazmultiple block $obj"
         $obj | New-AzLabSingle
     }
@@ -210,7 +243,7 @@ function New-AzLabMultiple {
 
     $jobs = $ConfigObject | ForEach-Object {
         Write-Verbose "From config: $_"
-        Start-Job  -InitializationScript $init -ScriptBlock $block -ArgumentList $PSScriptRoot -InputObject $_ -Name $_.LabName
+        Start-ThreadJob  -InitializationScript $init -ScriptBlock $block -ArgumentList $PSScriptRoot -InputObject $_ -Name $_.LabName -ThrottleLimit $ThrottleLimit
     }
 
     $hours = 2
@@ -234,8 +267,18 @@ $labs = Import-Csv -Path $CsvConfigFile
 Write-Verbose ($labs | Format-Table | Out-String)
 
 $labs | ForEach-Object {
-    $_.Emails = ($_.Emails.Split(';')).Trim()
-    $_.LinuxRdp = [System.Convert]::ToBoolean($_.LinuxRdp)
+    if ($_.Emails) {
+        $_.Emails = ($_.Emails.Split(';')).Trim()
+    }
+
+    if (Get-Member -InputObject $_ -Name 'GpuDriverEnabled') {
+        $_.GpuDriverEnabled = [System.Convert]::ToBoolean($_.GpuDriverEnabled)
+    }
+
+    if (Get-Member -InputObject $_ -Name 'LinuxRdp') {
+        $_.LinuxRdp = [System.Convert]::ToBoolean($_.LinuxRdp)
+    }
+
     $_.SharedPassword = [System.Convert]::ToBoolean($_.SharedPassword)
     if ($_.Schedules) {
         Write-Host "Setting schedules for $($_.LabName)"

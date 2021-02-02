@@ -61,9 +61,9 @@ async function run(id?: string, test?: boolean): Promise<void> {
             subscriptionId = data.subscriptionId;
             labVmId = id ? id : data.labVmId;
         } else {
-            const connectedServiceName: string = tl.getInput('ConnectedServiceName', true);
+            const connectedServiceName: string = String(tl.getInput('ConnectedServiceName', true));
             subscriptionId = tl.getEndpointDataParameter(connectedServiceName, 'SubscriptionId', true);
-            labVmId = tl.getInput('LabVmId', true);
+            labVmId = String(tl.getInput('LabVmId', true));
         }
 
         const vmName: string = resutil.getLabResourceName(labVmId, 'virtualmachines');

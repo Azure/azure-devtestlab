@@ -22,11 +22,6 @@ Describe  'Get and Set SharedImageGallery' {
             # Create the lab
             $lab | New-AzDtlLab
 
-            # WORKAROUND for 1082372
-            $lab | ForEach-Object {
-               Set-AzResource -ResourceGroupName $_.ResourceGroupName -ResourceType 'Microsoft.DevTestLab/labs/users' -Name "$($_.Name)/@me" -ApiVersion 2018-10-15-preview -Force
-            }
-
             $result | Out-String | Write-Verbose
         }
 
