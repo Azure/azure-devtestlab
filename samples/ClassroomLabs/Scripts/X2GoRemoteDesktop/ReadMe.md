@@ -26,26 +26,26 @@ The scripts below automatically install the X2Go server and the Linux desktop en
 ##### Install MATE Desktop & X2Go Server
 
 ```bash
-sudo sh -c "$(curl -fsSL https://raw.githubusercontent.com/colbylwilliams/lab-scripts/master/ubuntu/x2go-mate.sh)"
+sudo sh -c "$(curl -fsSL https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/ClassroomLabs/Scripts/X2GoRemoteDesktop/Ubuntu/x2go-mate.sh)"
 ```
 
 ##### Install XFCE4 Desktop & X2Go Server
 
 ```bash
-sudo sh -c "$(curl -fsSL https://raw.githubusercontent.com/colbylwilliams/lab-scripts/master/ubuntu/x2go-xfce4.sh)"
+sudo sh -c "$(curl -fsSL https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/ClassroomLabs/Scripts/X2GoRemoteDesktop/Ubuntu/x2go-xfce4.sh)"
 ```
 
 ##### Install Xubuntu Desktop & X2Go Server
 
 ```bash
-sudo sh -c "$(curl -fsSL https://raw.githubusercontent.com/colbylwilliams/lab-scripts/master/ubuntu/x2go-xubuntu.sh)"
+sudo sh -c "$(curl -fsSL https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/ClassroomLabs/Scripts/X2GoRemoteDesktop/Ubuntu/x2go-xubuntu.sh)"
 ```
 
 ### Install X2Go Client
 
 Once you have the X2Go server installed on your template VM (using the scripts above), you'll use the X2Go client to remotely connect to the VM. The X2Go Client is the application that allows you to connect to a remote server and display a graphical desktop on your local machine.
 
-**Instructions for installing the X2Go client can be found [here](https://wiki.x2go.org/doku.php/doc:installation:x2goclient).**
+Instructions for installing the X2Go client can be found at [https://wiki.x2go.org/doku.php/doc:installation:x2goclient](https://wiki.x2go.org/doku.php/doc:installation:x2goclient).
 
 Once you've installed the X2Go client, you'll need to **create a new session** to connect to your lab VM.
 
