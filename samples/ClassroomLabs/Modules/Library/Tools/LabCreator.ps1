@@ -129,12 +129,13 @@ $init = {
       
                 if (-not $img -or @($img).Count -ne 1) { Write-Error "$ImageName pattern doesn't match just one gallery image." }
             }
+
             Write-Host "Image $ImageName found."
             Write-Host "Linux $LinuxRdp***"
     
             $lab = $la `
             | New-AzLab -LabName $LabName -Image $img -Size $Size -UserName $UserName -Password $Password -LinuxRdpEnabled:$LinuxRdp -InstallGpuDriverEnabled:$GpuDriverEnabled -UsageQuotaInHours $UsageQuota `
-                -idleGracePeriod $idleGracePeriod -idleOsGracePeriod $idleOsGracePeriod -idleNoConnectGracePeriod $idleNoConnectGracePeriod -TeamsGroupId $AadGroupId `
+                -idleGracePeriod $idleGracePeriod -idleOsGracePeriod $idleOsGracePeriod -idleNoConnectGracePeriod $idleNoConnectGracePeriod -AadGroupId $TeamsGroupId `
             | Publish-AzLab `
             | Set-AzLab -MaxUsers $MaxUsers -UserAccessMode $UsageMode -SharedPasswordEnabled:$SharedPassword
 
