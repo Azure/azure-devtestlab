@@ -688,7 +688,10 @@ function New-AzLab {
         
         [parameter(mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [switch]
-        $SkipTemplateCreation = $false
+        $SkipTemplateCreation = $false,
+
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Enabled AAD connected labs.  NOTE:  If this Id is a teams team than the lab will be marked as a teams lab.")]
+        [string] $TeamsGroupId
     )
   
     begin { . BeginPreamble }
@@ -721,6 +724,7 @@ function New-AzLab {
                             sharedPasswordState = $sharedPassword
                             templateVmState = $hasTemplateVm
                             installGpuDriverEnabled = $gpuDriverState
+                            aadGroupId = $TeamsGroupId
                         }
                     } | ConvertTo-Json) | Out-Null
                 } else {
@@ -743,6 +747,7 @@ function New-AzLab {
                             enableNoConnectShutdown = $enableNoConnectShutdown
                             idleNoConnectGracePeriod = "PT$($idleNoConnectGracePeriod.ToString())M"
                             installGpuDriverEnabled = $gpuDriverState
+                            aadGroupId = $TeamsGroupId
                         }
                     } | ConvertTo-Json) | Out-Null
                 }

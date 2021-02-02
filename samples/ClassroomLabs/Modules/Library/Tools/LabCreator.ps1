@@ -10,7 +10,7 @@ param(
 )
 
 Import-Module ../Az.LabServices.psm1 -Force
-Install-Module -Name ThreadJob -Force
+Install-Module -Name ThreadJob -Scope CurrentUser -Force
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -39,6 +39,10 @@ $init = {
             [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
             [ValidateNotNullOrEmpty()]
             $ImageName,
+
+            [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+            [string]
+            $TeamsGroupId = "",
 
             [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
             [int]
@@ -126,12 +130,11 @@ $init = {
                 if (-not $img -or @($img).Count -ne 1) { Write-Error "$ImageName pattern doesn't match just one gallery image." }
             }
             Write-Host "Image $ImageName found."
-
             Write-Host "Linux $LinuxRdp***"
     
             $lab = $la `
             | New-AzLab -LabName $LabName -Image $img -Size $Size -UserName $UserName -Password $Password -LinuxRdpEnabled:$LinuxRdp -InstallGpuDriverEnabled:$GpuDriverEnabled -UsageQuotaInHours $UsageQuota `
-                -idleGracePeriod $idleGracePeriod -idleOsGracePeriod $idleOsGracePeriod -idleNoConnectGracePeriod $idleNoConnectGracePeriod `
+                -idleGracePeriod $idleGracePeriod -idleOsGracePeriod $idleOsGracePeriod -idleNoConnectGracePeriod $idleNoConnectGracePeriod -TeamsGroupId $AadGroupId `
             | Publish-AzLab `
             | Set-AzLab -MaxUsers $MaxUsers -UserAccessMode $UsageMode -SharedPasswordEnabled:$SharedPassword
 
@@ -267,20 +270,42 @@ $labs = Import-Csv -Path $CsvConfigFile
 Write-Verbose ($labs | Format-Table | Out-String)
 
 $labs | ForEach-Object {
-    if ($_.Emails) {
+
+    # Validate that the name is good, before we start creating labs
+    if (-not ($_.LabName -match "^[a-zA-Z0-9_, '`"!|-]*$")) {
+        Write-Error "Lab Name '$($_.LabName)' can't contain special characters..."
+    }
+
+    if ((Get-Member -InputObject $_ -Name 'Emails') -and ($_.Emails)) {
         $_.Emails = ($_.Emails.Split(';')).Trim()
     }
 
     if (Get-Member -InputObject $_ -Name 'GpuDriverEnabled') {
-        $_.GpuDriverEnabled = [System.Convert]::ToBoolean($_.GpuDriverEnabled)
+        if ($_.GpuDriverEnabled) {
+            $_.GpuDriverEnabled = [System.Convert]::ToBoolean($_.GpuDriverEnabled)
+        }
+        else {
+            $_.GpuDriverEnabled = $false
+        }
+    }
+    else {
+        Add-Member -InputObject $_ -MemberType NoteProperty -Name "GpuDriverEnabled" -Value $false
     }
 
     if (Get-Member -InputObject $_ -Name 'LinuxRdp') {
-        $_.LinuxRdp = [System.Convert]::ToBoolean($_.LinuxRdp)
+        if ($_.LinuxRdp) {
+            $_.LinuxRdp = [System.Convert]::ToBoolean($_.LinuxRdp)
+        }
+        else {
+            $_.LinuxRdp = $false
+        }
+    }
+    else {
+        Add-Member -InputObject $_ -MemberType NoteProperty -Name "LinuxRdp" -Value $false
     }
 
     $_.SharedPassword = [System.Convert]::ToBoolean($_.SharedPassword)
-    if ($_.Schedules) {
+    if ((Get-Member -InputObject $_ -Name 'Schedules') -and ($_.Schedules)) {
         Write-Host "Setting schedules for $($_.LabName)"
         $_.Schedules = Import-Schedules -schedules $_.Schedules
     }
