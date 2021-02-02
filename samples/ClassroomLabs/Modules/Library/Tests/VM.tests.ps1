@@ -1,8 +1,10 @@
 [cmdletbinding()]
 Param()
-Import-Module $PSScriptRoot\..\Az.LabServices.psm1
+Import-Module $PSScriptRoot\..\Az.LabServices.psm1 -Force
 
-. $PSScriptRoot\Utils.ps1
+#. $PSScriptRoot\Utils.ps1
+Import-Module $PSScriptRoot\Utils.psm1 -Force
+Write-Verbose "Loading Utils.psm1"
 
 
 Describe 'VMs' {

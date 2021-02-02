@@ -136,6 +136,9 @@ function Prep-MachineForAutoLogon
         Write-Error "Windows logon password was not provided. Please retry by providing a valid windows logon password to enable autologon."
     }
 
+    Write-Host "Disable Privacy Experience For auto logon after reboot"
+    reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\OOBE" /v "DisablePrivacyExperience" /t "REG_DWORD" /d 1 /f
+
     # Create a PS session for the user to trigger the creation of the registry entries required for autologon
     $computerName = "localhost"
     $password = ConvertTo-SecureString $windowsLogonPassword -AsPlainText -Force
@@ -238,7 +241,7 @@ function Configure-DeploymentGroupAgent
         Prep-MachineForAutoLogon -windowsLogonAccount $windowsLogonAccount -windowsLogonPassword $windowsLogonPassword
 
         # Arguements to run agent with autologon enabled
-        $agentConfigArgs = "--unattended", "--url", $accountUrl, "--auth", "PAT", "--token", $personalAccessToken, "--deploymentgroup", "--projectname", $projectName, "--deploymentgroupname", $deploymentGroupName, "--agent", $agentName, "--runAsAutoLogon", "--overwriteAutoLogon", "--windowslogonaccount", $windowsLogonAccount, "--work", "_work"
+        $agentConfigArgs = "--unattended", "--url", $accountUrl, "--auth", "PAT", "--token", $personalAccessToken, "--deploymentgroup", "--projectname", $projectName, "--deploymentgroupname", $deploymentGroupName, "--agent", $agentName, "--replace", "--runAsAutoLogon", "--overwriteAutoLogon", "--windowslogonaccount", $windowsLogonAccount, "--work", "_work"
     }
     else
     {
@@ -334,11 +337,3 @@ function Install-DeploymentGroupAgent
 }
 
 Install-DeploymentGroupAgent $accountUrl $projectName $deploymentGroupName $personalAccessToken $deploymentAgentTags $agentInstallPath $agentName $runAsAutoLogon $windowsLogonAccount $windowsLogonPassword
-
-
-
-
-
-
-
-
