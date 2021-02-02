@@ -16,9 +16,9 @@ When a teacher uses the management portal, they will be shown an error message i
 - You must replace "{Your Sub Id}" in the AzLabsCustomContributorRole.json file with your subscription id.
 
 # Directions
-1. Replace "{Your Sub Id}" in .\AzLabsCustomContribRole.json file with your subscription id.
+1. Replace "{Your Sub Id}" in .\AzLabsCustomContributorRole.json file with your subscription id.
 2. Open a PowerShell window.  Make sure that the window notes it is running under administrator privileges.
-3. Run `ImportCustomContributorRole.ps1`.  
+3. Run `ImportCustomContributorRole.ps1` which imports the custom role defined in .\AzLabsCustomContributorRole.json.
 
 This script will import the custom role into you subscription.  Here are the steps to assign this to a teacher:
 1. Assign the teacher the Reader role at the lab account level.
