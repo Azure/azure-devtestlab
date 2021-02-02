@@ -22,8 +22,7 @@
                        "Microsoft.LabServices/labAccounts/labs/environmentSettings/write",
                        "Microsoft.LabServices/labAccounts/labs/users/write",
                        "Microsoft.LabServices/labAccounts/labs/environmentSettings/schedules/delete",
-                       "Microsoft.LabServices/labAccounts/labs/environmentSettings/schedules/write"
-                      
+                       "Microsoft.LabServices/labAccounts/labs/environmentSettings/schedules/write"                      
                    ],
     "DataActions":  [
 
