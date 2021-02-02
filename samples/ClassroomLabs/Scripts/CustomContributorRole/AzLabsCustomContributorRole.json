@@ -1,0 +1,37 @@
+{
+    "Name":  "AzLabsCustomContributorRole",
+    "Id":  "91d76480-a4d7-4729-9912-0d37a89da32f",
+    "IsCustom":  true,
+    "Description":  "Custom contributor role for labs",
+    "Actions":  [
+                    "*"
+                ],
+    "NotActions":  [
+                       "Microsoft.Authorization/*/Delete",
+                       "Microsoft.Authorization/*/Write",
+                       "Microsoft.Authorization/elevateAccess/Action",
+                       "Microsoft.Blueprint/blueprintAssignments/write",
+                       "Microsoft.Blueprint/blueprintAssignments/delete",
+                       "Microsoft.LabServices/labAccounts/labs/delete",
+                       "Microsoft.LabServices/labAccounts/labs/write",
+                       "Microsoft.LabServices/labAccounts/labs/environmentSettings/Start/action",
+                       "Microsoft.LabServices/labAccounts/labs/environmentSettings/Stop/action",
+                       "Microsoft.LabServices/labAccounts/labs/environmentSettings/SaveImage/action",
+                       "Microsoft.LabServices/labAccounts/labs/environmentSettings/ResetPassword/action",
+                       "Microsoft.LabServices/labAccounts/labs/environmentSettings/Publish/action",
+                       "Microsoft.LabServices/labAccounts/labs/environmentSettings/write",
+                       "Microsoft.LabServices/labAccounts/labs/users/write",
+                       "Microsoft.LabServices/labAccounts/labs/environmentSettings/schedules/delete",
+                       "Microsoft.LabServices/labAccounts/labs/environmentSettings/schedules/write"
+                      
+                   ],
+    "DataActions":  [
+
+                    ],
+    "NotDataActions":  [
+
+                       ],
+    "AssignableScopes":  [
+                             "/subscriptions/{Your Sub Id}"
+                         ]
+}
