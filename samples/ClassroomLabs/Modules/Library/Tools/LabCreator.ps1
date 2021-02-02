@@ -135,7 +135,7 @@ $init = {
     
             $lab = $la `
             | New-AzLab -LabName $LabName -Image $img -Size $Size -UserName $UserName -Password $Password -LinuxRdpEnabled:$LinuxRdp -InstallGpuDriverEnabled:$GpuDriverEnabled -UsageQuotaInHours $UsageQuota `
-                -idleGracePeriod $idleGracePeriod -idleOsGracePeriod $idleOsGracePeriod -idleNoConnectGracePeriod $idleNoConnectGracePeriod -AadGroupId $TeamsGroupId `
+                -idleGracePeriod $idleGracePeriod -idleOsGracePeriod $idleOsGracePeriod -idleNoConnectGracePeriod $idleNoConnectGracePeriod -TeamsGroupId $TeamsGroupId `
             | Publish-AzLab `
             | Set-AzLab -MaxUsers $MaxUsers -UserAccessMode $UsageMode -SharedPasswordEnabled:$SharedPassword
 
