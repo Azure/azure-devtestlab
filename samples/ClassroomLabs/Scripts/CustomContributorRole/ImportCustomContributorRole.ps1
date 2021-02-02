@@ -1,5 +1,6 @@
-# Imports custom role named Az Labs Custom Contributor Role at the subscription level.  
-# Once imported, this role can then be assigned to teachers.  This role gives finer grained control over the permissions teachers are granted when managing labs.
+# Imports custom role named AzLabsCustomContributor Role at the subscription level.  
+# Once imported, this role can then be assigned to teachers at the lab level.  
+# This role gives fine grained control of the permissions that teachers are granted when managing labs.
 $index = (Get-Content -path ".\AzLabsCustomContributorRole.json" -Raw).IndexOf("{Your Sub Id}")
 if ($index -eq -1) {
     New-AzRoleDefinition -InputFile ".\AzLabsCustomContributorRole.json"
