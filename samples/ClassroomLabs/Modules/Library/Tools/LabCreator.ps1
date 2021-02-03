@@ -145,9 +145,14 @@ $init = {
 
             # If we have any lab owner emails, we need to assign the RBAC permission
             $LabOwnerEmails | ForEach-Object {
-                # Check if role exists, the role assignment is added by default by the person who runs the script
+                # Check if Lab Owner role already exists (the role assignment is added by default by the person who runs the script), if not create it
                 if (-not (Get-AzRoleAssignment -SignInName $_ -Scope $lab.id -RoleDefinitionName Owner)) {
                     New-AzRoleAssignment -SignInName $_ -Scope $lab.id -RoleDefinitionName Owner | Out-Null
+                }
+
+                # Check if the lab account reader role already exists, if not create it
+                if (-not (Get-AzRoleAssignment -SignInName $_ -ResourceGroupName $lab.ResourceGroupName -ResourceName $lab.LabAccountName -ResourceType "Microsoft.LabServices/labAccounts" -RoleDefinitionName Reader)) {
+                    New-AzRoleAssignment -SignInName $_ -ResourceGroupName $lab.ResourceGroupName -ResourceName $lab.LabAccountName -ResourceType "Microsoft.LabServices/labAccounts" -RoleDefinitionName Reader | Out-Null 
                 }
             }
 
@@ -287,6 +292,14 @@ $labs | ForEach-Object {
     # Validate that the name is good, before we start creating labs
     if (-not ($_.LabName -match "^[a-zA-Z0-9_, '`"!|-]*$")) {
         Write-Error "Lab Name '$($_.LabName)' can't contain special characters..."
+    }
+
+    # Checking to ensure the user has changd the example username/passwork in CSV files
+    if ($_.UserName -and ($_.UserName -ieq "test0000")) {
+        Write-Warning "Lab $($_.LabName) is using the default UserName from the example CSV, please update it for security reasons"
+    }
+    if ($_.Password -and ($_.Password -ieq "Test00000000")) {
+        Write-Warning "Lab $($_.LabName) is using the default Password from the example CSV, please update it for security reasons"
     }
 
     if ((Get-Member -InputObject $_ -Name 'Emails') -and ($_.Emails)) {
