@@ -92,6 +92,10 @@ $init = {
             $Emails,
 
             [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+            [string[]]
+            $LabOwnerEmails,
+
+            [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
             [int]
             $idleGracePeriod,
 
@@ -139,10 +143,18 @@ $init = {
             | Publish-AzLab `
             | Set-AzLab -MaxUsers $MaxUsers -UserAccessMode $UsageMode -SharedPasswordEnabled:$SharedPassword
 
+            # If we have any lab owner emails, we need to assign the RBAC permission
+            $LabOwnerEmails | ForEach-Object {
+                # Check if role exists, the role assignment is added by default by the person who runs the script
+                if (-not (Get-AzRoleAssignment -SignInName $_ -Scope $lab.id -RoleDefinitionName Owner)) {
+                    New-AzRoleAssignment -SignInName $_ -Scope $lab.id -RoleDefinitionName Owner | Out-Null
+                }
+            }
+
             Write-Host "$LabName lab doesn't exist. Created it."
         }
 
-        #Section to send out invitation emails 
+        #Section to send out invitation emails
         if ($Emails) {
 
             $lab = $lab | Add-AzLabUser -Emails $Emails
@@ -279,6 +291,10 @@ $labs | ForEach-Object {
 
     if ((Get-Member -InputObject $_ -Name 'Emails') -and ($_.Emails)) {
         $_.Emails = ($_.Emails.Split(';')).Trim()
+    }
+
+    if ((Get-Member -InputObject $_ -Name 'LabOwnerEmails') -and ($_.LabOwnerEmails)) {
+        $_.LabOwnerEmails = ($_.LabOwnerEmails.Split(';')).Trim()
     }
 
     if (Get-Member -InputObject $_ -Name 'GpuDriverEnabled') {
