@@ -294,6 +294,11 @@ $labs | ForEach-Object {
         Write-Error "Lab Name '$($_.LabName)' can't contain special characters..."
     }
 
+    # Validate that the aadGroupId (if it exists) isn't a null guid since that's not valid (it's in the default csv this way)
+    if ((Get-Member -InputObject $_ -Name 'AadGroupId') -and ($_.AadGroupId) -and ($_.AadGroupId -ieq "00000000-0000-0000-0000-000000000000")) {
+        Write-Error "AadGroupId cannot be all 0's for Lab '$($_.LabName)', please enter a valid AadGroupId"
+    }
+
     # Checking to ensure the user has changd the example username/passwork in CSV files
     if ($_.UserName -and ($_.UserName -ieq "test0000")) {
         Write-Warning "Lab $($_.LabName) is using the default UserName from the example CSV, please update it for security reasons"
