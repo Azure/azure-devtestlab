@@ -33,7 +33,7 @@ jobs:
     - name: Run Azure PowerShell script
       uses: azure/powershell@v1
       with:
-        azPSVersion: '3.1.0'
+        azPSVersion: 'latest'
         inlineScript: |
           Install-Module -Name Pester -Force -AllowClobber -RequiredVersion 4.10.1
           Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast* -EnableExit

@@ -99,7 +99,7 @@ function Get-FastGallery {
     Write-Verbose "Get-FastGallery: Shared Galleries $allsg"
     $allsg | Should -Not -BeNullOrEmpty | Write-Host "Missing Shared Image Gallery."
     $sg = $allsg `
-         | Where-Object {$_.Name.StartsWith('AzLabsTestGallery')} `
+         | Where-Object {$_.Name.StartsWith('myGallery')} `
          | Where-Object { (Get-AzGalleryImageDefinition -ResourceGroupName $_.ResourceGroupName -GalleryName $_.Name).Count -gt 0 }
 
     $sg | Should -Not -BeNullOrEmpty | Write-Host "Missing images in $sg"
