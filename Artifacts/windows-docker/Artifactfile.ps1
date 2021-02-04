@@ -1,4 +1,4 @@
-﻿#
+#
 # Optional parameters to this script file.
 #
 
@@ -12,7 +12,27 @@ param(
 )
 
 ###################################################################################################
+#
+# PowerShell configurations
+#
 
+# NOTE: Because the $ErrorActionPreference is "Stop", this script will stop on first failure.
+#       This is necessary to ensure we capture errors inside the try-catch-finally block.
+$ErrorActionPreference = "Stop"
+
+# Hide any progress bars, due to downloads and installs of remote components.
+$ProgressPreference = "SilentlyContinue"
+
+# Ensure we force use of TLS 1.2 for all downloads.
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+# Discard any collected errors from a previous execution.
+$Error.Clear()
+
+# Allow certian operations, like downloading files, to execute.
+Set-ExecutionPolicy Bypass -Scope Process -Force
+
+###################################################################################################
 #
 # Functions used in this script.
 #
@@ -121,7 +141,7 @@ function Test-NestedVirtualizationSupport
     # CAUTION !!!
     # There's no reliable way other than using the VMSize to identify support for nested virtualization yet!
 
-    return [bool] ($vmSize -match "Standard_[D|E]{1}\d{1,2}[s]?_v3")
+    return [bool] ($vmSize -match "Standard_[D|E]{1}\d{1,2}[d]?[s]?_v[3|4]")
 }
 
 function Get-TempPassword
@@ -238,17 +258,6 @@ function Invoke-ChocolateyPackageInstaller
 }
 
 ###################################################################################################
-
-#
-# PowerShell configurations
-#
-
-# NOTE: Because the $ErrorActionPreference is "Stop", this script will stop on first failure.
-#       This is necessary to ensure we capture errors inside the try-catch-finally block.
-$ErrorActionPreference = "Stop"
-
-###################################################################################################
-
 #
 # Main execution block.
 #
@@ -284,6 +293,10 @@ try
         if ($productType -eq 1)
         {
             # Windows 10
+            if ((Get-WindowsOptionalFeature -Online -FeatureName containers | select -ExpandProperty State) -eq "Disabled")
+            {
+                Enable-WindowsOptionalFeature -Online -FeatureName containers -All -NoRestart
+            }
             if ((Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V | select -ExpandProperty State) -eq "Disabled")
             {
                 Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All -NoRestart
@@ -294,7 +307,7 @@ try
             # Windows Server 2016
             if ((Get-WindowsFeature -Name Hyper-V | select -ExpandProperty InstallState) -eq "Available")
             {
-                Install-WindowsFeature –Name Hyper-V -IncludeManagementTools | Out-Null
+                Install-WindowsFeature -Name Hyper-V -IncludeManagementTools | Out-Null
             }
         }
 

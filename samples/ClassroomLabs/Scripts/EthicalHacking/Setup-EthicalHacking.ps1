@@ -1,4 +1,4 @@
-<#
+ <#
 The MIT License (MIT)
 Copyright (c) Microsoft Corporation  
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -242,35 +242,68 @@ function Invoke-Process {
     }
 }
 
+<#
+.SYNOPSIS
+Funtion will convert from .vmdk to .vhdx Hyper-V hard disk file.
+.PARAMETER VmdkFilePath
+Full file path for vmdk to be converted.
+.PARAMETER VhdxFilePath
+File file path where vhdx file should be created.
+#>
+function Convert-VdmkToVhdx {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$true)][string] $VmdkFilePath,
+        [Parameter(Mandatory=$true)][string] $VhdxFilePath
+    )
+    
+    Write-Host "Finding Starwind V2V Converter executable"
+    $swcExePath = Join-Path $env:ProgramFiles 'StarWind Software\StarWind V2V Converter\V2V_ConverterConsole.exe'
+    if (-not (Test-Path $swcExePath)){
+        Write-Host "Installing Starwind V2V Converter"
+        #Main download page is at https://www.starwindsoftware.com/download-starwind-products#download, choose 'Starwind V2V Converter'.
+        Invoke-Process -FileName $(Get-WebFile -DownloadUrl 'https://www.starwindsoftware.com/tmplink/starwindconverter.exe' -TargetFilePath $(Join-Path $env:TEMP 'starwindconverter.exe')) -Arguments '/verysilent'
+    }
+
+    #convert vmdk file
+    Write-Host "Converting '$VmdkFilePath' to '$VhdxFilePath'.  Warning: This may take several minutes."
+    Invoke-Process -FileName $swcExePath -Arguments "convert in_file_name=""$VmdkFilePath"" out_file_name=""$VhdxFilePath"" out_file_type=ft_vhdx_thin"
+}
+
 ### Kali Linux Functions ###
 <#
 .SYNOPSIS
 Downloads Kali Linux Hyper-V image and returns the path to the virtual machine configuration information file.
 #>
-function Get-KaliLinuxVmcxFile {
-    $_kaliLinuxHyperVFilePath = "$env:PUBLIC\Documents\Hyper-V\Kali-Linux"
-    New-Item -Path $_kaliLinuxHyperVFilePath -ItemType Directory -Force | Out-Null
+function Get-KaliLinuxDisk {
+    $vhdxPath = "$env:PUBLIC\Documents\Hyper-V\Virtual hard disks\Kali-Linux-2020.4-vmware-amd64.vhdx"
 
-    #If files already download, return
-    $vmcxFilePath = Get-ChildItem "$_kaliLinuxHyperVFilePath\*.vmcx" -Recurse | Select-Object -expand FullName
-    if ($null -ne $vmcxFilePath) { return $vmcxFilePath }
-  
-    Write-Host "Downloading compressed file with  Kali Linux image."
+    if (Test-Path ($vhdxPath)) { return $vhdxPath }
+
+    Write-Host "Downloading Kali Linux image compressed file. "
+     $_kaliLinuxExtractedFilesFolder = Join-Path $env:TEMP 'KaliLinux'
     #Download page is https://www.offensive-security.com/kali-linux-vm-vmware-virtualbox-image-download/
-    $kaliLinux7ZipFile = Get-WebFile -DownloadUrl 'https://images.offensive-security.com/virtual-images/kali-linux-2019.3-hyperv-amd64.7z' -TargetFilePath $(Join-Path $env:TEMP 'KaliLinuxZip.7z') -SkipIfAlreadyExists $true
+    $kaliLinux7ZipFile = Get-WebFile -DownloadUrl 'https://images.kali.org/virtual-images/kali-linux-2020.4-vmware-amd64.7z' -TargetFilePath $(Join-Path $_kaliLinuxExtractedFilesFolder 'kali-linux-2020.4-vmware-amd64.7z') -SkipIfAlreadyExists $true
  
-    Write-Host "Extracting Kali Linux Hyper-V files from compressed file."
     $sevenZipExe = Join-Path $env:ProgramFiles '7-zip\7z.exe'
     if (-not (Test-Path $sevenZipExe)) {
-        #Download page is https://www.7-zip.org/download.html.
+        Write-Host "Downloading and installing 7-Zip to extract Kali Linux compressed files."
+          #Download page is https://www.7-zip.org/download.html.
         $sevenZipInstallerPath = Get-WebFile -DownloadUrl 'https://www.7-zip.org/a/7z1900-x64.msi' -TargetFilePath $(Join-Path $env:TEMP '7zip.msi') -SkipIfAlreadyExists $true
   
         Invoke-Process -FileName "msiexec.exe" -Arguments "/i $sevenZipInstallerPath /quiet"
     }
-          
-    Invoke-Process -FileName $sevenZipExe -Arguments "x $kaliLinux7ZipFile -o$_kaliLinuxHyperVFilePath -r"
-    
-    return Get-ChildItem "$_kaliLinuxHyperVFilePath\*.vmcx" -Recurse | Select-Object -expand FullName
+
+    Write-Host "Extracting Kali Linux files from compressed file."
+    if ($null -eq (Get-ChildItem "$_kaliLinuxExtractedFilesFolder\Kali-Linux-2020.4-vmware-amd64.vmdk" -Recurse | Select-Object -expand FullName)) {
+        Invoke-Process -FileName $sevenZipExe -Arguments "x $kaliLinux7ZipFile -o$_kaliLinuxExtractedFilesFolder -r"
+    }
+    $vmdkFile = Get-ChildItem "$_kaliLinuxExtractedFilesFolder\Kali-Linux-2020.4-vmware-amd64.vmdk" -Recurse | Select-Object -expand FullName
+
+    Write-Host "Converting downloading Kali Linux files to Hyper-V files."
+    Convert-VdmkToVhdx -VmdkFilePath $vmdkFile -VhdxFilePath $vhdxPath
+
+    return $vhdxPath
 }
 
 <#
@@ -278,19 +311,24 @@ function Get-KaliLinuxVmcxFile {
 Creates new Kali Linux Hyper-V virtual machine.
 #>
 function New-KaliLinuxVM {
-    #if the machine already exists, return
-    If ($null -ne (@(Get-VM) | Where-Object Name -Like "kali-linux*")) { return }
+    $computerName = 'kali-linux'
 
-    $kaliLinuxVmcxFilePath = Get-KaliLinuxVmcxFile
+    #if the machine already exists, with expected network adapter, return
+    If ($null -ne (@(Get-VM) | Where-Object Name -Like $computerName | Get-VMNetworkAdapter | Where-Object SwitchName -like $SwitchName)) { return }
 
+    #download virtual hard disk, if not down already.
+    $kaliLinuxHardDiskFilePath = Get-KaliLinuxDisk
 
-    #fix ethernet adapter first, then import image
-    Write-Host "Importing Kali Linux Hyper-V virtual machine."
-    $report = Compare-Vm -Path $kaliLinuxVmcxFilePath
-    $report.Incompatibilities[0].Source | Disconnect-VMNetworkAdapter 
-    $report.VM | Add-VMNetworkAdapter -SwitchName $SwitchName
-    import-vm -CompatibilityReport $report 
-
+    #create-vm, add network adapter (legacy)
+    Write-Host "Looking for Kali Linux virtual machine.  Virtual machine will be created if not found."
+    $vm = @(Get-VM) | Where-Object Name -Like $computerName
+    if ($null -eq $vm) {
+        $vm = New-VM -Name $computerName -MemoryStartupBytes 2048MB -VHDPath $kaliLinuxHardDiskFilePath 
+    }
+    Write-Host "Adding network adapter to Kali Linux virtual machine."
+    if ($null -eq ($vm | Get-VMNetworkAdapter | Where-Object SwitchName -like $SwitchName)) {
+        $vm | Add-VMNetworkAdapter -SwitchName $SwitchName -IsLegacy $true
+    }
 }
 
 ### Metasploitable Functions ###
@@ -304,28 +342,18 @@ function Get-MetasploitableDisk {
     if (Test-Path ($vhdxPath)) { return $vhdxPath }
 
     Write-Host "Downloading Metasploitable image compressed file. "
+    $_metasploitableLinuxExtractPath = Join-Path $env:Temp 'MetasploitableLinux'
     #Download page is https://information.rapid7.com/download-metasploitable-2017.html
-    $metasploitableZipFile = Get-WebFile -DownloadUrl 'http://downloads.metasploit.com/data/metasploitable/metasploitable-linux-2.0.0.zip' -TargetFilePath $(Join-Path $env:TEMP 'metasploitable-linux-2.0.0.zip') -SkipIfAlreadyExists $true
+    $metasploitableZipFile = Get-WebFile -DownloadUrl 'http://downloads.metasploit.com/data/metasploitable/metasploitable-linux-2.0.0.zip' -TargetFilePath $(Join-Path $_metasploitableLinuxExtractPath 'metasploitable-linux-2.0.0.zip') -SkipIfAlreadyExists $true
  
     Write-Host "Extracting Metasploitable image files."
-    if ($null -eq (Get-ChildItem "$env:TEMP\*.vmdk" -Recurse | Select-Object -expand FullName)) {
-        Expand-Archive $metasploitableZipFile -DestinationPath $env:TEMP
+    if ($null -eq (Get-ChildItem "$_metasploitableLinuxExtractPath\*.vmdk" -Recurse | Select-Object -expand FullName)) {
+        Expand-Archive $metasploitableZipFile -DestinationPath $_metasploitableLinuxExtractPath
     }
-    
-    #install tools to convert vmdk file
-    if ($null -eq (Get-WmiObject Win32_Product | Where-Object { $_.Name -match 'Microsoft Virtual Machine Converter' })) {
-        #Main download page is at https://www.microsoft.com/en-us/download/details.aspx?id=42497
-        $mvmcInstallerPath = Get-WebFile -DownloadUrl 'https://download.microsoft.com/download/9/1/E/91E9F42C-3F1F-4AD9-92B7-8DD65DA3B0C2/mvmc_setup.msi' -TargetFilePath $(Join-Path $env:TEMP 'mvmc_setup.msi')
-        
-        Invoke-Process -FileName "msiexec.exe" -Arguments "/i $mvmcInstallerPath /quiet" 
-    }
-    Import-Module "$env:ProgramFiles\Microsoft Virtual Machine Converter\MvmcCmdlet.psd1"
+    $vmdkFile = Get-ChildItem "$_metasploitableLinuxExtractPath\*.vmdk" -Recurse | Select-Object -expand FullName
 
-    #convert vmdk file
-    Write-Host "Converting Metasploitable image files to Hyper-V hard disk file.  Warning: This may take several minutes."
-    $vmdkFile = Get-ChildItem "$env:TEMP\*.vmdk" -Recurse | Select-Object -expand FullName
-    #todo: test to make sure this returns
-    ConvertTo-MvmcVirtualHardDisk -SourceLiteralPath $vmdkFile -DestinationLiteralPath $vhdxPath -VhdType DynamicHardDisk -VhdFormat vhdx | Out-Host
+    Write-Host "Converting downloaded Metasploitable Linux files to Hyper-V files."
+    Convert-VdmkToVhdx -VmdkFilePath $vmdkFile -VhdxFilePath $vhdxPath
 
     return $vhdxPath
 }
@@ -344,7 +372,7 @@ function New-MetasploitableVm {
     $metasploitableHardDiskFilePath = Get-MetasploitableDisk
    
     #create-vm, add network adapter (legacy)
-    Write-Host "Creating Metasploitable virtual machine."
+    Write-Host "Looking for Metasploitable virtual machine.  Virtual machine will be created if not found."
     $vm = @(Get-VM) | Where-Object Name -Like $metasploitableComputerName
     if ($null -eq $vm) {
         $vm = New-VM -Name $metasploitableComputerName -MemoryStartupBytes 512MB -VHDPath $metasploitableHardDiskFilePath 
@@ -375,16 +403,20 @@ try {
     if ($null -eq $(Get-WindowsFeature -Name 'Hyper-V')) {
         Write-Error "This script only applies to machines that can run Hyper-V."
     }
+    if (([Microsoft.Windows.ServerManager.Commands.InstallState]::Installed -ne $(Get-WindowsFeature -Name 'Hyper-V' | Select-Object -ExpandProperty 'InstallState')) -or
+        ($null -eq (Get-Command Get-VMSwitch -errorAction SilentlyContinue))) {
+        Write-Error "This script only applies to machines that have Hyper-V feature and tools installed.  Try '../HyperV/SetupForNestedVirtualization.ps1 to install."
+    }
 
     Write-Host "Verifying virtual machine switch '$SwitchName' exists."
     if ($null -eq (@(Get-VMSwitch) | Where-Object Name -like $SwitchName)) {
-        Write-Error "Virtual machine doesn't exist.  Please create switch with name '$SwitchName'.  Try '../HyperV/SetupForNestedVirtualization.ps1 to create switch."
+        Write-Error "Virtual machine doesn't exist.  Please create switch with name '$SwitchName' or specify switch name in script arguments.  Try '../HyperV/SetupForNestedVirtualization.ps1 to create switch."
     }
  
-    Write-Host "Creating Kali Linux virtual machine."
+    Write-Host "Creating Kali Linux virtual machine, if needed."
     New-KaliLinuxVM
 
-    Write-Host "Creating Metasploitable Linux virtual machine."
+    Write-Host "Creating Metasploitable Linux virtual machine, if needed."
     New-MetasploitableVm
 
     Write-Host -Object "Script completed." -ForegroundColor Green

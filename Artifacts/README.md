@@ -8,7 +8,7 @@ Refer to [AUTHORING.md](AUTHORING.md) for details on what's required to author a
 
 ## Contributions
 
-Contributions are encouraged and welcome. However, the team reserves the right to decide which contributions will be accepted.
+Contributions are encouraged and welcome. However, the team reserves the right to decide which contributions will be accepted or request modifications to contributions.
 
 The process to get changes published requires the team to review the code submissions and test the artifact contributions or the changes. Submit a pull request to get the process started.
 

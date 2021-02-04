@@ -1,14 +1,18 @@
 [cmdletbinding()]
 Param()
-Import-Module $PSScriptRoot\..\Az.LabServices.psm1
+Import-Module $PSScriptRoot\..\Az.LabServices.psm1 -Force
 
-. $PSScriptRoot\Utils.ps1
-
-$laName     = 'Temp' + (Get-Random)
+#. $PSScriptRoot\Utils.ps1
+Import-Module $PSScriptRoot\Utils.psm1 -Force
+Write-Verbose "Loading Utils.psm1"
 
 Describe 'Lab Account' {
-        It 'Can create a Lab Account' {
+        BeforeAll {
+            $laName = "Temp$(Get-Random)"
+        }
 
+        It 'Can create a Lab Account' {
+            
             $la = Get-FastResourceGroup 
             $script:rgName = $la.ResourceGroupName
             
