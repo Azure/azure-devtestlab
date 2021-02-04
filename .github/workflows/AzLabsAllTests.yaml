@@ -28,46 +28,9 @@ jobs:
       uses: azure/login@v1
       with:
         creds: ${{secrets.AZURE_CREDENTIALS}}
-        enable-AzPSSession: true
 
     - name: Execute steps
       shell: pwsh
       run: |
         Install-Module -Name Pester -Force -AllowClobber -RequiredVersion 4.10.1
         Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast* -EnableExit
-
-  run-all-tests-core-linux:
-    runs-on: ubuntu-latest
-    steps:
-    
-    - uses: actions/checkout@v2
-
-    - name: Login via Az module
-      uses: azure/login@v1
-      with:
-        creds: ${{secrets.AZURE_CREDENTIALS}}
-        enable-AzPSSession: true
-
-    - name: Execute steps
-      shell: pwsh
-      run: |
-        Install-Module -Name Pester -Force -RequiredVersion 4.10.1
-        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast* -EnableExit
-
-  run-all-tests-powershell:
-    runs-on: windows-latest
-    steps:
-    
-    - uses: actions/checkout@v2
-
-    - name: Login via Az module
-      uses: azure/login@v1
-      with:
-        creds: ${{secrets.AZURE_CREDENTIALS}}
-        enable-AzPSSession: true
-
-    - name: Execute steps
-      shell: powershell
-      run: |
-        Install-Module -Name Pester -Force -AllowClobber -RequiredVersion 4.10.1
-        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast*  -EnableExit
