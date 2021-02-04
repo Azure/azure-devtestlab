@@ -33,4 +33,5 @@ jobs:
       shell: pwsh
       run: |
         Install-Module -Name Pester -Force -AllowClobber -RequiredVersion 4.10.1
+        Install-Module Az -Force -AllowClobber
         Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast* -EnableExit
