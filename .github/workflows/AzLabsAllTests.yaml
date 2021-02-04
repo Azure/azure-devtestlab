@@ -36,10 +36,24 @@ jobs:
         azPSVersion: 'latest'
         inlineScript: |
           Install-Module -Name Pester -Force -AllowClobber -RequiredVersion 4.10.1
+          Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/* -EnableExit
+
+  run-all-tests-core-ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+    
+    - uses: actions/checkout@v2
+
+    - name: Login via Az module
+      uses: azure/login@v1
+      with:
+        creds: ${{secrets.AZURE_CREDENTIALS}}
+        enable-AzPSSession: true
+
+    - name: Run Azure PowerShell script
+      uses: azure/powershell@v1
+      with:
+        azPSVersion: 'latest'
+        inlineScript: |
+          Install-Module -Name Pester -Force -AllowClobber -RequiredVersion 4.10.1
           Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast* -EnableExit
-    # - name: Execute steps
-    #   shell: pwsh
-    #   run: |
-    #     Install-Module -Name Pester -Force -AllowClobber -RequiredVersion 4.10.1
-    #     Install-Module Az -Force -AllowClobber
-    #     Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast* -EnableExit
