@@ -29,9 +29,15 @@ jobs:
       with:
         creds: ${{secrets.AZURE_CREDENTIALS}}
 
-    - name: Execute steps
-      shell: pwsh
-      run: |
-        Install-Module -Name Pester -Force -AllowClobber -RequiredVersion 4.10.1
-        Install-Module Az -Force -AllowClobber
-        Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast* -EnableExit
+    - name: Run Azure PowerShell script
+      uses: azure/powershell@v1
+      with:
+        azPSVersion: '3.1.0'
+        inlineScript: |
+          Get-AzVM -ResourceGroupName "AzLabsLibrary"
+    # - name: Execute steps
+    #   shell: pwsh
+    #   run: |
+    #     Install-Module -Name Pester -Force -AllowClobber -RequiredVersion 4.10.1
+    #     Install-Module Az -Force -AllowClobber
+    #     Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast* -EnableExit
