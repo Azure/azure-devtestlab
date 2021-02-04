@@ -35,7 +35,8 @@ jobs:
       with:
         azPSVersion: '3.1.0'
         inlineScript: |
-          Get-AzVM -ResourceGroupName "AzLabsLibrary"
+          Install-Module -Name Pester -Force -AllowClobber -RequiredVersion 4.10.1
+          Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast* -EnableExit
     # - name: Execute steps
     #   shell: pwsh
     #   run: |
