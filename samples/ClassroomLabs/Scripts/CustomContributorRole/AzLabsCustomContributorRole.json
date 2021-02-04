@@ -20,6 +20,7 @@
                        "Microsoft.LabServices/labAccounts/labs/environmentSettings/ResetPassword/action",
                        "Microsoft.LabServices/labAccounts/labs/environmentSettings/Publish/action",
                        "Microsoft.LabServices/labAccounts/labs/environmentSettings/write",
+                       "Microsoft.LabServices/labAccounts/labs/environmentSettings/delete",
                        "Microsoft.LabServices/labAccounts/labs/users/write",
                        "Microsoft.LabServices/labAccounts/labs/environmentSettings/schedules/delete",
                        "Microsoft.LabServices/labAccounts/labs/environmentSettings/schedules/write"                      
