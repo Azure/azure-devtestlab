@@ -27,7 +27,7 @@ jobs:
     - name: Execute steps
       shell: pwsh
       run: |
-        Install-Module Pester -Force -AllowClobber
+        Install-Module -Name Pester -Force -AllowClobber -RequiredVersion 4.10.1
         Install-Module Az -Force -AllowClobber
         $User = "${{ secrets.PRINCIPAL_USER }}"
         $PWord = ConvertTo-SecureString -String ${{ secrets.PRINCIPAL_PASSWORD }} -AsPlainText -Force
@@ -44,7 +44,7 @@ jobs:
     - name: Execute steps
       shell: pwsh
       run: |
-        Install-Module Pester -Force
+        Install-Module -Name Pester -Force -RequiredVersion 4.10.1
         Install-Module Az -Force
         $User = "${{ secrets.PRINCIPAL_USER }}"
         $PWord = ConvertTo-SecureString -String ${{ secrets.PRINCIPAL_PASSWORD }} -AsPlainText -Force
@@ -61,7 +61,7 @@ jobs:
     - name: Execute steps
       shell: powershell
       run: |
-        Install-Module Pester -Force -AllowClobber
+        Install-Module -Name Pester -Force -AllowClobber -RequiredVersion 4.10.1
         Install-Module Az -Force -AllowClobber
         $User = "${{ secrets.PRINCIPAL_USER }}"
         $PWord = ConvertTo-SecureString -String ${{ secrets.PRINCIPAL_PASSWORD }} -AsPlainText -Force

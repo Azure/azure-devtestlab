@@ -1123,6 +1123,40 @@ function Remove-AzLabUser {
     end { }
 }
 
+function Set-AzLabUser {
+    param(
+        [parameter(Mandatory = $true, HelpMessage = "Lab to remove users from", ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        $Lab,
+
+        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Users to remove")]
+        [ValidateNotNullOrEmpty()]
+        $User,
+
+        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Additional quota to assign to a user in hours")]
+        [ValidateNotNullOrEmpty()]
+        $AdditionalUsageQuota
+       
+    )
+    begin { . BeginPreamble }
+    process {
+        try {
+            foreach ($l in $Lab) {
+                foreach ($u in $User) {
+                    $userName = $u.name
+                    $uri = (ConvertToUri -resource $Lab) + '/users/' + $userName
+                    $body = @{additionalUsageQuota = "PT$($AdditionalUsageQuota.ToString())H"} | ConvertTo-Json
+
+                    return InvokeRest -Uri $uri -Method 'Put' -Body $body
+                }
+            }
+        }
+        catch {
+            Write-Error -ErrorRecord $_ -EA $callerEA
+        }
+    }
+    end { }
+}
 function Register-AzLabUser {
     param(
         [parameter(Mandatory = $true, HelpMessage = "Lab to remove users from", ValueFromPipeline = $true)]
@@ -1653,6 +1687,7 @@ Export-ModuleMember -Function   Get-AzLabAccount,
                                 Set-AzLabTemplateVM,
                                 Publish-AzLab,
                                 Add-AzLabUser,
+                                Set-AzLabUser,
                                 Get-AzLabUser,
                                 Remove-AzLabUser,
                                 Get-AzLabVm,
