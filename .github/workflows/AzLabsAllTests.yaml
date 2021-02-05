@@ -56,4 +56,4 @@ jobs:
         azPSVersion: 'latest'
         inlineScript: |
           Install-Module -Name Pester -Force -AllowClobber -RequiredVersion 4.10.1
-          Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast* -EnableExit
+          Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/* -EnableExit
