@@ -14,10 +14,10 @@ The tests run every day and whenever there is a new Push/PR in the library direc
 
 A `Cleanup.ps1` runs every N days to remove the randomly named Lab Accounts. I try to do it in the tests, but it is hard to predict all possible failure mode. 
 
-The tests run a Github actions on Windows and Linux latest, using the latest Az module.
+The tests run a Github actions on Windows and Linux latest, using the latest Az module. If you run them locally, make sure to use the same version of Pester as the Github actions.
 
 On Azure, the service principal that runs the test is `luca-azlabtest` and the RG containing all the resrouces is `azlabslibrary`.
 
-# To do
+## To do
 
 1. Pester runs with a `RequiredVersion` because I didn't have the energy to fix the random errors I was getting when moving it to the latest (breaking) version.
