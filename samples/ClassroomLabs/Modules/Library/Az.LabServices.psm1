@@ -630,7 +630,7 @@ function Remove-AzLab {
     }
     end { }
 }
-  
+
 function New-AzLab {
     [CmdletBinding()]
     param(
@@ -688,7 +688,10 @@ function New-AzLab {
         
         [parameter(mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [switch]
-        $SkipTemplateCreation = $false
+        $SkipTemplateCreation = $false,
+
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Enabled AAD connected labs.  NOTE:  If this Id is a teams team than the lab will be marked as a teams lab.")]
+        [string] $AadGroupId
     )
   
     begin { . BeginPreamble }
@@ -721,6 +724,7 @@ function New-AzLab {
                             sharedPasswordState = $sharedPassword
                             templateVmState = $hasTemplateVm
                             installGpuDriverEnabled = $gpuDriverState
+                            aadGroupId = $AadGroupId
                         }
                     } | ConvertTo-Json) | Out-Null
                 } else {
@@ -743,6 +747,7 @@ function New-AzLab {
                             enableNoConnectShutdown = $enableNoConnectShutdown
                             idleNoConnectGracePeriod = "PT$($idleNoConnectGracePeriod.ToString())M"
                             installGpuDriverEnabled = $gpuDriverState
+                            aadGroupId = $AadGroupId
                         }
                     } | ConvertTo-Json) | Out-Null
                 }
@@ -805,7 +810,7 @@ function Set-AzLab {
                     $l.properties | Add-Member -MemberType NoteProperty -Name sharedPasswordEnabled -Value $sharedPassword  -force
                 }
                 if ($PSBoundParameters.ContainsKey('UsageQuotaInHours') -or (-not (Get-Member -inputobject $l.properties -name "usageQuotaInHours" -Membertype Properties))) {
-                    $l.properties | Add-Member -MemberType NoteProperty -Name usageQuotaInHours -Value "PT$($UsageQuotaInHours.ToString())H" -force
+                    $l.properties | Add-Member -MemberType NoteProperty -Name usageQuota -Value "PT$($UsageQuotaInHours.ToString())H" -force
                 }
                 # update lab
                 $uri = (ConvertToUri -resource $LabAccount) + "/labs/" + $LabName
