@@ -1,3 +1,5 @@
+# It runs every day at 2am or when a push/pr is done on the library path or workflow path
+# I couldn't get pester 5.0+ to work, fixed at a version that works
 on:
   schedule:
     - cron: '0 2 * * * '
