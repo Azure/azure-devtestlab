@@ -1,5 +1,9 @@
 # Change log for Azure DevTest Labs template SharePoint-AllVersions
 
+## Enhancements & bug-fixes - Published in February 9, 2021
+
+* Implement temporary workaround to blocking cChoco issue https://github.com/chocolatey/cChoco/issues/151
+
 ## Enhancements & bug-fixes - Published in December 10, 2020
 
 * Update Chocolatey packages Edge, Notepad++ and Fiddler to their latest version
