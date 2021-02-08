@@ -1,4 +1,8 @@
-# Change log for Azure DevTest Labs template SharePoint-SingleFarm-FullConfig
+# Change log for Azure DevTest Labs template DTL-SharePoint-FullConfig
+
+## Enhancements & bug-fixes - Published in February 9, 2021
+
+* Implement temporary workaround to blocking cChoco issue https://github.com/chocolatey/cChoco/issues/151
 
 ## Enhancements & bug-fixes - Published in December 10, 2020
 
