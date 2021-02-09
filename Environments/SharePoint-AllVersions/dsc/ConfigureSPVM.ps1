@@ -172,14 +172,9 @@ configuration ConfigureSPVM
         #**********************************************************
         # Install applications using Chocolatey
         #**********************************************************
-        # cChocoInstaller InstallChoco
-        # {
-        #     InstallDir = "C:\Program Files\Choco"
-        # }
-        # Workaround for issue https://github.com/chocolatey/cChoco/issues/151
-        cChocoinstaller InstallChoco {
-            InstallDir            = "C:\Choco"
-            ChocoInstallScriptUrl = "https://gist.githubusercontent.com/artisticcheese/d934c1fb704a3e67b3c68283bcabca66/raw/9345bcb115ee7350172fa00085514212245a1c65/install.ps1"
+        cChocoInstaller InstallChoco
+        {
+            InstallDir = "C:\Choco"
         }
 
         cChocoPackageInstaller InstallEdge
