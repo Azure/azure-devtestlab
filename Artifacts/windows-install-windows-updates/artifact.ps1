@@ -38,7 +38,7 @@ function Download-File ($downloadUrl, $targetFile)
     Write-Output ("Downloading installation files from URL: $downloadUrl to $targetFile")
     $targetFolder = Split-Path $targetFile
 
-    if((Test-Path -path $targetFolder) -eq $false)
+    if ((Test-Path -path $targetFolder) -eq $false)
     {
         Write-Output "Creating folder $targetFolder"
         New-Item -ItemType Directory -Force -Path $targetFolder | Out-Null
@@ -54,17 +54,19 @@ function Download-File ($downloadUrl, $targetFile)
         {
             [Net.ServicePointManager]::SecurityProtocol = "Tls12, Tls11, Tls, Ssl3"
             $WebClient = New-Object System.Net.WebClient
-            $WebClient.DownloadFile($downloadUrl,$targetFile)
+            $WebClient.DownloadFile($downloadUrl, $targetFile)
             break
         }
         catch [Exception]
         {
             Write-Output "Caught exception during download..."
-            if ($_.Exception.InnerException){
+            if ($_.Exception.InnerException)
+            {
                 $exceptionMessage = $_.InnerException.Message
                 Write-Output "InnerException: $exceptionMessage"
             }
-            else {
+            else
+            {
                 $exceptionMessage = $_.Message
                 Write-Output "Exception: $exceptionMessage"
             }
@@ -72,7 +74,7 @@ function Download-File ($downloadUrl, $targetFile)
 
     } while ($downloadAttempts -lt 5)
 
-    if($downloadAttempts -eq 5)
+    if ($downloadAttempts -eq 5)
     {
         Write-Error "Download of $downloadUrl failed repeatedly. Giving up."
     }
@@ -92,7 +94,7 @@ try
     $localZipFile = Join-Path $scriptFolder 'PSWindowsUpdate.zip'
     
     # PSWindowsUpdate module downloaded from here:  https://gallery.technet.microsoft.com/scriptcenter/2d191bcd-3308-4edd-9de2-88dff796b0bc
-    Download-File "https://gallery.technet.microsoft.com/scriptcenter/2d191bcd-3308-4edd-9de2-88dff796b0bc/file/41459/47/PSWindowsUpdate.zip" $localZipFile
+    Download-File "https://i4.gallery.technet.s-msft.com/2d191bcd-3308-4edd-9de2-88dff796b0bc/file/41459/47/PSWindowsUpdate.zip" $localZipFile
     [System.IO.Compression.ZipFile]::ExtractToDirectory($localZipFile, $scriptFolder)
     
     $modulePath = Join-Path $scriptFolder "PSWindowsUpdate\PSWindowsUpdate.psm1"
