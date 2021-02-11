@@ -148,10 +148,10 @@ $init = {
 
             # Template VM should be enabled by default, unless CSV specifically says Disabled
             if ($TemplateVmState -and ($TemplateVmState -ieq "Disabled")) {
-                $templateVmState = "Disabled"
+                $TemplateVmState = "Disabled"
             }
             else {
-                $templateVmState = "Enabled"
+                $TemplateVmState = "Enabled"
             }
 
             Write-Host "Image $ImageName found."
