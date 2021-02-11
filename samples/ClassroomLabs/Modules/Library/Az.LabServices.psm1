@@ -686,12 +686,13 @@ function New-AzLab {
         [int]
         $idleNoConnectGracePeriod = 15,
         
-        [parameter(mandatory = $false, ValueFromPipelineByPropertyName = $true)]
-        [switch]
-        $SkipTemplateCreation = $false,
-
         [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Enabled AAD connected labs.  NOTE:  If this Id is a teams team than the lab will be marked as a teams lab.")]
-        [string] $AadGroupId
+        [string] $AadGroupId,
+
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Should this lab contain a Template VM?  Enabled = Yes, and Disabled = No")]
+        [ValidateSet('Enabled', 'Disabled')]
+        [string] $TemplateVmState = "Enabled"
+
     )
   
     begin { . BeginPreamble }
@@ -706,7 +707,6 @@ function New-AzLab {
                 $imageType = if ($image.id -match '/galleryimages/') { 'galleryImageResourceId' } else { 'sharedImageResourceId' }
                 if ($LinuxRdpEnabled) {$linuxRdpState = 'Enabled'} else { $linuxRdpState = 'Disabled' }
                 if ($InstallGpuDriverEnabled) {$gpuDriverState = 'Enabled'} else { $gpuDriverState = 'Disabled' }
-                if ($SkipTemplateCreation) {$hasTemplateVm = 'Disabled' } else { $hasTemplateVm = 'Enabled' }
                 if ($idleGracePeriod -eq 0) {$idleShutdownMode = "None"} else {$idleShutdownMode = "OnDisconnect"}
                 if ($idleOsGracePeriod -eq 0) {$enableDisconnectOnIdle = "Disabled"} else {$enableDisconnectOnIdle = "Enabled"}
                 if ($idleNoConnectGracePeriod -eq 0) {$enableNoConnectShutdown = "Disabled"} else {$enableNoConnectShutdown = "Enabled"}
@@ -722,7 +722,7 @@ function New-AzLab {
                             userQuota = "PT$($UsageQuotaInHours.ToString())H"
                             vmSize = $Size
                             sharedPasswordState = $sharedPassword
-                            templateVmState = $hasTemplateVm
+                            templateVmState = $TemplateVmState
                             installGpuDriverEnabled = $gpuDriverState
                             aadGroupId = $AadGroupId
                         }
@@ -739,7 +739,7 @@ function New-AzLab {
                             userQuota = "PT$($UsageQuotaInHours.ToString())H"
                             vmSize = $Size
                             sharedPasswordState = $sharedPassword
-                            templateVmState = $hasTemplateVm
+                            templateVmState = $TemplateVmState
                             idleShutdownMode = $idleShutdownMode
                             idleGracePeriod = "PT$($idleGracePeriod.ToString())M"
                             enableDisconnectOnIdle = $enableDisconnectOnIdle
