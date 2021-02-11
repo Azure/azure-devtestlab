@@ -9,8 +9,15 @@ param(
     $ThrottleLimit = 5
 )
 
+$outerScriptstartTime = Get-Date
+Write-Host "Executing Lab Creation Script, starting at $outerScriptstartTime" -ForegroundColor Green
+
 Import-Module ../Az.LabServices.psm1 -Force
-Install-Module -Name ThreadJob -Scope CurrentUser -Force
+
+# Install the ThreadJob module if the command isn't available
+if (-not (Get-Command -Name "Start-ThreadJob" -ErrorAction SilentlyContinue)) {
+    Install-Module -Name ThreadJob -Scope CurrentUser -Force
+}
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -75,6 +82,10 @@ $init = {
             [string]
             $Descr,
 
+            [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+            [string]
+            $TemplateVmState,
+
             [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
             [string]
             $UserName,
@@ -115,7 +126,8 @@ $init = {
             $Schedules
         )
 
-        Write-Host "Start creation of $LabName"
+        $startTime = Get-Date
+        Write-Host "Start creation of $LabName at $startTime" -ForegroundColor Green
 
         $la = Get-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName
         $lab = $la | Get-AzLab -LabName $LabName
@@ -134,26 +146,42 @@ $init = {
                 if (-not $img -or @($img).Count -ne 1) { Write-Error "$ImageName pattern doesn't match just one gallery image." }
             }
 
+            # Template VM should be enabled by default, unless CSV specifically says Disabled
+            if ($TemplateVmState -and ($TemplateVmState -ieq "Disabled")) {
+                $templateVmState = "Disabled"
+            }
+            else {
+                $templateVmState = "Enabled"
+            }
+
             Write-Host "Image $ImageName found."
             Write-Host "Linux $LinuxRdp***"
     
             $lab = $la `
             | New-AzLab -LabName $LabName -Image $img -Size $Size -UserName $UserName -Password $Password -LinuxRdpEnabled:$LinuxRdp -InstallGpuDriverEnabled:$GpuDriverEnabled -UsageQuotaInHours $UsageQuota `
-                -idleGracePeriod $idleGracePeriod -idleOsGracePeriod $idleOsGracePeriod -idleNoConnectGracePeriod $idleNoConnectGracePeriod -AadGroupId $AadGroupId `
+                -idleGracePeriod $idleGracePeriod -idleOsGracePeriod $idleOsGracePeriod -idleNoConnectGracePeriod $idleNoConnectGracePeriod -AadGroupId $AadGroupId -TemplateVmState $TemplateVmState `
             | Publish-AzLab `
             | Set-AzLab -MaxUsers $MaxUsers -UserAccessMode $UsageMode -SharedPasswordEnabled:$SharedPassword
 
             # If we have any lab owner emails, we need to assign the RBAC permission
-            $LabOwnerEmails | ForEach-Object {
-                # Check if Lab Owner role already exists (the role assignment is added by default by the person who runs the script), if not create it
-                if (-not (Get-AzRoleAssignment -SignInName $_ -Scope $lab.id -RoleDefinitionName Owner)) {
-                    New-AzRoleAssignment -SignInName $_ -Scope $lab.id -RoleDefinitionName Owner | Out-Null
-                }
+            if ($LabOwnerEmails) {
+                $LabOwnerEmails | ForEach-Object {
+                    # Need to ensure we didn't get an empty string, in case there's an extra delimiter
+                    if ($_) {
+                        # Check if Lab Owner role already exists (the role assignment is added by default by the person who runs the script), if not create it
+                        if (-not (Get-AzRoleAssignment -SignInName $_ -Scope $lab.id -RoleDefinitionName Owner)) {
+                            New-AzRoleAssignment -SignInName $_ -Scope $lab.id -RoleDefinitionName Owner | Out-Null
+                        }
 
-                # Check if the lab account reader role already exists, if not create it
-                if (-not (Get-AzRoleAssignment -SignInName $_ -ResourceGroupName $lab.ResourceGroupName -ResourceName $lab.LabAccountName -ResourceType "Microsoft.LabServices/labAccounts" -RoleDefinitionName Reader)) {
-                    New-AzRoleAssignment -SignInName $_ -ResourceGroupName $lab.ResourceGroupName -ResourceName $lab.LabAccountName -ResourceType "Microsoft.LabServices/labAccounts" -RoleDefinitionName Reader | Out-Null 
+                        # Check if the lab account reader role already exists, if not create it
+                        if (-not (Get-AzRoleAssignment -SignInName $_ -ResourceGroupName $lab.ResourceGroupName -ResourceName $lab.LabAccountName -ResourceType "Microsoft.LabServices/labAccounts" -RoleDefinitionName Reader)) {
+                            New-AzRoleAssignment -SignInName $_ -ResourceGroupName $lab.ResourceGroupName -ResourceName $lab.LabAccountName -ResourceType "Microsoft.LabServices/labAccounts" -RoleDefinitionName Reader | Out-Null 
+                        }
+                    }
                 }
+                
+                Write-Host "Added Lab Owners: $LabOwnerEmails ."
+
             }
 
             Write-Host "$LabName lab doesn't exist. Created it."
@@ -174,6 +202,8 @@ $init = {
             $Schedules | ForEach-Object { $_ | New-AzLabSchedule -Lab $lab } | Out-Null
             Write-Host "Added all schedules."
         }
+
+        Write-Host "Completed creation of $LabName, total duration $(((Get-Date) - $StartTime).TotalSeconds) seconds" -ForegroundColor Green
     }
 }
 
@@ -233,6 +263,7 @@ function New-Accounts {
 
     $hours = 1
     $jobs | Wait-Job -Timeout (60 * 60 * $hours) | Receive-Job
+    $jobs | Remove-Job
 }
   
 function New-AzLabMultiple {
@@ -261,14 +292,29 @@ function New-AzLabMultiple {
     }
 
     Write-Host "Starting creation of all labs in parallel. Can take a while."
+    $jobs = @()
 
-    $jobs = $ConfigObject | ForEach-Object {
+    $ConfigObject | ForEach-Object {
         Write-Verbose "From config: $_"
-        Start-ThreadJob  -InitializationScript $init -ScriptBlock $block -ArgumentList $PSScriptRoot -InputObject $_ -Name $_.LabName -ThrottleLimit $ThrottleLimit
+        $jobs += Start-ThreadJob  -InitializationScript $init -ScriptBlock $block -ArgumentList $PSScriptRoot -InputObject $_ -Name $_.LabName -ThrottleLimit $ThrottleLimit
     }
 
-    $hours = 2
-    $jobs | Wait-Job -Timeout (60 * 60 * $hours) | Receive-Job
+    while (($jobs | Measure-Object).Count -gt 0) {
+        $completedJobs = $jobs | Where-Object {($_.State -ieq "Completed") -or ($_.State -ieq "Failed")}
+        if (($completedJobs | Measure-Object).Count -gt 0) {
+            # Write output for completed jobs, but one by one so output doesn't bleed 
+            # together, also use "Continue" so we write the error but don't end the outer script
+            $completedJobs | ForEach-Object {
+                $_ | Receive-Job -ErrorAction Continue
+            }
+            # Trim off the completed jobs from our list of jobs
+            $jobs = $jobs | Where-Object {$_.Id -notin $completedJobs.Id}
+            # Remove the completed jobs from memory
+            $completedJobs | Remove-Job
+        }
+        # Wait for 60 sec before checking job status again
+        Start-Sleep -Seconds 60
+    }
 }
 
 function Import-Schedules {
@@ -353,3 +399,5 @@ Write-Verbose ($labs | ConvertTo-Json -Depth 10 | Out-String)
 New-ResourceGroups  -ConfigObject $labs
 New-Accounts        -ConfigObject $labs
 New-AzLabMultiple   -ConfigObject $labs
+
+Write-Host "Completed running Bulk Lab Creation script, total duration $(((Get-Date) - $outerScriptstartTime).TotalMinutes) minutes" -ForegroundColor Green
