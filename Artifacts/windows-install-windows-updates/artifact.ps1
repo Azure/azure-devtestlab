@@ -33,50 +33,18 @@ trap
 }
 
 ###################################################################################################
-function Download-File ($downloadUrl, $targetFile)
+
+function Test-PowerShellVersion
 {
-    Write-Output ("Downloading installation files from URL: $downloadUrl to $targetFile")
-    $targetFolder = Split-Path $targetFile
+    [CmdletBinding()]
+    param(
+        [double] $Version
+    )
 
-    if ((Test-Path -path $targetFolder) -eq $false)
+    $currentVersion = [double] "$($PSVersionTable.PSVersion.Major).$($PSVersionTable.PSVersion.Minor)"
+    if ($currentVersion -lt $Version)
     {
-        Write-Output "Creating folder $targetFolder"
-        New-Item -ItemType Directory -Force -Path $targetFolder | Out-Null
-    }
-
-    #Download the file
-    $downloadAttempts = 0
-    do
-    {
-        $downloadAttempts++
-
-        try
-        {
-            [Net.ServicePointManager]::SecurityProtocol = "Tls12, Tls11, Tls, Ssl3"
-            $WebClient = New-Object System.Net.WebClient
-            $WebClient.DownloadFile($downloadUrl, $targetFile)
-            break
-        }
-        catch [Exception]
-        {
-            Write-Output "Caught exception during download..."
-            if ($_.Exception.InnerException)
-            {
-                $exceptionMessage = $_.InnerException.Message
-                Write-Output "InnerException: $exceptionMessage"
-            }
-            else
-            {
-                $exceptionMessage = $_.Message
-                Write-Output "Exception: $exceptionMessage"
-            }
-        }
-
-    } while ($downloadAttempts -lt 5)
-
-    if ($downloadAttempts -eq 5)
-    {
-        Write-Error "Download of $downloadUrl failed repeatedly. Giving up."
+        throw "The current version of PowerShell is $currentVersion. Prior to running this artifact, ensure you have PowerShell version $Version or higher installed."
     }
 }
 
@@ -88,23 +56,20 @@ function Download-File ($downloadUrl, $targetFile)
 
 try
 {
-    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    Write-Host 'Validating local version of Powershell is higher than required for PSwindowsUpdate module.'
+    Test-PowerShellVersion -Version 3.0
 
-    $scriptFolder = Split-Path $Script:MyInvocation.MyCommand.Path
-    $localZipFile = Join-Path $scriptFolder 'PSWindowsUpdate.zip'
-    
-    # PSWindowsUpdate module downloaded from here:  https://gallery.technet.microsoft.com/scriptcenter/2d191bcd-3308-4edd-9de2-88dff796b0bc
-    Download-File "https://i4.gallery.technet.s-msft.com/2d191bcd-3308-4edd-9de2-88dff796b0bc/file/41459/47/PSWindowsUpdate.zip" $localZipFile
-    [System.IO.Compression.ZipFile]::ExtractToDirectory($localZipFile, $scriptFolder)
-    
-    $modulePath = Join-Path $scriptFolder "PSWindowsUpdate\PSWindowsUpdate.psm1"
-    Import-Module $modulePath
+    Write-Host "Updating NuGet provider to a version higher than 2.8.5.201."
+    Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force | Out-Null
+
+    Write-Host "Installing Powershell module 'PSWindowsUpdate'"
+    Install-Module -Name PSWindowsUpdate -MinimumVersion 2.2.0.2 -Force | Out-Null
+    Import-Module PSWindowsUpdate
     
     Write-Output 'Installing Windows Updates.'
     Get-WUInstall -IgnoreReboot -AcceptAll
     
     Write-Output "Windows Update finished. Rebooting..."
-
     Write-Host "`nThe artifact was applied successfully.`n"
 
     # Forcing the restart in script, as the artifact’s postDeployActions may timeout prematurely, prior to the Windows Updates completing, causing undesirable side effects.
