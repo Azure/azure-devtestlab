@@ -1,4 +1,8 @@
-# Change log for Azure DevTest Labs template SharePoint-SingleFarm-FullConfig
+# Change log for Azure DevTest Labs template DTL-SharePoint-FullConfig
+
+## Enhancements & bug-fixes - Published in February 9, 2021
+
+* Update DSC module cChoco from 2.4 to 2.5 to fix issue <https://github.com/chocolatey/cChoco/issues/151> 
 
 ## Enhancements & bug-fixes - Published in December 10, 2020
 
