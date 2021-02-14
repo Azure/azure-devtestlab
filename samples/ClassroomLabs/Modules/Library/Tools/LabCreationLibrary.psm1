@@ -497,7 +497,56 @@ function Set-LabPropertyByMenu {
     }
 }
 
+# I am forced to use parameter names starting with 'An' because otherwise they get
+# bounded automatically to the fields in the CSV and added to $PSBoundParameters
+function Select-Lab {
+    [CmdletBinding()]
+    param(
+        [parameter(Mandatory = $true, HelpMessage = "Array containing one line for each lab to be created", ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        [psobject[]]
+        $labs,
+
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Id to look for")]
+        [string]
+        $AnId,
+
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "If a lab contains any of these tags, it will be selected")]
+        [ValidateNotNullOrEmpty()]
+        [string[]]
+        $SomeTags
+    )
+
+    begin {
+        function HasAnyTags($foundTags) {
+            $found = $false
+            $SomeTags | ForEach-Object {
+                if(($foundTags -split ';') -contains $_) {
+                    $found = $true
+                }
+            }
+            return $found
+        }
+    }
+    process {
+
+        $labs | ForEach-Object {
+            Write-Verbose ($PSBoundParameters | Out-String)
+            $IdPassed = $PSBoundParameters.ContainsKey('AnId')
+            $TagsPassed = $PSBoundParameters.ContainsKey('SomeTags')
+            $IdOk = (-not $IdPassed) -or ($_.Id.Trim() -eq $AnId)
+            $TagsOk = (-not $TagsPassed) -or (HasAnyTags($_.Tags))
+
+            Write-Verbose "$IdPassed $TagsPassed $IdOk $TagsOk"
+
+            if($IdOk -and $TagsOk) {
+                return $_
+            }
+        }
+    }
+}
 Export-ModuleMember -Function   Import-LabsCsv,
                                 Publish-Labs,
                                 Set-LabProperty,
-                                Set-LabPropertyByMenu
+                                Set-LabPropertyByMenu,
+                                Select-Lab
