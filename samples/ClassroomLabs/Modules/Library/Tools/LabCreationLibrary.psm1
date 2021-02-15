@@ -1,4 +1,4 @@
-
+# Error if Az.LabServices module not loaded
 if (-not (Get-Command -Name "New-AzLab" -ErrorAction SilentlyContinue)) {
     Write-Error "You need to import the module Az.LabServices.psm1 in your script (i.e. Import-Module ../Az.LabServices.psm1 -Force )"
 }
@@ -125,6 +125,7 @@ function Publish-Labs {
         $aggregateLabs += $labs
     }
     end {
+        return $aggregateLabs
         $init = {
             function New-AzLabSingle {
                 [CmdletBinding()]

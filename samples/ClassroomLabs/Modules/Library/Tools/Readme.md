@@ -43,7 +43,7 @@ The full code for the example is immediately after the title in parenthesis.
 * `Import-LabsCsv` loads the configuration information from the csv file. It also loads schedule information for each lab from a separate file.
 * `Publish-Labs` publishes the labs and it is the natural end to all our pipelines. You can specify how many concurrent threads to use with the parameter `ThrottleLimit`.
 
-### Publish all the labs with a particular tag
+### Publish all the labs with a particular tag ([Examples/PublishByTag.ps1](./Examples/PublishByTag.ps1))
 
 ```powershell
 ".\hogwarts.csv"  | Import-LabsCsv | Select-Lab -SomeTags Maths, Science | Publish-Labs
@@ -57,13 +57,13 @@ In the example csv configuration file, the `Tags` column contains the emails of 
 
 * `Select-Lab` is just a convenience function. You can achieve the same result by using any of the `Powershell` provided selection functions (i.e., `Where-Object`).
  
-### Publish one lab with a given id
+### Publish one lab with a given id ([Examples/PublishById.ps1](./Examples/PublishById.ps1))
 
 ```powershell
 ".\hogwarts.csv"  | Import-LabsCsv | Select-Lab -Id id001 | Publish-Labs
 ```
 
-### Publish labs changing some configuration properties (i.e. their ResourceGroup)
+### Publish one lab changing some configuration properties (i.e. a staging ResourceGroup)([Examples/PublishStaging.ps1](./Examples/PublishStaging.ps1))
 
 ```powershell
 ".\hogwarts.csv" `
