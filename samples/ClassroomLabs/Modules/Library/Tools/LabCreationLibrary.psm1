@@ -540,9 +540,9 @@ function Show-LabMenu {
             $hash = @{}
             $properties | ForEach-Object { $hash[$_] = Read-Host -Prompt "$_"}
 
-            $result = $aggregateLabs | Set-LabProperty @hash
+            $aggregateLabs = $aggregateLabs | Set-LabProperty @hash
         }
-        return $result
+        return $aggregateLabs
     }
 }
 

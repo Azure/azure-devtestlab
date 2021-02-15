@@ -4,17 +4,16 @@ param(
     [string]
     $CsvConfigFile,
 
-    [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "If a lab contains any of these tags, it will be selected")]
+    [Parameter(Mandatory = $false, HelpMessage = "Which lab properties to show a prompt for")]
     [ValidateNotNullOrEmpty()]
-    [string]
-    $AnId
-    )
+    [string[]]
+    $Properties
+)
 
 Import-Module ../../Az.LabServices.psm1 -Force
 Import-Module ../LabCreationLibrary.psm1 -Force
 
 $CsvConfigFile `
   | Import-LabsCsv `
-  | Select-Lab -Id $AnId `
-  | Set-LabProperty -ResourceGroup Staging -MaxUsers 50 `
+  | Show-LabMenu -Properties $Properties `
   | Publish-Labs

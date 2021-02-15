@@ -75,7 +75,7 @@ In the example csv configuration file, the `Tags` column contains the emails of 
 
 * You can use any of the `Select-*` functions to choose labs. All the chosen labs will be modified by the `Set-LabProperty` function.
 
-### Show a menu to the user asking to select one lab
+### Show a menu asking to select one lab ([Examples/PickALab.ps1](./Examples/PickALab.ps1))
 
 ```console
 ".\hogwarts.csv" | Import-LabsCsv | Show-LabMenu -PickLab | Publish-Labs
@@ -89,7 +89,7 @@ Please select the lab to create:
 
 * The fields displayed for the various labs are fixed. Log an issue if you want me to make them configurable.
 
-### Show a menu to the user asking for the value of certain properties
+### Show a menu to the user asking for the value of some properties ([Examples/PickProperties.ps1](./Examples/PickProperties.ps1))
 
 ```console
 ".\hogwarts.csv" `
@@ -101,7 +101,7 @@ LabName: TestLab
 MaxUsers: 10
 ```
 
-### Show a menu to the user asking to select a lab and the value of certain properties
+### Show a menu to the user asking to select a lab and the value of some properties([Examples/PickLabAndProperties.ps1](./Examples/PickLabAndProperties.ps1))
 
 ```console
 ".\hogwarts.csv" `
