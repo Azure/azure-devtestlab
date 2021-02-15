@@ -46,22 +46,21 @@ Code in [LabCreator.ps1](./LabCreator.ps1).
 ### Publish all the labs with a particular tag
 
 ```powershell
-".\hogwarts.csv"  | Import-LabsCsv | Select-LabByAnyTag -tags Maths, Science | Publish-Labs
+".\hogwarts.csv"  | Import-LabsCsv | Select-Lab -SomeTags Maths, Science | Publish-Labs
 ```
 
 In the example csv configuration file, the `Tags` column contains the emails of the professors that are giving a certain course. You can create the labs for a particular professor with:
 
 ```powershell
-".\hogwarts.csv"  | Import-LabsCsv | Select-LabByAnyTag -tags bool1@hotmail.com | Publish-Labs
+".\hogwarts.csv"  | Import-LabsCsv | Select-Lab -SomeTags bool1@hotmail.com | Publish-Labs
 ```
 
-* `Select-LabByAnyTag` is just a convenince function. You can achieve the same result by using any of the `Powershell` provided selection function (i.e. `Where-Object`).
-* There is also a `Select-LabByAllTag` function that selects just the labs where the `Tags` field contains *all* the tags specified as parameters.
+* `Select-Lab` is just a convenience function. You can achieve the same result by using any of the `Powershell` provided selection functions (i.e., `Where-Object`).
  
 ### Publish one lab with a given id
 
 ```powershell
-".\hogwarts.csv"  | Import-LabsCsv | Select-LabById -Id id001 | Publish-Labs
+".\hogwarts.csv"  | Import-LabsCsv | Select-Lab -Id id001 | Publish-Labs
 ```
 
 ### Publish labs changing some configuration properties (i.e. their ResourceGroup)
@@ -69,7 +68,7 @@ In the example csv configuration file, the `Tags` column contains the emails of 
 ```powershell
 ".\hogwarts.csv" `
   | Import-LabsCsv `
-  | Select-LabById -Id id001 `
+  | Select-Lab -Id id001 `
   | Set-LabProperty -ResourceGroup Staging -MaxUsers 50 `
   | Publish-Labs
 ```
@@ -78,32 +77,46 @@ In the example csv configuration file, the `Tags` column contains the emails of 
 
 ### Show a menu to the user asking to select one lab
 
-```powershell
-".\hogwarts.csv" | Import-LabsCsv | Select-LabByMenu | Publish-Labs
+```console
+".\hogwarts.csv" | Import-LabsCsv | Show-LabMenu -PickLab | Publish-Labs
 
 LABS
 [0]     id001   hogwarts-rg2    History of Magic
 [1]     id002   hogwarts-rg2    Transfiguration
 [2]     id003   hogwarts-rg2    Charms
-Please select the number of the lab to create:
+Please select the lab to create:
 ```
 
-* Everything compose. You can use any of the `Select-*` or `Set-*` functions before (or after) the `Select-LabByMenu`.
 * The fields displayed for the various labs are fixed. Log an issue if you want me to make them configurable.
 
 ### Show a menu to the user asking for the value of certain properties
 
-```powershell
+```console
 ".\hogwarts.csv" `
   | Import-LabsCsv `
-  | Set-LabPropertyByMenu -properties LabName,MaxUsers `
+  | Show-LabMenu -Properties LabName,MaxUsers `
   | Publish-Labs
 
 LabName: TestLab
 MaxUsers: 10
 ```
 
-* As always, you can use any other function in the chain. For example, you can add `Select-LabByMenu` in the same pipeline to have the user both choose a lab and some properties of it.
+### Show a menu to the user asking to select a lab and the value of certain properties
+
+```console
+".\hogwarts.csv" `
+  | Import-LabsCsv `
+  | Show-LabMenu -PickLab -Properties LabName,MaxUsers `
+  | Publish-Labs
+
+LABS
+[0]     id001   hogwarts-rg2    History of Magic
+[1]     id002   hogwarts-rg2    Transfiguration
+[2]     id003   hogwarts-rg2    Charms
+Please select the lab to create: 0
+LabName: MyName
+MaxUsers: 30
+```
 
 ## Structure of the example [Hogwarts.csv](https://github.com/Azure/azure-devtestlab/blob/master/samples/ClassroomLabs/Modules/Library/Tools/hogwarts.csv)
 Item              | Description

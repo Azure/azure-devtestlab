@@ -474,7 +474,7 @@ function Set-LabProperty {
     }
 }
 
-function Set-LabPropertyByMenu {
+function Show-LabMenu {
     [CmdletBinding()]
     param(
         [parameter(Mandatory = $true, HelpMessage = "Array containing one line for each lab to be created", ValueFromPipeline = $true)]
@@ -482,18 +482,63 @@ function Set-LabPropertyByMenu {
         [psobject[]]
         $labs,
 
-        [Parameter(Mandatory = $true, HelpMessage = "Which lab properties to show a prompt for")]
+        [Parameter(Mandatory = $false, HelpMessage = "Pick one lab from the labs' list")]
+        [switch]
+        $PickLab,
+
+        [Parameter(Mandatory = $false, HelpMessage = "Which lab properties to show a prompt for")]
         [ValidateNotNullOrEmpty()]
         [string[]]
-        $properties
+        $Properties
     )
 
     begin {
-        $hash = @{}
-        $properties | ForEach-Object { $hash[$_] = Read-Host -Prompt "$_"}
+
+        function LabToString($lab, $index) {
+            return "[$index]`t$($lab.Id)`t$($lab.ResourceGroupName)`t$($lab.LabName)"
+        }
+
+        $propsPassed = $PSBoundParameters.ContainsKey('Properties')
+        $pickLabPassed = $PSBoundParameters.ContainsKey('PickLab')
+
+        if($pickLabPassed) {
+            Write-Host "LABS"
+        }
+
+
+        $aggregateLabs = @()
     }
     process {
-        $labs | Set-LabProperty @hash
+        $aggregateLabs += $labs
+    }
+    end {
+
+        if($pickLabPassed) {
+            $index = 0
+            $aggregateLabs | ForEach-Object { Write-Host (LabToString $_ ($index++)) }
+
+            $resp = $null
+            do {
+                $resp = Read-Host -Prompt "Please select the lab to create"
+                $resp = $resp -as [int]
+                if($resp -eq $null) {
+                    Write-Host "Not an integer.Try again." -ForegroundColor red
+                }
+                if($resp -and ($resp -ge $labs.Length -or $resp -lt 0)) {
+                    Write-Host "The lab number must be between 0 and $($labs.Length - 1). Try again." -ForegroundColor red
+                    $resp = $null
+                }
+            } until ($resp -ne $null)
+            $aggregateLabs = ,$aggregateLabs[$resp]
+        }
+
+        if($propsPassed) {
+            $hash = @{}
+            $properties | ForEach-Object { $hash[$_] = Read-Host -Prompt "$_"}
+
+            $result = $aggregateLabs | Set-LabProperty @hash
+        }
+        return $result
     }
 }
 
@@ -549,4 +594,5 @@ Export-ModuleMember -Function   Import-LabsCsv,
                                 Publish-Labs,
                                 Set-LabProperty,
                                 Set-LabPropertyByMenu,
-                                Select-Lab
+                                Select-Lab,
+                                Show-LabMenu
