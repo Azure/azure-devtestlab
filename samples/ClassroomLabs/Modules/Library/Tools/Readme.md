@@ -4,14 +4,17 @@ The [LabCreationLibrary.psm1](https://github.com/Azure/azure-devtestlab/blob/mas
 `Load configuration info from db/csv/...` => `Transform configuration info` => `Publish the labs`
 
 ## Table of Contents
+- [Table of Contents](#table-of-contents)
 - [Getting Started](#getting-started)
 - [Examples](#examples)
-  - [Publish all the labs](#publish-all-the-labs)
-  - [Publish all the labs with a particular tag](#publish-all-the-labs-with-a-particular-tag)
-  - [Publish one lab with a given id](#publish-one-lab-with-a-given-id)
-  - [Publish labs changing some configuration properties (i.e. their ResourceGroup)](#publish-labs-changing-some-configuration-properties-ie-their-resourcegroup)
-  - [Show a menu to the user asking to select one lab](#show-a-menu-to-the-user-asking-to-select-one-lab)
-  - [Show a menu to the user asking for the value of certain properties](#show-a-menu-to-the-user-asking-for-the-value-of-certain-properties)
+  - [Publish all the labs in a CSV file (Examples/PublishAll.ps1)](#publish-all-the-labs-in-a-csv-file-examplespublishallps1)
+  - [Publish all the labs in a JSON file (Examples/PublishAllJson.ps1)](#publish-all-the-labs-in-a-json-file-examplespublishalljsonps1)
+  - [Publish all the labs with a particular tag (Examples/PublishByTag.ps1)](#publish-all-the-labs-with-a-particular-tag-examplespublishbytagps1)
+  - [Publish one lab with a given id (Examples/PublishById.ps1)](#publish-one-lab-with-a-given-id-examplespublishbyidps1)
+  - [Publish one lab changing some configuration properties (i.e. a staging ResourceGroup)(Examples/PublishStaging.ps1)](#publish-one-lab-changing-some-configuration-properties-ie-a-staging-resourcegroupexamplespublishstagingps1)
+  - [Show a menu asking to select one lab (Examples/PickALab.ps1)](#show-a-menu-asking-to-select-one-lab-examplespickalabps1)
+  - [Show a menu to the user asking for the value of some properties (Examples/PickProperties.ps1)](#show-a-menu-to-the-user-asking-for-the-value-of-some-properties-examplespickpropertiesps1)
+  - [Show a menu to the user asking to select a lab and the value of some properties(Examples/PickLabAndProperties.ps1)](#show-a-menu-to-the-user-asking-to-select-a-lab-and-the-value-of-some-propertiesexamplespicklabandpropertiesps1)
 - [Structure of the example Hogwarts.csv](#structure-of-the-example-hogwartscsv)
 - [Structure of the example Charms.csv](#structure-of-the-example-charmscsv)
 
