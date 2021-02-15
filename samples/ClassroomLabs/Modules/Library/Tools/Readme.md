@@ -31,17 +31,24 @@ Import-Module LabCreationLibrary.psm1
 ```
 
 ## Examples
-The functions are generic and can be composed together to achieve different aims. In the following examples, we load the configuration information from a CSV file. The examples work identically if the information is loaded from a database. You need to substitute the first function with a database retrieving one.
+The functions are generic and can be composed together to achieve different aims. In the following examples, we load the configuration information from a CSV file. The examples work the same if the information is loaded from a database. You need to substitute the first function with a database retrieving one.
 
 The full code for the example is immediately after the title in parenthesis.
 
-### Publish all the labs ([LabCreator.ps1](./LabCreator.ps1))
+### Publish all the labs in a CSV file ([Examples/PublishAll.ps1](./Examples/PublishAll.ps1))
 
 ```powershell
 ".\hogwarts.csv" | Import-LabsCsv | Publish-Labs
 ```
 * `Import-LabsCsv` loads the configuration information from the csv file. It also loads schedule information for each lab from a separate file.
 * `Publish-Labs` publishes the labs and it is the natural end to all our pipelines. You can specify how many concurrent threads to use with the parameter `ThrottleLimit`.
+
+### Publish all the labs in a JSON file ([Examples/PublishAllJson.ps1](./Examples/PublishAllJson.ps1))
+You can store your configuration information in JSON form as well (i.e., file, Azure CosmoDb, other).
+
+```powershell
+Get-Content -Raw -Path "hogwarts.json" | ConvertFrom-Json | Publish-Labs
+```
 
 ### Publish all the labs with a particular tag ([Examples/PublishByTag.ps1](./Examples/PublishByTag.ps1))
 

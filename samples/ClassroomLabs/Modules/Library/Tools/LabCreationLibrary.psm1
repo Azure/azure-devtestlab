@@ -125,7 +125,6 @@ function Publish-Labs {
         $aggregateLabs += $labs
     }
     end {
-        return $aggregateLabs
         $init = {
             function New-AzLabSingle {
                 [CmdletBinding()]
