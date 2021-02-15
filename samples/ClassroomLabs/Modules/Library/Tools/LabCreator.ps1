@@ -9,10 +9,11 @@ param(
     $ThrottleLimit = 5
 )
 
+Import-Module ../Az.LabServices.psm1 -Force
+Import-Module ./LabCreationLibrary.psm1 -Force
+
 $outerScriptstartTime = Get-Date
 Write-Host "Executing Lab Creation Script, starting at $outerScriptstartTime" -ForegroundColor Green
-
-Import-Module .\LabCreationLibrary.psm1 -Force
 
 $CsvConfigFile | Import-LabsCsv | Publish-Labs
 

@@ -1,4 +1,7 @@
-Import-Module ../Az.LabServices.psm1 -Force
+
+if (-not (Get-Command -Name "New-AzLab" -ErrorAction SilentlyContinue)) {
+    Write-Error "You need to import the module Az.LabServices.psm1 in your script (i.e. Import-Module ../Az.LabServices.psm1 -Force )"
+}
 
 # Install the ThreadJob module if the command isn't available
 if (-not (Get-Command -Name "Start-ThreadJob" -ErrorAction SilentlyContinue)) {

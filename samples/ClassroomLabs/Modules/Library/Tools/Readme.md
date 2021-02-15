@@ -31,11 +31,11 @@ Import-Module LabCreationLibrary.psm1
 ```
 
 ## Examples
-The functions are generic and can be composed together to achieve different aims. In the following examples, we load the configuration information from a CSV file. The examples would work identically if the information were loaded from a database. You simply would need to substitute the first function with a database retrieving one.
+The functions are generic and can be composed together to achieve different aims. In the following examples, we load the configuration information from a CSV file. The examples work identically if the information is loaded from a database. You need to substitute the first function with a database retrieving one.
 
-### Publish all the labs
+The full code for the example is immediately after the title in parenthesis.
 
-Code in [LabCreator.ps1](./LabCreator.ps1).
+### Publish all the labs ([LabCreator.ps1](./LabCreator.ps1))
 
 ```powershell
 ".\hogwarts.csv" | Import-LabsCsv | Publish-Labs
