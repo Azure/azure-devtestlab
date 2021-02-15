@@ -1,4 +1,4 @@
-# Bulk Lab Creation Functions <!-- omit in toc -->
+# Bulk Lab Creation Module <!-- omit in toc -->
 The [LabCreationLibrary.psm1](https://github.com/Azure/azure-devtestlab/blob/master/samples/ClassroomLabs/Modules/Library/Tools/LabCreator.ps1) module enables users to create **Resource Groups**, **Lab Accounts** and **Labs** via commandline based on declarative configuration information. The standard pattern of usage is by composing a pipeline as follows:
 
 `Load configuration info from db/csv/...` => `Transform configuration info` => `Publish the labs`
