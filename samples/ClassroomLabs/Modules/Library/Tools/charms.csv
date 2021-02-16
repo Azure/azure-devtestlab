@@ -1,3 +1,0 @@
-Frequency,FromDate,ToDate,StartTime,EndTime,WeekDays,TimeZoneId, Notes
-Weekly,"1/1/2021", "12/12/2021", "10:00", "12:00", "Monday, Friday", "W. Europe Standard Time", "A recurrent class"
-Once,"1/1/2021", "12/12/2021", "10:00", "12:00", "", "W. Europe Standard Time", "A workshop"
