@@ -258,7 +258,6 @@ function Publish-Labs {
                     }
 
                     Write-Host "Image $ImageName found."
-                    Write-Host "Linux $LinuxRdp***"
             
                     $lab = $la `
                     | New-AzLab -LabName $LabName -Image $img -Size $Size -UserName $UserName -Password $Password -LinuxRdpEnabled:$LinuxRdp -InstallGpuDriverEnabled:$GpuDriverEnabled -UsageQuotaInHours $UsageQuota `
@@ -421,7 +420,6 @@ function Publish-Labs {
         }
 
 
-
         # Needs to create resources in this order, aka parallelize in these three groups, otherwise we get contentions:
         # i.e. different jobs trying to create the same common resource (RG or lab account)
         New-ResourceGroups  -ConfigObject $aggregateLabs
@@ -505,9 +503,8 @@ function Show-LabMenu {
         $pickLabPassed = $PSBoundParameters.ContainsKey('PickLab')
 
         if($pickLabPassed) {
-            Write-Host "LABS"
+           Write-Host "LABS"
         }
-
 
         $aggregateLabs = @()
     }

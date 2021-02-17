@@ -13,3 +13,4 @@ packages/
 **/obj/*
 **/Properties/PublishProfiles/*
 *.cred
+debug.log
