@@ -1,15 +1,15 @@
-import React, { Component } from 'react';
 import * as msal from '@azure/msal-browser';
-import { DetailsList, Spinner, Text, PrimaryButton, getTheme } from "@fluentui/react";
-
+import { CheckboxVisibility, DetailsList, getTheme, Spinner, Text } from "@fluentui/react";
+import React, { Component } from 'react';
+import VirtualMachineRow from './OwnershipButton';
 
 export default class App extends Component {
     publicClientApplication;
 
     msalConfig = {
         auth: {
-            clientId: '2590931b-92b1-4e33-b354-fdec5421028c',
-            authority: 'https://login.microsoftonline.com/bdfe93c9-f750-4fcc-b4f3-da5255b22a6a'
+            clientId: process.env.REACT_APP_AAD_CLIENT_ID,
+            authority: `https://login.microsoftonline.com/${process.env.REACT_APP_AAD_TENANT_ID}`
         }
     };
 
@@ -32,7 +32,7 @@ export default class App extends Component {
     render() {
         let contents = this.state.loading
             ? <Spinner label="Loading virtual machines..." />
-            : App.renderVirtualMachinesTable(this.state.virtualMachines);
+            : this.renderVirtualMachinesTable(this.state.virtualMachines);
 
         const theme = getTheme();
 
@@ -40,28 +40,13 @@ export default class App extends Component {
             <div style={{ boxShadow: theme.effects.elevation8 }}>
                 <div className="header" style={{ padding: "10px" }}>
                     <Text variant="xxLarge">Lab Virtual Machines</Text>
-                    <PrimaryButton style={{ float: "right" }} onClick={this.createVM.bind(this)}>Create VM</PrimaryButton>
                 </div>
                 {contents}
             </div>
         );
     }
 
-    async createVM() {
-        const token = await this.getAcccessToken();
-        await fetch("virtualmachines",
-            {
-                method: "POST",
-                headers: {
-                    "Authorization": "Bearer " + token.accessToken
-                }
-            }
-        );
-
-        await this.populateVirtualMachines();
-    }
-
-    static renderVirtualMachinesTable(virtualMachines) {
+    renderVirtualMachinesTable(virtualMachines) {
         return (
             <DetailsList
                 items={virtualMachines.map(vm => {
@@ -69,10 +54,45 @@ export default class App extends Component {
                         "Name": vm.name,
                         "Owner": vm.ownerUserPrincipalName,
                         "Location": vm.location,
+                        "Change Ownership": this.renderButton(vm)
                     };
                 })}
+                checkboxVisibility={CheckboxVisibility.hidden}
             />
         );
+    }
+
+    renderButton(virtualMachine) {
+        return <VirtualMachineRow
+            vmOwner={virtualMachine.ownerUserPrincipalName}
+            loggedInUser={this.state.loggedInUser}
+            unclaim={() => this.unclaimVirtualMachine(virtualMachine.name)}
+            claim={() => this.claimVirtualMachine(virtualMachine.name)}
+        />;
+    }
+
+    async claimVirtualMachine(vmName) {
+        const token = await this.getAcccessToken();
+        await fetch(`virtualmachines/claim/${vmName}`,
+            {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token.accessToken}`
+                }
+            });
+        await this.populateVirtualMachines();
+    }
+
+    async unclaimVirtualMachine(vmName) {
+        const token = await this.getAcccessToken();
+        await fetch(`virtualmachines/unclaim/${vmName}`,
+            {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token.accessToken}`
+                }
+            });
+        await this.populateVirtualMachines();
     }
 
     async populateVirtualMachines() {
@@ -80,7 +100,7 @@ export default class App extends Component {
         const response = await fetch("virtualmachines",
             {
                 headers: {
-                    "Authorization": "Bearer " + token.accessToken
+                    "Authorization": `Bearer ${token.accessToken}`
                 }
             });
         const data = await response.json();

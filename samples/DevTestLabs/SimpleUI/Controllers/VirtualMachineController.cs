@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Management.DevTestLabs;
 using Microsoft.Azure.Management.DevTestLabs.Models;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Net.Http.Headers;
 using Microsoft.Rest;
@@ -18,74 +19,78 @@ namespace SimpleDtlUI.Controllers
     {
         private readonly ILogger<VirtualMachineController> _logger;
 
-        // Put into app settings file, note in README that these properties should be updated by the user
-        private const string LabResourceGroupName = "sodasing-lab-rg";
-        private const string LabName = "sodasing-lab";
-        private const string SubscriptionId = "0c0ff9e3-52f3-4756-8551-2271c1cc9121";
-        private const string VirtualNetworkName = "Dtlsodasing-lab";
+        // Azure config settings
+        private readonly string _labResourceGroupName;
+        private readonly string _labName;
+        private readonly string _subscriptionId;
 
-        public VirtualMachineController(ILogger<VirtualMachineController> logger)
+        public VirtualMachineController(ILogger<VirtualMachineController> logger, IConfiguration config)
         {
-            _logger = logger;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+            // Assign config settings
+            _labResourceGroupName = config.GetValue<string>("LabResourceGroupName");
+            _labName = config.GetValue<string>("LabName");
+            _subscriptionId = config.GetValue<string>("SubscriptionId");
         }
 
         [HttpGet]
         [Route("/virtualmachines")]
-        public async Task<IEnumerable<LabVirtualMachine>> Get()
+        public async Task<IEnumerable<LabVirtualMachine>> ListVirtualMachines()
         {
             IDevTestLabsClient labClient = GetDevTestLabsClient();
 
             try
             {
-                _logger.LogInformation($"Retrieving virtual machines from resource group {LabResourceGroupName}, lab {LabName}");
+                _logger.LogInformation($"Retrieving VMs from resource group {_labResourceGroupName}, lab {_labName}");
 
-                IPage<LabVirtualMachine> virtualMachines = await labClient.VirtualMachines.ListAsync(LabResourceGroupName, LabName);
-
+                IPage<LabVirtualMachine> virtualMachines = await labClient.VirtualMachines.ListAsync(_labResourceGroupName, _labName);
+                
                 return virtualMachines;
             }
             catch (CloudException ex)
             {
-                _logger.LogError(ex, $"Error calling ListAsync API for resource group {LabResourceGroupName}, lab {LabName}");
+                _logger.LogError(ex, $"Error retrieving VMs for resource group {_labResourceGroupName}, lab {_labName}");
 
                 throw;
             }
         }
 
         [HttpPost]
-        [Route("/virtualmachines")]
-        public async Task Post(string vmName)
+        [Route("/virtualmachines/unclaim/{vmName}")]
+        public async Task UnclaimVirtualMachine(string vmName)
         {
             IDevTestLabsClient labClient = GetDevTestLabsClient();
 
             try
             {
-                _logger.LogInformation($"Creating virtual machine in {LabResourceGroupName}, lab {LabName}");
+                _logger.LogInformation($"Un-claiming VM {vmName}");
 
-                // TODO: Should VM info be in config?
-                LabVirtualMachine labVM = new LabVirtualMachine
-                {
-                    UserName = "vmadmin",
-                    Password = Guid.NewGuid().ToString(),
-                    OsType = "Linux",
-                    Size = "Standard_A2_v2",
-                    LabVirtualNetworkId = $"/subscriptions/{SubscriptionId}/resourcegroups/{LabResourceGroupName}/providers/microsoft.devtestlab/labs/{LabName}/virtualnetworks/{VirtualNetworkName}",
-                    LabSubnetName = $"{VirtualNetworkName}Subnet",
-                    GalleryImageReference = new GalleryImageReference
-                    {
-                        OsType = "Linux",
-                        Version = "Latest",
-                        Sku = "16.04-LTS",
-                        Offer = "UbuntuServer",
-                        Publisher = "Canonical"
-                    },
-                    Location = "West US 2"
-                };
-
-                await labClient.VirtualMachines.BeginCreateOrUpdateAsync(LabResourceGroupName, LabName, Guid.NewGuid().ToString(), labVM);
+                await labClient.VirtualMachines.UnClaimAsync(_labResourceGroupName, _labName, vmName);
             }
             catch (CloudException ex)
             {
-                _logger.LogError(ex, $"Error calling BeginCreateOrUpdateAsync API for resource group {LabResourceGroupName}, lab {LabName}");
+                _logger.LogError(ex, $"Error un-claiming VM {vmName}");
+
+                throw;
+            }
+        }
+
+        [HttpPost]
+        [Route("/virtualmachines/claim/{vmName}")]
+        public async Task ClaimVirtualMachine(string vmName)
+        {
+            IDevTestLabsClient labClient = GetDevTestLabsClient();
+
+            try
+            {
+                _logger.LogInformation($"Claiming VM {vmName}");
+
+                await labClient.VirtualMachines.ClaimAsync(_labResourceGroupName, _labName, vmName);
+            }
+            catch (CloudException ex)
+            {
+                _logger.LogError(ex, $"Error claiming VM {vmName}");
 
                 throw;
             }
@@ -104,7 +109,7 @@ namespace SimpleDtlUI.Controllers
 
             return new DevTestLabsClient(credentials)
             {
-                SubscriptionId = SubscriptionId
+                SubscriptionId = _subscriptionId
             };
         }
     }

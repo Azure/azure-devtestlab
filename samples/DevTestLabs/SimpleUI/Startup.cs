@@ -1,3 +1,5 @@
+using System;
+using System.Text;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
@@ -12,6 +14,42 @@ namespace SimpleDtlUI
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+
+            // Ensure that the Application Settings have been updated by the user of this code sample
+            // These settings can either by set in the Configuration pane of the App Service in the Azure portal, or in the appsettings.json file
+            var _labResourceGroupName = configuration.GetValue<string>("LabResourceGroupName");
+            var _labName = configuration.GetValue<string>("LabName");
+            var _subscriptionId = configuration.GetValue<string>("SubscriptionId");
+
+            string placeholderValue = "<set in Azure>";
+            bool labResourceGroupSet = !string.Equals(_labResourceGroupName, placeholderValue, StringComparison.InvariantCultureIgnoreCase);
+            bool labNameSet = !string.Equals(_labName, placeholderValue, StringComparison.InvariantCultureIgnoreCase);
+            bool subscriptionIdSet = !string.Equals(_subscriptionId, placeholderValue, StringComparison.InvariantCultureIgnoreCase);
+
+            if (labResourceGroupSet && labNameSet && subscriptionIdSet)
+            {
+                return;
+            }
+
+            StringBuilder errorMessage = new StringBuilder();
+            if (!labResourceGroupSet)
+            {
+                errorMessage.Append("LabResourceGroupName must be set in Application Settings. ");
+            }
+
+            if (!labNameSet)
+            {
+                errorMessage.Append("LabName must be set in Application Settings. ");
+            }
+
+            if (!subscriptionIdSet)
+            {
+                errorMessage.Append("SubscriptionId must be set in Application Settings. ");
+            }
+
+            errorMessage.Append("Please refer to the README for additional information.");
+
+            throw new InvalidOperationException(errorMessage.ToString());
         }
 
         public IConfiguration Configuration { get; }
@@ -27,6 +65,8 @@ namespace SimpleDtlUI
             {
                 configuration.RootPath = "ClientApp/build";
             });
+
+            services.AddApplicationInsightsTelemetry();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
