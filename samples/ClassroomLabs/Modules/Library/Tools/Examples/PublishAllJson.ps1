@@ -12,4 +12,4 @@ param(
 Import-Module ../../Az.LabServices.psm1 -Force
 Import-Module ../LabCreationLibrary.psm1 -Force
 
-Get-Content -Raw -Path $JsonConfigFile | ConvertFrom-Json | Publish-Labs
+Get-Content -Raw -Path $JsonConfigFile | ConvertFrom-Json | Publish-Labs -ThrottleLimit $ThrottleLimit

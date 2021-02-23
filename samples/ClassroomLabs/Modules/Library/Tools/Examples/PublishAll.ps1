@@ -15,6 +15,6 @@ Write-Host "Executing Lab Creation Script, starting at $outerScriptstartTime" -F
 Import-Module ../../Az.LabServices.psm1 -Force
 Import-Module ../LabCreationLibrary.psm1 -Force
 
-$CsvConfigFile | Import-LabsCsv | Publish-Labs
+$CsvConfigFile | Import-LabsCsv | Publish-Labs -ThrottleLimit $ThrottleLimit
 
 Write-Host "Completed running Bulk Lab Creation script, total duration $(((Get-Date) - $outerScriptstartTime).TotalMinutes) minutes" -ForegroundColor Green
