@@ -4,7 +4,7 @@ param(
     [string]
     $CsvConfigFile,
 
-    [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "If a lab contains any of these tags, it will be selected")]
+    [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Id for the lab to publish")]
     [ValidateNotNullOrEmpty()]
     [string]
     $AnId

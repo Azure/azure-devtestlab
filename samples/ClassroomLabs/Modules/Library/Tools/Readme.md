@@ -30,11 +30,18 @@ To get started, using the example configuration csv files:
 1. Update the example CSV files to configure the resources to be created.  For additional labs, create additional lines in the CSV file.  The CSV files can be modified directly with Microsoft Excel.
 1. Import the functions in the script by typing:
 ```powershell
-Import-Module LabCreationLibrary.psm1
+Import-Module .\LabCreationLibrary.psm1
 ```
 
 ## Examples
 The functions are generic and can be composed together to achieve different aims. In the following examples, we load the configuration information from a CSV file. The examples work the same if the information is loaded from a database. You need to substitute the first function with a database retrieving one.
+
+The examples scripts expect the modules used to be in the following directories:
+
+```powershell
+Import-Module ../../Az.LabServices.psm1 -Force
+Import-Module ../LabCreationLibrary.psm1 -Force
+```
 
 The full code for the example is immediately after the title in parenthesis.
 
@@ -70,7 +77,7 @@ In the example csv configuration file, the `Tags` column contains the emails of 
 ### Publish one lab with a given id ([Examples/PublishById.ps1](./Examples/PublishById.ps1))
 
 ```powershell
-".\hogwarts.csv"  | Import-LabsCsv | Select-Lab -Id id001 | Publish-Labs
+".\hogwarts.csv"  | Import-LabsCsv | Select-Lab -AnId id001 | Publish-Labs
 ```
 
 ### Publish one lab changing some configuration properties (i.e. a staging ResourceGroup)([Examples/PublishStaging.ps1](./Examples/PublishStaging.ps1))
@@ -79,7 +86,7 @@ In the example csv configuration file, the `Tags` column contains the emails of 
 ".\hogwarts.csv" `
   | Import-LabsCsv `
   | Select-Lab -Id id001 `
-  | Set-LabProperty -ResourceGroup Staging -MaxUsers 50 `
+  | Set-LabProperty -ResourceGroupName Staging -MaxUsers 50 `
   | Publish-Labs
 ```
 
