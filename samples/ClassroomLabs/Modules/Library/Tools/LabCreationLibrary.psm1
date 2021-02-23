@@ -308,65 +308,6 @@ function Publish-Labs {
                 Write-Host "Completed creation of $LabName, total duration $(((Get-Date) - $StartTime).TotalSeconds) seconds" -ForegroundColor Green
             }
         }
-
-        # No need to parallelize this one as super fast
-        function New-ResourceGroups {
-            [CmdletBinding()]
-            param(
-                [parameter(Mandatory = $true, ValueFromPipeline = $true)]
-                [psobject[]]
-                $ConfigObject
-            )
-
-            $Rgs = $ConfigObject | Select-Object -Property ResourceGroupName, Location -Unique
-            Write-Host "Operating on the following RGs:"
-            Write-Host $Rgs
-            
-            $Rgs | ForEach-Object {
-                if (-not (Get-AzResourceGroup -ResourceGroupName $_.ResourceGroupName -EA SilentlyContinue)) {
-                    New-AzResourceGroup -ResourceGroupName $_.ResourceGroupName -Location $_.Location | Out-null
-                    Write-Host "$($_.ResourceGroupName) resource group didn't exist. Created it."
-                }
-            }
-        }
-
-        function New-Accounts {
-            [CmdletBinding()]
-            param(
-                [parameter(Mandatory = $true, ValueFromPipeline = $true)]
-                [psobject[]]
-                $ConfigObject
-            )
-
-            $lacs = $ConfigObject | Select-Object -Property ResourceGroupName, LabAccountName -Unique
-            Write-Host "Operating on the following Lab Accounts:"
-            Write-Host $lacs
-
-            $block = {
-                param($path, $ResourceGroupName, $LabAccountName)
-
-                Set-StrictMode -Version Latest
-                $ErrorActionPreference = 'Stop'
-
-                $modulePath = Join-Path $path '..\Az.LabServices.psm1'
-                Import-Module $modulePath
-
-                if ((Get-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName) -eq $null ){
-                    New-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName | Out-Null
-                }
-                Write-Host "$LabAccountName lab account created or found."
-            }
-            
-            Write-Host "Starting lab accounts creation in parallel. Can take a while."
-            $jobs = @()
-            $lacs | ForEach-Object {
-                $jobs += Start-ThreadJob -ScriptBlock $block -ArgumentList $PSScriptRoot, $_.ResourceGroupName, $_.LabAccountName -Name $_.LabAccountName -ThrottleLimit $ThrottleLimit
-            }
-
-            $hours = 1
-            $jobs | Wait-Job -Timeout (60 * 60 * $hours) | Receive-Job
-            $jobs | Remove-Job
-        }
         
         function New-AzLabMultiple {
             [CmdletBinding()]
@@ -422,12 +363,150 @@ function Publish-Labs {
 
         # Needs to create resources in this order, aka parallelize in these three groups, otherwise we get contentions:
         # i.e. different jobs trying to create the same common resource (RG or lab account)
-        New-ResourceGroups  -ConfigObject $aggregateLabs
-        New-Accounts        -ConfigObject $aggregateLabs
+        #New-AzLabAccountBulk -ConfigObject $aggregateLabs
+        Publish-LabAccounts $aggregateLabs -ThrottleLimit $ThrottleLimit
         New-AzLabMultiple   -ConfigObject $aggregateLabs
     }
 }
+#********************************************************************
 
+function Publish-LabAccounts {
+    param(
+        [parameter(Mandatory = $true, HelpMessage = "Array containing one line for each lab account to be created", ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        [psobject[]]
+        $labAccounts,
+
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+        [int]
+        $ThrottleLimit = 5
+    )
+
+    begin {
+        # This patterns aggregates all the objects in the pipeline before performing an operation
+        # i.e. executes lab creation in parallel instead of sequentially
+        # This trick is to make it work both when the argument is passed as pipeline and as normal arg.
+        # I came up with this. Maybe there is a better way.
+        $aggregateLabs = @()
+    }
+    process {
+        # If passed through pipeline, $labs is a single object, otherwise it is the whole array
+        # It works because PS uses '+' to add objects or arrays to an array
+        $aggregateLabs += $labAccounts
+    }
+    end {
+        $init = {
+            function New-Account {
+                [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPlainTextForPassword", "", Scope = "Function")]
+                [CmdletBinding()]
+                param(
+                    [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+                    [ValidateNotNullOrEmpty()]
+                    $ResourceGroupName,
+
+                    [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+                    [ValidateNotNullOrEmpty()]
+                    $Location,
+
+                    [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+                    [ValidateNotNullOrEmpty()]
+                    $LabAccountName
+                )
+    
+                $startTime = Get-Date
+                Write-Host "Start creation of $LabAccountName at $startTime" -ForegroundColor Green
+    
+                if ((Get-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName) -eq $null ){
+                    New-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName | Out-Null
+                }
+                Write-Host "Completed creation of $LabAccountName, total duration $(((Get-Date) - $StartTime).TotalSeconds) seconds" -ForegroundColor Green
+                
+            }
+        }
+
+        # No need to parallelize this one as super fast
+        function New-ResourceGroups {
+            [CmdletBinding()]
+            param(
+                [parameter(Mandatory = $true, ValueFromPipeline = $true)]
+                [psobject[]]
+                $ConfigObject
+            )
+
+            $Rgs = $ConfigObject | Select-Object -Property ResourceGroupName, Location -Unique
+            Write-Host "Operating on the following RGs:"
+            Write-Host $Rgs
+            
+            $Rgs | ForEach-Object {
+                if (-not (Get-AzResourceGroup -ResourceGroupName $_.ResourceGroupName -EA SilentlyContinue)) {
+                    New-AzResourceGroup -ResourceGroupName $_.ResourceGroupName -Location $_.Location | Out-null
+                    Write-Host "$($_.ResourceGroupName) resource group didn't exist. Created it."
+                }
+            }
+        }
+        
+        
+        function New-AzAccountsMultiple {
+            [CmdletBinding()]
+            param(
+                [parameter(Mandatory = $true, ValueFromPipeline = $true)]
+                [psobject[]]
+                $ConfigObject
+            )
+
+            $block = {
+                param($path)
+
+                Set-StrictMode -Version Latest
+                $ErrorActionPreference = 'Stop'
+
+                $modulePath = Join-Path $path '..\Az.LabServices.psm1'
+                Import-Module $modulePath
+                # Really?? It got to be the lines below? Doing a ForEach doesn't work ...
+                $input.movenext() | Out-Null
+            
+                $obj = $input.current[0]
+
+                Write-Verbose "object inside the newazaccountmultiple block $obj"
+                $obj | New-Account
+            }
+
+            Write-Host "Starting creation of all labs in parallel. Can take a while."
+            $jobs = @()
+
+            $ConfigObject | ForEach-Object {
+                Write-Verbose "From config: $_"
+                $jobs += Start-ThreadJob  -InitializationScript $init -ScriptBlock $block -ArgumentList $PSScriptRoot -InputObject $_ -Name $_.LabName -ThrottleLimit $ThrottleLimit
+            }
+
+            while (($jobs | Measure-Object).Count -gt 0) {
+                $completedJobs = $jobs | Where-Object {($_.State -ieq "Completed") -or ($_.State -ieq "Failed")}
+                if (($completedJobs | Measure-Object).Count -gt 0) {
+                    # Write output for completed jobs, but one by one so output doesn't bleed 
+                    # together, also use "Continue" so we write the error but don't end the outer script
+                    $completedJobs | ForEach-Object {
+                        $_ | Receive-Job -ErrorAction Continue
+                    }
+                    # Trim off the completed jobs from our list of jobs
+                    $jobs = $jobs | Where-Object {$_.Id -notin $completedJobs.Id}
+                    # Remove the completed jobs from memory
+                    $completedJobs | Remove-Job
+                }
+                # Wait for 60 sec before checking job status again
+                Start-Sleep -Seconds 60
+            }
+        }
+
+
+        # Needs to create resources in this order, aka parallelize in these three groups, otherwise we get contentions:
+        # i.e. different jobs trying to create the same common resource (RG or lab account)
+        New-ResourceGroups  -ConfigObject $aggregateLabs
+        New-AzAccountsMultiple   -ConfigObject $aggregateLabs
+    }
+}
+
+
+#********************************************************************
 function Set-LabProperty {
     [CmdletBinding()]
     param(
@@ -592,6 +671,7 @@ function Select-Lab {
 }
 Export-ModuleMember -Function   Import-LabsCsv,
                                 Publish-Labs,
+                                Publish-LabAccounts,
                                 Set-LabProperty,
                                 Set-LabPropertyByMenu,
                                 Select-Lab,
