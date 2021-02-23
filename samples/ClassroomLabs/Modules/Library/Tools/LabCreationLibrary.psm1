@@ -338,12 +338,13 @@ function Publish-Labs {
                 $ConfigObject
             )
 
-            $lacs = $ConfigObject | Select-Object -Property ResourceGroupName, LabAccountName -Unique
+            $lacs = $ConfigObject | Select-Object -Property ResourceGroupName, LabAccountName, SharedGalleryResourceGroupName, SharedGalleryName -Unique
+
             Write-Host "Operating on the following Lab Accounts:"
             Write-Host $lacs
 
             $block = {
-                param($path, $ResourceGroupName, $LabAccountName)
+                param($path, $ResourceGroupName, $LabAccountName, $SharedGalleryResourceGroupName, $SharedGalleryName)
 
                 Set-StrictMode -Version Latest
                 $ErrorActionPreference = 'Stop'
@@ -351,16 +352,41 @@ function Publish-Labs {
                 $modulePath = Join-Path $path '..\Az.LabServices.psm1'
                 Import-Module $modulePath
 
-                if ((Get-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName) -eq $null ){
-                    New-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName | Out-Null
+                $labAccount = Get-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName
+
+                if ($labAccount -eq $null ){
+                    $labAccount = New-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName | Out-Null
+                    Write-Host "$LabAccountName lab account created."
                 }
-                Write-Host "$LabAccountName lab account created or found."
+                else {
+                    Write-Host "$LabAccountName lab account found - skipping create."
+                }
+
+                if ($SharedGalleryResourceGroupName -ne $null && $SharedGalleryName -ne $null){
+
+                    $gallery = $labAccount | Get-AzLabAccountSharedGallery
+                    if ($gallery -ne $null) {
+                        Write-Host "$LabAccountName lab account already has attached gallery $gallery."
+                    }
+                    else {
+                        $gallery = Get-AzGallery -ResourceGroupName $SharedGalleryResourceGroupName -Name $SharedGalleryName
+
+                        if ($gallery -ne $null) {
+                         Write-Host "$SharedGalleryName shared gallery found."
+                            New-AzLabAccountSharedGallery -LabAccount $labAccount -SharedGallery $gallery
+                            Write-Host "$SharedGalleryName shared gallery attached."
+                        }
+                        else {
+                            Write-Host "$SharedGalleryName shared gallery not found - skipping attach."
+                        }
+                    }
+                }
             }
             
             Write-Host "Starting lab accounts creation in parallel. Can take a while."
             $jobs = @()
             $lacs | ForEach-Object {
-                $jobs += Start-ThreadJob -ScriptBlock $block -ArgumentList $PSScriptRoot, $_.ResourceGroupName, $_.LabAccountName -Name $_.LabAccountName -ThrottleLimit $ThrottleLimit
+                $jobs += Start-ThreadJob -ScriptBlock $block -ArgumentList $PSScriptRoot, $_.ResourceGroupName, $_.LabAccountName, $_.SharedGalleryResourceGroupName, $_.SharedGalleryName -Name $_.LabAccountName -ThrottleLimit $ThrottleLimit
             }
 
             $hours = 1

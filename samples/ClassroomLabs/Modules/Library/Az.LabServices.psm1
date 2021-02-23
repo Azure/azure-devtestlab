@@ -996,6 +996,29 @@ function Publish-AzLab {
     end { }
 }
 
+function Get-AzLabAccountSharedGallery {
+    [CmdletBinding()]
+    param(
+        [parameter(Mandatory = $true, HelpMessage = "Lab Account to get attached Shared Gallery.", ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        $LabAccount
+    )
+
+    begin { . BeginPreamble }
+    process {
+        try {
+            foreach ($la in $LabAccount) {
+                $uri = (ConvertToUri -resource $la) + "/SharedGalleries/" 
+                return InvokeRest -Uri $uri -Method 'Get'
+            }
+        }
+        catch {
+            Write-Error -ErrorRecord $_ -EA $callerEA
+        }
+    }
+    end { }
+}
+
 function Get-AzLabAccountSharedImage {
     [CmdletBinding()]
     param(
@@ -1709,6 +1732,7 @@ Export-ModuleMember -Function   Get-AzLabAccount,
                                 Get-AzLabForVm,
                                 New-AzLabAccountSharedGallery,
                                 Remove-AzLabAccountSharedGallery,
+                                Get-AzLabAccountSharedGallery,
                                 Get-AzLabAccountPricingAndAvailability,
                                 Stop-AzLabTemplateVm,
                                 Start-AzLabTemplateVm,
