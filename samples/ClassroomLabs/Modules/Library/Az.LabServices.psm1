@@ -1024,15 +1024,79 @@ function Get-AzLabAccountSharedImage {
     param(
         [parameter(Mandatory = $true, HelpMessage = "Lab Account to get shared images from", ValueFromPipeline = $true)]
         [ValidateNotNullOrEmpty()]
-        $LabAccount 
+        $LabAccount,
+
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Are the images enabled?  Enabled = Yes, and Disabled = No")]
+        [ValidateSet('Enabled', 'Disabled', 'All')]
+        [string] $EnableState = "Enabled"
     )
   
     begin { . BeginPreamble }
     process {
         try {
+            
             foreach ($la in $LabAccount) {
                 $uri = (ConvertToUri -resource $la) + "/SharedImages"
-                return InvokeRest -Uri $uri -Method 'Get' | Where-Object { $_.properties.EnableState -eq 'Enabled' }
+
+                if ($EnableState -eq "All") {
+                    $response = InvokeRest -Uri $uri -Method 'Get'
+                }
+                else {
+                    $response = InvokeRest -Uri $uri -Method 'Get' | Where-Object { $_.properties.EnableState -eq $EnableState }
+                }
+                
+                return $response
+            }
+        }
+        catch {
+            Write-Error -ErrorRecord $_ -EA $callerEA
+        }
+    }
+    end { }
+}
+
+function Set-AzLabAccountSharedImage {
+    [CmdletBinding()]
+    param(
+        [parameter(Mandatory = $true, HelpMessage = "Shared image to update.", ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        $SharedImage,
+
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Should this image be enabled?  Enabled = Yes, and Disabled = No")]
+        [ValidateSet('Enabled', 'Disabled')]
+        [string] $EnableState = "Enabled"
+    )
+  
+    begin { . BeginPreamble }
+    process {
+        try {
+
+            foreach ($image in $SharedImage) {
+                $ResourceGroupName = $image.id.split('/')[4]
+                $LabAccountName = $image.id.split('/')[8]
+                $LabAccount = Get-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName
+
+                Write-Verbose "Image to update:\n$($image | ConvertTo-Json)"
+
+                $body = @{
+                    id = $image.id
+                    name = $image.name
+                    properties =
+                    @{
+                        EnableState = $EnableState
+                        sharedGalleryId = $image.properties.sharedGalleryId
+                        osType = $image.properties.osType
+                        imageType = $image.properties.imageType
+                        displayName = $image.properties.displayName
+                        definitionName = $image.properties.definitionName
+                    }
+                } | ConvertTo-Json
+
+                $uri = (ConvertToUri -resource $LabAccount) + "/SharedImages/"+ $image.name
+
+                $updatedImage = InvokeRest -Uri $uri -Method 'PUT' -Body ($body)
+                Write-Verbose "Updated image\n$($updatedImage | ConvertTo-Json)"
+                return WaitProvisioning -uri $uri -delaySec 60 -retryCount 120
             }
         }
         catch {
@@ -1709,6 +1773,7 @@ Export-ModuleMember -Function   Get-AzLabAccount,
                                 Get-AzLab,
                                 New-AzLab,
                                 Get-AzLabAccountSharedImage,
+                                Set-AzLabAccountSharedImage,
                                 Get-AzLabAccountGalleryImage,
                                 Remove-AzLab,
                                 Get-AzLabTemplateVM,
