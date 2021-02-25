@@ -1,17 +1,10 @@
-
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Table;
-using Newtonsoft.Json;
 ﻿/**
  *  Copyright (c) Microsoft Corporation.
  *  Licensed under the MIT License.
  */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Azure.Cosmos.Table;
 
 namespace RDGatewayAPI.Data
 {
@@ -38,6 +31,5 @@ namespace RDGatewayAPI.Data
         public int Port { get; set; }
 
         public int ExpiresOn { get; set; }
-
     }
 }

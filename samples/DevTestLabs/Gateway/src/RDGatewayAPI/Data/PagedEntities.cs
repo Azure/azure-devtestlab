@@ -1,4 +1,3 @@
-using Microsoft.WindowsAzure.Storage.Table;
 ﻿/**
  *  Copyright (c) Microsoft Corporation.
  *  Licensed under the MIT License.
@@ -6,71 +5,65 @@ using Microsoft.WindowsAzure.Storage.Table;
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
 using System.IO;
-using System.Xml;
-using System.Net.Http;
+using System.Linq;
 using System.Web;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Azure.Cosmos.Table;
+using Newtonsoft.Json;
 
 namespace RDGatewayAPI.Data
 {
     public sealed class PagedEntities<T>
         where T : ITableEntity
     {
+        private static readonly JsonSerializer Serializer = JsonSerializer.CreateDefault();
+
         private const string HEADER_X_FORWARDED_HOST = "X-Forwarded-Host";
         private const string HEADER_X_FORWARDED_PROTO = "X-Forwarded-Proto";
         private const string CONTINUATIONTOKEN_QUERYSTRING_KEY = "$skiptoken";
 
         private static string SerializeContinuationToken(TableContinuationToken continuationToken)
         {
-            using (var buffer = new MemoryStream())
-            using (var writer = new XmlTextWriter(buffer, Encoding.UTF8))
-            {
-                continuationToken.WriteXml(writer);
+            using var buffer = new MemoryStream();
+            using var writer = new JsonTextWriter(new StreamWriter(buffer));
 
-                writer.Flush();
+            Serializer.Serialize(writer, continuationToken);
 
-                return Convert.ToBase64String(buffer.ToArray());
-            }
+            writer.Flush();
+
+            return Convert.ToBase64String(buffer.ToArray());
         }
 
         private static TableContinuationToken DeserializeContinuationToken(string token)
         {
-            var continuationToken = new TableContinuationToken();
+            using var buffer = new MemoryStream(Convert.FromBase64String(token));
+            using var reader = new JsonTextReader(new StreamReader(buffer));
 
-            using (var buffer = new MemoryStream(Convert.FromBase64String(token)))
-            using (var reader = new XmlTextReader(buffer))
-            {
-                continuationToken.ReadXml(reader);
-            }
-
-            return continuationToken;
+            return Serializer.Deserialize<TableContinuationToken>(reader);
         }
 
-        public static string GetNextLink(HttpRequestMessage requestMessage, TableContinuationToken continuationToken)
+        public static string GetNextLink(HttpRequest request, TableContinuationToken continuationToken)
         {
-            var qs = HttpUtility.ParseQueryString(requestMessage.RequestUri.Query);
+            var qs = HttpUtility.ParseQueryString(request.QueryString.Value);
             qs.Set(CONTINUATIONTOKEN_QUERYSTRING_KEY, SerializeContinuationToken(continuationToken));
 
-            var uri = new UriBuilder(requestMessage.RequestUri.GetLeftPart(UriPartial.Path));
-            uri.Scheme = (requestMessage.Headers.TryGetValues(HEADER_X_FORWARDED_PROTO, out IEnumerable<string> protoValues) ? protoValues.FirstOrDefault() : uri.Scheme);
-            uri.Host = (requestMessage.Headers.TryGetValues(HEADER_X_FORWARDED_HOST, out IEnumerable<string> hostValues) ? hostValues.FirstOrDefault() : uri.Host);
+            var uri = new UriBuilder(request.Path);
+            uri.Scheme = request.Headers.TryGetValue(HEADER_X_FORWARDED_PROTO, out var protoValues) ? protoValues.FirstOrDefault() : uri.Scheme;
+            uri.Host = request.Headers.TryGetValue(HEADER_X_FORWARDED_HOST, out var hostValues) ? hostValues.FirstOrDefault() : uri.Host;
             uri.Port = -1; // remove the port information from URI
             uri.Query = qs.ToString();
 
             return uri.ToString();
         }
 
-        public static TableContinuationToken GetContinuationToken(HttpRequestMessage requestMessage)
+        public static TableContinuationToken GetContinuationToken(HttpRequest request)
         {
             var continuationToken = default(TableContinuationToken);
 
-            if (requestMessage.GetQueryNameValuePairs().ToDictionary(kv => kv.Key, kv => Uri.UnescapeDataString(kv.Value)).TryGetValue(CONTINUATIONTOKEN_QUERYSTRING_KEY, out string token))
+            if (request.Query.TryGetValue(CONTINUATIONTOKEN_QUERYSTRING_KEY, out var tokens))
             {
-                continuationToken = DeserializeContinuationToken(Uri.UnescapeDataString(token));
+                continuationToken = DeserializeContinuationToken(Uri.UnescapeDataString(tokens.First()));
             }
 
             return continuationToken;
