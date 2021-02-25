@@ -14,3 +14,4 @@ packages/
 **/Properties/PublishProfiles/*
 *.cred
 debug.log
+.DS_Store
