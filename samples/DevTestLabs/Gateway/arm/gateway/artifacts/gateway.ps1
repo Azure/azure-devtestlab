@@ -13,7 +13,7 @@ param(
 )
 
 function Set-PrivateKeyPermissions {
-    
+
     param (
         # The thumbprint of the target certificate
         [Parameter(Mandatory = $true)]
@@ -41,7 +41,7 @@ function Remove-CertificatePrivateKey {
     )
 
     # resolve the certificate ty thumbprint
-    $certificate = Get-ChildItem -Path CERT:\LocalMachine\my | Where-Object { $_.Thumbprint -eq $Thumbprint } | select -First 1
+    $certificate = Get-ChildItem -Path CERT:\LocalMachine\my | Where-Object { $_.Thumbprint -eq $Thumbprint } | Select-Object -First 1
 
     if ($certificate) {
 
@@ -64,8 +64,8 @@ function Remove-CertificatePrivateKey {
 
             # clean up - remove exported certificate
             Remove-Item -Path $certificatePath -Force -ErrorAction SilentlyContinue | Out-Null
-        }        
-    } 
+        }
+    }
 }
 
 function Install-ApplicationRequestRouting {
@@ -76,34 +76,28 @@ function Install-ApplicationRequestRouting {
         [string] $Hostname
     )
 
-    @( "http://go.microsoft.com/fwlink/?LinkID=615137", "http://go.microsoft.com/fwlink/?LinkID=615136" ) | % {
+    $msiUrl = "https://download.microsoft.com/download/C/F/F/CFF3A0B8-99D4-41A2-AE1A-496C08BEB904/WebPlatformInstaller_amd64_en-US.msi"
+    $msiPath = (Join-Path $PSScriptRoot ($msiUrl.Substring($msiUrl.LastIndexOf("/") + 1))) + ".msi"
 
-        $msiPath = (Join-Path $PSScriptRoot ($_.Substring($_.LastIndexOf("=") + 1))) + ".msi"
-        $logPath = [System.IO.Path]::ChangeExtension($msiPath, ".log")
+    if (!(Test-Path $msiPath -PathType leaf)) {
 
-        try {
-
-            # download MSI
-            Invoke-WebRequest $_ -OutFile $msiPath
-
-            # install MSI
-            Start-Process "msiexec.exe" -ArgumentList @( "/qn", "/i $msiPath", "/log $logPath" ) -NoNewWindow -Wait | Out-Null
-
-            # everything went well - remove the log file
-            Remove-Item -Path $logPath -Force -ErrorAction SilentlyContinue | Out-Null
-        }
-        finally {
-
-            # remove MSI file
-            Remove-Item -Path $msiPath -Force -ErrorAction SilentlyContinue | Out-Null
-        }
+        # download WebPI installer if needed
+        Invoke-WebRequest $msiUrl -OutFile $msiPath
     }
+
+    # install WebPI
+    $logPath = [System.IO.Path]::ChangeExtension($msiPath, ".log")
+    Start-Process "msiexec.exe" -ArgumentList @( "/qn", "/i $msiPath", "/log $logPath" ) -NoNewWindow -Wait | Out-Null
+
+    # install WebPI packages
+    $logPath = [System.IO.Path]::ChangeExtension($logPath, ".packages.log")
+    Start-Process "C:\Program Files\Microsoft\Web Platform Installer\WebPiCmd-x64.exe" -ArgumentList @( "/Install", "/Products:'UrlRewrite2,ARRv3_0'", "/AcceptEULA", "/Log:$logPath" ) -NoNewWindow -Wait | Out-Null
 
     if ($Hostname) {
 
         $appcmd = Join-Path $env:windir "System32\inetsrv\appcmd.exe"
         $ruleName = "TokenFactoryAPI"
-        
+
         # enable ARR proxy
         Start-Process $appcmd -ArgumentList @( "set", "config", "-section:system.webServer/proxy", "/enabled:`"True`"", "/commit:apphost" ) -NoNewWindow -Wait
 
@@ -113,17 +107,17 @@ function Install-ApplicationRequestRouting {
         # create API rewrite rule
         Start-Process $appcmd -ArgumentList @( "set", "config", "-section:system.webServer/rewrite/globalRules", "/+`"[name='$ruleName',patternSyntax='Wildcard',stopProcessing='True']`"", "/commit:apphost" ) -NoNewWindow -Wait
         Start-Process $appcmd -ArgumentList @( "set", "config", "-section:system.webServer/rewrite/globalRules", "/`"[name='$ruleName']`".match.url:`"api/*`"", "/commit:apphost" ) -NoNewWindow -Wait
-        Start-Process $appcmd -ArgumentList @( "set", "config", "-section:system.webServer/rewrite/globalRules", "/`"[name='$ruleName']`".action.type:`"Rewrite`"", "/commit:apphost" ) -NoNewWindow -Wait        
-        Start-Process $appcmd -ArgumentList @( "set", "config", "-section:system.webServer/rewrite/globalRules", "/`"[name='$ruleName']`".action.url:`"https://$Hostname/{R:0}`"", "/commit:apphost" ) -NoNewWindow -Wait        
+        Start-Process $appcmd -ArgumentList @( "set", "config", "-section:system.webServer/rewrite/globalRules", "/`"[name='$ruleName']`".action.type:`"Rewrite`"", "/commit:apphost" ) -NoNewWindow -Wait
+        Start-Process $appcmd -ArgumentList @( "set", "config", "-section:system.webServer/rewrite/globalRules", "/`"[name='$ruleName']`".action.url:`"https://$Hostname/{R:0}`"", "/commit:apphost" ) -NoNewWindow -Wait
 
         # set custom header for backend
-        Start-Process $appcmd -ArgumentList @( "set", "config", "-section:system.webServer/rewrite/globalRules", "/+`"[name='$ruleName']`".serverVariables.`"[name='HTTP_X_FORWARDED_HOST', value='{HTTP_HOST}']`"", "/commit:apphost" ) -NoNewWindow -Wait        
+        Start-Process $appcmd -ArgumentList @( "set", "config", "-section:system.webServer/rewrite/globalRules", "/+`"[name='$ruleName']`".serverVariables.`"[name='HTTP_X_FORWARDED_HOST', value='{HTTP_HOST}']`"", "/commit:apphost" ) -NoNewWindow -Wait
     }
 }
 
 try {
 
-    Start-Transcript -Path (Join-Path $PSScriptRoot "azuredeploy.log")
+    Start-Transcript -Path (Join-Path $PSScriptRoot "gateway.log")
 
     # install RDS Gateway Windows Feature
     Add-WindowsFeature -Name RDS-Gateway -IncludeAllSubFeature
@@ -140,7 +134,7 @@ try {
     # install RDGateway FedAuth plug-in
     $msi = Join-Path $PSScriptRoot "RDGatewayFedAuth.msi"
     $log = [System.IO.Path]::ChangeExtension($msi, '.log')
-    Start-Process "msiexec.exe" -ArgumentList @("/qn", "/lv!", "$log", "/i", "$msi", "ACCEPTEULA=1") -Wait -NoNewWindow 
+    Start-Process "msiexec.exe" -ArgumentList @("/qn", "/lv!", "$log", "/i", "$msi", "ACCEPTEULA=1") -Wait -NoNewWindow
 
     # grant private key access on certificates
     Set-PrivateKeyPermissions -Thumbprint $SslCertificateThumbprint
@@ -160,7 +154,7 @@ try {
     $wmi.TrustedIssuerCertificates = $SignCertificateThumbprint
     $wmi.IdleTimeoutMinutes = 120
     $wmi.SessionTimeoutMinutes = 720
-    $wmi.Put() 
+    $wmi.Put()
 
     # register FedAuth plug-in at gateway
     $wmi = Get-WmiObject -Namespace root\CIMV2\TerminalServices -Class Win32_TSGatewayServerSettings
@@ -169,7 +163,7 @@ try {
     $wmi.RecycleRpcApplicationPools()
 
     # restart gateway service
-    @("W3SVC", "TSGateway") | % { Restart-Service -Name $_ -Force }
+    @("W3SVC", "TSGateway") | ForEach-Object { Restart-Service -Name $_ -Force }
 }
 finally {
 

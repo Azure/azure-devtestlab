@@ -1,40 +1,25 @@
 {
-  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
     "adminUsername": {
       "type": "string",
       "metadata": {
-        "description": "Admin username"
+        "description": "Admin username on all VMs."
       }
     },
     "adminPassword": {
       "type": "securestring",
       "metadata": {
-        "description": "Admin password"
-      }
-    },
-    "instanceCount": {
-      "type": "int",
-      "defaultValue": 1,
-      "minValue": 1,
-      "maxValue": 10,
-      "metadata": {
-        "description": "Number of gateway VMs to provision"
-      }
-    },
-    "alwaysOn": {
-      "type": "bool",
-      "defaultValue": true,
-      "metadata": {
-        "description": "Keep the API in a warm state to avoid startup delays"
+        "description": "Admin password on all VMs."
       }
     },
     "tokenLifetime": {
       "type": "string",
       "defaultValue": "00:01:00",
-      "minLength": 8,
-      "maxLength": 8
+      "metadata": {
+        "description": "The TTL of a generated token (default: 00:01:00)"
+      }
     },
     "sslCertificate": {
       "type": "string",
@@ -58,147 +43,68 @@
     },
     "signCertificate": {
       "type": "string",
-      "minLength": 1,
+      "defaultValue": "",
       "metadata": {
         "description": "Certificate as Base64 encoded string."
       }
     },
     "signCertificatePassword": {
       "type": "securestring",
+      "defaultValue": "",
       "metadata": {
         "description": "Certificate password for installation."
       }
     },
     "signCertificateThumbprint": {
       "type": "string",
-      "minLength": 1,
+      "defaultValue": "",
       "metadata": {
         "description": "Certificate thumbprint for identification in the local certificate store."
       }
     },
-    "_artifactsLocation": {
+    "utcValue": {
       "type": "string",
-      "metadata": {
-        "description": "The base URI where artifacts required by this template are located.  This includes other templates, PowerShell Scripts and  Remote Desktop Gateway Pluggable Authentication module that supports token authentication."
-      }
-    },
-    "_artifactsLocationSasToken": {
-      "type": "securestring",
-      "metadata": {
-        "description": "The sasToken required to access _artifactsLocation.  When the template is deployed using an Azure Resource Group project in Visual Studio, a sasToken will be automatically generated."
-      },
-      "defaultValue": ""
+      "defaultValue": "[utcNow('u')]"
     }
   },
   "variables": {
-    "resourcePrefix": "[take(concat('rdgw-', uniqueString(resourceGroup().id)),10)]",
-    "asName": "[concat(variables('resourcePrefix'), '-as')]",
-    "aiName": "[concat(variables('resourcePrefix'), '-ai')]",
-    "kvName": "[concat(variables('resourcePrefix'), '-kv')]",
-    "kvSecretSSL": "SSLCertificate",
-    "kvSecretSign": "SignCertificate",
-    "vnetName": "[concat(variables('resourcePrefix'), '-vnet')]",
-    "vnetPrefix": "10.0.0.0/16",
-    "snetName": "Rig",
-    "snetPrefix": "10.0.0.0/24",
-    "pipName": "[concat(variables('resourcePrefix'), '-pip')]",
-    "pipID": "[resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))]",
-    "lbName": "[concat(variables('resourcePrefix'), '-lb')]",
-    "deployGateway": "[concat(deployment().name, '-Gateway')]",
-    "deployFunctionInit": "[concat(deployment().name, '-Function-Init')]",
-    "deployFunctionUpdate": "[concat(deployment().name, '-Function-Update')]"
+    "resourcePrefix": "[concat('rdg', uniqueString(resourceGroup().id))]",
+    "vmNamePrefix": "[take(variables('resourcePrefix'), 9)]",
+    "vmssName": "[concat(variables('resourcePrefix'),'-vmss')]",
+    "storageAccountName": "[variables('resourcePrefix')]",
+    "artifactsContainerName": "artifacts",
+    "keyVaultName": "[concat(variables('resourcePrefix'),'-kv')]",
+    "hostingPlanName": "[concat(variables('resourcePrefix'),'-hp')]",
+    "functionAppName": "[concat(variables('resourcePrefix'),'-fa')]",
+    "appInsightsName": "[concat(variables('resourcePrefix'),'-ai')]",
+    "keyVaultSecretSSLCertificate": "SSLCertificate",
+    "keyVaultSecretSignCertificate": "SignCertificate",
+    "vnetName": "[concat(variables('resourcePrefix'),'-vnet')]",
+    "snetGatewayName": "RDGateway",
+    "snetBastionName": "AzureBastionSubnet",
+    "loadBalancerName": "[concat(variables('resourcePrefix'),'-lb')]",
+    "publicIPAddressName": "[concat(variables('resourcePrefix'),'-pip')]",
+    "loadBalancerBackEndName": "gatewayBackEnd",
+    "loadBalancerFrontEndName": "gatewayFrontEnd",
+    "bastionHostName": "[concat(variables('resourcePrefix'),'-bh')]",
+    "bastionIPAddressName": "[concat(variables('resourcePrefix'),'-bh-pip')]",
+    "githubBranch": "master",
+    "githubRepoUrl": "https://github.com/Azure/azure-devtestlab",
+    "githubRepoPath": "samples/DevTestLabs/Gateway/src/RDGateway",
+    "createSignCertificate": "[or(empty(parameters('signCertificate')), empty(parameters('signCertificatePassword')), empty(parameters('signCertificateThumbprint')))]",
+    "createSignCertificateIdentity": "createSignCertificateIdentity",
+    "createSignCertificateScriptUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/DevTestLabs/Gateway/tools/create_cert.sh",
+    "bootstrapRoleAssignmentId": "[guid(concat(resourceGroup().id, 'contributor'))]",
+    "contributorRoleDefinitionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]"
   },
   "resources": [
     {
-      "apiVersion": "2015-05-01",
-      "type": "microsoft.insights/components",
-      "name": "[variables('aiName')]",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "ApplicationId": "[variables('aiName')]"
-      }
-    },
-    {
-      "apiVersion": "2015-06-15",
-      "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[variables('pipName')]",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "publicIPAllocationMethod": "Static",
-        "dnsSettings": {
-          "domainNameLabel": "[variables('resourcePrefix')]"
-        }
-      }
-    },
-    {
-      "name": "[variables('deployFunctionInit')]",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2015-01-01",
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))]",
-        "[resourceId('microsoft.insights/components', variables('aiName'))]"
-      ],
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(parameters('_artifactsLocation'), '/azuredeploy-function.json', parameters('_artifactsLocationSasToken'))]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "resourcePrefix": {
-            "value": "[variables('resourcePrefix')]"
-          },
-          "gatewayIp": {
-            "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))).ipAddress]"
-          },
-          "instrumentationKey": {
-            "value": "[reference(resourceId('microsoft.insights/components', variables('aiName'))).InstrumentationKey]"
-          }
-        }
-      }
-    },
-    {
-      "name": "[variables('deployFunctionUpdate')]",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2015-01-01",
-      "dependsOn": [
-        "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('kvName'), variables('kvSecretSign'))]",
-        "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('kvName'), variables('kvSecretSSL'))]",
-        "[resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))]",
-        "[resourceId('microsoft.insights/components', variables('aiName'))]"
-      ],
-      "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(parameters('_artifactsLocation'), '/azuredeploy-function.json', parameters('_artifactsLocationSasToken'))]",
-          "contentVersion": "1.0.0.0"
-        },
-        "parameters": {
-          "resourcePrefix": {
-            "value": "[variables('resourcePrefix')]"
-          },
-          "gatewayIp": {
-            "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))).ipAddress]"
-          },
-          "instrumentationKey": {
-            "value": "[reference(resourceId('microsoft.insights/components', variables('aiName'))).InstrumentationKey]"
-          },
-          "signCertificateUrl": {
-            "value": "[reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('kvName'), variables('kvSecretSign'))).secretUriWithVersion]"
-          },
-          "tokenLifetime": {
-            "value": "[parameters('tokenLifetime')]"
-          }
-        }
-      }
-    },
-    {
-      "name": "[variables('kvName')]",
       "type": "Microsoft.KeyVault/vaults",
-      "apiVersion": "2015-06-01",
+      "name": "[variables('keyVaultName')]",
+      "apiVersion": "2019-09-01",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.Resources/deployments', variables('deployFunctionInit'))]"
+        "[variables('createSignCertificateIdentity')]"
       ],
       "properties": {
         "enabledForDeployment": true,
@@ -209,127 +115,490 @@
           "name": "standard",
           "family": "A"
         },
+        "accessPolicies": []
+      },
+      "resources": [
+        {
+          "name": "[variables('keyVaultSecretSSLCertificate')]",
+          "type": "secrets",
+          "apiVersion": "2019-09-01",
+          "dependsOn": [
+            "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+          ],
+          "properties": {
+            "value": "[base64(concat('{ \"data\":\"', parameters('sslCertificate'), '\", \"dataType\":\"pfx\", \"password\":\"', parameters('sslCertificatePassword'), '\" }'))]"
+          }
+        },
+        {
+          "name": "[variables('keyVaultSecretSignCertificate')]",
+          "type": "secrets",
+          "apiVersion": "2019-09-01",
+          "dependsOn": [
+            "createSignCertificateScript",
+            "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+          ],
+          "properties": {
+            "value": "[base64(concat('{ \"data\":\"', if(variables('createSignCertificate'), reference('createSignCertificateScript').outputs.base64, parameters('signCertificate')), '\", \"dataType\":\"pfx\", \"password\":\"', if(variables('createSignCertificate'), reference('createSignCertificateScript').outputs.password, parameters('signCertificatePassword')), '\" }'))]"
+          }
+        }
+      ]
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('storageAccountName')]",
+      "apiVersion": "2020-08-01-preview",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "Standard_RAGRS",
+        "tier": "Standard"
+      },
+      "kind": "StorageV2",
+      "resources": [
+        {
+          "type": "blobServices/containers",
+          "apiVersion": "2020-08-01-preview",
+          "name": "[concat('default/', variables('artifactsContainerName'))]",
+          "dependsOn": [
+            "[variables('storageAccountName')]"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "microsoft.insights/components",
+      "kind": "web",
+      "name": "[variables('appInsightsName')]",
+      "apiVersion": "2015-05-01",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "Application_Type": "web",
+        "ApplicationId": "[variables('appInsightsName')]"
+      }
+    },
+    {
+      "name": "[variables('hostingPlanName')]",
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2018-02-01",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "Tier": "ElasticPremium",
+        "Name": "EP1"
+      },
+      "properties": {
+        "name": "[variables('hostingPlanName')]"
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "kind": "functionapp",
+      "name": "[variables('functionAppName')]",
+      "apiVersion": "2020-09-01",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "createSignCertificateScript",
+        "[resourceId('microsoft.insights/components', variables('appInsightsName'))]",
+        "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+      ],
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+        "siteConfig": {
+          "minimumElasticInstanceCount": 1,
+          "functionsRuntimeScaleMonitoringEnabled": true,
+          "appSettings": [
+            {
+              "name": "AzureWebJobsDashboard",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')),'2015-05-01-preview').key1)]"
+            },
+            {
+              "name": "AzureWebJobsStorage",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')),'2015-05-01-preview').key1)]"
+            },
+            {
+              "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')),'2015-05-01-preview').key1)]"
+            },
+            {
+              "name": "WEBSITE_CONTENTSHARE",
+              "value": "[variables('functionAppName')]"
+            },
+            {
+              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "value": "[reference(resourceId('microsoft.insights/components', variables('appInsightsName'))).InstrumentationKey]"
+            },
+            {
+              "name": "AZURE_FUNCTIONS_ENVIRONMENT",
+              "value": "Production"
+            },
+            {
+              "name": "FUNCTIONS_EXTENSION_VERSION",
+              "value": "~3"
+            },
+            {
+              "name": "FUNCTIONS_WORKER_RUNTIME",
+              "value": "dotnet"
+            },
+            {
+              "name": "Project",
+              "value": "[variables('githubRepoPath')]"
+            },
+            {
+              "name": "SignCertificate",
+              "value": "[concat('@Microsoft.KeyVault(SecretUri=', reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), variables('keyVaultSecretSignCertificate'))).secretUriWithVersion, ')')]"
+            },
+            {
+              "name": "TokenLifetime",
+              "value": "[parameters('tokenLifetime')]"
+            }
+          ]
+        }
+      },
+      "resources": [
+        {
+          "type": "sourcecontrols",
+          "name": "web",
+          "apiVersion": "2020-09-01",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/Sites', variables('functionAppName'))]"
+          ],
+          "properties": {
+            "repoUrl": "[variables('githubRepoUrl')]",
+            "branch": "[variables('githubBranch')]",
+            "isManualIntegration": true
+          }
+        }
+      ]
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/accessPolicies",
+      "name": "[concat(variables('keyVaultName'), '/add')]",
+      "apiVersion": "2019-09-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', variables('functionAppName'))]",
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ],
+      "properties": {
         "accessPolicies": [
           {
-            "tenantId": "[reference(resourceId('Microsoft.Resources/deployments', variables('deployFunctionInit'))).outputs.tenantId.value]",
-            "objectId": "[reference(resourceId('Microsoft.Resources/deployments', variables('deployFunctionInit'))).outputs.principalId.value]",
+            "tenantId": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2020-09-01', 'Full').identity.tenantId]",
+            "objectId": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2020-09-01', 'Full').identity.principalId]",
             "permissions": {
-              "secrets": [
-                "get"
-              ]
+              "secrets": [ "get" ]
             }
           }
         ]
       }
     },
     {
-      "name": "[concat(variables('kvName'), '/', variables('kvSecretSSL'))]",
-      "type": "Microsoft.KeyVault/vaults/secrets",
-      "apiVersion": "2015-06-01",
+      "condition": "[variables('createSignCertificate')]",
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "name": "[variables('createSignCertificateIdentity')]",
+      "apiVersion": "2018-11-30",
+      "location": "[resourceGroup().location]"
+    },
+    {
+      "condition": "[variables('createSignCertificate')]",
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2018-09-01-preview",
+      "name": "[variables('bootstrapRoleAssignmentId')]",
       "dependsOn": [
-        "[resourceId('Microsoft.KeyVault/vaults', variables('kvName'))]"
+        "[variables('createSignCertificateIdentity')]"
       ],
       "properties": {
-        "value": "[base64(concat('{ \"data\":\"', parameters('sslCertificate'), '\", \"dataType\":\"pfx\", \"password\":\"', parameters('sslCertificatePassword'), '\" }'))]"
+        "roleDefinitionId": "[variables('contributorRoleDefinitionId')]",
+        "principalId": "[if(variables('createSignCertificate'), reference(variables('createSignCertificateIdentity'), '2018-11-30').principalId, json('null'))]",
+        "scope": "[resourceGroup().id]",
+        "principalType": "ServicePrincipal"
       }
     },
     {
-      "name": "[concat(variables('kvName'), '/', variables('kvSecretSign'))]",
-      "type": "Microsoft.KeyVault/vaults/secrets",
-      "apiVersion": "2015-06-01",
+      "condition": "[variables('createSignCertificate')]",
+      "type": "Microsoft.Resources/deployments",
+      "name": "createSignCertificateIdentityAccessPolicyDeployment",
+      "apiVersion": "2019-10-01",
       "dependsOn": [
-        "[resourceId('Microsoft.KeyVault/vaults', variables('kvName'))]"
+        "[variables('createSignCertificateIdentity')]",
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
       ],
       "properties": {
-        "value": "[base64(concat('{ \"data\":\"', parameters('signCertificate'), '\", \"dataType\":\"pfx\", \"password\":\"', parameters('signCertificatePassword'), '\" }'))]"
+        "mode": "Incremental",
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "parameters": {
+          "createSignCertificate": {
+            "value": "[variables('createSignCertificate')]"
+          },
+          "keyVaultName": {
+            "value": "[variables('keyVaultName')]"
+          },
+          "createSignCertificateIdentityTenantId": {
+            "value": "[if(variables('createSignCertificate'), reference(variables('createSignCertificateIdentity'), '2018-11-30').tenantId, json('null'))]"
+          },
+          "createSignCertificateIdentityPrincipalId": {
+            "value": "[if(variables('createSignCertificate'), reference(variables('createSignCertificateIdentity'), '2018-11-30').principalId, json('null'))]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+            "createSignCertificate": {
+              "type": "bool"
+            },
+            "keyVaultName": {
+              "type": "string"
+            },
+            "createSignCertificateIdentityTenantId": {
+              "type": "string"
+            },
+            "createSignCertificateIdentityPrincipalId": {
+              "type": "string"
+            }
+          },
+          "resources": [
+            {
+              "condition": "[parameters('createSignCertificate')]",
+              "type": "Microsoft.KeyVault/vaults/accessPolicies",
+              "name": "[concat(parameters('keyVaultName'), '/add')]",
+              "apiVersion": "2019-09-01",
+              "properties": {
+                "accessPolicies": [
+                  {
+                    "tenantId": "[parameters('createSignCertificateIdentityTenantId')]",
+                    "objectId": "[parameters('createSignCertificateIdentityPrincipalId')]",
+                    "permissions": {
+                      "keys": [ "get", "create" ],
+                      "secrets": [ "get", "set" ],
+                      "certificates": [ "get", "create" ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
       }
     },
     {
-      "apiVersion": "2015-06-15",
+      "condition": "[variables('createSignCertificate')]",
+      "type": "Microsoft.Resources/deploymentScripts",
+      "kind": "AzureCLI",
+      "name": "createSignCertificateScript",
+      "apiVersion": "2020-10-01",
+      "location": "[resourceGroup().location]",
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('createSignCertificateIdentity'))]": { /*ttk bug*/
+          }
+        }
+      },
+      "dependsOn": [
+        "[variables('createSignCertificateIdentity')]",
+        "[variables('bootstrapRoleAssignmentId')]",
+        "createSignCertificateIdentityAccessPolicyDeployment",
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ],
+      "properties": {
+        "forceUpdateTag": "[parameters('utcValue')]",
+        "azCliVersion": "2.18.0",
+        "timeout": "PT1H",
+        "arguments": "[format('-v {0}', variables('keyVaultName'))]",
+        "cleanupPreference": "Always",
+        "retentionInterval": "PT1H",
+        "primaryScriptUri": "[variables('createSignCertificateScriptUri')]"
+      }
+    },
+    {
       "type": "Microsoft.Network/virtualNetworks",
       "name": "[variables('vnetName')]",
+      "apiVersion": "2020-05-01",
       "location": "[resourceGroup().location]",
       "properties": {
         "addressSpace": {
-          "addressPrefixes": [
-            "[variables('vnetPrefix')]"
-          ]
+          "addressPrefixes": [ "10.0.0.0/16" ]
         },
         "subnets": [
           {
-            "name": "[variables('snetName')]",
+            "name": "[variables('snetGatewayName')]",
             "properties": {
-              "addressPrefix": "[variables('snetPrefix')]"
+              "addressPrefix": "10.0.0.0/24",
+              "delegations": [],
+              "privateEndpointNetworkPolicies": "Disabled",
+              "privateLinkServiceNetworkPolicies": "Enabled"
+            }
+          },
+          {
+            "name": "[variables('snetBastionName')]",
+            "properties": {
+              "addressPrefix": "10.0.1.0/27",
+              "delegations": [],
+              "privateEndpointNetworkPolicies": "Disabled",
+              "privateLinkServiceNetworkPolicies": "Enabled"
             }
           }
-        ]
+        ],
+        "virtualNetworkPeerings": [],
+        "enableDdosProtection": false,
+        "enableVmProtection": false
       }
     },
     {
-      "apiVersion": "2015-06-15",
-      "name": "[variables('lbName')]",
-      "type": "Microsoft.Network/loadBalancers",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('publicIPAddressName')]",
+      "apiVersion": "2020-05-01",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "Basic"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Static",
+        "publicIPAddressVersion": "IPv4",
+        "idleTimeoutInMinutes": 4,
+        "dnsSettings": {
+          "domainNameLabel": "[toLower(variables('resourcePrefix'))]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('bastionIPAddressName')]",
+      "apiVersion": "2020-05-01",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "Standard"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Static",
+        "publicIPAddressVersion": "IPv4",
+        "idleTimeoutInMinutes": 4,
+        "dnsSettings": {
+          "domainNameLabel": "[concat(toLower(variables('resourcePrefix')), '-admin')]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Network/bastionHosts",
+      "name": "[variables('bastionHostName')]",
+      "apiVersion": "2020-07-01",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))]"
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('bastionIPAddressName'))]"
       ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig",
+            "properties": {
+              "subnet": {
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnetName'), variables('snetBastionName'))]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('bastionIPAddressName'))]"
+              }
+            }
+          }
+        ]
+        // "dnsName": "string"
+      }
+    },
+    {
+      "type": "Microsoft.Network/loadBalancers",
+      "name": "[variables('loadBalancerName')]",
+      "apiVersion": "2020-05-01",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
+      ],
+      "sku": {
+        "name": "Basic"
+      },
       "properties": {
         "frontendIPConfigurations": [
           {
-            "name": "LoadBalancerFrontend",
+            "name": "[variables('loadBalancerFrontEndName')]",
             "properties": {
               "publicIPAddress": {
-                "id": "[variables('pipID')]"
-              }
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]"
+              },
+              "privateIPAllocationMethod": "Dynamic",
+              "privateIPAddressVersion": "IPv4"
             }
           }
         ],
         "backendAddressPools": [
           {
-            "name": "LoadBalancerBackend"
+            "name": "[variables('loadBalancerBackendName')]",
+            "properties": {}
           }
         ],
         "loadBalancingRules": [
           {
-            "name": "Balance443",
+            "name": "TCP80",
             "properties": {
               "frontendIPConfiguration": {
-                "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', variables('lbName'), 'LoadBalancerFrontend')]"
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', variables('loadBalancerName')), '/frontendIPConfigurations/', variables('loadBalancerFrontEndName'))]"
               },
-              "frontendPort": 443,
-              "backendPort": 443,
-              "enableFloatingIP": false,
-              "idleTimeoutInMinutes": 5,
-              "protocol": "Tcp",
-              "enableDestinationServiceEndpoint": false,
-              "loadDistribution": "SourceIPProtocol",
               "backendAddressPool": {
-                "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('lbName'), 'LoadBalancerBackend')]"
+                "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadBalancerName'), variables('loadBalancerBackendName'))]"
               },
               "probe": {
-                "id": "[resourceId('Microsoft.Network/loadBalancers/probes', variables('lbName'), if(parameters('alwaysOn'), 'HealthCheck', 'Probe443'))]"
-              }
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', variables('loadBalancerName')), '/probes/HealthCheck')]"
+              },
+              "protocol": "Tcp",
+              "frontendPort": 80,
+              "backendPort": 80,
+              "enableFloatingIP": false,
+              "idleTimeoutInMinutes": 5,
+              "enableTcpReset": false,
+              "loadDistribution": "SourceIPProtocol"
             }
           },
           {
-            "name": "Balance3391",
+            "name": "TCP443",
             "properties": {
               "frontendIPConfiguration": {
-                "id": "[resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', variables('lbName'), 'LoadBalancerFrontend')]"
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', variables('loadBalancerName')), '/frontendIPConfigurations/', variables('loadBalancerFrontEndName'))]"
               },
+              "backendAddressPool": {
+                "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadBalancerName'), variables('loadBalancerBackendName'))]"
+              },
+              "probe": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', variables('loadBalancerName')), '/probes/Probe443')]"
+              },
+              "protocol": "Tcp",
               "frontendPort": 443,
               "backendPort": 443,
               "enableFloatingIP": false,
-              "idleTimeoutInMinutes": 5,
-              "protocol": "Udp",
-              "enableDestinationServiceEndpoint": false,
-              "loadDistribution": "SourceIPProtocol",
+              "idleTimeoutInMinutes": 4,
+              "enableTcpReset": false,
+              "loadDistribution": "SourceIPProtocol"
+            }
+          },
+          {
+            "name": "UDP3391",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', variables('loadBalancerName')), '/frontendIPConfigurations/', variables('loadBalancerFrontEndName'))]"
+              },
               "backendAddressPool": {
-                "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('lbName'), 'LoadBalancerBackend')]"
+                "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadBalancerName'), variables('loadBalancerBackendName'))]"
               },
               "probe": {
-                "id": "[resourceId('Microsoft.Network/loadBalancers/probes', variables('lbName'), 'Probe3391')]"
-              }
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', variables('loadBalancerName')), '/probes/Probe3391')]"
+              },
+              "protocol": "Udp",
+              "frontendPort": 3391,
+              "backendPort": 3391,
+              "enableFloatingIP": false,
+              "idleTimeoutInMinutes": 4,
+              "enableTcpReset": false,
+              "loadDistribution": "SourceIPProtocol"
             }
           }
         ],
@@ -362,120 +631,276 @@
               "numberOfProbes": 2
             }
           }
-        ]
+        ],
+        "inboundNatPools": []
       }
     },
     {
-      "type": "Microsoft.Compute/availabilitySets",
-      "name": "[variables('asName')]",
-      "apiVersion": "2016-04-30-preview",
+      "type": "Microsoft.Compute/virtualMachineScaleSets",
+      "name": "[variables('vmssName')]",
+      "apiVersion": "2019-07-01",
       "location": "[resourceGroup().location]",
-      "properties": {
-        "platformFaultDomainCount": 2,
-        "platformUpdateDomainCount": 2,
-        "managed": true
-      }
-    },
-    {
-      "name": "[concat(variables('deployGateway'), copyIndex())]",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2015-01-01",
       "dependsOn": [
-        "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('kvName'), variables('kvSecretSign'))]",
+        "createSignCertificateScript",
+        "[resourceId('Microsoft.Web/sites', variables('functionAppName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
         "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]",
-        "[resourceId('Microsoft.Network/loadBalancers', variables('lbName'))]",
-        "[resourceId('Microsoft.Compute/availabilitySets', variables('asName'))]",
-        "[resourceId('Microsoft.Resources/deployments', variables('deployFunctionUpdate'))]"
+        "[resourceId('Microsoft.Network/loadBalancers', variables('loadBalancerName'))]",
+        "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), variables('keyVaultSecretSSLCertificate'))]",
+        "[resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), variables('keyVaultSecretSignCertificate'))]"
       ],
-      "copy": {
-        "name": "gatewayLoop",
-        "count": "[parameters('instanceCount')]"
+      "sku": {
+        "name": "Standard_B4ms",
+        "capacity": 0
       },
       "properties": {
+        "overprovision": true,
+        "singlePlacementGroup": true,
+        "doNotRunExtensionsOnOverprovisionedVMs": false,
+        "upgradePolicy": {
+          "mode": "Manual"
+        },
+        "virtualMachineProfile": {
+          "osProfile": {
+            "adminUsername": "[parameters('adminUsername')]",
+            "adminPassword": "[parameters('adminPassword')]",
+            "computerNamePrefix": "[variables('vmNamePrefix')]",
+            "windowsConfiguration": {
+              "provisionVMAgent": true,
+              "enableAutomaticUpdates": true
+            },
+            "secrets": [
+              {
+                "sourceVault": {
+                  "id": "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+                },
+                "vaultCertificates": [
+                  {
+                    "certificateUrl": "[reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), variables('keyVaultSecretSSLCertificate'))).secretUriWithVersion]",
+                    "certificateStore": "My"
+                  },
+                  {
+                    "certificateUrl": "[reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('keyVaultName'), variables('keyVaultSecretSignCertificate'))).secretUriWithVersion]",
+                    "certificateStore": "My"
+                  }
+                ]
+              }
+            ]
+          },
+          "storageProfile": {
+            "osDisk": {
+              "osType": "Windows",
+              "createOption": "FromImage",
+              "caching": "ReadWrite",
+              "managedDisk": {
+                "storageAccountType": "Premium_LRS"
+              },
+              "diskSizeGB": 127
+            },
+            "imageReference": {
+              "publisher": "MicrosoftWindowsServer",
+              "offer": "WindowsServer",
+              "sku": "2019-Datacenter",
+              "version": "latest"
+            }
+          },
+          "networkProfile": {
+            "networkInterfaceConfigurations": [
+              {
+                "name": "nic",
+                "properties": {
+                  "primary": true,
+                  "enableAcceleratedNetworking": false,
+                  "dnsSettings": {
+                    "dnsServers": []
+                  },
+                  "enableIPForwarding": false,
+                  "ipConfigurations": [
+                    {
+                      "name": "ipconfig",
+                      "properties": {
+                        "privateIPAddressVersion": "IPv4",
+                        "subnet": {
+                          "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnetName'), variables('snetGatewayName'))]"
+                        },
+                        "loadBalancerBackendAddressPools": [
+                          {
+                            "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', variables('loadBalancerName'), variables('loadBalancerBackEndName'))]"
+                          }
+                        ],
+                        "loadBalancerInboundNatPools": []
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "extensionProfile": {
+            "extensions": [
+              {
+                "name": "Initialize",
+                "properties": {
+                  "publisher": "Microsoft.Compute",
+                  "type": "CustomScriptExtension",
+                  "typeHandlerVersion": "1.8",
+                  "autoUpgradeMinorVersion": true,
+                  "settings": {
+                    "fileUris": [
+                      "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2017-10-01').primaryEndpoints.blob, variables('artifactsContainerName'), '/gateway.ps1')]",
+                      "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2017-10-01').primaryEndpoints.blob, variables('artifactsContainerName'), '/RDGatewayFedAuth.msi')]"
+                    ],
+                    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -Command \"& { $script = gci -Filter gateway.ps1 -Recurse | sort -Descending -Property LastWriteTime | select -First 1 -ExpandProperty FullName; . $script -SslCertificateThumbprint ', parameters('sslCertificateThumbprint'), ' -SignCertificateThumbprint ', if(variables('createSignCertificate'), reference('createSignCertificateScript').outputs.thumbprint, parameters('signCertificateThumbprint')), ' -TokenFactoryHostname ', reference(resourceId('Microsoft.Web/sites', variables('functionAppName')), '2018-02-01').defaultHostName, ' }\"')]"
+                  },
+                  "protectedSettings": {
+                    "storageAccountName": "[variables('storageAccountName')]",
+                    "storageAccountKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts',variables('storageAccountName')), '2019-04-01').keys[0].value]"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "name": "privateEndpointDeployment",
+      "apiVersion": "2019-10-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/Sites', variables('functionAppName'))]",
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]",
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]",
+        "[resourceId('Microsoft.Network/loadBalancers', variables('loadBalancerName'))]"
+      ],
+      "properties": {
         "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(parameters('_artifactsLocation'), '/azuredeploy-gateway.json', parameters('_artifactsLocationSasToken'))]",
-          "contentVersion": "1.0.0.0"
+        "expressionEvaluationOptions": {
+          "scope": "inner"
         },
         "parameters": {
           "resourcePrefix": {
             "value": "[variables('resourcePrefix')]"
           },
-          "resourceIndex": {
-            "value": "[copyIndex()]"
+          "site": {
+            "value": "[resourceId('Microsoft.Web/sites', variables('functionAppName'))]"
           },
-          "adminUsername": {
-            "value": "[parameters('adminUsername')]"
+          "vnet": {
+            "value": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
           },
-          "adminPassword": {
-            "value": "[parameters('adminPassword')]"
-          },
-          "vnetName": {
-            "value": "[variables('vnetName')]"
-          },
-          "snetName": {
-            "value": "[variables('snetName')]"
-          },
-          "availabilitySetName": {
-            "value": "[variables('asName')]"
-          },
-          "loadBalancerName": {
-            "value": "[variables('lbName')]"
-          },
-          "loadBalancerBackendAddressPoolName": {
-            "value": "LoadBalancerBackend"
-          },
-          "loadBalancerFrontendIPConfigurationName": {
-            "value": "LoadBalancerFrontend"
-          },
-          "keyvaultId": {
-            "value": "[resourceId('Microsoft.KeyVault/vaults', variables('kvName'))]"
-          },
-          "keyvaultSecretSSLUrl": {
-            "value": "[reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('kvName'), variables('kvSecretSSL'))).secretUriWithVersion]"
-          },
-          "keyvaultSecretSSLThumbprint": {
-            "value": "[parameters('sslCertificateThumbprint')]"
-          },
-          "keyvaultSecretSignUrl": {
-            "value": "[reference(resourceId('Microsoft.KeyVault/vaults/secrets', variables('kvName'), variables('kvSecretSign'))).secretUriWithVersion]"
-          },
-          "keyvaultSecretSignThumbprint": {
-            "value": "[parameters('signCertificateThumbprint')]"
-          },
-          "tokenFactoryHostname": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('deployFunctionUpdate'))).outputs.functionHostname.value]"
-          },
-          "_artifactsLocation": {
-            "value": "[parameters('_artifactsLocation')]"
-          },
-          "_artifactsLocationSasToken": {
-            "value": "[parameters('_artifactsLocationSasToken')]"
+          "subnet": {
+            "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnetName'), variables('snetGatewayName'))]"
           }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+            "resourcePrefix": {
+              "type": "string"
+            },
+            "site": {
+              "type": "string"
+            },
+            "vnet": {
+              "type": "string"
+            },
+            "subnet": {
+              "type": "string"
+            }
+          },
+          "variables": {
+            "privateEndpointName": "[concat(parameters('resourcePrefix'), '-pe')]",
+            "privateDnsZoneName": "privatelink.azurewebsites.net",
+            "privateDnsZoneLinkName": "[concat(parameters('resourcePrefix'), '-dnslink')]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Network/privateEndpoints",
+              "name": "[variables('privateEndpointName')]",
+              "apiVersion": "2020-05-01",
+              "location": "eastus",
+              "properties": {
+                "subnet": {
+                  "id": "[parameters('subnet')]"
+                },
+                "privateLinkServiceConnections": [
+                  {
+                    "name": "[variables('privateEndpointName')]",
+                    "properties": {
+                      "privateLinkServiceId": "[parameters('site')]",
+                      "groupIds": [
+                        "sites"
+                      ]
+                    }
+                  }
+                ],
+                "manualPrivateLinkServiceConnections": [],
+                "customDnsConfigs": []
+              }
+            },
+            {
+              "type": "Microsoft.Network/privateDnsZones",
+              "name": "[variables('privateDnsZoneName')]",
+              "apiVersion": "2018-09-01",
+              "location": "global",
+              "properties": {}
+            },
+            {
+              "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+              "apiVersion": "2018-09-01",
+              "name": "[concat(variables('privateDnsZoneName'), '/', variables('privateDnsZoneLinkName'))]",
+              "location": "global",
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZoneName'))]"
+              ],
+              "properties": {
+                "registrationEnabled": false,
+                "virtualNetwork": {
+                  "id": "[parameters('vnet')]"
+                }
+              }
+            },
+            {
+              "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+              "name": "[concat(variables('privateEndpointName'), '/default')]",
+              "apiVersion": "2020-05-01",
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/privateEndpoints', variables('privateEndpointName'))]",
+                "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZoneName'))]"
+              ],
+              "properties": {
+                "privateDnsZoneConfigs": [
+                  {
+                    "name": "privatelink-azurewebsites-net",
+                    "properties": {
+                      "privateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZoneName'))]"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
         }
       }
     }
   ],
   "outputs": {
-    "gatewayFQDN": {
-      "type": "string",
-      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))).dnsSettings.fqdn]"
+    "artifactsStorage": {
+      "type": "object",
+      "value": {
+        "account": "[variables('storageAccountName')]",
+        "container": "[variables('artifactsContainerName')]"
+      }
     },
-    "gatewayIP": {
-      "type": "string",
-      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('pipName'))).ipAddress]"
-    },
-    "functionName": {
-      "type": "string",
-      "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('deployFunctionInit'))).outputs.functionName.value]"
-    },
-    "tenantId": {
-      "type": "string",
-      "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('deployFunctionInit'))).outputs.tenantId.value]"
-    },
-    "principalId": {
-      "type": "string",
-      "value": "[reference(resourceId('Microsoft.Resources/deployments', variables('deployFunctionInit'))).outputs.principalId.value]"
+    "gateway": {
+      "type": "object",
+      "value": {
+        "scaleSet": "[variables('vmssName')]",
+        "function": "[variables('functionAppName')]",
+        "ip": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName')), '2017-04-01').ipAddress]",
+        "fqdn": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName')), '2017-04-01').dnsSettings.fqdn]"
+      }
     }
   }
 }

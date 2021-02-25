@@ -1,6 +1,0 @@
-{
-  "itemDisplayName": "Windows Jumpbox To Two Linux VMs",
-  "description": "This template deploys a Windows VM with two Linux VMs on an DTL subnet.",
-  "githubUsername": "Microsoft",
-  "summary": "Deploys a trio of VMs as an environment in a DevTest Lab."
-}
