@@ -21,7 +21,11 @@ helpText=$(cat << endHelp
 Remote Desktop Gateway Deploy Utility
 
 Options:
+
   -h  View this help output text again.
+
+
+  Required
 
   -s  Name or ID of subscription.
         You can configure the default subscription using az account set -s NAME_OR_ID.
@@ -33,15 +37,23 @@ Options:
   -l  Location. Values from: az account list-locations.
         You can configure the default location using az configure --defaults location=<location>.
 
-  -u  The admin username for the gateway vms.
+  -u  Admin username for the gateway VMs.
 
-  -p  The admin password for the gateway vms.
+  -p  Admin password for the gateway VMs.
 
   -c  Path to the SSL certificate .pfx or .p12 file.
 
-  -k  The SSL certificate password for installation.
+  -k  Password used to export the SSL certificate (for installation).
 
-  -i  Number of vms in the gateway scale set. default: 1
+
+  Optional
+
+  -x  Path to self-signed certificate .pfx or .p12 file.
+        If this option is ommitted, a new certificate will be generated during deployment using KeyVault.
+
+  -t  Password used to export the self-signed certificate (for installation).
+
+  -i  Number of VMs in the gateway scale set. default: 1
 
 Examples:
 
@@ -61,7 +73,7 @@ instances=1
 # sub=$( az account show | jq -r '.id' )
 
 # get arg values
-while getopts ":hs:g:l:u:p:c:k:i:" opt; do
+while getopts ":hs:g:l:u:p:c:k:x:t:i:" opt; do
     case $opt in
         s)  sub=$OPTARG;;
         g)  rg=$OPTARG;;
@@ -70,6 +82,8 @@ while getopts ":hs:g:l:u:p:c:k:i:" opt; do
         p)  adminPassword=$OPTARG;;
         c)  sslCert=$OPTARG;;
         k)  sslCertPassword=$OPTARG;;
+        x)  signCert=$OPTARG;;
+        t)  signCertPassword=$OPTARG;;
         i)  instances==$OPTARG;;
         h)  echo "$helpText" >&2; exit 0;;
         \?) die "Invalid option -$OPTARG \n$helpText";;
@@ -91,6 +105,7 @@ azversion=$( az version | jq -r '."azure-cli"' ) # TODO remove this after new ve
 # temp fix end
 
 
+# ensure required args
 [ ! -z "$sub" ] || die "-s must have a value\n$helpText"
 [ ! -z "$rg" ] || die "-g must have a value\n$helpText"
 [ ! -z "$region" ] || die "-l must have a value\n$helpText"
@@ -100,8 +115,17 @@ azversion=$( az version | jq -r '."azure-cli"' ) # TODO remove this after new ve
 [ ! -z "$sslCertPassword" ] || die "-k must have a value\n$helpText"
 [ ! -z "$instances" ] || die "-i must have a value\n$helpText"
 
-# make sure sslCert is a path to a file
+# ensure sslCert is a path to a file
 [ -f "$sslCert" ] || die "-c $sslCert not found. Please check the path is correct and try again."
+
+
+if [ ! -z "$signCert" ]; then
+  # ensure signCert is a path to a file
+  [ -f "$signCert" ] || die "-x $signCert not found. Please check the path is correct and try again."
+  [ ! -z "$signCertPassword" ] || die "-t signing certificate password must have a value when -x signing certificate path is provided\n$helpText"
+elif [ ! -z "$signCertPassword" ]; then
+  die "-x signing certificate path must have a have value if -t signing certificate password is provided\n$helpText"
+fi
 
 
 # check if logged in to azure cli
@@ -117,6 +141,13 @@ sslCertThumbprint=$( openssl pkcs12 -in $sslCert -nodes -passin pass:$sslCertPas
 sslCertCommonName=$( openssl pkcs12 -in $sslCert -nodes -passin pass:$sslCertPassword | openssl x509 -noout -subject | rev | cut -d "=" -f 1 | rev | sed 's/ //g' )
 
 
+if [ ! -z "$signCert" ]; then
+  echo "\nParsing signing certificate\n"
+  signCertBase64=$( base64 $signCert )
+  signCertThumbprint=$( openssl pkcs12 -in $signCert -nodes -passin pass:$signCertPassword | openssl x509 -noout -fingerprint | cut -d "=" -f 2 | sed 's/://g' )
+fi
+
+
 echo "\nDeploying arm template"
 deploy=$(az deployment group create --subscription $sub -g $rg \
          --template-file $template \
@@ -124,9 +155,13 @@ deploy=$(az deployment group create --subscription $sub -g $rg \
                       adminPassword=$adminPassword \
                       sslCertificate=$sslCertBase64 \
                       sslCertificatePassword=$sslCertPassword \
-                      sslCertificateThumbprint=$sslCertThumbprint | jq '.properties.outputs' )
+                      sslCertificateThumbprint=$sslCertThumbprint \
+                      signCertificate=$signCertBase64 \
+                      signCertificatePassword=$signCertPassword \
+                      signCertificateThumbprint=$signCertThumbprint | jq '.properties.outputs' )
 
-[ -z "$deploy" ] && "Failed to deploy arm template - aborting."
+
+[ ! -z "$deploy" ] || die "Failed to deploy arm template."
 
 
 if [ -d "$artifactsSource" ]; then

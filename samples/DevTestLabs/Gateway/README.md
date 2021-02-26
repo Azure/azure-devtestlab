@@ -8,7 +8,7 @@ This approach adds security by alleviating the need to have lab VMs RDP port exp
 
 ## Prerequisites
 
-There are two prerequisites to deploy the remote desktop gateway service; an SSL certificate, and the pluggable token authentication module installer. Details for both are below.
+There are two reqired prerequisites to deploy the remote desktop gateway service; an SSL certificate, and the pluggable token authentication module installer. Details for both are below.
 
 ### TLS/SSL Certificate
 
@@ -45,13 +45,20 @@ To deploy the gateway service:
 
 Next, execute the script at: [`<PathToClone>/arm/gateway/deploy.sh`](/arm/gateway/deploy.sh) with the following arguments:
 
-- `-g` The Name of the Azure Resource Group to deploy the gateway resources. It will be created if it doesn't exist.
+#### Required
+
+- `-g` Name of the Azure Resource Group to deploy the gateway resources. It will be created if it doesn't exist.
 - `-l` Location. Values from: `az account list-locations`.
 - `-s` Name or ID of the subscription to deploy the gateway resources.
-- `-u` The admin username to use for the gateway service VMs.
-- `-p` The admin password for the gateway service VMs.
+- `-u` Admin username to use for the gateway service VMs.
+- `-p` Admin password for the gateway service VMs.
 - `-c` Path to the SSL certificate .pfx or .p12 file.
-- `-k` The password used to export the SSL certificate (for installation).
+- `-k` Password used to export the SSL certificate (for installation).
+
+#### Optional
+
+- `-x` Path to self-signed certificate .pfx or .p12 file.
+- `-t` Password used to export the self-signed certificate (for installation).
 - `-i` Number of VMs in the gateway scale set. default: 1
 
 #### Example
