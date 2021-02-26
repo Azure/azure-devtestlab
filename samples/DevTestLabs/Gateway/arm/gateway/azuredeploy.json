@@ -90,7 +90,7 @@
     "bastionIPAddressName": "[concat(variables('resourcePrefix'),'-bh-pip')]",
     "githubBranch": "master",
     "githubRepoUrl": "https://github.com/Azure/azure-devtestlab",
-    "githubRepoPath": "samples/DevTestLabs/Gateway/src/RDGateway",
+    "githubRepoPath": "samples/DevTestLabs/Gateway/src/RDGatewayAPI",
     "createSignCertificate": "[or(empty(parameters('signCertificate')), empty(parameters('signCertificatePassword')), empty(parameters('signCertificateThumbprint')))]",
     "createSignCertificateIdentity": "createSignCertificateIdentity",
     "createSignCertificateScriptUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/DevTestLabs/Gateway/tools/create_cert.sh",
