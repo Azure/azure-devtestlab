@@ -8,7 +8,7 @@ This approach adds security by alleviating the need to have lab VMs RDP port exp
 
 ## Prerequisites
 
-There are two reqired prerequisites to deploy the remote desktop gateway service; an SSL certificate, and the pluggable token authentication module installer. Details for both are below.
+There are two required prerequisites to deploy the remote desktop gateway service; an SSL certificate, and the pluggable token authentication module installer. Details for both are below.
 
 ### TLS/SSL Certificate
 
