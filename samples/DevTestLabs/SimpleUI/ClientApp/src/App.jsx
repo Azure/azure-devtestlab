@@ -1,7 +1,7 @@
 import * as msal from '@azure/msal-browser';
 import { CheckboxVisibility, DetailsList, getTheme, Spinner, Text } from "@fluentui/react";
 import React, { Component } from 'react';
-import VirtualMachineRow from './OwnershipButton';
+import OwnershipButton from './OwnershipButton';
 
 export default class App extends Component {
     publicClientApplication;
@@ -63,12 +63,14 @@ export default class App extends Component {
     }
 
     renderButton(virtualMachine) {
-        return <VirtualMachineRow
-            vmOwner={virtualMachine.ownerUserPrincipalName}
-            loggedInUser={this.state.loggedInUser}
-            unclaim={() => this.unclaimVirtualMachine(virtualMachine.name)}
-            claim={() => this.claimVirtualMachine(virtualMachine.name)}
-        />;
+        return (
+            <OwnershipButton
+                vmOwner={virtualMachine.ownerUserPrincipalName}
+                loggedInUser={this.state.loggedInUser}
+                unclaim={() => this.unclaimVirtualMachine(virtualMachine.name)}
+                claim={() => this.claimVirtualMachine(virtualMachine.name)}
+            />
+        );
     }
 
     async claimVirtualMachine(vmName) {
@@ -77,7 +79,7 @@ export default class App extends Component {
             {
                 method: "POST",
                 headers: {
-                    "Authorization": `Bearer ${token.accessToken}`
+                    "Authorization": `Bearer ${token}`
                 }
             });
         await this.populateVirtualMachines();
@@ -89,7 +91,7 @@ export default class App extends Component {
             {
                 method: "POST",
                 headers: {
-                    "Authorization": `Bearer ${token.accessToken}`
+                    "Authorization": `Bearer ${token}`
                 }
             });
         await this.populateVirtualMachines();
@@ -100,7 +102,7 @@ export default class App extends Component {
         const response = await fetch("virtualmachines",
             {
                 headers: {
-                    "Authorization": `Bearer ${token.accessToken}`
+                    "Authorization": `Bearer ${token}`
                 }
             });
         const data = await response.json();
@@ -110,23 +112,35 @@ export default class App extends Component {
     async getAcccessToken() {
         const request = {
             scopes: ["https://management.azure.com/user_impersonation"],
-            account: this.publicClientApplication.getAccountByUsername(this.state.loggedInUser)
         };
 
+        request.account = await this.getAccount(request);
+
         if (this.state.loggedInUser === null) {
-            const authResult = await this.publicClientApplication.loginPopup(request);
-            this.setState({ loggedInUser: authResult.account.username });
-            return authResult;
+            this.setState({ loggedInUser: request.account.username })
         }
 
         try {
-            return await this.publicClientApplication.acquireTokenSilent(request);
+            const authResult = await this.publicClientApplication.acquireTokenSilent(request);
+            return authResult.accessToken;
         } catch (ex) {
             if (ex instanceof msal.InteractionRequiredAuthError) {
-                // Fallback to pop-up if silent login fails
-                return await this.publicClientApplication.acquireTokenPopup(request);
+                // Fallback to pop-up if silent acquisition of token fails
+                const authResult = await this.publicClientApplication.acquireTokenPopup(request);
+                return authResult.accessToken;
             }
             throw ex;
         }
+    }
+
+    async getAccount(request) {
+        const accounts = this.publicClientApplication.getAllAccounts();
+
+        if (accounts.length === 0) {
+            await this.publicClientApplication.loginPopup(request);
+        }
+
+        // For simplicity, assume user will only be using a single account to access this application
+        return accounts[0];
     }
 }

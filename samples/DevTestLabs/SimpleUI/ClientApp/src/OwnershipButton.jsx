@@ -5,7 +5,7 @@ import React, { Component } from 'react';
  * Button component for user to claim/unclaim a VM
  * 
  * */
-export default class VirtualMachineRow extends Component {
+export default class OwnershipButton extends Component {
     constructor(props) {
         super(props);
 
