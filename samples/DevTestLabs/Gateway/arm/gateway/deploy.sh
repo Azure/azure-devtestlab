@@ -70,10 +70,11 @@ fi
 
 # defaults
 instances=1
+githubOrg="Azure"
 # sub=$( az account show | jq -r '.id' )
 
 # get arg values
-while getopts ":hs:g:l:u:p:c:k:x:t:i:" opt; do
+while getopts ":hs:g:l:u:p:c:k:x:t:i:o:" opt; do
     case $opt in
         s)  sub=$OPTARG;;
         g)  rg=$OPTARG;;
@@ -84,12 +85,14 @@ while getopts ":hs:g:l:u:p:c:k:x:t:i:" opt; do
         k)  sslCertPassword=$OPTARG;;
         x)  signCert=$OPTARG;;
         t)  signCertPassword=$OPTARG;;
-        i)  instances==$OPTARG;;
+        i)  instances=$OPTARG;;
+        o)  githubOrg=$OPTARG;;
         h)  echo "$helpText" >&2; exit 0;;
         \?) die "Invalid option -$OPTARG \n$helpText";;
         :)  die "Option -$OPTARG requires an argument \n$helpText.";;
     esac
 done
+
 
 echo ""
 
@@ -97,12 +100,6 @@ echo ""
 [ -x "$(command -v jq)" ] || die "jq command is not installed.\njq is required to run this deploy script. Please install jq from https://stedolan.github.io/jq/download/, then try again."
 # check for the azure cli
 [ -x "$(command -v az)" ] || die "az command is not installed.\nThe Azure CLI is required to run this deploy script. Please install the Azure CLI, run az login, then try again."
-
-# temp fix start
-verCheck() { printf "%03d%03d%03d" $(echo "$1" | tr '.' ' '); }
-azversion=$( az version | jq -r '."azure-cli"' ) # TODO remove this after new version released 3/2
-[ $(verCheck $azversion) -gt $(verCheck 2.18.0) ] && die "There is a bug in az cli 2.19.0+ storage module that prevents this script from executing correctly. Please downgrade to version 2.18.0 and run this script again."
-# temp fix end
 
 
 # ensure required args
@@ -158,7 +155,8 @@ deploy=$(az deployment group create --subscription $sub -g $rg \
                       sslCertificateThumbprint=$sslCertThumbprint \
                       signCertificate=$signCertBase64 \
                       signCertificatePassword=$signCertPassword \
-                      signCertificateThumbprint=$signCertThumbprint | jq '.properties.outputs' )
+                      signCertificateThumbprint=$signCertThumbprint \
+                      githubUser=$githubOrg | jq '.properties.outputs' )
 
 
 [ ! -z "$deploy" ] || die "Failed to deploy arm template."
