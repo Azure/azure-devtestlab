@@ -65,6 +65,10 @@
     "utcValue": {
       "type": "string",
       "defaultValue": "[utcNow('u')]"
+    },
+    "githubUser": {
+      "type": "string",
+      "defaultValue": "Azure"
     }
   },
   "variables": {
@@ -89,11 +93,11 @@
     "bastionHostName": "[concat(variables('resourcePrefix'),'-bh')]",
     "bastionIPAddressName": "[concat(variables('resourcePrefix'),'-bh-pip')]",
     "githubBranch": "master",
-    "githubRepoUrl": "https://github.com/Azure/azure-devtestlab",
+    "githubRepoUrl": "[concat('https://github.com/', parameters('githubUser'), '/azure-devtestlab')]",
     "githubRepoPath": "samples/DevTestLabs/Gateway/src/RDGatewayAPI",
     "createSignCertificate": "[or(empty(parameters('signCertificate')), empty(parameters('signCertificatePassword')), empty(parameters('signCertificateThumbprint')))]",
     "createSignCertificateIdentity": "createSignCertificateIdentity",
-    "createSignCertificateScriptUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/DevTestLabs/Gateway/tools/create_cert.sh",
+    "createSignCertificateScriptUri": "[concat('https://raw.githubusercontent.com/', parameters('githubUser'), '/azure-devtestlab/master/samples/DevTestLabs/Gateway/tools/create_cert.sh')]",
     "bootstrapRoleAssignmentId": "[guid(concat(resourceGroup().id, 'contributor'))]",
     "contributorRoleDefinitionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]"
   },
