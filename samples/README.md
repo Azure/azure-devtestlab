@@ -24,6 +24,7 @@ A curated list of link with interesting information about Lab Services
   * [Victoria University](https://educationblog.microsoft.com/en-au/2020/02/victoria-university-builds-work-ready-graduates-streamlines-learning-with-azure-lab-services/)
   * [Bicocca University](https://customers.microsoft.com/en-us/story/773188-universita-milano-bicocca-azure-education-italy-en)
   * [Cagliari University](https://customers.microsoft.com/en-us/story/776202-university-cagliary-azure-education-italy-en)
+  * [IT Sligo University](https://pulse.microsoft.com/en/making-a-difference-en/education-en/fa1-it-sligo-levelling-the-playing-field-in-education-with-cloud-technology/)
 * [The Blog](https://techcommunity.microsoft.com/t5/azure-lab-services/bg-p/AzureLabServicesBlog) - In depth articles, user stories and news.
   * [Nested Virtualization Tips](https://techcommunity.microsoft.com/t5/azure-lab-services/nested-virtualization-tips/ba-p/1534323) - How to best set up nested virtualization for lab VMs
   * [Connecting to on premise network](https://techcommunity.microsoft.com/t5/azure-lab-services/connecting-to-on-premise-networks/ba-p/1381569) - Use network peering to your intranet.
