@@ -135,7 +135,7 @@ echo "Getting script runner managed identity resource group"
 identityGroup=$( echo $identity | jq -r '.resourceGroup' )
 
 echo "Deleting script runner managed identity role assignments"
-az role assignment delete --assignee $principalId -g $identityGroup
+az role assignment delete --assignee $identityId -g $identityGroup
 
 echo "Deleting script runner managed identity"
 az identity delete --ids "$AZ_SCRIPTS_USER_ASSIGNED_IDENTITY"
