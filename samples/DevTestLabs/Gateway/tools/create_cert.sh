@@ -125,19 +125,4 @@ echo "{ \"thumbprint\": \"$thumbprint\", \"password\": \"$password\", \"base64\"
 echo "Cleaning up temporary files"
 rm -rf "$tdir"
 
-echo "Getting script runner managed identity"
-identity=$( az identity show --ids "$AZ_SCRIPTS_USER_ASSIGNED_IDENTITY" )
-
-echo "Getting script runner managed identity pricipalId"
-identityId=$( echo $identity | jq -r '.principalId' )
-
-echo "Getting script runner managed identity resource group"
-identityGroup=$( echo $identity | jq -r '.resourceGroup' )
-
-echo "Deleting script runner managed identity role assignments"
-az role assignment delete --assignee $identityId -g $identityGroup
-
-echo "Deleting script runner managed identity"
-az identity delete --ids "$AZ_SCRIPTS_USER_ASSIGNED_IDENTITY"
-
 echo "Done."
