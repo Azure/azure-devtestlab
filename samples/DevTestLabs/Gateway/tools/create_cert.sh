@@ -125,7 +125,9 @@ echo "{ \"thumbprint\": \"$thumbprint\", \"password\": \"$password\", \"base64\"
 echo "Cleaning up temporary files"
 rm -rf "$tdir"
 
-echo "Deleting script runner managed identity"
-az identity delete --ids "$AZ_SCRIPTS_USER_ASSIGNED_IDENTITY"
+# echo "Deleting script runner managed identity"
+# principalId=$( az identity show --ids "$AZ_SCRIPTS_USER_ASSIGNED_IDENTITY" --query principalId -o tsv )
+# az role assignment delete --assignee $principalId
+# az identity delete --ids "$AZ_SCRIPTS_USER_ASSIGNED_IDENTITY"
 
 echo "Done."

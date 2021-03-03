@@ -148,11 +148,11 @@ fi
 echo "\nDeploying arm template"
 deploy=$(az deployment group create --subscription $sub -g $rg \
          --template-file $template \
-         --parameters adminUsername=$adminUsername \
-                      adminPassword=$adminPassword \
-                      sslCertificate=$sslCertBase64 \
-                      sslCertificatePassword=$sslCertPassword \
-                      sslCertificateThumbprint=$sslCertThumbprint \
+         --parameters adminUsername="$adminUsername" \
+                      adminPassword="$adminPassword" \
+                      sslCertificate="$sslCertBase64" \
+                      sslCertificatePassword="$sslCertPassword" \
+                      sslCertificateThumbprint="$sslCertThumbprint" \
                       signCertificate=$signCertBase64 \
                       signCertificatePassword=$signCertPassword \
                       signCertificateThumbprint=$signCertThumbprint \

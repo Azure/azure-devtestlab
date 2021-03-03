@@ -98,7 +98,7 @@
     "createSignCertificate": "[or(empty(parameters('signCertificate')), empty(parameters('signCertificatePassword')), empty(parameters('signCertificateThumbprint')))]",
     "createSignCertificateIdentity": "createSignCertificateIdentity",
     "createSignCertificateScriptUri": "[concat('https://raw.githubusercontent.com/', parameters('githubUser'), '/azure-devtestlab/master/samples/DevTestLabs/Gateway/tools/create_cert.sh')]",
-    "bootstrapRoleAssignmentId": "[guid(concat(resourceGroup().id, 'contributor'))]",
+    "createSignCertificateRoleAssignmentId": "[guid(concat(resourceGroup().id, variables('createSignCertificateIdentity'), 'contributor'))]",
     "contributorRoleDefinitionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]"
   },
   "resources": [
@@ -308,7 +308,7 @@
       "condition": "[variables('createSignCertificate')]",
       "type": "Microsoft.Authorization/roleAssignments",
       "apiVersion": "2018-09-01-preview",
-      "name": "[variables('bootstrapRoleAssignmentId')]",
+      "name": "[variables('createSignCertificateRoleAssignmentId')]",
       "dependsOn": [
         "[variables('createSignCertificateIdentity')]"
       ],
@@ -404,7 +404,7 @@
       },
       "dependsOn": [
         "[variables('createSignCertificateIdentity')]",
-        "[variables('bootstrapRoleAssignmentId')]",
+        "[variables('createSignCertificateRoleAssignmentId')]",
         "createSignCertificateIdentityAccessPolicyDeployment",
         "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
       ],
