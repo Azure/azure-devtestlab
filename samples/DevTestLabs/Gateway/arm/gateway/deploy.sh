@@ -162,6 +162,16 @@ deploy=$(az deployment group create --subscription $sub -g $rg \
 [ ! -z "$deploy" ] || die "Failed to deploy arm template."
 
 
+echo "\nGetting script runner managed identity"
+identity=$( az identity show --subscription $sub -g $rg -n createSignCertificateIdentity --query principalId -o tsv )
+
+echo "Deleting script runner managed identity role assignments"
+az role assignment delete --subscription $sub -g $rg --assignee $identity
+
+echo "Deleting script runner managed identity"
+az identity delete --subscription $sub -g $rg -n createSignCertificateIdentity
+
+
 if [ -d "$artifactsSource" ]; then
   artifacts=$( echo $deploy | jq '.artifactsStorage.value' )
   artifactsAccount=$( echo $artifacts | jq -r '.account' )
