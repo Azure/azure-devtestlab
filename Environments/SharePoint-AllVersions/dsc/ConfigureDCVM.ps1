@@ -9,15 +9,17 @@
         [Parameter(Mandatory)] [Boolean]$ConfigureADFS
     )
 
-    Import-DscResource -ModuleName ActiveDirectoryDsc, NetworkingDsc, xPSDesiredStateConfiguration, ActiveDirectoryCSDsc, CertificateDsc, cADFS, xDnsServer, ComputerManagementDsc
+    Import-DscResource -ModuleName ActiveDirectoryDsc, NetworkingDsc, xPSDesiredStateConfiguration, ActiveDirectoryCSDsc, CertificateDsc, xDnsServer, ComputerManagementDsc, AdfsDsc
     [String] $DomainNetbiosName = (Get-NetBIOSName -DomainFQDN $DomainFQDN)
     [System.Management.Automation.PSCredential] $DomainCredsNetbios = New-Object System.Management.Automation.PSCredential ("${DomainNetbiosName}\$($Admincreds.UserName)", $Admincreds.Password)
     [System.Management.Automation.PSCredential] $AdfsSvcCredsQualified = New-Object System.Management.Automation.PSCredential ("${DomainNetbiosName}\$($AdfsSvcCreds.UserName)", $AdfsSvcCreds.Password)
     $Interface = Get-NetAdapter| Where-Object Name -Like "Ethernet*"| Select-Object -First 1
     $InterfaceAlias = $($Interface.Name)
     $ComputerName = Get-Content env:computername
-    [String] $SPTrustedSitesName = "SPSites"
-    [String] $ADFSSiteName = "ADFS"
+    [String] $SPTrustedSitesName = "spsites"
+    [String] $ADFSSiteName = "adfs"
+    [String] $AdfsOidcAGName = "SPS-OIDC"
+    [String] $AdfsOidcIdentifier = "fae5bd07-be63-4a64-a28c-7931a4ebf62b"
 
     Node localhost
     {
@@ -30,10 +32,15 @@
         #**********************************************************
         # Create AD domain
         #**********************************************************
+        if ($ConfigureADFS -eq $true) {
+            # Install AD FS early (before reboot) to workaround error below on resource AdfsApplicationGroup:
+            # "System.InvalidOperationException: The test script threw an error. ---> System.IO.FileNotFoundException: Could not load file or assembly 'Microsoft.IdentityServer.Diagnostics, Version=10.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35' or one of its dependencie"
+            WindowsFeature AddADFS { Name = "ADFS-Federation";    Ensure = "Present"; }
+        }
         WindowsFeature AddADDS { Name = "AD-Domain-Services"; Ensure = "Present" }
         WindowsFeature AddDNS  { Name = "DNS";                Ensure = "Present" }
         DnsServerAddress SetDNS { Address = '127.0.0.1' ; InterfaceAlias = $InterfaceAlias; AddressFamily  = 'IPv4' }
-        
+
         ADDomain CreateADForest
         {
             DomainName                    = $DomainFQDN
@@ -69,6 +76,7 @@
             DomainName           = $DomainFQDN
             UserName             = $Admincreds.UserName
             EmailAddress         = "$($Admincreds.UserName)@$DomainFQDN"
+            UserPrincipalName    = "$($Admincreds.UserName)@$DomainFQDN"
             PasswordNeverExpires = $true
             Ensure               = "Present"
             DependsOn            = "[WaitForADDomain]WaitForDCReady"
@@ -183,16 +191,15 @@
 
             ADUser CreateAdfsSvcAccount
             {
-                DomainName = $DomainFQDN
-                UserName = $AdfsSvcCreds.UserName
-                Password = $AdfsSvcCreds
+                DomainName             = $DomainFQDN
+                UserName               = $AdfsSvcCreds.UserName
+                UserPrincipalName      = "$($AdfsSvcCreds.UserName)@$DomainFQDN"
+                Password               = $AdfsSvcCreds
                 PasswordAuthentication = 'Negotiate'
-                PasswordNeverExpires = $true
-                Ensure = "Present"
-                DependsOn = "[CertReq]GenerateADFSSiteCertificate", "[CertReq]GenerateADFSSigningCertificate", "[CertReq]GenerateADFSDecryptionCertificate"
+                PasswordNeverExpires   = $true
+                Ensure                 = "Present"
+                DependsOn              = "[CertReq]GenerateADFSSiteCertificate", "[CertReq]GenerateADFSSigningCertificate", "[CertReq]GenerateADFSDecryptionCertificate"
             }
-
-            WindowsFeature AddADFS { Name = "ADFS-Federation"; Ensure = "Present"; DependsOn = "[ADUser]CreateAdfsSvcAccount" }
 
             xDnsRecord AddADFSHostDNS
             {
@@ -215,45 +222,112 @@
                 DependsOn = "[WaitForADDomain]WaitForDCReady"
             }
 
-            cADFSFarm CreateADFSFarm
+            AdfsFarm CreateADFSFarm
             {
-                ServiceCredential = $AdfsSvcCredsQualified
-                InstallCredential = $DomainCredsNetbios
-                #CertificateThumbprint = $siteCert
-                DisplayName = "$ADFSSiteName.$DomainFQDN"
-                ServiceName = "$ADFSSiteName.$DomainFQDN"
-                #SigningCertificateThumbprint = $signingCert
-                #DecryptionCertificateThumbprint = $decryptionCert
-                CertificateName = "$ADFSSiteName.$DomainFQDN"
-                SigningCertificateName = "$ADFSSiteName.Signing"
-                DecryptionCertificateName = "$ADFSSiteName.Decryption"
-                Ensure= 'Present'
-                PsDscRunAsCredential = $DomainCredsNetbios
-                DependsOn = "[WindowsFeature]AddADFS"
+                FederationServiceName        = "$ADFSSiteName.$DomainFQDN"
+                FederationServiceDisplayName = "$ADFSSiteName.$DomainFQDN"
+                CertificateName              = "$ADFSSiteName.$DomainFQDN"
+                SigningCertificateName       = "$ADFSSiteName.Signing"
+                DecryptionCertificateName    = "$ADFSSiteName.Decryption"
+                ServiceAccountCredential     = $AdfsSvcCredsQualified
+                Credential                   = $DomainCredsNetbios
+                DependsOn                    = "[WindowsFeature]AddADFS"
             }
 
-            cADFSRelyingPartyTrust CreateADFSRelyingParty
+            ADFSRelyingPartyTrust CreateADFSRelyingParty
             {
-                Name = $SPTrustedSitesName
-                Identifier = "urn:federation:sharepoint"
-                ClaimsProviderName = @("Active Directory")
-                WsFederationEndpoint = "https://$SPTrustedSitesName.$DomainFQDN/_trust/"
-                AdditionalWSFedEndpoint = @("https://*.$DomainFQDN/")
+                Name                       = $SPTrustedSitesName
+                Identifier                 = "urn:sharepoint:$($SPTrustedSitesName)"
+                ClaimsProviderName         = @("Active Directory")
+                WSFedEndpoint              = "https://$SPTrustedSitesName.$DomainFQDN/_trust/"
+                ProtocolProfile            = "WsFed-SAML"
+                AdditionalWSFedEndpoint    = @("https://*.$DomainFQDN/")
                 IssuanceAuthorizationRules = '=> issue(Type = "http://schemas.microsoft.com/authorization/claims/permit", value = "true");'
-                IssuanceTransformRules = @"
-@RuleTemplate = "LdapClaims"
-@RuleName = "AD"
-c:[Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsaccountname", Issuer == "AD AUTHORITY"]
-=> issue(
-store = "Active Directory", 
-types = ("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress", "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"), 
-query = ";mail,tokenGroups(longDomainQualifiedName);{0}", 
-param = c.Value);
-"@
-                ProtocolProfile = "WsFed-SAML"
-                Ensure= 'Present'
+                IssuanceTransformRules     = @(
+                    MSFT_AdfsIssuanceTransformRule
+                    {
+                        TemplateName   = 'LdapClaims'
+                        Name           = 'Claims from Active Directory attributes'
+                        AttributeStore = 'Active Directory'
+                        LdapMapping    = @(
+                            MSFT_AdfsLdapMapping
+                            {
+                                LdapAttribute     = 'userPrincipalName'
+                                OutgoingClaimType = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn'
+                            }
+                            MSFT_AdfsLdapMapping
+                            {
+                                LdapAttribute     = 'mail'
+                                OutgoingClaimType = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'
+                            }
+                            MSFT_AdfsLdapMapping
+                            {
+                                LdapAttribute     = 'tokenGroups(longDomainQualifiedName)'
+                                OutgoingClaimType = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'
+                            }
+                        )
+                    }
+                )
+                Ensure               = 'Present'
                 PsDscRunAsCredential = $DomainCredsNetbios
-                DependsOn = "[cADFSFarm]CreateADFSFarm"
+                DependsOn            = "[AdfsFarm]CreateADFSFarm"
+            }
+
+            AdfsApplicationGroup OidcGroup
+            {
+                Name        = $AdfsOidcAGName
+                Description = "OIDC setup for SharePoint"
+                PsDscRunAsCredential = $DomainCredsNetbios
+                DependsOn   = "[AdfsFarm]CreateADFSFarm"
+            }
+
+            AdfsNativeClientApplication OidcNativeApp
+            {
+                Name                       = "$AdfsOidcAGName - Native application"
+                ApplicationGroupIdentifier = $AdfsOidcAGName
+                Identifier                 = $AdfsOidcIdentifier
+                RedirectUri                = "https://$SPTrustedSitesName.$DomainFQDN/"
+                DependsOn                  = "[AdfsApplicationGroup]OidcGroup"
+            }
+
+            AdfsWebApiApplication OidcWebApiApp
+            {
+                Name                          = "$AdfsOidcAGName - Web API"
+                ApplicationGroupIdentifier    = $AdfsOidcAGName
+                Identifier                    = $AdfsOidcIdentifier
+                AccessControlPolicyName       = "Permit everyone"
+                AlwaysRequireAuthentication   = $false
+                AllowedClientTypes            = "Public", "Confidential"
+                IssueOAuthRefreshTokensTo     = "AllDevices"
+                NotBeforeSkew                 = 0
+                RefreshTokenProtectionEnabled = $true
+                RequestMFAFromClaimsProviders = $false
+                TokenLifetime                 = 0
+                IssuanceTransformRules        = @(
+                    MSFT_AdfsIssuanceTransformRule
+                    {
+                        TemplateName = "CustomClaims"
+                        Name         = "Email"
+                        CustomRule   = 'c:[Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"]
+    => issue(claim = c);'
+                    }
+                    MSFT_AdfsIssuanceTransformRule
+                    {
+                        TemplateName = "CustomClaims"
+                        Name         = "nbf"
+                        CustomRule   = 'c:[Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/windowsaccountname"] 
+    => issue(Type = "nbf", Value = "0");'
+                    }
+                )
+                DependsOn                  = "[AdfsApplicationGroup]OidcGroup"
+            }
+
+            AdfsApplicationPermission OidcWebApiAppPermission
+            {
+                ClientRoleIdentifier = $AdfsOidcIdentifier
+                ServerRoleIdentifier = $AdfsOidcIdentifier
+                ScopeNames           = "openid"
+                DependsOn            = "[AdfsNativeClientApplication]OidcNativeApp", "[AdfsWebApiApplication]OidcWebApiApp"
             }
             
             WindowsFeature AddADCSManagementTools { Name = "RSAT-ADCS-Mgmt";     Ensure = "Present"; }
@@ -313,7 +387,7 @@ $DomainFQDN = "contoso.local"
 $PrivateIP = "10.1.1.4"
 $ConfigureADFS = $false
 
-$outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.80.0.3\DSCWork\ConfigureDCVM.0\ConfigureDCVM"
+$outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.1.0\DSCWork\ConfigureDCVM.0\ConfigureDCVM"
 ConfigureDCVM -Admincreds $Admincreds -AdfsSvcCreds $AdfsSvcCreds -DomainFQDN $DomainFQDN -PrivateIP $PrivateIP -ConfigureADFS $ConfigureADFS -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
 Set-DscLocalConfigurationManager -Path $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force

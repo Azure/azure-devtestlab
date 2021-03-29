@@ -26,11 +26,12 @@ configuration ConfigureSPVM
     [System.Management.Automation.PSCredential] $SPFarmCredsQualified = New-Object System.Management.Automation.PSCredential ("${DomainNetbiosName}\$($SPFarmCreds.UserName)", $SPFarmCreds.Password)
     [System.Management.Automation.PSCredential] $SPAppPoolCredsQualified = New-Object System.Management.Automation.PSCredential ("${DomainNetbiosName}\$($SPAppPoolCreds.UserName)", $SPAppPoolCreds.Password)
     [String] $SPDBPrefix = "SP$($SharePointVersion)_"
-    [String] $SPTrustedSitesName = "SPSites$SharePointVersion"
+    [String] $SPTrustedSitesName = "spsites$SharePointVersion"
     [String] $ComputerName = Get-Content env:computername
     #[String] $ServiceAppPoolName = "SharePoint Service Applications"
     [String] $SetupPath = "C:\Setup"
     [String] $DCSetupPath = "\\$DCName\C$\Setup"
+    [String] $TrustedIdChar = "e"
 
     Node localhost
     {
@@ -169,6 +170,23 @@ configuration ConfigureSPVM
             GetScript = { }
         }
 
+        xScript EnableFileSharing
+        {
+            TestScript = {
+                # Test if firewall rules for file sharing already exist
+                $rulesSet = Get-NetFirewallRule -DisplayGroup "File And Printer Sharing" -Enabled True -ErrorAction SilentlyContinue | Where-Object{$_.Profile -eq "Domain"}
+                if ($null -eq $rulesSet) {
+                    return $false   # Run SetScript
+                } else {
+                    return $true    # Rules already set
+                }
+            }
+            SetScript = {
+                Set-NetFirewallRule -DisplayGroup "File And Printer Sharing" -Enabled True -Profile Domain -Confirm:$false
+            }
+            GetScript = { }
+        }
+
         #**********************************************************
         # Install applications using Chocolatey
         #**********************************************************
@@ -205,13 +223,13 @@ configuration ConfigureSPVM
         WaitForADDomain WaitForDCReady
         {
             DomainName              = $DomainFQDN
-            WaitTimeout             = 1200
+            WaitTimeout             = 1800
             RestartCount            = 2
             WaitForValidCredentials = $True
             Credential              = $DomainAdminCredsQualified
             DependsOn               = "[DnsServerAddress]SetDNS"
         }
-        
+
         # WaitForADDomain sets reboot signal only if WaitForADDomain did not find domain within "WaitTimeout" secs
         PendingReboot RebootOnSignalFromWaitForDCReady
         {
@@ -234,7 +252,7 @@ configuration ConfigureSPVM
             SkipCcmClientSDK = $true
             DependsOn        = "[Computer]JoinDomain"
         }
-        
+
         # This script is still needed
         xScript CreateWSManSPNsIfNeeded
         {
@@ -296,6 +314,7 @@ configuration ConfigureSPVM
             DomainName                    = $DomainFQDN
             UserName                      = $SPSetupCreds.UserName
             Password                      = $SPSetupCreds
+            UserPrincipalName             = "$($SPSetupCreds.UserName)@$DomainFQDN"
             PasswordNeverExpires          = $true
             Ensure                        = "Present"
             PsDscRunAsCredential = $DomainAdminCredsQualified
@@ -306,6 +325,7 @@ configuration ConfigureSPVM
         {
             DomainName                    = $DomainFQDN
             UserName                      = $SPFarmCreds.UserName
+            UserPrincipalName             = "$($SPFarmCreds.UserName)@$DomainFQDN"
             Password                      = $SPFarmCreds
             PasswordNeverExpires          = $true
             Ensure                        = "Present"
@@ -327,6 +347,7 @@ configuration ConfigureSPVM
         {
             DomainName                    = $DomainFQDN
             UserName                      = $SPAppPoolCreds.UserName
+            UserPrincipalName             = "$($SPAppPoolCreds.UserName)@$DomainFQDN"
             Password                      = $SPAppPoolCreds
             PasswordNeverExpires          = $true
             Ensure                        = "Present"
@@ -514,13 +535,13 @@ configuration ConfigureSPVM
             {
                 Name                         = $DomainFQDN
                 Description                  = "Federation with $DomainFQDN"
-                Realm                        = "urn:federation:sharepoint"
+                Realm                        = "urn:sharepoint:spsites"
                 SignInUrl                    = "https://adfs.$DomainFQDN/adfs/ls/"
-                IdentifierClaim              = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
+                IdentifierClaim              = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn"
                 ClaimsMappings               = @(
                     MSFT_SPClaimTypeMapping{
-                        Name = "Email"
-                        IncomingClaimType = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
+                        Name = "upn"
+                        IncomingClaimType = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn"
                     }
                     MSFT_SPClaimTypeMapping{
                         Name = "Role"
@@ -618,7 +639,7 @@ configuration ConfigureSPVM
             {
                 Url                  = "http://$SPTrustedSitesName/"
                 OwnerAlias           = "i:0#.w|$DomainNetbiosName\$($DomainAdminCreds.UserName)"
-                SecondaryOwnerAlias  = "i:05.t|$DomainFQDN|$($DomainAdminCreds.UserName)@$DomainFQDN"
+                SecondaryOwnerAlias  = "i:0$TrustedIdChar.t|$DomainFQDN|$($DomainAdminCreds.UserName)@$DomainFQDN"
                 Name                 = "Team site"
                 Template             = "STS#0"
                 CreateDefaultGroups  = $true
@@ -679,8 +700,8 @@ function Get-NetBIOSName
 }
 
 <#
-# Azure DSC extension logging: C:\WindowsAzure\Logs\Plugins\Microsoft.Powershell.DSC\2.21.0.0
-# Azure DSC extension configuration: C:\Packages\Plugins\Microsoft.Powershell.DSC\2.21.0.0\DSCWork
+# Azure DSC extension logging: C:\WindowsAzure\Logs\Plugins\Microsoft.Powershell.DSC\2.83.1.0
+# Azure DSC extension configuration: C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.1.0\DSCWork
 
 Install-Module -Name PendingReboot
 help ConfigureSPVM
@@ -698,7 +719,7 @@ $SQLAlias = "SQLAlias"
 $SharePointVersion = "2019"
 $ConfigureADFS = $false
 
-$outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.80.2.0\DSCWork\ConfigureSPVM.0\ConfigureSPVM"
+$outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.1.0\DSCWork\ConfigureSPVM.0\ConfigureSPVM"
 ConfigureSPVM -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPAppPoolCreds $SPAppPoolCreds -SPPassphraseCreds $SPPassphraseCreds -DNSServer $DNSServer -DomainFQDN $DomainFQDN -DCName $DCName -SQLName $SQLName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -ConfigureADFS $ConfigureADFS -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
 Set-DscLocalConfigurationManager -Path $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
