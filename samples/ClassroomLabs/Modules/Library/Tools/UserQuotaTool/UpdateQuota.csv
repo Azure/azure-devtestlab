@@ -1,3 +1,2 @@
-ResourceGroupName,LabAccountName,LabName,QuotaExtension
-RGName,LAName,"History of Magic",12
-RGName,LAName,Transfiguration,15
+ResourceGroupName,LabAccountName,LabName,AdditionalHours
+AzLabsLibrary,AzLabsLibrary-la,Gns3Laba,13
