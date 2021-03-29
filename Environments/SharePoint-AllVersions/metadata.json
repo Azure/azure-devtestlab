@@ -1,7 +1,7 @@
 {
   "itemDisplayName": "SharePoint 2019 / 2016 / 2013 with a lightweight configuration",
-  "description": "SharePoint 2019 / 2016 / 2013 with a lightweight configuration. Each version is independent and may or may not be deployed.",
-  "summary": "SharePoint 2019 / 2016 / 2013 with a lightweight configuration. Each version is independent and may or may not be deployed.",
+  "description": "Deploy SharePoint 2019 / 2016 / 2013 with a lightweight configuration. Each version is independent and may or may not be deployed.",
+  "summary": "Deploy SharePoint 2019 / 2016 / 2013 with a lightweight configuration. Each version is independent and may or may not be deployed.",
   "githubUsername": "Yvand",
-  "dateUpdated": "2021-02-09"
+  "dateUpdated": "2021-03-29"
 }
