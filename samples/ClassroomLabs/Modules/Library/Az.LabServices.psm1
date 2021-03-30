@@ -239,11 +239,16 @@ function GetHeaderWithAuthToken {
     return $header
 }
 
-$ApiVersion = 'api-version=2019-01-01-preview'
+$ApiVersion = 'api-version=2020-05-01-preview'
 
 function GetLabAccountUri($ResourceGroupName) {
     $subscriptionId = (Get-AzureRmContext).Subscription.Id
     return "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.LabServices/labaccounts"
+}
+
+function GetLabPlanUri($ResourceGroupName) {
+    $subscriptionId = (Get-AzureRmContext).Subscription.Id
+    return "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.LabServices/labPlans"
 }
 
 function ConvertToUri($resource) {
@@ -428,6 +433,62 @@ function New-AzLabAccount {
     end { }
 }
 
+function New-AzLabPlan2 {
+    [CmdletBinding()]
+    param(
+        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Resource Group to contain the lab account", ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        $ResourceGroupName,
+
+        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Name of Lab Account to create")]
+        [ValidateNotNullOrEmpty()]
+        $LabPlanName
+    )
+
+    begin { . BeginPreamble }
+    process {
+        try {
+            foreach ($rgName in $ResourceGroupName) {
+                $rg = Get-AzureRmResourceGroup -name $rgName
+                $subscriptionId = (Get-AzureRmContext).Subscription.Id
+                $uri = "https://management.azure.com/subscriptions/$subscriptionId/resourcegroups/$rgName/providers/microsoft.labservices/labPlans/$LabPlanName"
+                $body = @{
+                    location = $rg.Location
+                    properties = @{
+                        allowedRegions = @($rg.Location)
+                        defaultConnectionProfile = @{
+                            webSshAccessEnabled = "Enabled"
+                            webRdpAccessEnabled = "Enabled"
+                            clientSshAccessEnabled = "Disabled"
+                            clientRdpAccessEnabled = "Disabled"
+                            sharedPasswordEnabled = "Disabled"
+                        }
+                        defaultAutoShutdownProfile = @{
+                            shutdownOnDisconnectEnabled = "Disabled"
+                            shutdownWhenNotConnectedEnabled = "Disabled"
+                            shutdownOnIdleEnabled = "Disabled"                  
+                        }
+                        supportInfo = @{
+                            url = "https://help.contoso.com"
+                            email = "rbest@microsoft.com"
+                            phone = "+1-202-555-0123"
+                            instructions = "Contact support for help."
+                        }
+                    }
+                } | ConvertTo-Json -Depth 10
+                Write-Verbose "Creating Lab Plan $LabPlanName REST call."
+                $lab = InvokeRest -Uri $uri -Method "Put" -Body $body
+                WaitProvisioning -uri $uri -delaySec 60 -retryCount 120 | Out-Null
+                return $lab
+            }
+        }
+        catch {
+            Write-Error -ErrorRecord $_ -EA $callerEA
+        }
+    }
+    end { }
+}
+
 function Remove-AzLabAccount {
     [CmdletBinding()]
     param(
@@ -440,6 +501,29 @@ function Remove-AzLabAccount {
     process {
         try {
             foreach ($la in $LabAccount) {
+                $uri = ConvertToUri -resource $la
+                return InvokeRest -Uri $uri -Method 'Delete'
+            }
+        }
+        catch {
+            Write-Error -ErrorRecord $_ -EA $callerEA
+        }
+    }
+    end { }
+}
+
+function Remove-AzLabPlan2 {
+    [CmdletBinding()]
+    param(
+        [parameter(Mandatory = $true, HelpMessage = "Lab Plan to Remove.", ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        $LabPlan
+    )
+
+    begin { . BeginPreamble }
+    process {
+        try {
+            foreach ($la in $LabPlan) {
                 $uri = ConvertToUri -resource $la
                 return InvokeRest -Uri $uri -Method 'Delete'
             }
@@ -579,6 +663,61 @@ function Get-AzLabAccount {
     end { }
 }
 
+function Get-AzLabPlan2 {
+    [CmdletBinding()]
+    param(
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Resource Group Containing the lab account", ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        $ResourceGroupName = '*',
+
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true , HelpMessage = "Name of Lab Account to retrieve (your can use * and ?)")]
+        [ValidateNotNullOrEmpty()]
+        $LabPlanName = '*'
+    )
+
+    begin { . BeginPreamble }
+    process {
+        try {
+            foreach ($rg in $ResourceGroupName) {
+
+                if ($ResourceGroupName -and (-not $ResourceGroupName.Contains("*"))) {
+                    # Proper RG
+                    if ($LabPlanName -and (-not $LabPlanName.Contains("*"))) {
+                        # Proper RG, Proper Name
+                        # A get for a single resource returns 404 if it doesn't exist, so need to convert to empty array.
+                        try {
+                            $uri = (GetLabPlanUri -ResourceGroupName $ResourceGroupName) + "/$LabPlanName"
+                            InvokeRest  -Uri $uri -Method 'Get'
+                        } catch {
+                            $StatusCode = $_.Exception.Response.StatusCode.value__
+                            if($StatusCode -eq 404) {
+                                return @()
+                            } else {
+                                Write-Error $_
+                            }
+                        }
+                    }
+                    else {
+                        #Proper RG, wild name
+                        $uri = GetLabPlanUri -ResourceGroupName $ResourceGroupName
+                        InvokeRest  -Uri $uri -Method 'Get' | Where-Object { $_.name -like $LabPlanName }
+                    }
+                }
+                else {
+                    # Wild RG forces query by subscription
+                    $subscriptionId = (Get-AzureRmContext).Subscription.Id
+                    $uri = "https://management.azure.com/subscriptions/$SubscriptionId/providers/Microsoft.LabServices/labPlans"
+                    InvokeRest  -Uri $uri -Method 'Get' | Where-Object { ($_.name -like $LabAccountName ) -and ($_.id.Split('/')[4] -like $ResourceGroupName) }
+                }
+            }
+        }
+        catch {
+            Write-Error -ErrorRecord $_ -EA $callerEA
+        }
+    }
+    end { }
+}
+
 function Get-AzLab {
     [CmdletBinding()]
     param(
@@ -606,6 +745,42 @@ function Get-AzLab {
     }
     end { }
 }
+
+function Get-AzLab2 {
+    [CmdletBinding()]
+    param(
+        [parameter(Mandatory = $true, HelpMessage = "Lab Account to get labs from", ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        $LabAccount,
+
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Name of Lab to retrieve (your can use * and ?)")]
+        [ValidateNotNullOrEmpty()]
+        $LabName = '*'
+
+    )
+
+    begin { . BeginPreamble }
+    process {
+        try {
+            foreach ($la in $LabAccount) {
+                $uri = (ConvertToUri -resource $la)
+                $uri = $uri.Replace("labPlans","labs")
+                if ($LabName -eq '*'){
+                    $uri = $uri.Replace($la.LabAccountName,"")
+                } else {
+                    $uri = $uri.Replace($la.LabAccountName,$LabName)
+                }
+
+                InvokeRest -Uri $uri -Method 'Get' | Where-Object { $_.Name -like $LabName }
+            }
+        }
+        catch {
+            Write-Error -ErrorRecord $_ -EA $callerEA
+        }
+    }
+    end { }
+}
+
 
 # TODO: should this be synchronous (aka wait for completion of deletion)?
 function Remove-AzLab {
@@ -751,6 +926,163 @@ function New-AzLab {
                         }
                     } | ConvertTo-Json) | Out-Null
                 }
+
+                $lab = WaitProvisioning -uri $labUri -delaySec 60 -retryCount 120
+                WaitProvisioning -uri $environmentSettingUri -delaySec 60 -retryCount 120 | Out-Null
+                return $lab
+            }
+        }
+        catch {
+            Write-Error -ErrorRecord $_ -EA $callerEA
+        }
+    }
+    end { }
+}
+
+function New-AzLab2 {
+    [CmdletBinding()]
+    param(
+        [parameter(Mandatory = $true, HelpMessage = "Lab Plan to create lab into", ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        $LabPlan,
+  
+        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Name of Lab to create")]
+        [ValidateNotNullOrEmpty()]
+        $LabName,
+
+        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Shared Image or Gallery image to use")]
+        [ValidateNotNullOrEmpty()]
+        $Image,
+
+        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Size for template VM")]
+        [ValidateNotNullOrEmpty()]
+        $Size,
+            
+        [parameter(mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+        [switch]
+        $InstallGpuDriverEnabled = $false,
+
+        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "User name if shared password is enabled")]
+        [string]
+        $UserName,
+
+        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Password if shared password is enabled")]
+        [string]
+        $Password,
+
+        [parameter(mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+        [switch]
+        $LinuxRdpEnabled = $false,
+
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Quota of hours x users (defaults to 40)")]
+        [int]
+        $UsageQuotaInHours = 40,
+
+        [parameter(mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+        [switch]
+        $SharedPasswordEnabled = $false,
+
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Idle Shutdown Grace Period (0 is off)")]
+        [int]
+        $idleGracePeriod = 0,
+
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Disconnect on Idle Grace Period (0 is off)")]
+        [int]
+        $idleOsGracePeriod = 0,
+
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Shutdown on No Connect Grace Period (0 is off)")]
+        [int]
+        $idleNoConnectGracePeriod = 0,
+        
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Enabled AAD connected labs.  NOTE:  If this Id is a teams team than the lab will be marked as a teams lab.")]
+        [string] $AadGroupId,
+
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Should this lab contain a Template VM?  Enabled = Yes, and Disabled = No")]
+        [ValidateSet('Enabled', 'Disabled')]
+        [string] $TemplateVmState = "Enabled"
+
+    )
+  
+    begin { . BeginPreamble }
+    process {
+        try {
+            foreach ($la in $LabPlan) {
+                $labUri = ConvertToUri $la
+                $labUri = $labUri.Replace("labPlans","labs")
+                $labUri = $labUri.Replace($la.LabAccountName,$LabName)
+
+                #$createUri = $labAccountUri + "/createLab"
+                #$labUri = "https://management.azure.com/subscriptions/$subscriptionId/resourcegroups/$rgName/providers/microsoft.labservices/labs/$LabName"
+                #$environmentSettingUri = $labUri + "/environmentsettings/default"
+                $sharedPassword = if ($SharedPasswordEnabled) { "Enabled" } else { "Disabled" }
+                #$imageType = if ($image.id -match '/galleryimages/') { 'galleryImageResourceId' } else { 'sharedImageResourceId' }
+                #if ($LinuxRdpEnabled) {$linuxRdpState = 'Enabled'} else { $linuxRdpState = 'Disabled' }
+                if ($InstallGpuDriverEnabled) {$gpuDriverState = 'Enabled'} else { $gpuDriverState = 'Disabled' }
+                if ($idleGracePeriod -eq 0) {$idleShutdownMode = "Disabled"} else {$idleShutdownMode = "Enabled"}
+                if ($idleOsGracePeriod -eq 0) {$enableDisconnectOnIdle = "Disabled"} else {$enableDisconnectOnIdle = "Enabled"}
+                if ($idleNoConnectGracePeriod -eq 0) {$enableNoConnectShutdown = "Disabled"} else {$enableNoConnectShutdown = "Enabled"}
+
+                #if ($LinuxRdpEnabled) {
+                #InvokeRest -Uri $createUri -Method 'Post' -Body (@{
+                #        name = $LabName
+                #        labParameters = @{
+                #            $imageType = $image.id
+                #            linuxRdpState = $linuxRdpState
+                #            password = $Password
+                #            username = $UserName
+                #            userQuota = "PT$($UsageQuotaInHours.ToString())H"
+                #            vmSize = $Size
+                #            sharedPasswordState = $sharedPassword
+                #            templateVmState = $TemplateVmState
+                #            installGpuDriverEnabled = $gpuDriverState
+                #            aadGroupId = $AadGroupId
+                #        }
+                #    } | ConvertTo-Json) | Out-Null
+                #} else {
+
+                    InvokeRest -Uri $labUri -Method 'Put' -Body (@{
+                        location = $LabPlan.location
+                        properties = @{
+                            title = $LabName + " - Title"
+                            description = $LabName + " - Description"
+                            labPlanId = $($la.id)
+                            connectionProfile = @{
+                                webSshAccessEnabled = "Disabled"
+                                webRdpAccessEnabled = "Enabled"
+                                clientSshAccessEnabled = "Disabled"
+                                clientRdpAccessEnabled = "Enabled"
+                            }
+                            autoShutdownProfile = @{
+                                shutdownOnDisconnectEnabled = $enableDisconnectOnIdle
+                                shutdownWhenNotConnectedEnabled = $enableNoConnectShutdown
+                                shutdownOnIdleEnabled = $idleShutdownMode
+                            }
+                            securityProfile = @{
+                                openAccess = "Disabled"
+                            }
+                            virtualMachineProfile = @{
+                                createOption = "TemplateVM"
+                                imageReference = @{
+                                    offer = "windowsserver"
+                                    publisher = "MicrosoftWindowsServer"
+                                    sku = "2019-datacenter"
+                                    version = "2019.0.201"
+                                }
+                                sku = @{
+                                    name = $Size
+                                    capacity = 0
+                                }
+                                additionalCapabilities = @{
+                                    installGpuDrivers = $gpuDriverState
+                                }
+                                usageQuota = "PT$($UsageQuotaInHours.ToString())H"
+                                sharedPasswordEnabled = $sharedPassword
+                                username = $UserName
+                                Password = $Password
+                            }
+                        }
+                    } | ConvertTo-Json  -Depth 10) | Out-Null
+                #}
 
                 $lab = WaitProvisioning -uri $labUri -delaySec 60 -retryCount 120
                 WaitProvisioning -uri $environmentSettingUri -delaySec 60 -retryCount 120 | Out-Null
@@ -1297,6 +1629,46 @@ function InvokeStudentRest {
     Write-Verbose $body
     return Invoke-RestMethod -Uri $fullUri -Method 'Post' -Headers $headers -Body $body -ContentType 'application/json'
 }
+
+function Add-AzLabStudentUsage {
+    param(
+        [parameter(Mandatory = $true, HelpMessage = "Lab to get users from", ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        $Lab,
+
+        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Email to match users to (you can use '*', '?', etc...)")]
+        [ValidateNotNullOrEmpty()]
+        $Email,
+
+        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Additional usage hours to add to quota.")]
+        [ValidateNotNullOrEmpty()]
+        $AdditionalUsage
+
+    )
+    begin { . BeginPreamble }
+    process {
+        try {
+            foreach ($l in $Lab) {
+                $students = Get-AzLabUser -Lab $l -Email $Email
+                foreach ($student in $students) {
+                    $uri = (ConvertToUri -resource $l) + '/users/' + $student.name
+                    $body = @{
+                        "properties" = @{
+                            "additionalUsageQuota" = "PT$($AdditionalUsage)H"
+                        }
+                    } | ConvertTo-Json
+               
+                    return InvokeRest -Uri $uri -Method 'Put' -Body $body
+                }
+            }
+        }
+        catch {
+            Write-Error -ErrorRecord $_ -EA $callerEA
+        }
+    }
+    end { }
+}
+
 function Get-AzLabStudentVm {
     [CmdletBinding()]
     param(
@@ -1683,8 +2055,11 @@ function Get-AzLabAccountPricingAndAvailability {
 }
 
 Export-ModuleMember -Function   Get-AzLabAccount,
+                                Get-AzLabPlan2,
                                 Get-AzLab,
+                                Get-AzLab2,
                                 New-AzLab,
+                                New-AzLab2,
                                 Get-AzLabAccountSharedImage,
                                 Get-AzLabAccountGalleryImage,
                                 Remove-AzLab,
@@ -1703,7 +2078,9 @@ Export-ModuleMember -Function   Get-AzLabAccount,
                                 New-AzLabSchedule,
                                 Remove-AzLabSchedule,
                                 New-AzLabAccount,
+                                New-AzLabPlan2,
                                 Remove-AzLabAccount,
+                                Remove-AzLabPlan2,
                                 Start-AzLabVm,
                                 Stop-AzLabVm,
                                 Get-AzLabForVm,
@@ -1715,4 +2092,5 @@ Export-ModuleMember -Function   Get-AzLabAccount,
                                 Get-AzLabStudentVm,
                                 Get-AzLabStudentCurrentVm,
                                 Stop-AzLabStudentVm,
-                                Start-AzLabStudentVm
+                                Start-AzLabStudentVm,
+                                Add-AzLabStudentUsage
