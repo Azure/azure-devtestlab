@@ -213,16 +213,24 @@ function Get-AzureRmCachedAccessToken() {
     $ErrorActionPreference = 'Stop'
     Set-StrictMode -Off
 
-    $azureRmProfile = [Microsoft.Azure.Commands.Common.Authentication.Abstractions.AzureRmProfileProvider]::Instance.Profile
-    if (-not $azureRmProfile.Accounts.Count) {
-        Write-Error "Ensure you have logged in before calling this function."
-    }
+    # First, see if we have a global variable somewhere
+    $token = Get-Variable -Name "AccessToken" -ValueOnly -Scope Global -ErrorAction SilentlyContinue
 
-    $currentAzureContext = Get-AzureRmContext
-    $profileClient = New-Object Microsoft.Azure.Commands.ResourceManager.Common.RMProfileClient($azureRmProfile)
-    Write-Debug ("Getting access token for tenant" + $currentAzureContext.Subscription.TenantId)
-    $token = $profileClient.AcquireAccessToken($currentAzureContext.Subscription.TenantId)
-    return $token.AccessToken
+    if ($token) {
+        return $token
+    }
+    else {
+        $azureRmProfile = [Microsoft.Azure.Commands.Common.Authentication.Abstractions.AzureRmProfileProvider]::Instance.Profile
+        if (-not $azureRmProfile.Accounts.Count) {
+            Write-Error "Ensure you have logged in before calling this function."
+        }
+
+        $currentAzureContext = Get-AzureRmContext
+        $profileClient = New-Object Microsoft.Azure.Commands.ResourceManager.Common.RMProfileClient($azureRmProfile)
+        Write-Debug ("Getting access token for tenant" + $currentAzureContext.Subscription.TenantId)
+        $token = $profileClient.AcquireAccessToken($currentAzureContext.Subscription.TenantId)
+        return $token.AccessToken
+    }
 }
 
 function GetHeaderWithAuthToken {
@@ -251,14 +259,59 @@ function ConvertToUri($resource) {
 }
 
 function InvokeRest($Uri, $Method, $Body, $params) {
+    #Variables for retry logic
+    $maxCallCount = 3 #Max number of calls to attempt
+    $retryIntervalInSeconds = 5 
+    $shouldRetry = $false
+    $currentCallCount = 0
+
     $authHeaders = GetHeaderWithAuthToken
 
     $fullUri = $Uri + '?' + $ApiVersion
-
+    
     if ($params) { $fullUri += '&' + $params }
 
-    if ($body) { Write-Verbose $body }    
-    $result = Invoke-WebRequest -Uri $FullUri -Method $Method -Headers $authHeaders -Body $Body -UseBasicParsing
+    if ($body) { Write-Verbose $body }
+
+    do{
+        try{
+            $currentCallCount += 1
+            $shouldRetry = $false
+            $result = Invoke-WebRequest -Uri $FullUri -Method $Method -Headers $authHeaders -Body $Body -UseBasicParsing 
+        }catch{
+            #if we have reach max number of calls, rethrow error no matter what it is
+            if($currentCallCount -eq $maxCallCount){
+                throw
+            }
+
+            #retry if Rest method is GET
+            if ($Method -eq 'Get'){
+                $shouldRetry = $true
+            }
+
+            $StatusCode = $null
+            if ($_.PSObject.Properties.Item('Exception') -and `
+                $_.Exception.PSObject.Properties.Item('Response') -and `
+                $_.Exception.Response.PSObject.Properties.Item('StatusCode') -and `
+                $_.Exception.Response.StatusCode.PSObject.Properties.Item('value__')){
+                $StatusCode = $_.Exception.Response.StatusCode.value__
+            }
+            Write-Verbose "Response status code for '$Uri' is '$StatusCode'"
+            switch($StatusCode){
+                404 { $shouldRetry = $false } #Don't retry on NotFound error, even if it is a GET call
+                503 { $shouldRetry = $true} #Always safe to retry on ServerUnavailable
+            }  
+
+            if ($shouldRetry){
+                 #Sleep before retrying call
+                Write-Verbose "Retrying after interval of $retryIntervalInSeconds seconds. Status code for previous attempt: $StatusCode"
+                Start-Sleep -Seconds $retryIntervalInSeconds
+            }else{
+                #propogate error if not retrying
+                throw
+            }
+        }
+    }while($shouldRetry -and ($currentCallCount -lt $maxCallCount))
     $resObj = $result.Content | ConvertFrom-Json
     
     # Happens with Post commands ...
@@ -312,6 +365,46 @@ function WaitProvisioning($uri, $delaySec, $retryCount, $params) {
         $tries += 1
     }
     return $res
+}
+
+function WaitDeleting($uri, $delaySec, $retryCount) {
+    Write-Verbose "Retrying $retryCount times every $delaySec seconds."
+    try {
+        $tries = 0;
+        $res = InvokeRest -Uri $uri -Method 'Get'
+        if ($res.PSObject.Properties.Item('properties') -and `
+            $res.properties.PSObject.Properties.Item('provisioningState')) {
+            while ($res.properties.provisioningState -eq 'Deleting') {
+                Write-Verbose "$tries : ProvisioningState = $($res.properties.provisioningState)"
+                if ($tries -ge $retryCount) {
+                    throw ("$retryCount retries of retrieving $uri with ProvisioningState = Deleting has either failed or is taking longer than the timeout.")
+                }
+                Start-Sleep -Seconds $delaySec
+                $res = InvokeRest -Uri $uri -Method 'Get'
+                $tries += 1
+            }
+        } else {
+            throw ("Result missing provisioning state.")
+        }
+    } catch {
+        $StatusCode = $null
+        if ($_.PSObject.Properties.Item('Exception') -and `
+                $_.Exception.PSObject.Properties.Item('Response') -and `
+                $_.Exception.Response.PSObject.Properties.Item('StatusCode') -and `
+                $_.Exception.Response.StatusCode.PSObject.Properties.Item('value__')){
+                $StatusCode = $_.Exception.Response.StatusCode.value__
+        } else {
+            $StatusCode = 408
+        }
+        
+        if($StatusCode -eq 404) {
+            return @()
+        } else {
+            throw
+        }
+    }
+    
+    return @()
 }
 
 function WaitStatusChange($uri, $delaySec, $retryCount, $params, $status) {
@@ -458,9 +551,13 @@ function New-AzLabAccountSharedGallery {
         [ValidateNotNullOrEmpty()]
         $LabAccount,
 
-        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Azure resource for shared gallery.")]
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Azure resource for shared gallery.")]
         [ValidateNotNullOrEmpty()]
-        $SharedGallery
+        $SharedGallery,
+
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Shared gallery resource id.")]
+        [ValidateNotNullOrEmpty()]
+        [string]$SharedGalleryId
     )
 
     begin { . BeginPreamble }
@@ -468,13 +565,22 @@ function New-AzLabAccountSharedGallery {
         try {
             foreach ($la in $LabAccount) {
                 $uri = ConvertToUri -resource $la
-                $sharedGalleryName = $SharedGallery.Name
 
-                # Bizarre. Using Get-AzLibrary returns an object with Id property, Get-AzResource one with ResourceId. This should work for both.
-                if (Get-Member -inputobject $SharedGallery -name "ResourceId" -Membertype Properties) {
-                    $sharedLibraryId = $SharedGallery.ResourceId
-                } else {
-                    $sharedLibraryId = $SharedGallery.Id
+                if ($SharedGalleryId -eq $null){
+
+                    $sharedGalleryName = $SharedGallery.Name
+
+                    # Bizarre. Using Get-AzLibrary returns an object with Id property, Get-AzResource one with ResourceId. This should work for both.
+                    if (Get-Member -inputobject $SharedGallery -name "ResourceId" -Membertype Properties) {
+                        $sharedLibraryId = $SharedGallery.ResourceId
+                    } else {
+                        $sharedLibraryId = $SharedGallery.Id
+                    }
+                }
+                else {
+                    # /subscriptions/ebfb37db-8168-4a51-aa4d-4e5e2efa4f54/resourceGroups/MSPTestRG/providers/Microsoft.Compute/galleries/TestSharedGallery
+                    $sharedGalleryName = $SharedGalleryId.split('/')[8]
+                    $sharedLibraryId = $SharedGalleryId
                 }
 
                 $fullUri = $uri + "/SharedGalleries/$sharedGalleryName"
@@ -550,7 +656,13 @@ function Get-AzLabAccount {
                             $uri = (GetLabAccountUri -ResourceGroupName $ResourceGroupName) + "/$LabAccountName"
                             InvokeRest  -Uri $uri -Method 'Get'
                         } catch {
-                            $StatusCode = $_.Exception.Response.StatusCode.value__
+                            $StatusCode = $null
+                            if ($_.PSObject.Properties.Item('Exception') -and `
+                                $_.Exception.PSObject.Properties.Item('Response') -and `
+                                $_.Exception.Response.PSObject.Properties.Item('StatusCode') -and `
+                                $_.Exception.Response.StatusCode.PSObject.Properties.Item('value__')){
+                                $StatusCode = $_.Exception.Response.StatusCode.value__
+                            }
                             if($StatusCode -eq 404) {
                                 return @()
                             } else {
@@ -613,7 +725,11 @@ function Remove-AzLab {
     param(
         [parameter(Mandatory = $true, HelpMessage = "Lab Account to get labs from", ValueFromPipeline = $true)]
         [ValidateNotNullOrEmpty()]
-        $Lab 
+        $Lab,
+
+        [parameter(mandatory = $false, HelpMessage = "Wait for Deletion to complete before continuing.", ValueFromPipelineByPropertyName = $true)]
+        [bool]
+        $EnableWaitForDelete = $true
     )
   
     begin { . BeginPreamble }
@@ -621,7 +737,10 @@ function Remove-AzLab {
         try {
             foreach ($l in $Lab) {
                 $uri = ConvertToUri -resource $l
-                return InvokeRest -Uri $uri -Method 'Delete'
+                InvokeRest -Uri $uri -Method 'Delete'
+                if ($EnableWaitForDelete) {
+                    WaitDeleting -uri $uri -delaySec 30 -retryCount 60
+                }
             }
         }
         catch {
@@ -752,8 +871,11 @@ function New-AzLab {
                     } | ConvertTo-Json) | Out-Null
                 }
 
+                #Wait for lab to be created.
                 $lab = WaitProvisioning -uri $labUri -delaySec 60 -retryCount 120
-                WaitProvisioning -uri $environmentSettingUri -delaySec 60 -retryCount 120 | Out-Null
+                #Wait for template to be provisioned.  Even labs without a template will return a environmentsetting object.
+                $defaultEnvironmentSetting = WaitProvisioning -uri $environmentSettingUri -delaySec 60 -retryCount 120 
+
                 return $lab
             }
         }
@@ -772,50 +894,60 @@ function Set-AzLab {
         $Lab,
 
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Maximum number of users in lab.")]
-        [int]
-        $MaxUsers = 5,
+        [string]
+        $MaxUsers,
 
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Access mode for the lab (either Restricted or Open)")]
         [ValidateSet('Restricted', 'Open')]
         [string]
-        $UserAccessMode = 'Restricted',
+        $UserAccessMode,
 
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
-        [switch]
-        $SharedPasswordEnabled = $false, 
+        [ValidateSet('Enabled', 'Disabled')]
+        [string]
+        $SharedPasswordEnabled,
 
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Quota of hours x users (defaults to 40)")]
-        [int]
-        $UsageQuotaInHours = 40
+        [string]
+        $UsageQuotaInHours,
+
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Set the AAD Group for the lab.")]
+        [string]
+        $AADGroupIdForLab
     )
   
     begin { . BeginPreamble }
     process {
         try {
+
             foreach ($l in $Lab) {
                 $ResourceGroupName = $l.id.split('/')[4]
                 $LabAccountName = $l.id.split('/')[8]
                 $LabName = $l.Name
                 $LabAccount = Get-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName
+                $CurrentLab = Get-AzLab -LabAccount $LabAccount -LabName $LabName
 
                 Write-Verbose "Lab to update:\n$($lab | ConvertTo-Json)"
-                if ($PSBoundParameters.ContainsKey('MaxUsers') -or (-not (Get-Member -inputobject $l.properties -name "maxUsersInLab" -Membertype Properties))) {
-                    $l.properties | Add-Member -MemberType NoteProperty -Name maxUsersInLab -Value $MaxUsers.ToString()  -force
+                if ($MaxUsers -gt 0) {
+                        $CurrentLab.properties | Add-Member -MemberType NoteProperty -Name maxUsersInLab -Value $MaxUsers -force
                 }
-                if ($PSBoundParameters.ContainsKey('UserAccessMode') -or (-not (Get-Member -inputobject $l.properties -name "userAccessMode" -Membertype Properties))) {
-                    $l.properties | Add-Member -MemberType NoteProperty -Name userAccessMode -Value $UserAccessMode  -force
+                if ($UserAccessMode) {
+                    $CurrentLab.properties | Add-Member -MemberType NoteProperty -Name userAccessMode -Value $UserAccessMode  -force
                 }
-                if ($PSBoundParameters.ContainsKey('SharedPasswordEnabled') -or (-not (Get-Member -inputobject $l.properties -name "sharedPasswordEnabled" -Membertype Properties))) {
-                    $sharedPassword = if ($SharedPasswordEnabled) { "Enabled" } else { "Disabled" }
-                    $l.properties | Add-Member -MemberType NoteProperty -Name sharedPasswordEnabled -Value $sharedPassword  -force
+                #
+                if ($SharedPasswordEnabled) {
+                    $CurrentLab.properties | Add-Member -MemberType NoteProperty -Name sharedPasswordEnabled -Value $SharedPasswordEnabled  -force
                 }
-                if ($PSBoundParameters.ContainsKey('UsageQuotaInHours') -or (-not (Get-Member -inputobject $l.properties -name "usageQuotaInHours" -Membertype Properties))) {
-                    $l.properties | Add-Member -MemberType NoteProperty -Name usageQuota -Value "PT$($UsageQuotaInHours.ToString())H" -force
+                if ($UsageQuotaInHours) {
+                    $CurrentLab.properties | Add-Member -MemberType NoteProperty -Name usageQuota -Value "PT$($UsageQuotaInHours)H" -force
+                }
+                if ($AADGroupIdForLab) {
+                    $CurrentLab.properties | Add-Member -MemberType NoteProperty -Name aadGroupId -Value $AADGroupIdForLab -force
                 }
                 # update lab
                 $uri = (ConvertToUri -resource $LabAccount) + "/labs/" + $LabName
 
-                $lab = InvokeRest -Uri $uri -Method 'PUT' -Body ($l | ConvertTo-Json)
+                $lab = InvokeRest -Uri $uri -Method 'PUT' -Body ($CurrentLab | ConvertTo-Json)
                 return WaitProvisioning -uri $uri -delaySec 60 -retryCount 120
             }
         }
@@ -978,7 +1110,7 @@ function Publish-AzLab {
 
                 $uriProv = (ConvertToUri -resource $l) + '/EnvironmentSettings/Default'
                 # As a simple scheme, we check every minute for 1.5 hours
-                WaitPublishing -uri $uriProv -delaySec 60 -retryCount 90 -params '$expand=properties(%24expand%3DresourceSettings(%24expand%3DreferenceVm(%24expand%3DvmStateDetails)))' | Out-Null
+                WaitPublishing -uri $uriProv -delaySec 120 -retryCount 120 -params '$expand=properties(%24expand%3DresourceSettings(%24expand%3DreferenceVm(%24expand%3DvmStateDetails)))' | Out-Null
 
                 # We need this so that the lab UI shows the home page instead of the 'Done' button
                 $t = $l | Get-AzLabTemplateVM
@@ -996,20 +1128,107 @@ function Publish-AzLab {
     end { }
 }
 
+function Get-AzLabAccountSharedGallery {
+    [CmdletBinding()]
+    param(
+        [parameter(Mandatory = $true, HelpMessage = "Lab Account to get attached Shared Gallery.", ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        $LabAccount
+    )
+
+    begin { . BeginPreamble }
+    process {
+        try {
+            foreach ($la in $LabAccount) {
+                $uri = (ConvertToUri -resource $la) + "/SharedGalleries/" 
+                return InvokeRest -Uri $uri -Method 'Get'
+            }
+        }
+        catch {
+            Write-Error -ErrorRecord $_ -EA $callerEA
+        }
+    }
+    end { }
+}
+
 function Get-AzLabAccountSharedImage {
     [CmdletBinding()]
     param(
         [parameter(Mandatory = $true, HelpMessage = "Lab Account to get shared images from", ValueFromPipeline = $true)]
         [ValidateNotNullOrEmpty()]
-        $LabAccount 
+        $LabAccount,
+
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Are the images enabled?  Enabled = Yes, and Disabled = No")]
+        [ValidateSet('Enabled', 'Disabled', 'All')]
+        [string] $EnableState = "Enabled"
     )
   
     begin { . BeginPreamble }
     process {
         try {
+            
             foreach ($la in $LabAccount) {
                 $uri = (ConvertToUri -resource $la) + "/SharedImages"
-                return InvokeRest -Uri $uri -Method 'Get' | Where-Object { $_.properties.EnableState -eq 'Enabled' }
+
+                if ($EnableState -eq "All") {
+                    $response = InvokeRest -Uri $uri -Method 'Get'
+                }
+                else {
+                    $response = InvokeRest -Uri $uri -Method 'Get' | Where-Object { $_.properties.EnableState -eq $EnableState }
+                }
+                
+                return $response
+            }
+        }
+        catch {
+            Write-Error -ErrorRecord $_ -EA $callerEA
+        }
+    }
+    end { }
+}
+
+function Set-AzLabAccountSharedImage {
+    [CmdletBinding()]
+    param(
+        [parameter(Mandatory = $true, HelpMessage = "Shared image to update.", ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        $SharedImage,
+
+        [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Should this image be enabled?  Enabled = Yes, and Disabled = No")]
+        [ValidateSet('Enabled', 'Disabled')]
+        [string] $EnableState = "Enabled"
+    )
+  
+    begin { . BeginPreamble }
+    process {
+        try {
+
+            foreach ($image in $SharedImage) {
+                $ResourceGroupName = $image.id.split('/')[4]
+                $LabAccountName = $image.id.split('/')[8]
+                $LabAccount = Get-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName
+
+                Write-Verbose "Image to update:\n$($image | ConvertTo-Json)"
+
+                $body = @{
+                    id = $image.id
+                    name = $image.name
+                    properties =
+                    @{
+                        EnableState = $EnableState
+                        sharedGalleryId = $image.properties.sharedGalleryId
+                        osType = $image.properties.osType
+                        imageType = $image.properties.imageType
+                        displayName = $image.properties.displayName
+                        definitionName = $image.properties.definitionName
+                    }
+                } | ConvertTo-Json
+
+                $uri = (ConvertToUri -resource $LabAccount) + "/SharedImages/"+ $image.name
+
+                $updatedImage = InvokeRest -Uri $uri -Method 'PUT' -Body ($body)
+                Write-Verbose "Updated image\n$($updatedImage | ConvertTo-Json)"
+                return WaitProvisioning -uri $uri -delaySec 60 -retryCount 120
             }
         }
         catch {
@@ -1134,11 +1353,11 @@ function Set-AzLabUser {
         [ValidateNotNullOrEmpty()]
         $Lab,
 
-        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Users to remove")]
+        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Users to update")]
         [ValidateNotNullOrEmpty()]
         $User,
 
-        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Additional quota to assign to a user in hours")]
+        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Setting the additional quota for a user in hours")]
         [ValidateNotNullOrEmpty()]
         $AdditionalUsageQuota
        
@@ -1150,7 +1369,7 @@ function Set-AzLabUser {
                 foreach ($u in $User) {
                     $userName = $u.name
                     $uri = (ConvertToUri -resource $Lab) + '/users/' + $userName
-                    $body = @{additionalUsageQuota = "PT$($AdditionalUsageQuota.ToString())H"} | ConvertTo-Json
+                    $body = @{"properties" = @{additionalUsageQuota = "PT$($AdditionalUsageQuota.ToString())H"}} | ConvertTo-Json
 
                     return InvokeRest -Uri $uri -Method 'Put' -Body $body
                 }
@@ -1183,6 +1402,28 @@ function Register-AzLabUser {
 
                 $uri = "https://management.azure.com/providers/Microsoft.LabServices/users/$userName/register"
 
+                return InvokeRest -Uri $uri -Method 'Post' -Body $body
+            }
+        }
+        catch {
+            Write-Error -ErrorRecord $_ -EA $callerEA
+        }
+    }
+    end { }
+}
+
+function Sync-AzLabADUsers {
+    param(
+        [parameter(Mandatory = $true, HelpMessage = "Lab to sync users.", ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        $Lab
+    )
+    begin { . BeginPreamble }
+    process {
+        try {
+            foreach ($l in $Lab) {
+                $uri = (ConvertToUri -resource $Lab) + '/syncUserList'
+                $body = $null
                 return InvokeRest -Uri $uri -Method 'Post' -Body $body
             }
         }
@@ -1576,7 +1817,10 @@ function New-AzLabSchedule {
         [Array] $WeekDays = @('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'),
 
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Notes for the class meeting.")]
-        $Notes = ""
+        $Notes = "",
+
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Event type.")]
+        [System.String]$EventType = "Standard"
     )
     begin { . BeginPreamble }
     process {
@@ -1601,6 +1845,16 @@ function New-AzLabSchedule {
                 $duntil = [datetime]::New($edate.Year, $edate.Month, $edate.Day, $stime.Hour, $stime.Minute, 0)
                 $fullUntil = $duntil.ToString('o')
 
+                if ($EventType -eq "Stop") {
+                    $startEnabledState = "Disabled"
+                    $endEnabledState = "Enabled"
+                }
+                else {
+                    $startEnabledState = "Enabled"
+                    $endEnabledState = "Enabled"
+                }
+              
+
                 if ($Frequency -eq 'Weekly') {
                     $body = @{
                         properties = @{
@@ -1616,11 +1870,11 @@ function New-AzLabSchedule {
                             timeZoneId        = $TimeZoneId
 
                             startAction       = @{
-                                enableState = "Enabled"
+                                enableState = $startEnabledState
                                 actionType  = "Start"
                             }
                             endAction         = @{
-                                enableState = "Enabled"
+                                enableState = $endEnabledState
                                 actionType  = "Stop"
                             }
                             notes             = $Notes
@@ -1636,11 +1890,11 @@ function New-AzLabSchedule {
                             end         = $fullEnd
                             timeZoneId  = $TimeZoneId
                             startAction = @{
-                                enableState = "Enabled"
+                                enableState = $startEnabledState
                                 actionType  = "Start"
                             }
                             endAction   = @{
-                                enableState = "Enabled"
+                                enableState = $endEnabledState
                                 actionType  = "Stop"
                             }
                             notes       = $Notes
@@ -1686,6 +1940,7 @@ Export-ModuleMember -Function   Get-AzLabAccount,
                                 Get-AzLab,
                                 New-AzLab,
                                 Get-AzLabAccountSharedImage,
+                                Set-AzLabAccountSharedImage,
                                 Get-AzLabAccountGalleryImage,
                                 Remove-AzLab,
                                 Get-AzLabTemplateVM,
@@ -1709,10 +1964,12 @@ Export-ModuleMember -Function   Get-AzLabAccount,
                                 Get-AzLabForVm,
                                 New-AzLabAccountSharedGallery,
                                 Remove-AzLabAccountSharedGallery,
+                                Get-AzLabAccountSharedGallery,
                                 Get-AzLabAccountPricingAndAvailability,
                                 Stop-AzLabTemplateVm,
                                 Start-AzLabTemplateVm,
                                 Get-AzLabStudentVm,
                                 Get-AzLabStudentCurrentVm,
                                 Stop-AzLabStudentVm,
-                                Start-AzLabStudentVm
+                                Start-AzLabStudentVm,
+                                Sync-AzLabADUsers

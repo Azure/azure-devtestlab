@@ -150,7 +150,7 @@ MaxUsers          | Maximum number of users expected for the lab.
 UsageQuota        | Maximum quota per student
 UsageMode         | Type of usage expected for the lab.  Either "Restricted" - only those who are registered in the lab, or "Open" anyone.
 SharedPassword    | Boolean value on whether the lab should use a shared password.  "True" means the lab uses a single shared password for the student's virtual machines, "False" means the students will be prompted to change their password on first login.
-Size              | The Virtual Machine size to use for the Lab.  The options are:  Basic, MediumGPUVisualization, Performance, SmallGPUCompute, SmallGPUVisualization, Standard, Virtualization, Large
+Size              | The Virtual Machine size to use for the Lab.  The options are:  Basic, MediumGPUVisualization, Performance, SmallGPUCompute, SmallGPUVisualization, Standard, Virtualization, Large .  Please see details below on how these map to the Azure Portal.
 Title             | The title for the lab.
 Descr             | The description for the lab.
 UserName          | The default user name
@@ -172,3 +172,16 @@ EndTime           | End Time
 WeekDays          | Days of the week.  "Monday, Tuesday, Friday".  The days are comma seperated with the text. If Frequency is "Once" use an empty string "" 
 TimeZoneId        | Time zone for the classes.  "Central Standard Time"
 Notes             | Additional notes
+
+## Virtual Machine Sizes
+The Azure Portal shows sizes with a friendly name when creating a lab and the API takes specific strings that map to those friendly names.  Listed below is the mapping between these.  More information can be found in the [Lab Services Admin Guide](https://docs.microsoft.com/en-us/azure/lab-services/administrator-guide#vm-sizing).
+Friendly Name                  | API Size               | Series
+-------------------------------|------------------------|------------
+Small                          | Basic                  | Standard_A2_v2
+Medium                         | Standard               | Standard_A4_v2
+Medium (nested virtualization) | Virtualization         | Standard_D4s_v3
+Large                          | Large                  | Standard_A8_v2
+Large (nested virtualization)  | Performance            | Standard_D8s_v3
+Small GPU (visualization)      | SmallGPUVisualization  | Standard_NV6
+Small GPU (Compute)            | SmallGPUCompute        | Standard_NC6
+Medium GPU (visualization)     | MediumGPUVisualization | Standard_NV12
