@@ -812,6 +812,7 @@ function Set-AzLab {
                 if ($PSBoundParameters.ContainsKey('UsageQuotaInHours') -or (-not (Get-Member -inputobject $l.properties -name "usageQuotaInHours" -Membertype Properties))) {
                     $l.properties | Add-Member -MemberType NoteProperty -Name usageQuota -Value "PT$($UsageQuotaInHours.ToString())H" -force
                 }
+                
                 # update lab
                 $uri = (ConvertToUri -resource $LabAccount) + "/labs/" + $LabName
 
@@ -1297,6 +1298,46 @@ function InvokeStudentRest {
     Write-Verbose $body
     return Invoke-RestMethod -Uri $fullUri -Method 'Post' -Headers $headers -Body $body -ContentType 'application/json'
 }
+
+function Add-AzLabStudentUsage {
+    param(
+        [parameter(Mandatory = $true, HelpMessage = "Lab to get users from", ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        $Lab,
+
+        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Email to match users to (you can use '*', '?', etc...)")]
+        [ValidateNotNullOrEmpty()]
+        $Email,
+
+        [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Additional usage hours to add to quota.")]
+        [ValidateNotNullOrEmpty()]
+        $AdditionalUsage
+
+    )
+    begin { . BeginPreamble }
+    process {
+        try {
+            foreach ($l in $Lab) {
+                $students = Get-AzLabUser -Lab $l -Email $Email
+                foreach ($student in $students) {
+                    $uri = (ConvertToUri -resource $l) + '/users/' + $student.name
+                    $body = @{
+                        "properties" = @{
+                            "additionalUsageQuota" = "PT$($AdditionalUsage)H"
+                        }
+                    } | ConvertTo-Json
+               
+                    return InvokeRest -Uri $uri -Method 'Put' -Body $body
+                }
+            }
+        }
+        catch {
+            Write-Error -ErrorRecord $_ -EA $callerEA
+        }
+    }
+    end { }
+}
+
 function Get-AzLabStudentVm {
     [CmdletBinding()]
     param(
@@ -1715,4 +1756,5 @@ Export-ModuleMember -Function   Get-AzLabAccount,
                                 Get-AzLabStudentVm,
                                 Get-AzLabStudentCurrentVm,
                                 Stop-AzLabStudentVm,
-                                Start-AzLabStudentVm
+                                Start-AzLabStudentVm,
+                                Add-AzLabStudentUsage

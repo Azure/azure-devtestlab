@@ -1,0 +1,4 @@
+ResourceGroupName,LabAccountName,LabName,AddEmails,RemoveEmails,Invitation
+RGName,LAName,"History of Magic",students1add,
+RGName,LAName,"Dark Arts",students2Add,Students1Remove
+RGName,LAName,BBB,students2Add,
