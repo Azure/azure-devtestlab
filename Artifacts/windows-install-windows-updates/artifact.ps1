@@ -1,5 +1,4 @@
 ###################################################################################################
-
 #
 # PowerShell configurations
 #
@@ -8,10 +7,22 @@
 #       This is necessary to ensure we capture errors inside the try-catch-finally block.
 $ErrorActionPreference = "Stop"
 
-# Ensure we set the working directory to that of the script.
-Push-Location $PSScriptRoot
+# Hide any progress bars, due to downloads and installs of remote components.
+$ProgressPreference = "SilentlyContinue"
+
+# Ensure we force use of TLS 1.2 for all downloads.
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+# Discard any collected errors from a previous execution.
+$Error.Clear()
+
+# Allow certian operations, like downloading files, to execute.
+Set-ExecutionPolicy Bypass -Scope Process -Force
 
 ###################################################################################################
+#
+# Handle all errors in this script.
+#
 
 trap
 {
@@ -33,6 +44,9 @@ trap
 }
 
 ###################################################################################################
+#
+# Functions used in this script.
+#
 
 function Test-PowerShellVersion
 {
@@ -49,7 +63,6 @@ function Test-PowerShellVersion
 }
 
 ###################################################################################################
-
 #
 # Main execution block.
 #
@@ -66,10 +79,10 @@ try
     Install-Module -Name PSWindowsUpdate -MinimumVersion 2.2.0.2 -Force | Out-Null
     Import-Module PSWindowsUpdate
     
-    Write-Output 'Installing Windows Updates.'
+    Write-Host 'Installing Windows Updates.'
     Get-WUInstall -IgnoreReboot -AcceptAll
     
-    Write-Output "Windows Update finished. Rebooting..."
+    Write-Host "Windows Update finished. Rebooting..."
     Write-Host "`nThe artifact was applied successfully.`n"
 
     # Forcing the restart in script, as the artifact’s postDeployActions may timeout prematurely, prior to the Windows Updates completing, causing undesirable side effects.
