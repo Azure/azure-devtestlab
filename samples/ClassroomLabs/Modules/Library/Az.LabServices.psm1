@@ -1572,7 +1572,7 @@ function New-AzLabSchedule {
         [ValidateLength(3, 40)]
         [string] $TimeZoneId = "W. Europe Standard Time",
     
-        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Days when to start the VM.")]
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Days when to start the VM when using a weekly schedule.")]
         [Array] $WeekDays = @('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'),
 
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Notes for the class meeting.")]
@@ -1598,8 +1598,14 @@ function New-AzLabSchedule {
                 $fullEnd = $endd.ToString('o')
 
                 $edate = [datetime]::Parse($ToDate)
-                $duntil = [datetime]::New($edate.Year, $edate.Month, $edate.Day, $stime.Hour, $stime.Minute, 0)
+                $duntil = [datetime]::New($edate.Year, $edate.Month, $edate.Day, 23, 59, 59)
                 $fullUntil = $duntil.ToString('o')
+
+                #'Daily' schedule is actually a 'Weekly' schedule repeated everyday of the week.
+                if ($Frequency -eq 'Daily'){
+                    $Frequency = 'Weekly'
+                    $WeekDays = @('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday')
+                }
 
                 if ($Frequency -eq 'Weekly') {
                     $body = @{
