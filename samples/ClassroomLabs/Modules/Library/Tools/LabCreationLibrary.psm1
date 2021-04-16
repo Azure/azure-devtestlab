@@ -338,12 +338,22 @@ function Publish-Labs {
                 $ConfigObject
             )
 
-            $lacs = $ConfigObject | Select-Object -Property ResourceGroupName, LabAccountName -Unique
+            $lacs = $ConfigObject | Select-Object -Property ResourceGroupName, LabAccountName, SharedGalleryResourceId, EnableSharedGalleryImages | Sort-Object -Property ResourceGroupName, LabAccountName
+            $lacNames = $lacs | Select-Object -Property ResourceGroupName, LabAccountName -Unique
+
+            # Get the first unique resource group\lab account and attempt to attach a shared gallery if one is specified in the csv.  If the resource group\lab account exists
+            # more than once in the csv, we only attempt to attach to the first one and skip the rest.
+            $lacsToCreate = @()
+            foreach ($lacName in $lacNames){
+                $lac = $lacs | Where-Object {$_.ResourceGroupName -eq $lacName.ResourceGroupName -and $_.LabAccountName -eq $lacName.LabAccountName} | Select-Object -First 1
+                $lacsToCreate += $lac
+            }
+
             Write-Host "Operating on the following Lab Accounts:"
-            Write-Host $lacs
+            Write-Host $lacsToCreate
 
             $block = {
-                param($path, $ResourceGroupName, $LabAccountName)
+                param($path, $ResourceGroupName, $LabAccountName, $SharedGalleryResourceId, $EnableSharedGalleryImages)
 
                 Set-StrictMode -Version Latest
                 $ErrorActionPreference = 'Stop'
@@ -351,16 +361,55 @@ function Publish-Labs {
                 $modulePath = Join-Path $path '..\Az.LabServices.psm1'
                 Import-Module $modulePath
 
-                if ((Get-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName) -eq $null ){
-                    New-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName | Out-Null
+                $labAccount = Get-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName
+    
+                if ($labAccount -eq $null ){
+                    $labAccount = New-AzLabAccount -ResourceGroupName $ResourceGroupName -LabAccountName $LabAccountName
+                    Write-Host "$LabAccountName lab account created."
                 }
-                Write-Host "$LabAccountName lab account created or found."
+                else {
+                    Write-Host "$LabAccountName lab account found - skipping create."
+                }
+
+                if ($SharedGalleryResourceId -ne $null){
+
+                    $gallery = $labAccount | Get-AzLabAccountSharedGallery
+                    if ($gallery -ne $null) {
+                        Write-Host "$LabAccountName lab account already has attached gallery $gallery."
+                    }
+                    else {
+                        $gallery = Get-AzGallery -ResourceId $SharedGalleryResourceId
+
+                        if ($gallery -ne $null) {
+                         Write-Host "$SharedGalleryResourceId shared gallery found."
+                            New-AzLabAccountSharedGallery -LabAccount $labAccount -SharedGallery $gallery
+                            Write-Host "$SharedGalleryResourceId shared gallery attached."
+                        }
+                        else {
+                            Write-Host "$SharedGalleryResourceId shared gallery not found - skipping attach."
+                        }
+                    }
+
+                    Write-Host "Enabling images for lab account: $labAccount"
+                    if ($EnableSharedGalleryImages -ne $null)
+                    {
+                        $imageNames = $EnableSharedGalleryImages.Split(',')
+                    }
+
+                    Write-Host "Images to enable: $imageNames"
+                    $images = $labAccount | Get-AzLabAccountSharedImage -EnableState All
+                    foreach ($imageName in $imageNames)
+                    {
+                        $image = $images | Where-Object { $_.name -like $imageName } | Set-AzLabAccountSharedImage -EnableState Enabled
+                        Write-Host "Image enabled: $image"
+                    }
+                }
             }
             
             Write-Host "Starting lab accounts creation in parallel. Can take a while."
             $jobs = @()
-            $lacs | ForEach-Object {
-                $jobs += Start-ThreadJob -ScriptBlock $block -ArgumentList $PSScriptRoot, $_.ResourceGroupName, $_.LabAccountName -Name $_.LabAccountName -ThrottleLimit $ThrottleLimit
+            $lacsToCreate | ForEach-Object {
+                $jobs += Start-ThreadJob -ScriptBlock $block -ArgumentList $PSScriptRoot, $_.ResourceGroupName, $_.LabAccountName, $_.SharedGalleryResourceId, $_.EnableSharedGalleryImages -Name $_.LabAccountName -ThrottleLimit $ThrottleLimit
             }
 
             $hours = 1
@@ -418,7 +467,6 @@ function Publish-Labs {
                 Start-Sleep -Seconds 60
             }
         }
-
 
         # Needs to create resources in this order, aka parallelize in these three groups, otherwise we get contentions:
         # i.e. different jobs trying to create the same common resource (RG or lab account)
