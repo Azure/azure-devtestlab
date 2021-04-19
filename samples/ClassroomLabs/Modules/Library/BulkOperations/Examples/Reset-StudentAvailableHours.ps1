@@ -6,7 +6,7 @@ param(
 
     [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
     [int]
-    $ThrottleLimit = 7
+    $ThrottleLimit = 5
 )
 
 Set-StrictMode -Version Latest
@@ -17,12 +17,12 @@ if (-not (Test-Path -Path $CsvConfigFile)) {
     Write-Error "Input CSV File must exist, please choose a valid file location..."
 }
 
-Import-Module ../Az.LabServices.psm1 -Force
-Import-Module ../Tools/LabCreationLibrary.psm1 -Force
+Import-Module ../../Az.LabServices.psm1 -Force
+Import-Module ../Az.LabServices.BulkOperations.psm1 -Force
 
 $scriptstartTime = Get-Date
-Write-Host "Executing Bulk Lab deletion Script, starting at $scriptstartTime" -ForegroundColor Green
+Write-Host "Executing Bulk User Quota Script, starting at $scriptstartTime" -ForegroundColor Green
 
-$CsvConfigFile | Import-Csv | Remove-AzLabsBulk -ThrottleLimit $ThrottleLimit
+$CsvConfigFile | Import-Csv | Reset-AzLabUserQuotaBulk -ThrottleLimit $ThrottleLimit
 
-Write-Host "Completed running Bulk Lab deletion Script, total duration $([math]::Round(((Get-Date) - $scriptstartTime).TotalMinutes, 1)) minutes" -ForegroundColor Green
+Write-Host "Completed running Bulk User Quota script, total duration $([math]::Round(((Get-Date) - $scriptstartTime).TotalMinutes, 1)) minutes" -ForegroundColor Green

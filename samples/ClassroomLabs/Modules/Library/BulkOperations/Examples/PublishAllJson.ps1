@@ -2,15 +2,14 @@
 param(
     [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
     [string]
-    $CsvConfigFile,
+    $JsonConfigFile,
 
     [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
     [int]
     $ThrottleLimit = 5
-
 )
 
 Import-Module ../../Az.LabServices.psm1 -Force
-Import-Module ../LabCreationLibrary.psm1 -Force
+Import-Module ../Az.LabServices.BulkOperations.psm1 -Force
 
-$CsvConfigFile | Import-LabsCsv | Set-LabProperty -ResourceGroupName Staging | Publish-Labs -ThrottleLimit $ThrottleLimit
+Get-Content -Raw -Path $JsonConfigFile | ConvertFrom-Json | Publish-Labs -ThrottleLimit $ThrottleLimit

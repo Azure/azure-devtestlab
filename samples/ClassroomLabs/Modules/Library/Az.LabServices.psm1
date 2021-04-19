@@ -213,24 +213,28 @@ function Get-AzureRmCachedAccessToken() {
     $ErrorActionPreference = 'Stop'
     Set-StrictMode -Off
 
-    # First, see if we have a global variable somewhere
-    $token = Get-Variable -Name "AccessToken" -ValueOnly -Scope Global -ErrorAction SilentlyContinue
+    $azureRmProfile = [Microsoft.Azure.Commands.Common.Authentication.Abstractions.AzureRmProfileProvider]::Instance.Profile
+    if (-not $azureRmProfile.Accounts.Count) {
+        Write-Error "Ensure you have logged in before calling this function."
+    }
 
-    if ($token) {
-        return $token
+    $profileClient = New-Object Microsoft.Azure.Commands.ResourceManager.Common.RMProfileClient($azureRmProfile)
+
+    $currentAzureContext = Get-AzureRmContext
+
+    if ($currentAzureContext) {
+        $tenantId = $currentAzureContext.Subscription.TenantId
     }
     else {
-        $azureRmProfile = [Microsoft.Azure.Commands.Common.Authentication.Abstractions.AzureRmProfileProvider]::Instance.Profile
-        if (-not $azureRmProfile.Accounts.Count) {
-            Write-Error "Ensure you have logged in before calling this function."
-        }
-
-        $currentAzureContext = Get-AzureRmContext
-        $profileClient = New-Object Microsoft.Azure.Commands.ResourceManager.Common.RMProfileClient($azureRmProfile)
-        Write-Debug ("Getting access token for tenant" + $currentAzureContext.Subscription.TenantId)
-        $token = $profileClient.AcquireAccessToken($currentAzureContext.Subscription.TenantId)
-        return $token.AccessToken
+        # There are cases where we don't have the context, like running in Azure Automation
+        # Fallback is to pull the tenant ID out of the AzureRmProfile if it's there
+        $tenantId = $azureRmProfile.DefaultContext.Tenant.Id
     }
+
+    Write-Debug ("Getting access token for tenant" + $tenantId)
+    $token = $profileClient.AcquireAccessToken($tenantId)
+    return $token.AccessToken
+
 }
 
 function GetHeaderWithAuthToken {
@@ -298,9 +302,10 @@ function InvokeRest($Uri, $Method, $Body, $params) {
             }
             Write-Verbose "Response status code for '$Uri' is '$StatusCode'"
             switch($StatusCode){
+                401 { $shouldRetry = $false } #Don't retry on Unauthorized error, regardless of what kind of call
                 404 { $shouldRetry = $false } #Don't retry on NotFound error, even if it is a GET call
                 503 { $shouldRetry = $true} #Always safe to retry on ServerUnavailable
-            }  
+            }
 
             if ($shouldRetry){
                  #Sleep before retrying call
@@ -1936,6 +1941,19 @@ function Get-AzLabAccountPricingAndAvailability {
     end { }
 }
 
+function Convert-UsageQuotaToHours {
+    [CmdletBinding()]
+    param(
+        [parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [string]
+        $RawTimeSpan
+    )
+
+    $usage = [System.Xml.XmlConvert]::ToTimeSpan($RawTimeSpan)
+    return [math]::Ceiling($usage.TotalHours)
+}
+
+
 Export-ModuleMember -Function   Get-AzLabAccount,
                                 Get-AzLab,
                                 New-AzLab,
@@ -1972,4 +1990,5 @@ Export-ModuleMember -Function   Get-AzLabAccount,
                                 Get-AzLabStudentCurrentVm,
                                 Stop-AzLabStudentVm,
                                 Start-AzLabStudentVm,
-                                Sync-AzLabADUsers
+                                Sync-AzLabADUsers,
+                                Convert-UsageQuotaToHours

@@ -11,9 +11,9 @@ param(
 )
 
 Import-Module ../../Az.LabServices.psm1 -Force
-Import-Module ../LabCreationLibrary.psm1 -Force
+Import-Module ../Az.LabServices.BulkOperations.psm1 -Force
 
 $CsvConfigFile `
   | Import-LabsCsv `
-  | Show-LabMenu -Properties $Properties `
+  | Show-LabMenu -PickLab -Properties $Properties `
   | Publish-Labs

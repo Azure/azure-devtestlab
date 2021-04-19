@@ -25,8 +25,8 @@ if (Test-Path -Path $CsvOutputFile) {
     Write-Error "Output File cannot already exist, please choose a location to create a new output file..."
 }
 
-Import-Module ../Az.LabServices.psm1 -Force
-Import-Module ../Tools/LabCreationLibrary.psm1 -Force
+Import-Module ../../Az.LabServices.psm1 -Force
+Import-Module ../Az.LabServices.BulkOperations.psm1 -Force
 
 $scriptstartTime = Get-Date
 Write-Host "Executing Script to get all registration links, starting at $scriptstartTime" -ForegroundColor Green

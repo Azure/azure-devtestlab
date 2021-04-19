@@ -13,7 +13,7 @@ if (Test-Path -Path $CsvOutputFile) {
 }
 
 Import-Module ../Az.LabServices.psm1 -Force
-Import-Module ../Tools/LabCreationLibrary.psm1 -Force
+Import-Module ../BulkOperations/Az.LabServices.BulkOperations.psm1 -Force
 
 $labAccounts = Get-AzLabAccount
 $labs = $labAccounts | Get-AzLab

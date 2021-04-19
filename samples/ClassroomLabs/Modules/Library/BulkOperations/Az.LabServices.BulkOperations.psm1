@@ -52,6 +52,9 @@ function Import-LabsCsv {
 
     $labs | ForEach-Object {
 
+        # First thing, we need to save the original properties in case they're needed later (for export)
+        Add-Member -InputObject $_ -MemberType NoteProperty -Name OriginalProperties -Value $_.PsObject.Copy()
+
         # Validate that the name is good, before we start creating labs
         if (-not ($_.LabName -match "^[a-zA-Z0-9_, '`"!|-]*$")) {
             Write-Error "Lab Name '$($_.LabName)' can't contain special characters..."
@@ -70,7 +73,7 @@ function Import-LabsCsv {
             }
         }
 
-        # Checking to ensure the user has changd the example username/passwork in CSV files
+        # Checking to ensure the user has changed the example username/passwork in CSV files
         if ($_.UserName -and ($_.UserName -ieq "test0000")) {
             Write-Warning "Lab $($_.LabName) is using the default UserName from the example CSV, please update it for security reasons"
         }
@@ -122,6 +125,64 @@ function Import-LabsCsv {
     return ,$labs # PS1 Magick here, the comma is actually needed. Don't ask why.
     # Ok, here is why, PS1 puts each object in the collection on the pipeline one by one
     # unless you say explicitely that you want to pass it as a single object
+}
+
+function Export-LabsCsv {
+    param(
+        [parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [object[]]
+        $labs,
+
+        [parameter(Mandatory = $true)]
+        [string]
+        $CsvConfigFile,
+
+        [parameter(Mandatory = $false)]
+        [switch] $Force
+    )
+
+    begin
+    {
+        $outArray = @()
+    }
+
+    process
+    {
+        # Iterate over the labs and pull out the inner properties (orig object) and add in result fields
+        $labs | ForEach-Object {
+            $obj = $_
+
+            # If we don't have the underlying properties, need to bail out
+            if (-not (Get-Member -InputObject $_ -Name OriginalProperties)) {
+                Write-Error "Cannot write out labs CSV, input labs object doesn't contain original properties"
+            }
+
+            $outObj = $_.OriginalProperties
+
+            # We need to copy any 'result' fields over to the original object we're writing out
+            Get-Member -InputObject $obj -Name "*Result" | ForEach-Object {
+                if (Get-Member -InputObject $outObj -Name $_.Name) {
+                    $outObj.$($_.Name) = $obj.$($_.Name)
+                }
+                else {
+                    Add-Member -InputObject $outObj -MemberType NoteProperty -Name $_.Name $obj.$($_.Name)
+                }
+            }
+
+            # Add the object to the cumulative array
+            $outArray += $outObj
+        }
+    }
+
+    end
+    {
+        if ($Force.IsPresent) {
+            $outArray | Export-Csv -Path $CsvConfigFile -NoTypeInformation -Force
+        }
+        else {
+            $outArray | Export-Csv -Path $CsvConfigFile -NoTypeInformation -NoClobber
+        }
+    }
 }
 
 function New-AzLabAccountsBulk {
@@ -1084,10 +1145,6 @@ function Reset-AzLabUserQuotaBulk {
                 $modulePath = Join-Path $path '..\Az.LabServices.psm1'
                 Import-Module $modulePath
             }
-            if (-not (Get-Command -Name "Convert-UsageQuotaToHours" -ErrorAction SilentlyContinue)) {
-                $modulePath = Join-Path $path '..\tools\LabCreationLibrary.psm1'
-                Import-Module $modulePath
-            }
 
             Write-Verbose "ConfigObject: $($obj | ConvertTo-Json -Depth 10)"
 
@@ -1168,20 +1225,7 @@ function Reset-AzLabUserQuotaBulk {
     }
 }
 
-function Convert-UsageQuotaToHours {
-    [CmdletBinding()]
-    param(
-        [parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [string]
-        $RawTimeSpan
-    )
-
-    $usage = [System.Xml.XmlConvert]::ToTimeSpan($RawTimeSpan)
-    return [math]::Ceiling($usage.TotalHours)
-}
-
-
-function Test-AzLabsBulk {
+function Confirm-AzLabsBulk {
     param(
         [parameter(Mandatory = $true, HelpMessage = "Array containing one line for each lab", ValueFromPipeline = $true)]
         [ValidateNotNullOrEmpty()]
@@ -1568,10 +1612,10 @@ Export-ModuleMember -Function   Import-LabsCsv,
                                 Sync-AzLabADUsersBulk,
                                 Get-AzLabsRegistrationLinkBulk,
                                 Reset-AzLabUserQuotaBulk,
-                                Convert-UsageQuotaToHours,
-                                Test-AzLabsBulk,
+                                Confirm-AzLabsBulk,
                                 Set-AzRoleToLabAccountsBulk,
                                 Set-LabProperty,
                                 Set-LabPropertyByMenu,
                                 Select-Lab,
-                                Show-LabMenu
+                                Show-LabMenu,
+                                Export-LabsCsv
