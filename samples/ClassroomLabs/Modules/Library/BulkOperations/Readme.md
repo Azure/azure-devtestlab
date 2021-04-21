@@ -1,5 +1,5 @@
 # Bulk Lab Creation Module <!-- omit in toc -->
-The [LabCreationLibrary.psm1](https://github.com/Azure/azure-devtestlab/blob/master/samples/ClassroomLabs/Modules/Library/Tools/LabCreator.ps1) module enables users to create **Resource Groups**, **Lab Accounts** and **Labs** via commandline based on declarative configuration information. The standard pattern of usage is by composing a pipeline as follows:
+The [Az.LabServices.BulkOperations.psm1](https://github.com/Azure/azure-devtestlab/blob/master/samples/ClassroomLabs/Modules/Library/BulkOperations/Az.LabServices.BulkOperations.psm1) module enables bulk operations on **Resource Groups**, **Lab Accounts** and **Labs** via commandline based on declarative configuration information. The standard pattern of usage is by composing a pipeline as follows:
 
 `Load configuration info from db/csv/...` => `Transform configuration info` => `Publish the labs`
 
@@ -23,14 +23,14 @@ The [Bulk Lab Creation functions](https://github.com/Azure/azure-devtestlab/tree
 
 To get started, using the example configuration csv files:
 
-1. Get a local copy of the LabCreator.ps1 script by either [cloning the repo](https://github.com/Azure/azure-devtestlab.git) or by [downloading a copy](https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/ClassroomLabs/Modules/Library/Tools/LabCreator.ps1)
+1. Get a local copy of the LabCreator.ps1 script by either [cloning the repo](https://github.com/Azure/azure-devtestlab.git) or by [downloading a copy](https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/ClassroomLabs/Modules/Library/BulkOperations/Az.LabServices.BulkOperations.psm1)
 1. Get a local copy of the example [hogwarts.csv](https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/ClassroomLabs/Modules/Library/Tools/hogwarts.csv) file and example [charms.csv](https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/ClassroomLabs/Modules/Library/Tools/charms.csv) file
 1. Launch a PowerShell session
 1. Ensure [Azure PowerShell](https://docs.microsoft.com/en-us/powershell/azure/install-az-ps) installed
 1. Update the example CSV files to configure the resources to be created.  For additional labs, create additional lines in the CSV file.  The CSV files can be modified directly with Microsoft Excel.
 1. Import the functions in the script by typing:
 ```powershell
-Import-Module .\LabCreationLibrary.psm1
+Import-Module .\Az.LabServices.BulkOperations.psm1
 ```
 
 ## Examples
@@ -40,7 +40,7 @@ The examples scripts expect the modules used to be in the following directories:
 
 ```powershell
 Import-Module ../../Az.LabServices.psm1 -Force
-Import-Module ../LabCreationLibrary.psm1 -Force
+Import-Module ../Az.LabServices.BulkOperations.psm1 -Force
 ```
 
 The full code for the example is immediately after the title in parenthesis.
@@ -150,7 +150,7 @@ MaxUsers          | Maximum number of users expected for the lab.
 UsageQuota        | Maximum quota per student
 UsageMode         | Type of usage expected for the lab.  Either "Restricted" - only those who are registered in the lab, or "Open" anyone.
 SharedPassword    | Boolean value on whether the lab should use a shared password.  "True" means the lab uses a single shared password for the student's virtual machines, "False" means the students will be prompted to change their password on first login.
-Size              | The Virtual Machine size to use for the Lab.  The options are:  Basic, MediumGPUVisualization, Performance, SmallGPUCompute, SmallGPUVisualization, Standard, Virtualization, Large
+Size              | The Virtual Machine size to use for the Lab.  The options are:  Basic, MediumGPUVisualization, Performance, SmallGPUCompute, SmallGPUVisualization, Standard, Virtualization, Large .  Please see details below on how these map to the Azure Portal.
 Title             | The title for the lab.
 Descr             | The description for the lab.
 UserName          | The default user name
@@ -172,3 +172,16 @@ EndTime           | End Time
 WeekDays          | Days of the week.  "Monday, Tuesday, Friday".  The days are comma seperated with the text. If Frequency is "Once" use an empty string "" 
 TimeZoneId        | Time zone for the classes.  "Central Standard Time"
 Notes             | Additional notes
+
+## Virtual Machine Sizes
+The Azure Portal shows sizes with a friendly name when creating a lab and the API takes specific strings that map to those friendly names.  Listed below is the mapping between these.  More information can be found in the [Lab Services Admin Guide](https://docs.microsoft.com/en-us/azure/lab-services/administrator-guide#vm-sizing).
+Friendly Name                  | API Size               | Series
+-------------------------------|------------------------|------------
+Small                          | Basic                  | Standard_A2_v2
+Medium                         | Standard               | Standard_A4_v2
+Medium (nested virtualization) | Virtualization         | Standard_D4s_v3
+Large                          | Large                  | Standard_A8_v2
+Large (nested virtualization)  | Performance            | Standard_D8s_v3
+Small GPU (visualization)      | SmallGPUVisualization  | Standard_NV6
+Small GPU (Compute)            | SmallGPUCompute        | Standard_NC6
+Medium GPU (visualization)     | MediumGPUVisualization | Standard_NV12
