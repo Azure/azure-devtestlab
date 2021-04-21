@@ -1825,7 +1825,8 @@ function New-AzLabSchedule {
         $Notes = "",
 
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Event type.")]
-        [System.String]$EventType = "Standard"
+        [ValidateSet("Standard", "Stop")]
+        [string] $EventType = "Standard"
     )
     begin { . BeginPreamble }
     process {
