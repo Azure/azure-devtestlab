@@ -1,5 +1,5 @@
 # Bulk Lab Creation Module <!-- omit in toc -->
-The [LabCreationLibrary.psm1](https://github.com/Azure/azure-devtestlab/blob/master/samples/ClassroomLabs/Modules/Library/Tools/LabCreator.ps1) module enables users to create **Resource Groups**, **Lab Accounts** and **Labs** via commandline based on declarative configuration information. The standard pattern of usage is by composing a pipeline as follows:
+The [Az.LabServices.BulkOperations.psm1](https://github.com/Azure/azure-devtestlab/blob/master/samples/ClassroomLabs/Modules/Library/BulkOperations/Az.LabServices.BulkOperations.psm1) module enables bulk operations on **Resource Groups**, **Lab Accounts** and **Labs** via commandline based on declarative configuration information. The standard pattern of usage is by composing a pipeline as follows:
 
 `Load configuration info from db/csv/...` => `Transform configuration info` => `Publish the labs`
 
@@ -23,14 +23,14 @@ The [Bulk Lab Creation functions](https://github.com/Azure/azure-devtestlab/tree
 
 To get started, using the example configuration csv files:
 
-1. Get a local copy of the LabCreator.ps1 script by either [cloning the repo](https://github.com/Azure/azure-devtestlab.git) or by [downloading a copy](https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/ClassroomLabs/Modules/Library/Tools/LabCreator.ps1)
+1. Get a local copy of the LabCreator.ps1 script by either [cloning the repo](https://github.com/Azure/azure-devtestlab.git) or by [downloading a copy](https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/ClassroomLabs/Modules/Library/BulkOperations/Az.LabServices.BulkOperations.psm1)
 1. Get a local copy of the example [hogwarts.csv](https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/ClassroomLabs/Modules/Library/Tools/hogwarts.csv) file and example [charms.csv](https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/ClassroomLabs/Modules/Library/Tools/charms.csv) file
 1. Launch a PowerShell session
 1. Ensure [Azure PowerShell](https://docs.microsoft.com/en-us/powershell/azure/install-az-ps) installed
 1. Update the example CSV files to configure the resources to be created.  For additional labs, create additional lines in the CSV file.  The CSV files can be modified directly with Microsoft Excel.
 1. Import the functions in the script by typing:
 ```powershell
-Import-Module .\LabCreationLibrary.psm1
+Import-Module .\Az.LabServices.BulkOperations.psm1
 ```
 
 ## Examples
@@ -40,7 +40,7 @@ The examples scripts expect the modules used to be in the following directories:
 
 ```powershell
 Import-Module ../../Az.LabServices.psm1 -Force
-Import-Module ../LabCreationLibrary.psm1 -Force
+Import-Module ../Az.LabServices.BulkOperations.psm1 -Force
 ```
 
 The full code for the example is immediately after the title in parenthesis.

@@ -41,7 +41,7 @@ if (-not (Get-Command -Name "Get-AzLabAccount" -ErrorAction SilentlyContinue)) {
     Write-Error "Unable to find the Az.LabServices.psm1 module, please add to the Azure Automation account"
 }
 if (-not (Get-Command -Name "Reset-AzLabUserQuotaBulk" -ErrorAction SilentlyContinue)) {
-    Write-Error "Unable to find the LabCreationLibrary.psm1 module, please add to the Azure Automation account"
+    Write-Error "Unable to find the Az.LabServices.BulkOperations.psm1 module, please add to the Azure Automation account"
 }
 if (-not (Get-Command -Name "Start-ThreadJob" -ErrorAction SilentlyContinue)) {
     Write-Error "Unable to find the ThreadJob Powershell module, please add to the Azure Automation account"
