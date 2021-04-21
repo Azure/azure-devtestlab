@@ -136,6 +136,22 @@ Setting a recurrent schedule for your class is done using the `New-AzLabSchedule
 ) | ForEach-Object { $_ | New-AzLabSchedule -Lab $lab} | Out-Null
 ```
 
+To have schedule repeat only on certain dates, pass in the $WeekDays object:
+
+```powershell
+@(
+    [PSCustomObject]@{TimeZoneId='Pacific Standard Time';Frequency='Weekly';WeekDays = @('Monday', 'Thursday', 'Saturday');FromDate=$today;ToDate = $end;StartTime='10:00';EndTime='11:00'}
+) | ForEach-Object { $_ | New-AzLabSchedule -Lab $lab} 
+```
+
+To have schedule repeat daily change the frequency parameter
+
+```powershell
+@(
+    [PSCustomObject]@{TimeZoneId='Pacific Standard Time';Frequency='Daily';FromDate=$today;ToDate = $end;StartTime='10:00';EndTime='11:00'}
+) | ForEach-Object { $_ | New-AzLabSchedule -Lab $lab} 
+```
+
 ## Remove objects
 
 The library contains function to remove all the kinds of objects created, i.e. `Remove-AzLabAccount`, `Remove-AzLab`, `Remove-AzLabSchedule`, `Remove-AzLabUser`.
