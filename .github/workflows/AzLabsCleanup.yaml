@@ -4,7 +4,7 @@ on:
   repository_dispatch:
     types: run
 
-name: Cleanup
+name: LabServices-PowerShellLibrary-Cleanup
 
 jobs:
 

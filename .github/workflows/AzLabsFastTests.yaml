@@ -17,7 +17,7 @@ on:
     branches-ignore:
       - master
 
-name: AllTests
+name: LabServices-PowerShellLibrary-FastTests
 
 jobs:
 
