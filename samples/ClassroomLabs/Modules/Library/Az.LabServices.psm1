@@ -571,7 +571,7 @@ function New-AzLabAccountSharedGallery {
             foreach ($la in $LabAccount) {
                 $uri = ConvertToUri -resource $la
 
-                if ($SharedGalleryId -eq $null){
+                if ($SharedGallery){
 
                     $sharedGalleryName = $SharedGallery.Name
 
@@ -582,10 +582,13 @@ function New-AzLabAccountSharedGallery {
                         $sharedLibraryId = $SharedGallery.Id
                     }
                 }
-                else {
+                elseif ($SharedGalleryId) {
                     # /subscriptions/ebfb37db-8168-4a51-aa4d-4e5e2efa4f54/resourceGroups/MSPTestRG/providers/Microsoft.Compute/galleries/TestSharedGallery
                     $sharedGalleryName = $SharedGalleryId.split('/')[8]
                     $sharedLibraryId = $SharedGalleryId
+                }
+                else {
+                    Write-Error "Must pass in either SharedGallery or SharedGalleryId to New-AzlabAccountSharedGallery commandlet"
                 }
 
                 $fullUri = $uri + "/SharedGalleries/$sharedGalleryName"

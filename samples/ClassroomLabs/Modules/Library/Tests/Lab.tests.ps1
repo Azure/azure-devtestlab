@@ -13,7 +13,7 @@ Describe 'Lab' {
         $labName1 = "TestLab$(Get-Random)"
         #$imgName1 = "CentOS-Based*"
         $usageQuota1 = 30
-        $shPsswd1 = $false
+        $shPsswd1 = "Disabled"
         $size1 = "Basic"
         $userName1 = "test0000"
         $password1 = "Test00000000"
@@ -39,7 +39,7 @@ Describe 'Lab' {
         Write-Verbose "Lab.Tests: la $($script:la)"
 
         $lab = $script:la `
-        | New-AzLab -LabName $labName1 -Image $img -Size $size1 -UsageQuotaInHours $usageQuota1 -SharedPasswordEnabled:$shPsswd1 -UserName $userName1 -Password $password1 -LinuxRdpEnabled:$linuxRdp1 `
+        | New-AzLab -LabName $labName1 -Image $img -Size $size1 -UsageQuotaInHours $usageQuota1 -SharedPasswordEnabled $shPsswd1 -UserName $userName1 -Password $password1 -LinuxRdpEnabled:$linuxRdp1 `
         | Publish-AzLab
         
         Write-Verbose "$labName1 lab doesn't exist. Created it."
@@ -51,7 +51,7 @@ Describe 'Lab' {
         $lab = $script:la | Get-AzLab -LabName $labName1
         $lab | Should -Not -BeNullOrEmpty                   
 
-        $lab | Set-AzLab -MaxUsers 3 -UsageQuotaInHours 10 -UserAccessMode 'Restricted' -SharedPasswordEnabled | Out-Null
+        $lab | Set-AzLab -MaxUsers 3 -UsageQuotaInHours 10 -UserAccessMode 'Restricted' -SharedPasswordEnabled 'Enabled' | Out-Null
     }
     It 'Can set Title and description on template vm' {
         $lab = $script:la | Get-AzLab -LabName $labName1
