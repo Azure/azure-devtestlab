@@ -6,11 +6,6 @@ Import-Module $PSScriptRoot\..\Az.LabServices.psm1 -Force
 Import-Module $PSScriptRoot\Utils.psm1 -Force
 Write-Verbose "Loading Utils.psm1"
 
-
-
-# Get-AzGallery returns empty on github action VMs, but not on my machine.
-# Disabling the test
-# I use it from console. Disabling the test for now.
 Describe 'Shared Gallery' {
 
     BeforeAll {
@@ -20,7 +15,6 @@ Describe 'Shared Gallery' {
     }
 
     AfterAll {
-        # $script:la | Remove-AzLabAccount
     }
 
     It 'Can attach/detach a shared library' {

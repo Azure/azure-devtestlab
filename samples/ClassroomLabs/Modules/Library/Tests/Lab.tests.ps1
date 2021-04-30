@@ -16,7 +16,7 @@ Describe 'Lab' {
         $shPsswd1 = $false
         $size1 = "Basic"
         $userName1 = "test0000"
-        $password1 = "Test00000000"
+        $password1 = "Test$(Get-Random)"
         $linuxRdp1 = $true
 
         $script:la = Get-FastLabAccount
@@ -51,7 +51,7 @@ Describe 'Lab' {
         $lab = $script:la | Get-AzLab -LabName $labName1
         $lab | Should -Not -BeNullOrEmpty                   
 
-        $lab | Set-AzLab -MaxUsers 3 -UsageQuotaInHours 10 -UserAccessMode 'Restricted' -SharedPasswordEnabled | Out-Null
+        $lab | Set-AzLab -MaxUsers 3 -UsageQuotaInHours 10 -UserAccessMode 'Restricted' -SharedPasswordEnabled 'Enabled' | Out-Null
     }
     It 'Can set Title and description on template vm' {
         $lab = $script:la | Get-AzLab -LabName $labName1

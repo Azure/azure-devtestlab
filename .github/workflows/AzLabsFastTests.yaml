@@ -1,8 +1,6 @@
 # It runs every day at 2am or when a push/pr is done on the library path or workflow path
 # I couldn't get pester 5.0+ to work, fixed at a version that works
 on:
-  schedule:
-    - cron: '0 2 * * * '
   # See here: https://goobar.io/2019/12/07/manually-trigger-a-github-actions-workflow/
   repository_dispatch:
     types: run
@@ -10,16 +8,16 @@ on:
     paths:
     - 'samples/ClassroomLabs/**'
     - '.github/workflows/**'
-    branches:
+    branches-ignore:
       - master
   pull_request:
     paths:
     - 'samples/ClassroomLabs/**'
     - '.github/workflows/**'
-    branches:
+    branches-ignore:
       - master
 
-name: LabServices-PowerShellLibrary-AllTests
+name: LabServices-PowerShellLibrary-FastTests
 
 jobs:
 
@@ -42,7 +40,7 @@ jobs:
         azPSVersion: 'latest'
         inlineScript: |
           Install-Module -Name Pester -Force -AllowClobber -RequiredVersion 4.10.1
-          Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/* -EnableExit
+          Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast* -EnableExit
 
   run-all-tests-core-ubuntu:
     runs-on: ubuntu-latest
@@ -62,4 +60,4 @@ jobs:
         azPSVersion: 'latest'
         inlineScript: |
           Install-Module -Name Pester -Force -AllowClobber -RequiredVersion 4.10.1
-          Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/* -EnableExit
+          Invoke-Pester ./samples/ClassroomLabs/Modules/Library/Tests/Fast* -EnableExit

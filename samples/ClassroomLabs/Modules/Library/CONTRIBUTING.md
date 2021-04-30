@@ -1,7 +1,30 @@
 # Contributing
+Contributions to the PowerShell library are encouraged and welcome!  When contributing to this repository, please first discuss the change you wish to make via issue, email, or any other method with the owners of this repository before making a change.
 
-When contributing to this repository, please first discuss the change you wish to make via issue,
-email, or any other method with the owners of this repository before making a change.
+## Submitting Code
+The best way to contribute code to the repository is to create a fork, apply & test your changes in the fork, and then create a pull request to submit the code back to this repository.  Remember these tips for your pull request:
+* Include a good title and detailed description on the new contribution or the change
+* Sample code (if appropriate) on how others can leveage the new feature/code/change
+* Update [AllFeatures.ps1](Scenarios/AllFeatures.ps1) (if applicable) to publish a sample for your change
+
+## Running Tests
+We use [Pester](https://pester.dev/) to execute our PowerShell-based tests both locally and in GitHub Actions.  To execute tests for the library:
+1. Clone the repository
+2. Open a PowerShell window for test execution
+3. Ensure that you have Pester installed (we require version 4):
+    ```PowerShell
+    Install-Module -Name Pester -Force -AllowClobber -RequiredVersion 4.10.1
+    ```
+2. Change directory to ./samples/ClassroomLabs/Modules/Library/Tests
+3. Execute the relevent command:
+    ```Powershell
+    # To run all the tests from the
+    # ./samples/ClassroomLabs/Modules/Library/Tests directory:
+    Invoke-Pester *
+
+    # To run just the 'fast' tests:
+    Invoke-Pester Fast*
+    ```
 
 ## Code Guidelines
 
