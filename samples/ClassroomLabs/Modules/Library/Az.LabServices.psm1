@@ -747,7 +747,7 @@ function Remove-AzLab {
                 $uri = ConvertToUri -resource $l
                 InvokeRest -Uri $uri -Method 'Delete'
                 if ($EnableWaitForDelete) {
-                    WaitDeleting -uri $uri -delaySec 30 -retryCount 60
+                    WaitDeleting -uri $uri -delaySec 60 -retryCount 60
                 }
             }
         }
