@@ -776,7 +776,7 @@ function New-AzLab {
             
         [parameter(mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [switch]
-        $InstallGpuDriverEnabled = $false,
+        $GpuDriverEnabled = $false,
 
         [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "User name if shared password is enabled")]
         [string]
@@ -788,7 +788,7 @@ function New-AzLab {
 
         [parameter(mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [switch]
-        $LinuxRdpEnabled = $false,
+        $LinuxRdp = $false,
 
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Quota of hours x users (defaults to 40)")]
         [int]
@@ -829,13 +829,13 @@ function New-AzLab {
                 $environmentSettingUri = $labUri + "/environmentsettings/default"
                 $sharedPassword = if ($SharedPasswordEnabled) { "Enabled" } else { "Disabled" }
                 $imageType = if ($image.id -match '/galleryimages/') { 'galleryImageResourceId' } else { 'sharedImageResourceId' }
-                if ($LinuxRdpEnabled) {$linuxRdpState = 'Enabled'} else { $linuxRdpState = 'Disabled' }
-                if ($InstallGpuDriverEnabled) {$gpuDriverState = 'Enabled'} else { $gpuDriverState = 'Disabled' }
+                if ($LinuxRdp) {$linuxRdpState = 'Enabled'} else { $linuxRdpState = 'Disabled' }
+                if ($GpuDriverEnabled) {$gpuDriverState = 'Enabled'} else { $gpuDriverState = 'Disabled' }
                 if ($idleGracePeriod -eq 0) {$idleShutdownMode = "None"} else {$idleShutdownMode = "OnDisconnect"}
                 if ($idleOsGracePeriod -eq 0) {$enableDisconnectOnIdle = "Disabled"} else {$enableDisconnectOnIdle = "Enabled"}
                 if ($idleNoConnectGracePeriod -eq 0) {$enableNoConnectShutdown = "Disabled"} else {$enableNoConnectShutdown = "Enabled"}
 
-                if ($LinuxRdpEnabled) {
+                if ($LinuxRdp) {
                 InvokeRest -Uri $createUri -Method 'Post' -Body (@{
                         name = $LabName
                         labParameters = @{
@@ -879,7 +879,17 @@ function New-AzLab {
                 #Wait for lab to be created.
                 $lab = WaitProvisioning -uri $labUri -delaySec 60 -retryCount 120
                 #Wait for template to be provisioned.  Even labs without a template will return a environmentsetting object.
-                $defaultEnvironmentSetting = WaitProvisioning -uri $environmentSettingUri -delaySec 60 -retryCount 120 
+                $defaultEnvironmentSetting = WaitProvisioning -uri $environmentSettingUri -delaySec 60 -retryCount 120
+                
+                if ($GpuDriverEnabled) {
+
+                    # The template VM needs to be restarted for the GPU drivers to finish installing properly
+                    # This will eventually be done within the product, but for now, we need to do this explicitly
+                    Write-Verbose "Start template VM"
+                    Get-AzLabTemplateVm $lab | Start-AzLabTemplateVm
+                    Get-AzLabTemplateVm $lab | Stop-AzLabTemplateVm
+                    Write-Verbose "Stopped template VM"
+                }
 
                 return $lab
             }
@@ -907,9 +917,9 @@ function Set-AzLab {
         [string]
         $UserAccessMode,
 
-        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]       
         [ValidateSet('Enabled', 'Disabled')]
-        [string]
+         [string]
         $SharedPasswordEnabled,
 
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Quota of hours x users (defaults to 40)")]
