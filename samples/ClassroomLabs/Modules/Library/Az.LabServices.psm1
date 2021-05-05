@@ -917,9 +917,9 @@ function Set-AzLab {
         [string]
         $UserAccessMode,
 
-        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]       
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
         [ValidateSet('Enabled', 'Disabled')]
-         [string]
+        [string]
         $SharedPasswordEnabled,
 
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Quota of hours x users (defaults to 40)")]
