@@ -62,7 +62,7 @@ async function run(id?: string, test?: boolean): Promise<void> {
             ciId = id ? id : data.ciId;
         } else {
             const connectedServiceName: string = String(tl.getInput('ConnectedServiceName', true));
-            subscriptionId = tl.getEndpointDataParameter(connectedServiceName, 'SubscriptionId', true);
+            subscriptionId = String(tl.getEndpointDataParameter(connectedServiceName, 'SubscriptionId', true));
             ciId = String(tl.getInput('CustomImageId', true));
         }
 

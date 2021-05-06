@@ -20,6 +20,7 @@ The following are tools used to create these tasks and are recommended.
 * The latest version of [Node.js](https://nodejs.org/en/download/).
 * [Typescript Compiler](https://www.npmjs.com/package/typescript) v2.2.0 or later.
   * This should already be part of the dependencies, when configuring the project for the first time.
+  * If you have problems running it, simply install it globally: `npm install typescript -g`
 * [TFS Cross Platform Command Line Interface](https://github.com/Microsoft/tfs-cli)
   * The `tfx-cli` can be installed using `npm`, a component of `Node.js` by running `npm i -g tfx-cli`
 
@@ -34,9 +35,15 @@ To configure your local environment, after cloning the repo, do the following:
 
    `az login --use-device-code`
 
+   Ensure you switch to the desired subscription, if have access to more than one.
+   
    To generate the file, run command:
 
    `az ad sp create-for-rbac --sdk-auth > authfile.json`
+
+   If you get errors parsing the JSON, ensure the format of the file is UTF-8. You can force it by using the alternate command:
+
+   `az ad sp create-for-rbac --sdk-auth | out-file -encoding utf8 authfile.json`
 
 2. Run command to download all dependencies.
 

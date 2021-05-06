@@ -1,14 +1,11 @@
 {
   "manifestVersion": 1,
   "id": "tasks",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "name": "Azure DevTest Labs Tasks",
-  "publisher": "ms-azuredevtestlabs",
+  "publisher": "ms-azuredevtestlabs-dev",
   "description": "Collection of Azure Pipelines tasks to interact with Azure DevTest Labs.",
-  "galleryFlags": [
-    "Public",
-    "Preview"
-  ],
+  "galleryFlags": [],
   "targets": [
     {
       "id": "Microsoft.VisualStudio.Services"
