@@ -885,7 +885,7 @@ function New-AzLab {
 
                     # The template VM needs to be restarted for the GPU drivers to finish installing properly
                     # This will eventually be done within the product, but for now, we need to do this explicitly
-                    Write-Verbose "Start template VM"
+                    Write-Verbose "Start template VM after installing GPU drivers"
                     Get-AzLabTemplateVm $lab | Start-AzLabTemplateVm
                     Get-AzLabTemplateVm $lab | Stop-AzLabTemplateVm
                     Write-Verbose "Stopped template VM"
