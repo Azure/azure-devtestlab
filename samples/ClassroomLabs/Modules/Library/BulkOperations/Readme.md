@@ -174,14 +174,14 @@ TimeZoneId        | Time zone for the classes.  "Central Standard Time"
 Notes             | Additional notes
 
 ## Virtual Machine Sizes
-The Azure Portal shows sizes with a friendly name when creating a lab and the API takes specific strings that map to those friendly names.  Listed below is the mapping between these.  More information can be found in the [Lab Services Admin Guide](https://docs.microsoft.com/en-us/azure/lab-services/administrator-guide#vm-sizing).
-Friendly Name                  | API Size               | Series
--------------------------------|------------------------|------------
-Small                          | Basic                  | Standard_A2_v2
-Medium                         | Standard               | Standard_A4_v2
-Medium (nested virtualization) | Virtualization         | Standard_D4s_v3
-Large                          | Large                  | Standard_A8_v2
-Large (nested virtualization)  | Performance            | Standard_D8s_v3
-Small GPU (visualization)      | SmallGPUVisualization  | Standard_NV6
-Small GPU (Compute)            | SmallGPUCompute        | Standard_NC6
-Medium GPU (visualization)     | MediumGPUVisualization | Standard_NV12
+The Azure Portal shows sizes with a friendly name when creating a lab and the API takes specific strings that map to those friendly names.  Listed below is the mapping between these.  More information can be found in the [Lab Services Admin Guide](https://docs.microsoft.com/en-us/azure/lab-services/administrator-guide#vm-sizing) which includes information on the VM series.
+Friendly Name                  | API Size
+-------------------------------|------------------------
+Small                          | Basic
+Medium                         | Standard
+Medium (nested virtualization) | Virtualization
+Large                          | Large
+Large (nested virtualization)  | Performance
+Small GPU (visualization)      | SmallGPUVisualization  
+Small GPU (Compute)            | SmallGPUCompute
+Medium GPU (visualization)     | MediumGPUVisualization
