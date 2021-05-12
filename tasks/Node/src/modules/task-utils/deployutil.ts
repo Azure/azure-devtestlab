@@ -1,5 +1,4 @@
 import fs from 'fs';
-import { v4 as uuidv4 } from 'uuid';
 
 import * as tl from 'azure-pipelines-task-lib/task';
 
@@ -154,8 +153,8 @@ export function getDeploymentError(deploymentError: any): string {
 }
 
 export function getDeploymentName(prefix: string = 'Dtl'): string {
-    const guid: string = uuidv4().replace(/-/gi, '');
-    return `${prefix}${guid}`;
+    const name: string = Math.random().toString(36).substr(2, 9);
+    return `${prefix}${name}`;
 }
 
 export async function getDeploymentOutput(armClient: ResourceManagementClient, resourceGroupName: string): Promise<any[]> {

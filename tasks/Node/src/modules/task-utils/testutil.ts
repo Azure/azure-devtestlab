@@ -4,14 +4,14 @@ import path from 'path';
 import * as tl from 'azure-pipelines-task-lib/task';
 
 export function getTestDataFolder() {
-    const parentFileName = require.main ? require.main.filename : null;
+    const parentFileName = __filename;
     if (!parentFileName) {
         throw 'TestUtil: Expectation is that this function is called from a parent module.';
     }
 
     tl.debug(`TestUtil: Getting test data for module '${path.relative(process.cwd(), parentFileName)}'.`)
 
-    return path.dirname(parentFileName).replace(/\\out\\/gi, '\\src\\');
+    return path.dirname(parentFileName).replace(/\\(out|dist)\\/gi, '\\src\\');
 }
 
 export function getTestData(): any {
@@ -30,7 +30,7 @@ export function getTestData(): any {
 
 export function writeTestLog(error: any): void {
     try {
-        const parentFileName = require.main ? require.main.filename : null;
+        const parentFileName = __filename;
         if (!parentFileName) {
             throw 'TestUtil: Expectation is that this function is called from a parent module.';
         }
