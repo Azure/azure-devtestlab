@@ -1,3 +1,5 @@
+const TerserPlugin = require("terser-webpack-plugin");
+
 module.exports = {
   mode: "production",
   devtool: false,
@@ -10,6 +12,17 @@ module.exports = {
     AzureDtlDeleteEnvironment: "./src/tasks/AzureDtlDeleteEnvironment/task.ts",
     AzureDtlDeleteVM: "./src/tasks/AzureDtlDeleteVM/task.ts",
     AzureDtlUpdateEnvironment: "./src/tasks/AzureDtlUpdateEnvironment/task.ts"
+  },
+  optimization: {
+    minimizer: [
+      new TerserPlugin({
+        parallel: true,
+        terserOptions: {
+          keep_classnames: /AbortSignal/,
+          keep_fnames: /AbortSignal/,
+        },
+      }),
+    ],
   },
   output: {
     path: __dirname + "/dist/",

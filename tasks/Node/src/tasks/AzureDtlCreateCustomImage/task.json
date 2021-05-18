@@ -16,7 +16,7 @@
     "version": {
         "Major": 3,
         "Minor": 0,
-        "Patch": 1
+        "Patch": 16
     },
     "visibility": [
         "Build",
@@ -152,7 +152,7 @@
         }
     ],
     "execution": {
-        "Node": {
+        "Node10": {
             "target": "task.js"
         }
     }

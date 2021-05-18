@@ -4,7 +4,7 @@ import * as tl from 'azure-pipelines-task-lib/task';
 import * as deployutil from '../../modules/task-utils/deployutil';
 import * as resutil from '../../modules/task-utils/resourceutil';
 
-import { Aborter, AnonymousCredential, BlobURL, Models, StorageURL } from "@azure/storage-blob";
+import * as storage from "@azure/storage-blob";
 import { ResourceManagementClient } from "@azure/arm-resources";
 
 export async function exportEnvironmentTemplate(exportEnvTemplateLocation: string, envTemplateLocation: string, envTemplateSasToken: string): Promise<void> {
@@ -15,11 +15,11 @@ export async function exportEnvironmentTemplate(exportEnvTemplateLocation: strin
     console.log('Exporting environment template.');
 
     const templateFileName = 'azuredeploy.json';
-    const credential = new AnonymousCredential();
-    const pipeline = StorageURL.newPipeline(credential);
+    const credential = new storage.AnonymousCredential();
+    const pipeline = storage.newPipeline(credential);
 
-    const blobUrl = new BlobURL(`${envTemplateLocation}/${templateFileName}${envTemplateSasToken}`, pipeline);
-    const response: Models.BlobDownloadResponse = await blobUrl.download(Aborter.none, 0);
+    const blobUrl = new storage.BlobClient(`${envTemplateLocation}/${templateFileName}${envTemplateSasToken}`, pipeline);
+    const response: storage.BlobDownloadResponseParsed = await blobUrl.download();
 
     if (response && response.readableStreamBody) {
         tl.mkdirP(exportEnvTemplateLocation);

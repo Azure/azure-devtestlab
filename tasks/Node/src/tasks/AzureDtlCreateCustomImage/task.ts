@@ -137,7 +137,7 @@ function getInputData(ciName?: string, test?: boolean): CreateCiTaskInputData {
             labVmId: String(tl.getInput('LabVmId', true)),
             linuxOsState: String(tl.getInput('LinuxOsState', equalsIgnoreCase(osType, 'Linux'))),
             osType: osType,
-            subscriptionId: tl.getEndpointDataParameter(connectedServiceName, 'SubscriptionId', true),
+            subscriptionId: String(tl.getEndpointDataParameter(connectedServiceName, 'SubscriptionId', true)),
             windowsOsState: String(tl.getInput('WindowsOsState', equalsIgnoreCase(osType, 'Windows')))
         };
     }

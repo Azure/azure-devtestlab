@@ -13,6 +13,7 @@ function copySrc(srcDir, destDir) {
         ncp(srcDir, destDir, {
             filter: function (name) {
                 var includeFile = name.indexOf('.ts') === -1
+                    && name.indexOf('template.json') === -1
                     && name.indexOf('testdata.json') === -1
                     && name.indexOf('modules') === -1
                     && name.indexOf('tests') === -1;

@@ -1,32 +1,32 @@
 {
   "name": "azure-pipelines-dtl-tasks",
-  "version": "3.0.0",
+  "version": "3.0.16",
   "description": "Collection of cross-platform Azure Pipelines tasks to interact with Azure DevTest Labs.",
   "main": "index.js",
   "dependencies": {
     "@azure/arm-devtestlabs": "^3.2.0",
+    "@azure/core-tracing": "^1.0.0-preview.11",
     "@azure/arm-resources": "^4.0.0",
-    "@azure/ms-rest-js": "^2.1.0",
-    "@azure/ms-rest-nodeauth": "^3.0.6",
-    "@azure/storage-blob": "^10.4.0",
-    "azure-pipelines-task-lib": "^2.12.0",
+    "@azure/ms-rest-js": "^2.4.1",
+    "@azure/ms-rest-nodeauth": "^3.0.9",
+    "@azure/storage-blob": "^12.5.0",
+    "azure-pipelines-task-lib": "^3.1.2",
     "isomorphic-fetch": "^3.0.0",
     "minimist": "^1.2.5",
-    "tough-cookie": "^4.0.0",
-    "uuid": "^8.3.2"
+    "tough-cookie": "^4.0.0"
   },
   "devDependencies": {
-    "@types/mocha": "^8.2.0",
+    "@types/mocha": "^8.2.2",
     "@types/ncp": "^2.0.4",
-    "@types/node": "^14.14.20",
+    "@types/node": "^15.0.2",
     "@types/q": "^1.5.4",
-    "@types/uuid": "^8.3.0",
     "ncp": "^2.0.0",
-    "react-dev-utils": "^11.0.1",
+    "react-dev-utils": "^11.0.4",
     "rimraf": "^3.0.2",
-    "ts-loader": "^8.0.14",
-    "typescript": "^4.1.3",
-    "webpack": "^5.12.3"
+    "terser-webpack-plugin": "^5.1.1",
+    "ts-loader": "^9.1.2",
+    "typescript": "^4.2.4",
+    "webpack": "^5.36.2"
   },
   "scripts": {
     "build-dev": "npm run copy-dev && tsc",
@@ -38,7 +38,8 @@
     "copy-dev": "node scripts/copy.js --dev",
     "init-dev": "npm run clean-dev && npm run build-dev",
     "init-mods": "npm install && npm run clean-submods",
-    "package": "npm run clean && npm run clean-submods && npm run bundle && npm run copy && npm run tfx",
+    "package": "npm run package-build && npm run tfx",
+    "package-build": "npm run clean && npm run clean-submods && npm run bundle && npm run copy",
     "test": "echo \"Error: no test specified\" && exit 1",
     "tfx": "tfx extension create --manifest-globs --root dist --output-path dist"
   },

@@ -84,9 +84,35 @@ function Import-LabsCsv {
         if ((Get-Member -InputObject $_ -Name 'Emails') -and ($_.Emails)) {
             $_.Emails = ($_.Emails.Split(';')).Trim()
         }
+        else {
+            #Assign to empty array since New-AzLab expects this property to exist, but this property should be optional in the csv
+            Add-Member -InputObject $_ -MemberType NoteProperty -Name "Emails" -Value @() 
+        }
 
         if ((Get-Member -InputObject $_ -Name 'LabOwnerEmails') -and ($_.LabOwnerEmails)) {
             $_.LabOwnerEmails = ($_.LabOwnerEmails.Split(';')).Trim()
+        }
+        else {
+            #Assign to empty array since New-AzLab expects this property to exist, but this property should be optional in the csv
+            Add-Member -InputObject $_ -MemberType NoteProperty -Name "LabOwnerEmails" -Value @() 
+        }
+
+        # TODO: There are two odd things about this code:
+        #   1.) The name of this property on the input object is "SharedPassword", but the the New-AzLab function expects the parameter name to be "SharedPasswordEnabled".
+        #   2.) The Set-AzLab function expects this property to have Enabled\Disabled values, but New-AzLab expects true\false.
+        # In the future, we need to resolve these inconsistencies. It works right now because:
+        #   1.) New-AzLabsBulk calls New-AzLab to create a new lab.  When New-AzLab is called, it ignores this "SharedPassword" property value and defaults it to False because New-AzLab is expecting the property to be named "SharedPasswordEnabled".
+        #   2.) New-AzLabsBulk then calls Set-AzLab.  When Set-AzLab is called, the value of this "SharedPassword" property is explicitly passed in as the "SharedPasswordEnabled" parameter.
+        if (Get-Member -InputObject $_ -Name 'SharedPassword') {
+            if ([System.Convert]::ToBoolean($_.SharedPassword)) {
+                $_.SharedPassword = 'Enabled'
+            }
+            else {
+                $_.SharedPassword = 'Disabled'
+            }
+        }
+        else {
+            Add-Member -InputObject $_ -MemberType NoteProperty -Name "SharedPassword" -Value 'Disabled'
         }
 
         if (Get-Member -InputObject $_ -Name 'GpuDriverEnabled') {
@@ -116,6 +142,10 @@ function Import-LabsCsv {
         if ((Get-Member -InputObject $_ -Name 'Schedules') -and ($_.Schedules)) {
             Write-Verbose "Setting schedules for $($_.LabName)"
             $_.Schedules = Import-Schedules -schedules $_.Schedules
+        }
+        else {
+            #Assign to empty array since New-AzLab expects this property to exist, but this property should be optional in the csv
+            Add-Member -InputObject $_ -MemberType NoteProperty -Name "Schedules" -Value @() 
         }
 
     }
@@ -420,6 +450,7 @@ function New-AzLabsBulk {
 
                 if ($lab) {
                     Write-Host "Lab already exists..  Updating properties instead."
+
                     Set-AzLab -Lab $lab -MaxUsers $obj.MaxUsers -UserAccessMode $obj.UsageMode -SharedPasswordEnabled $obj.SharedPassword | Out-Null
 
                     # In the case of AAD Group, we have to force sync users to update the MaxUsers property

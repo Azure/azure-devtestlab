@@ -61,6 +61,7 @@
   ],
   "exclude": [
     "**/authfile.json",
-    "**/testdata.json"
+    "**/testdata.json",
+    "**/template.json"
   ]
 }

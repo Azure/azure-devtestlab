@@ -4,6 +4,7 @@
 **/node_modules
 
 **/authfile.json
+**/template.json
 **/testdata.json
 **/.taskkey
 **/*.map

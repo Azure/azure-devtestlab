@@ -1,3 +1,5 @@
+import path from 'path';
+
 import '../../modules/task-utils/polyfill';
 import { equalsIgnoreCase } from '../../modules/task-utils/polyfill';
 
@@ -222,7 +224,7 @@ function getInputData(vmName?: string, test?: boolean): CreateVmTaskInputData {
             retryOnFailure: retryOnFailure,
             retryCount: retryOnFailure && data.retryCount ? +data.retryCount : 0,
             subscriptionId: data.subscriptionId,
-            templateFile: data.templateFile,
+            templateFile: path.join(testutil.getTestDataFolder(), data.templateFile),
             vmName: vmName ? vmName : data.vmName,
             waitMinutes: data.waitMinutes ? +data.waitMinutes : 0
         };
@@ -241,7 +243,7 @@ function getInputData(vmName?: string, test?: boolean): CreateVmTaskInputData {
             parametersFile: String(tl.getInput('ParametersFile', false)),
             retryOnFailure: retryOnFailure,
             retryCount: retryOnFailure ? Number(tl.getInput('RetryCount', false)) : 0,
-            subscriptionId: tl.getEndpointDataParameter(connectedServiceName, 'SubscriptionId', true),
+            subscriptionId: String(tl.getEndpointDataParameter(connectedServiceName, 'SubscriptionId', true)),
             templateFile: String(tl.getInput('TemplateFile', true)),
             vmName: String(tl.getInput('VirtualMachineName', true)),
             waitMinutes: Number(tl.getInput('WaitMinutesForApplyArtifacts', false))

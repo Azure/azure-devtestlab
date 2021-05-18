@@ -84,7 +84,7 @@ function getInputData(envName?: string, test?: boolean): CreateOrUpdateEnvTaskIn
             outputTemplateVariables: tl.getBoolInput('OutputTemplateVariables'),
             parametersFile: String(tl.getInput('ParametersFile', false)),
             parameterOverrides: String(tl.getInput('ParameterOverrides', false)),
-            subscriptionId: tl.getEndpointDataParameter(connectedServiceName, 'SubscriptionId', true),
+            subscriptionId: String(tl.getEndpointDataParameter(connectedServiceName, 'SubscriptionId', true)),
             templateFile: '',
             templateId: String(tl.getInput('TemplateId', true))
         };
