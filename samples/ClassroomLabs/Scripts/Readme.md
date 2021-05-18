@@ -9,3 +9,4 @@ This folder contains scripts to help set up classes in Azure Lab Services.
 5. [HyperV](./HyperV/): helps preparing a template virtual machine for a classroom lab to use Hyper-V nested virtualization.
 6. [X2GoRemoteDesktop](./X2GoRemoteDesktop/): These scripts install the X2Go server and client for the selected Linux desktop environment (MATE, XFCE4, or Xubuntu) on your Linux lab VM. 
 7. [CustomContributorRole](./CustomContributorRole): This script imports a custom role that you can assign teachers to have finer control over the management operations that they can perform for a lab.
+8. [BringImageToSharedImageGallery](./BringImageToSharedImageGallery): This script imports an image from an Azure VM to shared image gallery.
