@@ -67,11 +67,6 @@ param
 # Lets stop the script for any errors
 $ErrorActionPreference = "Stop"
 
-# TODO ITEMS
-# 1)  Enable passing Business Unit to control which SIG/Subscription to use
-# 2)  What should the replication regions be?  DTL will update this automatically, but causes delay on creating new VMs
-
-
 function Get-ResourceWithPrompt {
 
     param (

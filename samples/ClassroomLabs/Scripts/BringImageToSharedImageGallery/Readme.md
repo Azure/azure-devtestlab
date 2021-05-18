@@ -6,7 +6,7 @@ This script is used to bring a custom image from an Azure virtual machine (VM) t
 
 # Directions
 1. Open a PowerShell window.  Make sure that the window notes it is running under administrator privileges.
-2. Run `BringImageToSharedImageGallery.ps1`.
+2. Run `BringImageToSharedImageGallery.ps1`.  You can either pass all the required parameters when you run the script.  Or, you can run the script without the parameters so that you are prompted as shown in the next bullet.
 3. When prompted, enter information about where the source VM resides and the shared image gallery where the custom image will be created.  Here are some helpful tips:
 
     - After you provide your subscription, you will be prompted with the following question: **Is this a DTL VM?**.  Assuming that you used an Azure VM to set up your image, you should answer **No** for this question.
@@ -15,7 +15,7 @@ This script is used to bring a custom image from an Azure virtual machine (VM) t
 
     - When you create a new image definition, you will be prompted for the following information:
         - Name of the image definition.
-        - Whether the image is [specialized or generalize](https://docs.microsoft.com/azure/virtual-machines/shared-image-galleries#generalized-and-specialized-images).
+        - Whether the image is [specialized or generalized](https://docs.microsoft.com/azure/virtual-machines/shared-image-galleries#generalized-and-specialized-images).
         - Publisher.  For more information about the value to enter, see [Image definitions](https://docs.microsoft.com/azure/virtual-machines/shared-image-galleries#image-definitions).
         - Offer.  For more information about the value to enter, see [Image definitions](https://docs.microsoft.com/azure/virtual-machines/shared-image-galleries#image-definitions).  
         - HyperVGeneration.  You should enter **v1**.
