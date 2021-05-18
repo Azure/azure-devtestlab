@@ -47,18 +47,6 @@ if (-not (Get-Command -Name "Start-ThreadJob" -ErrorAction SilentlyContinue)) {
     Write-Error "Unable to find the ThreadJob Powershell module, please add to the Azure Automation account"
 }
 
-# Get the Access Token for this session
-$azureRmProfile = Invoke-Expression "[Microsoft.Azure.Commands.Common.Authentication.Abstractions.AzureRmProfileProvider]::Instance.Profile"
-$profileClient = New-Object Microsoft.Azure.Commands.ResourceManager.Common.RMProfileClient($azureRmProfile)
-$token = $profileClient.AcquireAccessToken($Conn.TenantID)
-
-# Write the access token as a global variable so we can access it in the Lab Services library
-Set-Variable -Name "AccessToken" -Value $token.AccessToken -Scope Global
-
-if ($token.AccessToken) {
-    Write-Host "We have an access token"
-}
-
 $labAccounts = Get-AzLabAccount | Where-Object {
     $_.LabAccountName -match $labAccountNameRegex
 }
@@ -74,14 +62,10 @@ try {
         $_.LabAccountName -match $labAccountNameRegex
     }
     
-    Write-Host "We found lab accounts"
-
     $labs = $labAccounts | Get-AzLab 6>> $HostOutputFile.FullName
 
-    Write-Host "We found labs"
-
     # Filter the labs down to only the set that we should update
-    Write-Host "Checking for labs to exclude..." 6>> $HostOutputFile.FullName
+    Write-Output "Checking for labs to exclude..." 6>> $HostOutputFile.FullName
     $labsToUpdate = $labs | Where-Object {
         $toExclude = $null
         $labName = $_.Name
@@ -91,7 +75,7 @@ try {
         }
         if ($toExclude) 
             {
-                Write-Host "   Excluding Lab '$labName' in Resource Group '$resourceGroupName'" 6>> $HostOutputFile.FullName
+                Write-Output "   Excluding Lab '$labName' in Resource Group '$resourceGroupName'" 6>> $HostOutputFile.FullName
                 $false
             } 
         else {$true}
