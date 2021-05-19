@@ -39,7 +39,7 @@ Describe 'Lab' {
         Write-Verbose "Lab.Tests: la $($script:la)"
 
         $lab = $script:la `
-        | New-AzLab -LabName $labName1 -Image $img -Size $size1 -UsageQuotaInHours $usageQuota1 -SharedPasswordEnabled:$shPsswd1 -UserName $userName1 -Password $password1 -LinuxRdpEnabled:$linuxRdp1 `
+        | New-AzLab -LabName $labName1 -Image $img -Size $size1 -UsageQuotaInHours $usageQuota1 -SharedPasswordEnabled:$shPsswd1 -UserName $userName1 -Password $password1 -LinuxRdp:$linuxRdp1 `
         | Publish-AzLab
         
         Write-Verbose "$labName1 lab doesn't exist. Created it."
