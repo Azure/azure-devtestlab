@@ -84,7 +84,7 @@ function Get-FastLab {
         Write-Verbose "Get-FastLab: Linux RDP $linuxRdp"
 
         $lab = $la `
-        | New-AzLab -LabName $LabRealName -Image $img -Size $size -UsageQuotaInHours $usageQuota -UserName $userName -Password $password -LinuxRdpEnabled:$linuxRdp -SharedPasswordEnabled:$shPsswd `
+        | New-AzLab -LabName $LabRealName -Image $img -Size $size -UsageQuotaInHours $usageQuota -UserName $userName -Password $password -LinuxRdp:$linuxRdp -SharedPasswordEnabled:$shPsswd `
         | Publish-AzLab
         Write-Verbose "$LaRealbName lab doesn't exist. Created it."
         return $lab
