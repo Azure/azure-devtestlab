@@ -64,7 +64,7 @@
         }
     },
     "variables": {
-        "quickstartRepoRoot": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/",
+        "quickstartRepoRoot": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/quickstarts/microsoft.servicefabric/",
         "clusterName": "[concat('sf-', toLower(uniqueString(resourceGroup().name)))]",
         "vaultName": "[concat('kv-', toLower(uniqueString(resourceGroup().name)))]",
         "vaultSecret": "ClusterCertificate",
