@@ -173,7 +173,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[concat(variables('quickstartRepoRoot'), '5-VM-Ubuntu-1-NodeTypes-Secure/azuredeploy.json')]",
+                    "uri": "[concat(variables('quickstartRepoRoot'), '5-vm-ubuntu-1-nodetypes-secure/azuredeploy.json')]",
                     "contentVersion": "1.0.0.0"
                 },
                 "parameters": {
