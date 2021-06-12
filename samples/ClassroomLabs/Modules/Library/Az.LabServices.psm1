@@ -1827,7 +1827,7 @@ function New-AzLabSchedule {
         [ValidateLength(4, 5)]
         [string] $EndTime = "10:00",
     
-        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "The Windows time zone id associated with labVmStartup (E.g. UTC, Pacific Standard Time, Central Europe Standard Time).")]
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "The Windows time zone id associated with labVmStartup (E.g. UTC, Pacific Standard Time, Central Europe Standard Time).  See Time zones are https://docs.microsoft.com/rest/api/maps/timezone/get-timezone-enum-windows.")]
         [ValidateLength(3, 40)]
         [string] $TimeZoneId = "W. Europe Standard Time",
     
