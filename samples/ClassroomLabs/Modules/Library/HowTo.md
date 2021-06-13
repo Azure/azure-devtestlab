@@ -127,7 +127,7 @@ $labs | Get-AzLabUser | Send-AzLabUserInvitationEmail -InvitationText 'You are i
 
 ## Set schedules
 
-Setting a recurrent schedule for your class is done using the `New-AzLabSchedule` function:
+Setting a recurrent schedule for your class is done using the `New-AzLabSchedule` function.  Time zones are  [Windows Time Zones](https://docs.microsoft.com/rest/api/maps/timezone/get-timezone-enum-windows).
 
 ```powershell
 @(
@@ -139,8 +139,11 @@ Setting a recurrent schedule for your class is done using the `New-AzLabSchedule
 To have schedule repeat only on certain dates, pass in the $WeekDays object:
 
 ```powershell
+$startDate = (Get-Date).ToString()
+$endDate = (Get-Date).AddMonths(4).ToString()
+$timeZone = 'W. Australia Standard Time'
 @(
-    [PSCustomObject]@{TimeZoneId='Pacific Standard Time';Frequency='Weekly';WeekDays = @('Monday', 'Thursday', 'Saturday');FromDate=$today;ToDate = $end;StartTime='10:00';EndTime='11:00'}
+    [PSCustomObject]@{TimeZoneId=$timeZone;Frequency='Weekly';WeekDays = @('Monday', 'Thursday', 'Saturday');FromDate=$startDate;ToDate = $endDate;StartTime='10:00';EndTime='11:00'}
 ) | ForEach-Object { $_ | New-AzLabSchedule -Lab $lab} 
 ```
 
