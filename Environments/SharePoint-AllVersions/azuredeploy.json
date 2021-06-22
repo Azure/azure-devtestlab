@@ -369,7 +369,7 @@
       "spAppPoolUserName": "spapppool",
       "spAppPoolPassword": "[parameters('serviceAccountsPassword')]",
       "spPassphrase": "[parameters('serviceAccountsPassword')]",
-      "localAdminUserName": "[concat('local-', parameters('adminUserName'))]"
+      "localAdminUserName": "[concat('local-', uniqueString(subscription().subscriptionId))]"
     },
     "networkSettings": {
       "vNetPrivateName": "[concat(resourceGroup().name, '-vnet')]",
@@ -1533,13 +1533,38 @@
     }
   ],
   "outputs": {
-    "EnvironmentLocation": {
+    "domainAdminAccount": {
       "type": "string",
-      "value": "[parameters('_artifactsLocation')]"
+      "value": "[concat(substring(parameters('domainFQDN'), 0, indexOf(parameters('domainFQDN'), '.')), '\\', parameters('adminUserName'))]"
     },
-    "EnvironmentSAS": {
+    "localAdminAccount": {
       "type": "string",
-      "value": "[parameters('_artifactsLocationSasToken')]"
+      "value": "[variables('generalSettings').localAdminUserName]"
+    },
+    "publicIPAddressSP2019": {
+      "condition": "[and(equals(parameters('provisionSharePoint2019'), 'Yes'), equals(parameters('addPublicIPAddressToEachVM'), 'Yes'))]",
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('vmSP2019').vmPublicIPName)).dnsSettings.fqdn]"
+    },
+    "publicIPAddressSP2016": {
+      "condition": "[and(equals(parameters('provisionSharePoint2016'), 'Yes'), equals(parameters('addPublicIPAddressToEachVM'), 'Yes'))]",
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('vmSP2016').vmPublicIPName)).dnsSettings.fqdn]"
+    },
+    "publicIPAddressSP2013": {
+      "condition": "[and(equals(parameters('provisionSharePoint2013'), 'Yes'), equals(parameters('addPublicIPAddressToEachVM'), 'Yes'))]",
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('vmSP2013').vmPublicIPName)).dnsSettings.fqdn]"
+    },
+    "publicIPAddressSQL": {
+      "condition": "[equals(parameters('addPublicIPAddressToEachVM'), 'Yes')]",
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('vmSQL').vmPublicIPName)).dnsSettings.fqdn]"
+    },
+    "publicIPAddressDC": {
+      "condition": "[equals(parameters('addPublicIPAddressToEachVM'), 'Yes')]",
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('vmDC').vmPublicIPName)).dnsSettings.fqdn]"
     }
   }
 }
