@@ -23,9 +23,11 @@ function bundle() {
           warnings: []
         });
       } else {
-        messages = formatWebpackMessages(
-          stats.toJson({ all: false, warnings: true, errors: true })
-        );
+        const rawMessages = stats.toJson({ all: false, warnings: true, errors: true })
+        messages = formatWebpackMessages({
+          errors: rawMessages.errors.map((e) => e.message),
+          warnings: rawMessages.warnings.map((e) => e.message),
+        });
       }
       if (messages.errors.length) {
         // Only keep the first error. Others are often indicative
@@ -44,7 +46,7 @@ function bundle() {
         console.log(
           chalk.yellow(
             '\nTreating warnings as errors because process.env.CI = true.\n' +
-              'Most CI servers set it automatically.\n'
+            'Most CI servers set it automatically.\n'
           )
         );
         return reject(new Error(messages.warnings.join('\n\n')));
