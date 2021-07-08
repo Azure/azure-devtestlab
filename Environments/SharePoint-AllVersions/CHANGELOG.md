@@ -1,8 +1,22 @@
 # Change log for Azure DevTest Labs template SharePoint-AllVersions
 
+## Enhancements & bug-fixes - Published in June 22, 2021
+
+* Reduce deployment time by removing the (no longer needed) workaround that reboots SP VM before creating the site in SharePoint 2019
+* Reduce deployment time by enabling the distributed cache service during the SharePoint farm creation (in SP VM only)
+* Reduce deployment time by running script UpdateGPOToTrustRootCACert only if necessary
+* Install Visual Studio Code in SP and FE VMs
+* Create modern team sites instead of classic team sites in SharePoint 2019
+* Return various information as output of the template deployment
+* Update TLS 1.2 settings in SP and FE VMs
+* Enable file sharing (on Domain network profile) also on SQL VM (it is already enabled on SP and FE VMs)
+* Update DSC module SharePointDSC from 4.5.1 to 4.7, removed the now useless dependency on ReverseDSC and manually added the changes in PR #1325
+* Update DSC module xDnsServer from 1.16.0 to 2.0
+* Set local admin name on VM SQL/SP/FE with a unique string, to avoid using the local admin instead of the domain admin
+
 ## Enhancements & bug-fixes - Published in March 29, 2021
 
-* Rename local admin on VM SQL/SP/FE to local-<adminUserName>, to avoid using the local admin instead of the domain admin
+* Rename local admin on VM SQL/SP/FE to local-'adminUserName', to avoid using the local admin instead of the domain admin
 * Set UserPrincipalName of all AD accounts
 * Change the identity claim type to use the UPN in federated authentication
 * Change the format of the realm / identifier in federated authentication
