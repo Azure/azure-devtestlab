@@ -80,7 +80,7 @@ try
     Import-Module PSWindowsUpdate
     
     Write-Host 'Installing Windows Updates.'
-    Get-WUInstall -IgnoreReboot -AcceptAll
+    Get-WUInstall -IgnoreUserInput -Acceptall -Download -Install -Verbose -IgnoreReboot
     
     Write-Host "Windows Update finished. Rebooting..."
     Write-Host "`nThe artifact was applied successfully.`n"
