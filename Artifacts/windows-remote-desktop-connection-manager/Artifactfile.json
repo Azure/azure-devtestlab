@@ -2,13 +2,13 @@
     "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
     "title": "Remote Desktop Connection Manager",
     "publisher": "Vince Adams",
-    "description": "Installs Remote Desktop Connection Manager using the Chocolatey package manager",
+    "description": "Installs Remote Desktop Connection Manager using the Chocolatey package manager.\r\nThis application has a vulnerability that won't be fixed because it is no longer supported. https://msrc.microsoft.com/update-guide/en-US/vulnerability/CVE-2020-0765.",
     "tags": [
         "Windows",
         "rdcman",
         "Remote Desktop Connection Manager"
     ],
-    "iconUri": "https://chocolatey.org/content/packageimages/rdcman.2.7.1406.20160916.png",
+    "iconUri": "https://community.chocolatey.org/Content/Images/packageDefaultIcon.png",
     "targetOsType": "Windows",
     "runCommand": {
         "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./install-choco-package.ps1 -Packages ', 'rdcman', '\"')]"
