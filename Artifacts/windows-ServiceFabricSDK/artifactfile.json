@@ -9,7 +9,6 @@
     "Azure",
     "ServiceFabric"
   ],
-  "iconUri": "https://106c4.wpc.azureedge.net/80106C4/Gallery-Prod/cdn/2015-02-24/prod20161101-microsoft-windowsazure-gallery/Microsoft.ServiceFabricCluster.1.0.6/Icons/Small.png",
   "targetOsType": "Windows",
   "parameters": {
     "VSVersion": {
