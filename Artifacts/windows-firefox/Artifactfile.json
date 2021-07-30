@@ -7,7 +7,7 @@
         "Windows",
         "Firefox"
     ],
-    "iconUri": "https://chocolatey.org/content/packageimages/Firefox.52.0.1.png",
+    "iconUri": "https://community.chocolatey.org/content/packageimages/Firefox.90.0.2.svg",
     "targetOsType": "Windows",
     "runCommand": {
         "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./install-choco-package.ps1 -Packages ', 'firefox', '\"')]"

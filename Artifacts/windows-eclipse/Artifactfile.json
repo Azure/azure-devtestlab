@@ -7,7 +7,7 @@
         "Windows",
         "Eclipse"
     ],
-    "iconUri": "https://chocolatey.org/content/packageimages/eclipse.4.7.3.png",
+    "iconUri": "https://community.chocolatey.org/content/packageimages/eclipse.4.20.png",
     "targetOsType": "Windows",
     "runCommand": {
         "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./install-choco-package.ps1 -Packages ', 'eclipse', '\"')]"

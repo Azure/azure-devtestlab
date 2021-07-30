@@ -7,7 +7,7 @@
         "Windows",
         "AWS"
     ],
-    "iconUri": "https://chocolatey.org/content/packageimages/awscli.1.11.76.png",
+    "iconUri": "https://community.chocolatey.org/content/packageimages/awscli.2.2.24.png",
     "targetOsType": "Windows",
     "runCommand": {
         "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./install-choco-package.ps1 -Packages ', 'awscli', '\"')]"

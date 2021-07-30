@@ -7,7 +7,7 @@
         "Windows",
         "SSMS"
     ],
-    "iconUri": "https://chocolatey.org/content/packageimages/sql-server-management-studio.13.0.16106.4.png",
+    "iconUri": "https://community.chocolatey.org/content/packageimages/sql-server-management-studio.15.0.18386.0.png",
     "targetOsType": "Windows",
     "runCommand": {
         "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./install-choco-package.ps1 -Packages ''', 'sql-server-management-studio', '''\"')]"

@@ -7,7 +7,7 @@
         "PowerShell",
         "Selenium"
     ],
-    "iconUri": "https://chocolatey.org/content/packageimages/selenium-all-drivers.4.0.png",
+    "iconUri": "https://community.chocolatey.org/content/packageimages/selenium-all-drivers.4.0.png",
     "targetOsType": "Windows",
     "parameters": {
         "seleniumServerStandaloneJarFile": {
