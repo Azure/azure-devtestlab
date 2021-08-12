@@ -5,7 +5,7 @@ $ErrorActionPreference = "Stop"
 # ************ FIELDS TO UPDATE ******************
 # ************************************************
 
-# Whitelist Labs (lab names that we should not include when updating quota)
+# List of lab names that we should not include when updating quota)
 $excludeLabs = @('*test*','*demo*','*training*', '*how to*')
 
 # Number of available hours we reset the student to when running this script
