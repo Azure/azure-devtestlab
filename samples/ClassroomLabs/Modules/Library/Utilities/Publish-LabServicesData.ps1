@@ -6,12 +6,12 @@
    2. For current properties of all lab virtual machines in the subscription, irregardless of what lab they are in.
    3. For current properties of all lab users in the subscription, irregardless of what lab they are in.
  #>
- #IMPORTANT: Comment out parameter block if executing in an Azure Function with timer trigger
- #param($timer)
- param (
+#IMPORTANT: Comment out parameter block if executing in an Azure Function with timer trigger
+#param($timer)
+param (
     [string] $StorageAccountResourceGroupName,
     [string] $StorageAccountName
- )
+)
 
 $ErrorActionPreference = "Stop"
 
@@ -22,10 +22,10 @@ Set-StrictMode -Version 3.0
 # ************************************************
 # If script is being run in a Azure Function environment,
 #  we expected the storage account name and resource group to be application settings
-if ([Environment]::GetEnvironmentVariable('StorageAccountResourceGroupName')){
+if ([Environment]::GetEnvironmentVariable('StorageAccountResourceGroupName')) {
     $StorageAccountResourceGroupName = [Environment]::GetEnvironmentVariable('StorageAccountResourceGroupName')
 }
-if ([Environment]::GetEnvironmentVariable('StorageAccountName')){
+if ([Environment]::GetEnvironmentVariable('StorageAccountName')) {
     $StorageAccountName = [Environment]::GetEnvironmentVariable('StorageAccountName')
 }
 
@@ -143,16 +143,14 @@ foreach ($labAccount in $labAccounts) {
         #This API has price and vm size information for a lab
         # We need to call directly since Az.LabServices doesn't expose this
         try {
- 
-            $labPricingInformation = Invoke-WebRequest `
-                $[uri]::EscapeUriString("https://management.azure.com$($lab.id)/getLabPricingAndAvailability?api-version=2019-01-01-preview") `
+            $url = "https://management.azure.com$($lab.id)/getLabPricingAndAvailability?api-version=2019-01-01-preview" 
+            $labPricingInformation = Invoke-WebRequest $url `
                 -Headers @{                    
-                'Content-Type'  = 'application/json';                   
-                'Authorization' = "Bearer $(Get-AzAccessToken | Select-Object -expand Token)";
+                'Content-Type'  = 'application/json'                   
+                'Authorization' = "Bearer $(Get-AzAccessToken | Select-Object -expand Token)"
             } `
-                -Method POST `
-            | ConvertFrom-Json
-
+            -Method POST | ConvertFrom-Json
+         
             #Add pricing information for lab
             $details | Add-Member -Name "PricePerHour" -Value $labPricingInformation.price -MemberType NoteProperty
             $details | Add-Member -Name "PriceCurrencyCode" -Value $labPricingInformation.currencyCode -MemberType NoteProperty
@@ -165,7 +163,10 @@ foreach ($labAccount in $labAccounts) {
             $details | Add-Member -Name "VmMemoryInGb" -Value $labPricingInformation.size.memoryInGb -MemberType NoteProperty
             $details | Add-Member -Name "VmGpu" -Value $labPricingInformation.size.gpu -MemberType NoteProperty
         }
-        catch { <# Call will fail if lab is in a bad state #> }
+        catch {
+            Write-Warning "Couldn't get pricing information for Lab Account '$($labAccount.LabAccountName)', Lab '$($lab.LabName)'" 
+           #Write-Warning "Url is $url"
+        }
 
         #Write Lab information to temporary file
         $details | Export-Csv -Path $LabInfoLocalOutputFile -NoTypeInformation -Append -Force
@@ -271,9 +272,9 @@ Write-ResourceInformation -StorageAccountContext $ctx -ContainerName $UserInfoCo
 #Write an identifiable blog with the latest information.
 # Warning: This will result in duplicate information and should be accounted for 
 # if using these containers as a data source for reports
-   Write-ResourceInformation -StorageAccountContext $ctx -ContainerName $LabInfoContainerName -BlobName "$LabInfoPrefix-latest.csv" -DataFile $LabInfoLocalOutputFile
-   Write-ResourceInformation -StorageAccountContext $ctx -ContainerName $VmInfoContainerName -BlobName "$VmInfoPrefix-latest.csv" -DataFile $VmInfoLocalOutputFile
-   Write-ResourceInformation -StorageAccountContext $ctx -ContainerName $UserInfoContainerName -BlobName "$UserInfoPrefix-latest.csv" -DataFile $UserInfoLocalOutputFile
+Write-ResourceInformation -StorageAccountContext $ctx -ContainerName $LabInfoContainerName -BlobName "$LabInfoPrefix-latest.csv" -DataFile $LabInfoLocalOutputFile
+Write-ResourceInformation -StorageAccountContext $ctx -ContainerName $VmInfoContainerName -BlobName "$VmInfoPrefix-latest.csv" -DataFile $VmInfoLocalOutputFile
+Write-ResourceInformation -StorageAccountContext $ctx -ContainerName $UserInfoContainerName -BlobName "$UserInfoPrefix-latest.csv" -DataFile $UserInfoLocalOutputFile
 
 #Clean up temporary files
 @($LabInfoLocalOutputFile, $VmInfoLocalOutputFile, $UserInfoLocalOutputFile) | ForEach-object { Remove-Item -Path $_ -Force }
