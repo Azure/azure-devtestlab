@@ -1,5 +1,19 @@
 # Change log for Azure DevTest Labs template SharePoint-AllVersions
 
+## Enhancements & bug-fixes - Published in September 13, 2021
+
+* Fix the error when browsing the team site collection in SharePoint 2019 by updating SharePointDSC to 4.8.
+* Change default size of virtual machines to use B-series burstable, ideal for such template and much cheaper than other comparable series.
+* Change default storage type of SharePoint virtual machines to 'StandardSSD_LRS'.
+* Change type of parameters to boolean when possible.
+* Introduce new parameter 'RDPTrafficAllowed', to finely configure if/how RDP traffic should be allowed.
+* Reorder parameters to have a more logical display when deploying the template from the portal.
+* Update the list of disk types available for virtual machines.
+* Improve management of automatic Windows updates
+* Update apiVersion of all resources to latest version.
+* Update DSC module SharePointDSC from 4.7 to 4.8, which no longer needs custom changes.
+* Update DSC module SqlServerDsc from 15.1.1 to 15.2
+
 ## Enhancements & bug-fixes - Published in June 22, 2021
 
 * Reduce deployment time by removing the (no longer needed) workaround that reboots SP VM before creating the site in SharePoint 2019
