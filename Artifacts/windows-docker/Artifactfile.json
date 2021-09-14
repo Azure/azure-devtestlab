@@ -15,6 +15,12 @@
     },
     "postDeployActions": [
         {
+            "action": "deallocate"
+        },
+        {
+            "action": "waitForShutdown"
+        },
+        {
             "action": "restart"
         }
     ]
