@@ -175,8 +175,8 @@ async function run(envId?: string, test?: boolean): Promise<void> {
         const envName: string = resutil.getLabResourceName(inputData.envId, 'environments');
         tl.setResult(tl.TaskResult.Succeeded, `Lab Environment '${envName}' was successfully updated.`);
     }
-    catch (error) {
-        console.debug(error);
+    catch (error:any) {
+        console.debug(JSON.stringify(error, null, 2));
         tl.setResult(tl.TaskResult.Failed, error.message);
     }
 }

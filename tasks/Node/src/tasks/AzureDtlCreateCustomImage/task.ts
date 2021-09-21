@@ -171,8 +171,8 @@ async function run(ciName?: string, test?: boolean): Promise<void> {
 
         tl.setResult(tl.TaskResult.Succeeded, `Lab Custom Image '${inputData.ciName}' was successfully created.`);
     }
-    catch (error) {
-        console.debug(error);
+    catch (error:any) {
+        console.debug(JSON.stringify(error, null, 2));
         tl.setResult(tl.TaskResult.Failed, error.message);
     }
 }

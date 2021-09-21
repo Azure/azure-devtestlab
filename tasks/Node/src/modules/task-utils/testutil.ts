@@ -24,11 +24,11 @@ export function getTestData(): any {
         return JSON.parse(data);
     }
     catch (error) {
-        tl.error(error);
+        tl.error(JSON.stringify(error, null, 2));
     }
 }
 
-export function writeTestLog(error: any): void {
+export function writeTestLog(message: any): void {
     try {
         const parentFileName = __filename;
         if (!parentFileName) {
@@ -39,9 +39,9 @@ export function writeTestLog(error: any): void {
         const testLogFilePath = path.join(path.dirname(parentFileName), 'testlog.json');
 
         tl.debug(`TestUtil: Writing test log to file '${path.relative(process.cwd(), testLogFilePath)}'.`)
-        fs.writeFileSync(testLogFilePath, JSON.stringify(error, null, 2), 'utf8');
+        fs.writeFileSync(testLogFilePath, JSON.stringify(message, null, 2), 'utf8');
     }
     catch (error) {
-        tl.error(error);
+        tl.error(JSON.stringify(error, null, 2));
     }
 }
