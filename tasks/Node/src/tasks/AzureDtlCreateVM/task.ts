@@ -80,7 +80,7 @@ function convertToMinutesString(minutes: number): string {
 }
 
 async function createVm(clients: TaskClients, inputData: CreateVmTaskInputData): Promise<void> {
-    let labVmId: string | undefined = undefined;
+    let labVmId: string = '';
 
     const labName: string = resutil.getLabResourceName(inputData.labId, 'labs');
     const labRgName: string = resutil.getLabResourceName(inputData.labId, 'resourcegroups');
@@ -134,7 +134,7 @@ async function createVm(clients: TaskClients, inputData: CreateVmTaskInputData):
             }
             else {
                 // Reset labVmId to ensure we don't mistakenly return a previously invalid value in case of a subsequent retry error.
-                labVmId = undefined;
+                labVmId = '';
 
                 tl.warning(`A deployment failure occured. Retrying deployment (attempt ${i} of ${count - 1}).`);
                 tl.debug('Deployment failed with error:');
@@ -175,7 +175,15 @@ function getDeploymentParameters(labName: string, vmName: string, parametersFile
     deployutil.replaceParameter(deploymentParameters, 'labName', labName);
     deployutil.replaceParameter(deploymentParameters, 'newVMName', vmName);
 
-    deploymentParameters.forEach((p) => parameters[`${p.name}`] = { value: p.value });
+    deploymentParameters.forEach((p) => {
+        // Guard for cases where "undefined" parameters seem to get added at run time. If so, simply ignore them.
+        if (p.name != 'undefined') {
+            parameters[`${p.name}`] = { value: p.value };
+        }
+        else {
+            tl.warning(`Encountered invalid parameter while parsing parameters file: "${p.name}" = "${p.value}"`);
+        }
+    });
 
     return parameters;
 }
