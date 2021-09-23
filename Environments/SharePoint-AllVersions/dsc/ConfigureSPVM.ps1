@@ -9,6 +9,7 @@ configuration ConfigureSPVM
         [Parameter(Mandatory)] [String]$SQLAlias,
         [Parameter(Mandatory)] [String]$SharePointVersion,
         [Parameter(Mandatory)] [Boolean]$ConfigureADFS,
+        [Parameter(Mandatory)] [Boolean]$EnableAnalysis,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$DomainAdminCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSetupCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPFarmCreds,
@@ -117,6 +118,24 @@ configuration ConfigureSPVM
             GetScript = { }
         }
 
+        Script EnableLongPath
+        {
+            GetScript = { }
+            TestScript = {
+                return $false   # If TestScript returns $false, DSC executes the SetScript to bring the node back to the desired state
+            }
+            SetScript = 
+            {
+                $longPathEnabled = Get-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem\ -Name LongPathsEnabled
+                if (-not $longPathEnabled) {
+                    New-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem\ -Name LongPathsEnabled -Value 1 -PropertyType DWord
+                }
+                else {
+                    Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem\ -Name LongPathsEnabled -Value 1
+                }
+            }
+        }
+
         xScript EnableFileSharing
         {
             TestScript = {
@@ -213,12 +232,14 @@ configuration ConfigureSPVM
             DependsOn            = "[cChocoInstaller]InstallChoco"
         }
 
-        # # THIS RESOURCE IS FOR ANALYSIS OF DSC LOGS ONLY AND TOTALLY OPTIONNAL
-        # cChocoPackageInstaller InstallPython
-        # {
-        #     Name                 = "python"
-        #     Ensure               = "Present"
-        #     DependsOn            = "[cChocoInstaller]InstallChoco"
+        # if ($EnableAnalysis) {
+        #     # This resource is for  of dsc logs only and totally optionnal
+        #     cChocoPackageInstaller InstallPython
+        #     {
+        #         Name                 = "python"
+        #         Ensure               = "Present"
+        #         DependsOn            = "[cChocoInstaller]InstallChoco"
+        #     }
         # }
 
         #**********************************************************
@@ -692,28 +713,30 @@ configuration ConfigureSPVM
             }
         }
 
-        # # THIS RESOURCE IS FOR ANALYSIS OF DSC LOGS ONLY AND TOTALLY OPTIONNAL
-        # xScript parseDscLogs
-        # {
-        #     TestScript = { return $false }
-        #     SetScript = {
-        #         $setupPath = $using:SetupPath
-        #         $localScriptPath = "$setupPath\parse-dsc-logs.py"
-        #         New-Item -ItemType Directory -Force -Path $setupPath
+        # if ($EnableAnalysis) {
+        #     # This resource is for analysis of dsc logs only and totally optionnal
+        #     xScript parseDscLogs
+        #     {
+        #         TestScript = { return $false }
+        #         SetScript = {
+        #             $setupPath = $using:SetupPath
+        #             $localScriptPath = "$setupPath\parse-dsc-logs.py"
+        #             New-Item -ItemType Directory -Force -Path $setupPath
 
-        #         $url = "https://gist.githubusercontent.com/Yvand/777a2e97c5d07198b926d7bb4f12ab04/raw/parse-dsc-logs.py"
-        #         $downloader = New-Object -TypeName System.Net.WebClient
-        #         $downloader.DownloadFile($url, $localScriptPath)
+        #             $url = "https://gist.githubusercontent.com/Yvand/777a2e97c5d07198b926d7bb4f12ab04/raw/parse-dsc-logs.py"
+        #             $downloader = New-Object -TypeName System.Net.WebClient
+        #             $downloader.DownloadFile($url, $localScriptPath)
 
-        #         $dscExtensionPath = "C:\WindowsAzure\Logs\Plugins\Microsoft.Powershell.DSC"
-        #         $folderWithMaxVersionNumber = Get-ChildItem -Directory -Path $dscExtensionPath | Where-Object { $_.Name -match "^[\d\.]+$"} | Sort-Object -Descending -Property Name | Select-Object -First 1
-        #         $fullPathToDscLogs = [System.IO.Path]::Combine($dscExtensionPath, $folderWithMaxVersionNumber)
-                
-        #         python $localScriptPath "$fullPathToDscLogs"
+        #             $dscExtensionPath = "C:\WindowsAzure\Logs\Plugins\Microsoft.Powershell.DSC"
+        #             $folderWithMaxVersionNumber = Get-ChildItem -Directory -Path $dscExtensionPath | Where-Object { $_.Name -match "^[\d\.]+$"} | Sort-Object -Descending -Property Name | Select-Object -First 1
+        #             $fullPathToDscLogs = [System.IO.Path]::Combine($dscExtensionPath, $folderWithMaxVersionNumber)
+                    
+        #             python $localScriptPath "$fullPathToDscLogs"
+        #         }
+        #         GetScript = { }
+        #         DependsOn            = "[cChocoPackageInstaller]InstallPython"
+        #         PsDscRunAsCredential = $DomainAdminCredsQualified
         #     }
-        #     GetScript = { }
-        #     DependsOn            = "[cChocoPackageInstaller]InstallPython"
-        #     PsDscRunAsCredential = $DomainAdminCredsQualified
         # }
     }
 }
@@ -761,8 +784,9 @@ $SQLName = "SQL"
 $SQLAlias = "SQLAlias"
 $SharePointVersion = "2019"
 $ConfigureADFS = $false
+$EnableAnalysis = $true
 
-$outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.1.0\DSCWork\ConfigureSPVM.0\ConfigureSPVM"
+$outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.2.0\DSCWork\ConfigureSPVM.0\ConfigureSPVM"
 ConfigureSPVM -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPAppPoolCreds $SPAppPoolCreds -SPPassphraseCreds $SPPassphraseCreds -DNSServer $DNSServer -DomainFQDN $DomainFQDN -DCName $DCName -SQLName $SQLName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -ConfigureADFS $ConfigureADFS -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
 Set-DscLocalConfigurationManager -Path $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
