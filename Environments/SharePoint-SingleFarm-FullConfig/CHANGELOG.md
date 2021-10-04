@@ -1,5 +1,10 @@
 # Change log for Azure DevTest Labs template DTL-SharePoint-FullConfig
 
+## Enhancements & bug-fixes - Published in October 4, 2021
+
+* Improve reliability of DSC module cChoco, which caused most of the deployment errors.
+* Fix deployment error in SharePoint 2013 by also restarting service SPAdminV4 before deploying the solution.
+
 ## Enhancements & bug-fixes - Published in September 13, 2021
 
 * Change default size of virtual machines to use B-series burstable, ideal for such template and much cheaper than other comparable series.
