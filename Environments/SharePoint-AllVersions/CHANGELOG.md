@@ -1,5 +1,10 @@
 # Change log for Azure DevTest Labs template SharePoint-AllVersions
 
+## Enhancements & bug-fixes - Published in October 4, 2021
+
+* Improve reliability of DSC module cChoco, which caused most of the deployment errors.
+* Add output variable domainAdminAccountFormatForBastion.
+
 ## Enhancements & bug-fixes - Published in September 13, 2021
 
 * Fix the error when browsing the team site collection in SharePoint 2019 by updating SharePointDSC to 4.8.
