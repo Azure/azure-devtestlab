@@ -1550,6 +1550,10 @@
       "type": "string",
       "value": "[concat(substring(parameters('domainFQDN'), 0, indexOf(parameters('domainFQDN'), '.')), '\\', parameters('adminUserName'))]"
     },
+    "domainAdminAccountFormatForBastion": {
+      "type": "string",
+      "value": "[concat(parameters('adminUserName'), '@', parameters('domainFQDN'))]"
+    },
     "localAdminAccount": {
       "type": "string",
       "value": "[variables('generalSettings').localAdminUserName]"
