@@ -192,4 +192,4 @@ Remove-AzureRmResourceGroup -Name DtlPS1 -Location "West Europe"
 
 ## Give us feedback
 
-Feel free to give us feedback on the library [here](https://github.com/Azure/azure-devtestlab/issues).
+Feel free to give us feedback on the library by [logging a GitHub issue](https://github.com/Azure/azure-devtestlab/issues).
