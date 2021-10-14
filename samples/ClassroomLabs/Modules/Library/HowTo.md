@@ -1,6 +1,6 @@
 # Az.LabServices Tutorial <!-- omit in TOC -->
 
-Az.LabServices is a PowerShell module to simplify the management of [Azure Lab services](https://azure.microsoft.com/en-in/services/lab-services/). It provides composable functions to create, query, update and delete lab accounts, labs, VMs and Images.
+Az.LabServices is a PowerShell module to simplify the management of [Azure Lab services](https://azure.microsoft.com/services/lab-services/). It provides composable functions to create, query, update and delete lab accounts, labs, VMs and Images.
 
 - [Introduction](#introduction)
 - [Import the module](#import-the-module)
@@ -41,7 +41,7 @@ Get-Command -Module Az.LabServices
 
 ## Publish a new lab
 
-From now on, the tutorial assumes that you are signed in into Azure. If you are not, you can read about it [here](https://docs.microsoft.com/en-us/powershell/azure/authenticate-azureps?view=azps-2.1.0).
+From now on, the tutorial assumes that you are signed in into Azure. If you are not, you can read about it [here](https://docs.microsoft.com/powershell/azure/authenticate-azureps?view=azps-2.1.0).
 
 First, let's create a new Resource Group to host your lab.
 
@@ -51,7 +51,7 @@ New-AzureRmResourceGroup -Name DtlPS1 -Location "West Europe"
 
 Then create a new lab account in the resource group
 
-```powerhsell
+```powershell
 $la = New-AzLabAccount -ResourceGroupName DtlPS1 -LabAccountName TestAzLab
 ```
 
@@ -79,9 +79,34 @@ If later on you need to modify some property of the lab (i.e. change number of u
 
 If you want reusable functions that do all the steps above in one shot, look at the `New-AzLabSingle` function inside the [`LabCreator.ps1`](Tools/LabCreator.ps1) script.
 
+To get a list of available sizes for a new lab, use the following script.  The 'Name' property for the size is the value that needs to passed to New-AzLab cmdlet.
+
+```powershell
+#$la is Lab Account object from New-AzLabAccount or Get-AzLabAccount
+$la = Get-AzLabAccount -LabAccountName "TestAzLab"
+
+#Call Sizes and Pricing api to get list of available sizes for a lab account
+$apiVersion = "2019-01-01-preview"
+$pricingAndSizesUrl = "https://management.azure.com/subscriptions/$($la.id.split('/')[2])/resourceGroups/$($la.ResourceGroupName)/providers/Microsoft.LabServices/labaccounts/$($la.LabAccountName)/getPricingAndAvailability?api-version=$apiVersion"
+$token = Get-AzAccessToken | Select -expand Token
+$response = Invoke-RestMethod $pricingAndSizesUrl `
+    -Authentication Bearer `
+    -Token $(ConvertTo-SecureString $token -AsPlainText -Force) `
+    -Method POST -ContentType "application/json"
+
+#Parse sizes
+$results = foreach ($os in $OSes){
+  $response.operatingSystems.PSObject.Properties[$os].Value.sizes.PSObject.Properties `
+    | Where-Object { $_.Value.availability -eq "Available"} `
+    | Select-Object -expand Value `
+    | foreach {[PSCustomObject]@{Name=$_.sizeName;DisplayName=$_.localizedDisplayName;"Memory (GBs)"=$_.memoryInGb;Cores=$_.coresCount;OS=$os}}
+}
+$results | Format-Table
+```
+
 ## Query for lab accounts, labs and VMs
 
-The library makes extensive use of [PowerShell pipelines](https://docs.microsoft.com/en-us/powershell/scripting/learn/understanding-the-powershell-pipeline?view=powershell-6) as a way to pass the most important object(s) to a function. This allows the creation of 'chains of functions' to perform multiple operations on an object.
+The library makes extensive use of [PowerShell pipelines](https://docs.microsoft.com/powershell/scripting/learn/understanding-the-powershell-pipeline?view=powershell-6) as a way to pass the most important object(s) to a function. This allows the creation of 'chains of functions' to perform multiple operations on an object.
 
 The library contains a powerful query system, that allows you to retrieve objects (i.e. lab accounts, labs, VMs etc...) that can then be used as input in such functions chains.
 
@@ -122,7 +147,7 @@ $labs | Add-AzLabUser -Emails @('user1@example.com', 'user2@example.com')
 Once added, you can then send invitation emails to your lab users as below:
 
 ```powershell
-$labs | Get-AzLabUser | Send-AzLabUserInvitationEmail -InvitationText 'You are invited to mylab'
+$labs | Get-AzLabUser | Send-AzLabUserInvitationEmail -InvitationText 'You are invited to my lab'
 ```
 
 ## Set schedules
@@ -167,4 +192,4 @@ Remove-AzureRmResourceGroup -Name DtlPS1 -Location "West Europe"
 
 ## Give us feedback
 
-Feel free to give us feedback on the library [here](https://github.com/Azure/azure-devtestlab/issues).
+Feel free to give us feedback on the library by [logging a GitHub issue](https://github.com/Azure/azure-devtestlab/issues).
