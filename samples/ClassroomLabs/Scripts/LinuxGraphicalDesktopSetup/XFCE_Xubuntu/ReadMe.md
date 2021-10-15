@@ -9,7 +9,7 @@ These scripts work for both 16.04 LTS and 18.04 LTS.  They will likely work for 
 
 [X2Go](https://wiki.x2go.org/doku.php/doc:newtox2go) is a Remote Desktop solution, which sometimes is referred to as Remote Control. This is not to be confused with Microsoft Remote Desktop Connection that uses RDP - this is a competing Remote Desktop solution and protocol.
 
-Using X2Go requires three steps: _(Students only need to do step #2 below to connect to their assigned VM)_
+Using X2Go requires two steps: _(Students only need to do step #2 below to connect to their assigned VM)_
 
 1. [Install the X2Go server](#install-x2go-server) on the lab's template VM using one of the scripts below.
 2. [Install the X2Go client and create a session](#create-x2go-client-and-create-session) to connect to your lab (remote) VM.

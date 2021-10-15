@@ -23,7 +23,7 @@ Both [X2Go](https://wiki.x2go.org/doku.php/doc:newtox2go) and [Xrdp](https://en.
 
 X2Go typically provides better performance for students when they need to connect to a Linux VM.  However, X2Go doesn't support all graphical desktops.  As a result, these instructions show using X2Go with MATE and Xrdp with GNOME.
 
-There are three basic steps involved to set up either X2Go or Xrdp: _(Students only need to do step #2 below to connect to their assigned VM)_
+There are two steps involved to set up either X2Go or Xrdp: _(Students only need to do step #2 below to connect to their assigned VM)_
 
 1. [Install the X2Go\Xrdp server](#install-x2go-or-xrdp-server) on the lab's template VM using one of the scripts below.
 2. [Install X2Go\RDP client and create a session](#create-x2go-or-rdp-and-create-a-session) to connect to your lab (remote) VM.
