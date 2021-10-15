@@ -1,5 +1,5 @@
 # Introduction
-These scripts install the X2Go server for the selected Linux desktop environment (MATE, XFCE4, or Xubuntu) on your Linux lab VM.  
+These scripts install the X2Go server for the selected Linux desktop environment (XFCE4 or Xubuntu) on your Linux lab VM.  
 
 ## Ubuntu
 
@@ -20,22 +20,16 @@ The lab (remote) VM runs X2Go server. Graphical sessions are started on this rem
 
 The scripts below automatically install the X2Go server and the Linux desktop environment.  To install using these scripts, SSH into the template VM and paste in one of the following scripts depending on which desktop environment you prefer:
 
-##### Install MATE Desktop & X2Go Server
-
-```bash
-sudo sh -c "$(curl -fsSL https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/ClassroomLabs/Scripts/X2GoRemoteDesktop/Ubuntu/x2go-mate.sh)"
-```
-
 ##### Install XFCE4 Desktop & X2Go Server
 
 ```bash
-sudo sh -c "$(curl -fsSL https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/ClassroomLabs/Scripts/X2GoRemoteDesktop/Ubuntu/x2go-xfce4.sh)"
+sudo sh -c "$(curl -fsSL https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/ClassroomLabs/Scripts/LinuxGraphicalDesktopSetup/XFCE_Xubuntu/Ubuntu/x2go-xfce4.sh)"
 ```
 
 ##### Install Xubuntu Desktop & X2Go Server
 
 ```bash
-sudo sh -c "$(curl -fsSL https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/ClassroomLabs/Scripts/X2GoRemoteDesktop/Ubuntu/x2go-xubuntu.sh)"
+sudo sh -c "$(curl -fsSL https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/ClassroomLabs/Scripts/LinuxGraphicalDesktopSetup/XFCE_Xubuntu/Ubuntu/x2go-xubuntu.sh)"
 ```
 
 ### Install X2Go Client and Create a Session

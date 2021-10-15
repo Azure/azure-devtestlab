@@ -12,8 +12,8 @@ As a result, when you run the below scripts to install these versions, the steps
 
 These scripts have been tested with:
 - Ubuntu 18.04 LTS to install GNOME\Xrdp and MATE\X2Go.
-- Ubuntu 20.04 LTS and 21.04 with GNOME\Xrdp installed.
-- Ubuntu 20.04 LTS with MATE\X2Go installed.
+- Ubuntu 20.04 LTS and 21.04 to install GNOME\Xrdp.
+- Ubuntu 20.04 LTS to install MATE\X2Go.
 
 NOTE: X2Go isn't compatible with GNOME which is why Xrdp must be used.  See X2Go's list of [compatible desktop environments](https://wiki.x2go.org/doku.php/doc:de-compat) for more information.  Also, X2Go packages aren't currently available for Ubuntu 21.04.
 
@@ -37,13 +37,13 @@ The scripts below automatically install the X2Go\Xrdp server and the MATE\GNOME 
 ##### Install MATE Desktop & X2Go Server
 
 ```bash
-sudo sh -c "$(curl -fsSL https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/ClassroomLabs/Scripts/X2GoRemoteDesktop/Ubuntu/x2go-mate.sh)"
+sudo sh -c "$(curl -fsSL https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/ClassroomLabs/Scripts/LinuxGraphicalDesktopSetup/GNOME_MATE/Ubuntu/x2go-mate.sh)"
 ```
 
 ##### Install GNOME Desktop & Xrdp Server
 
 ```bash
-sudo sh -c "$(curl -fsSL https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/ClassroomLabs/Scripts/X2GoRemoteDesktop/Ubuntu/x2go-xfce4.sh)"
+sudo sh -c "$(curl -fsSL https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/ClassroomLabs/Scripts/LinuxGraphicalDesktopSetup/GNOME_MATE/Ubuntu/xrdp-GNOME.sh)"
 ```
 
 ### Install X2Go or RDP Client and Create a Session
