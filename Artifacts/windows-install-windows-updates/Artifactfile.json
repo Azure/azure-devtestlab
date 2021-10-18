@@ -7,16 +7,7 @@
     "Windows"
   ],
   "targetOsType": "Windows",
-  "parameters": {
-    "includeMicrosoftUpdates": {
-      "type": "bool",
-      "displayName": "Include Microsoft updates",
-      "description": "Include updates for all Microsoft products",
-      "defaultValue": false,
-      "allowEmpty": true
-    }
-  },
   "runCommand": {
-    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./artifact.ps1 -IncludeMicrosoftUpdates:$', parameters('includeMicrosoftUpdates'), '\"')]"
+    "commandToExecute": "powershell.exe -ExecutionPolicy bypass \"& ./artifact.ps1\""
   }
 }
