@@ -3,9 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@azure/msal-browser": "^2.8.0",
+    "@azure/msal-browser": "^2.18.0",
+    "@azure/msal-react": "^1.1.0",
     "@fluentui/react": "^7.155.3",
     "react": "^16.0.0",
+    "react-async-hook": "^4.0.0",
     "react-dom": "^16.0.0",
     "react-scripts": "^3.4.1",
     "rimraf": "^2.6.2"

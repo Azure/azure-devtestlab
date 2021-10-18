@@ -1,46 +1,32 @@
-﻿import { Spinner, DefaultButton} from '@fluentui/react';
-import React, { Component } from 'react';
+﻿import React from 'react';
+import { Spinner, DefaultButton } from '@fluentui/react';
+import { useAsyncCallback } from 'react-async-hook';
+import { useAuthContext } from './Hooks';
 
-/**
- * Button component for user to claim/unclaim a VM
- * 
- * */
-export default class OwnershipButton extends Component {
-    constructor(props) {
-        super(props);
+export const VMAction = {
+    Claim: 'Claim',
+    Unclaim: 'Unclaim'
+};
 
-        this.state = {
-            isUpdating: false,
-        };
+export const OwnershipButton = (props) => {
+    const { accessToken } = useAuthContext();
+    const { action, vmName } = props;
+
+    const headers = { 'Authorization': `Bearer ${accessToken}` };
+
+    const onClick = async () => {
+        return await fetch(`virtualmachines/${action.toLowerCase()}/${vmName}`, { method: 'POST', headers: headers });
     }
 
-    render() {
-        if (this.state.isUpdating) {
-            return <DefaultButton disabled={true}><Spinner/></DefaultButton>;
-        }
+    const asyncOnClick = useAsyncCallback(onClick);
 
-        // Check if user currently has this VM claimed
-        if (this.props.loggedInUser === this.props.vmOwner) {
-            return <DefaultButton text={"Unclaim"} onClick={() => this.unclaim()} />;
-        }
-
-        // Check if user is eligible to claim this VM
-        if (this.props.vmOwner === "") {
-            return <DefaultButton text={"Claim"} onClick={() => this.claim()} />;
-        }
-
-        return <></>;
-    }
-
-    async unclaim() {
-        this.setState({ isUpdating: true });
-        await this.props.unclaim();
-        this.setState({ isUpdating: false });
-    }
-
-    async claim() {
-        this.setState({ isUpdating: true });
-        await this.props.claim();
-        this.setState({ isUpdating: false });
-    }
+    return (
+        <DefaultButton
+            onClick={asyncOnClick.execute}
+            disabled={asyncOnClick.loading || asyncOnClick.result}
+            text={!asyncOnClick.result ? (action) : (`${action}ed!`)}
+        >
+            {asyncOnClick.loading && <Spinner />}
+        </DefaultButton>
+    );
 }
