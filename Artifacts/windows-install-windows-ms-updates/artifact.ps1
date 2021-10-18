@@ -3,6 +3,12 @@
 # PowerShell configurations
 #
 
+
+[CmdletBinding()]
+param(
+    [switch] $IncludeMicrosoftUpdates
+)
+
 # NOTE: Because the $ErrorActionPreference is "Stop", this script will stop on first failure.
 #       This is necessary to ensure we capture errors inside the try-catch-finally block.
 $ErrorActionPreference = "Stop"
@@ -80,7 +86,7 @@ try
     Import-Module PSWindowsUpdate
     
     Write-Host 'Installing Windows Updates.'
-    Get-WUInstall -IgnoreUserInput -Acceptall -Download -Install -Verbose -IgnoreReboot
+    Get-WUInstall -IgnoreUserInput -Acceptall -Download -Install -Verbose -IgnoreReboot -MicrosoftUpdate:$IncludeMicrosoftUpdates
     
     Write-Host "Windows Update finished. Rebooting..."
     Write-Host "`nThe artifact was applied successfully.`n"

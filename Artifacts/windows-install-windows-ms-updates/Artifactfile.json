@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+  "title": "Installs the latest Windows and Microsoft Updates",
+  "description": "Installs the latest patches, security fixes and updates via the Windows Update PowerShell Module, optionally including Microsoft updates.",
+  "publisher": "Microsoft",
+  "tags": [
+    "Windows"
+  ],
+  "targetOsType": "Windows",
+  "parameters": {
+    "includeMicrosoftUpdates": {
+      "type": "bool",
+      "displayName": "Include Microsoft updates",
+      "description": "Include updates for all Microsoft products",
+      "defaultValue": false,
+      "allowEmpty": true
+    }
+  },
+  "runCommand": {
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./artifact.ps1 -IncludeMicrosoftUpdates:$', parameters('includeMicrosoftUpdates'), '\"')]"
+  }
+}
