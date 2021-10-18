@@ -19,7 +19,7 @@ NOTE: X2Go isn't compatible with GNOME which is why Xrdp must be used.  See X2Go
 
 ## Configuring X2Go and Xrdp
 
-Both [X2Go](https://wiki.x2go.org/doku.php/doc:newtox2go) and [Xrdp](https://en.wikipedia.org/wiki/Xrdp) are Remote Desktop solutions, which sometimes is referred to as Remote Control.
+Both [X2Go](https://wiki.x2go.org/doku.php/doc:newtox2go) and [Xrdp](https://en.wikipedia.org/wiki/Xrdp) are Remote Desktop solutions, which sometimes is referred to as Remote Control.  A key difference between X2Go is that it uses the same port as SSH (port 22).  Azure Lab Services enables the SSH port by default. Xrdp uses port 3389 which [you must enable](https://docs.microsoft.com/azure/lab-services/how-to-enable-remote-desktop-linux#enable-remote-desktop-connection-for-rdp) when you create a lab.
 
 X2Go typically provides better performance for students when they need to connect to a Linux VM.  However, X2Go doesn't support all graphical desktops.  As a result, these instructions show using X2Go with MATE and Xrdp with GNOME.
 
