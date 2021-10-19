@@ -7,7 +7,7 @@ export const App = () => {
 
     return (
         <div style={{ padding: theme.spacing.s2 }}>
-            <Text variant="xxLarge">Lab Virtual Machines</Text>
+            <Text variant='xxLarge'>Lab Virtual Machines</Text>
             <div style={{ boxShadow: theme.effects.elevation8 }}>
                 <VirtualMachineTable />
             </div>

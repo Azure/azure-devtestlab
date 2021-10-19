@@ -27,7 +27,7 @@ export const useAuthContext = () => {
     const [loggedInUser, setLoggedInUser] = useState(null);
 
     useEffect(() => {
-        if (inProgress === "none") {
+        if (inProgress === 'none') {
             requestAuthContext(instance, accounts).then((authContext) => {
                 setAccessToken(authContext.accessToken);
                 setLoggedInUser(authContext.account.username);
