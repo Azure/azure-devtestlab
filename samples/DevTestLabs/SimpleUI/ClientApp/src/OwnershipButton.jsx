@@ -12,11 +12,13 @@ export const OwnershipButton = (props) => {
     const { accessToken } = useAuthContext();
     const { action, vmName } = props;
 
-    const headers = { 'Authorization': `Bearer ${accessToken}` };
+    const headers = React.useMemo(() => {
+        return { 'Authorization': `Bearer ${accessToken}` };
+    }, [accessToken]);
 
-    const onClick = async () => {
+    const onClick = React.useCallback(async () => {
         return await fetch(`virtualmachines/${action.toLowerCase()}/${vmName}`, { method: 'POST', headers: headers });
-    }
+    }, [vmName, action, headers]);
 
     const asyncOnClick = useAsyncCallback(onClick);
 

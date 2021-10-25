@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useMsal } from '@azure/msal-react';
 import { loginRequest } from './AuthConfig';
+import { InteractionStatus } from '@azure/msal-browser';
 
 const requestAuthContext = async (instance) => {
     const activeAccount = instance.getActiveAccount();
@@ -27,12 +28,15 @@ export const useAuthContext = () => {
     const [loggedInUser, setLoggedInUser] = useState(null);
 
     useEffect(() => {
-        if (inProgress === 'none') {
-            requestAuthContext(instance, accounts).then((authContext) => {
+        const setAuthContext = async () => {
+            if (inProgress === InteractionStatus.None) {
+                const authContext = await requestAuthContext(instance, accounts);
                 setAccessToken(authContext.accessToken);
                 setLoggedInUser(authContext.account.username);
-            });
+            }
         }
+
+        setAuthContext();
     }, [inProgress, accounts, instance]);
 
     return { accessToken, loggedInUser };
