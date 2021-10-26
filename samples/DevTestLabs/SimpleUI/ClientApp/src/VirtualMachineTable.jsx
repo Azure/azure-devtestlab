@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckboxVisibility, DetailsList, Spinner } from '@fluentui/react';
+import { CheckboxVisibility, DetailsList, Spinner, Text } from '@fluentui/react';
 import { useAsync } from 'react-async-hook';
 import { useAuthContext } from './Hooks';
 import { OwnershipButton, VMAction } from './OwnershipButton';
@@ -28,7 +28,11 @@ export const VirtualMachineTable = () => {
     const fetchLabVMs = React.useCallback(async () => {
         if (accessToken != null) {
             const headers = { 'Authorization': `Bearer ${accessToken}` };
-            return (await fetch('virtualmachines', { headers: headers })).json();
+            const response = await fetch('virtualmachines', { headers: headers });
+            if (response.ok) {
+                return response.json();
+            }
+            throw new Error('Unable to fetch lab VMs');
         }
     }, [accessToken]);
 
@@ -37,10 +41,10 @@ export const VirtualMachineTable = () => {
     const labVMs = React.useMemo(() => {
         return (asyncFetchLabVMs.result || []).map(vm => {
             return {
-                'Name': vm.name,
-                'Owner': vm.ownerUserPrincipalName,
-                'Location': vm.location,
-                'Ownership': renderOwnershipButton(vm, loggedInUser)
+                Name: vm.name,
+                Owner: vm.ownerUserPrincipalName,
+                Location: vm.location,
+                Ownership: renderOwnershipButton(vm, loggedInUser)
             };
         })
     }, [asyncFetchLabVMs.result, loggedInUser]);
@@ -48,13 +52,17 @@ export const VirtualMachineTable = () => {
     return (
         <div>
             {asyncFetchLabVMs.loading && <Spinner label='Loading virtual machines...' />}
-            {asyncFetchLabVMs.error && <div>Error: {asyncFetchLabVMs.error.message}</div>}
-            {asyncFetchLabVMs.result && (
+            {asyncFetchLabVMs.error &&
+                <Text>
+                    An error has occurred: {asyncFetchLabVMs.error.message}
+                </Text>
+            }
+            {asyncFetchLabVMs.result &&
                 <DetailsList
                     items={labVMs}
                     checkboxVisibility={CheckboxVisibility.hidden}
                 />
-            )}
+            }
         </div>
     );
 };
