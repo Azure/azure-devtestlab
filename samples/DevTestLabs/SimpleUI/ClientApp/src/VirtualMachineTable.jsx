@@ -2,28 +2,10 @@ import React from 'react';
 import { CheckboxVisibility, DetailsList, Spinner, Text } from '@fluentui/react';
 import { useAsync } from 'react-async-hook';
 import { useAuthContext } from './Hooks';
-import { OwnershipButton, VMAction } from './OwnershipButton';
-
-const renderOwnershipButton = (virtualMachine, loggedInUser) => {
-    let action;
-    if (!virtualMachine.ownerUserPrincipalName) {
-        action = VMAction.Claim;
-    } else if (virtualMachine.ownerUserPrincipalName === loggedInUser) {
-        action = VMAction.Unclaim;
-    } else {
-        return <></>;
-    }
-
-    return (
-        <OwnershipButton
-            action={action}
-            vmName={virtualMachine.name}
-        />
-    );
-}
+import { OwnershipButton } from './OwnershipButton';
 
 export const VirtualMachineTable = () => {
-    const { accessToken, loggedInUser } = useAuthContext();
+    const { accessToken } = useAuthContext();
 
     const fetchLabVMs = React.useCallback(async () => {
         if (accessToken != null) {
@@ -44,10 +26,10 @@ export const VirtualMachineTable = () => {
                 Name: vm.name,
                 Owner: vm.ownerUserPrincipalName,
                 Location: vm.location,
-                Ownership: renderOwnershipButton(vm, loggedInUser)
+                Ownership: <OwnershipButton vmOwner={vm.ownerUserPrincipalName} vmName={vm.name} />
             };
         })
-    }, [asyncFetchLabVMs.result, loggedInUser]);
+    }, [asyncFetchLabVMs.result]);
 
     return (
         <div>

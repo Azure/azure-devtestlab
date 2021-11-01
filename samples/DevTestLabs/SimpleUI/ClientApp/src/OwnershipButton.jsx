@@ -3,14 +3,16 @@ import { Spinner, DefaultButton } from '@fluentui/react';
 import { useAsyncCallback } from 'react-async-hook';
 import { useAuthContext } from './Hooks';
 
-export const VMAction = {
-    Claim: 'Claim',
-    Unclaim: 'Unclaim'
-};
-
 export const OwnershipButton = (props) => {
-    const { accessToken } = useAuthContext();
-    const { action, vmName } = props;
+    const { accessToken, loggedInUser } = useAuthContext();
+    const { vmOwner, vmName } = props;
+
+    let action;
+    if (!vmOwner) {
+        action = 'Claim';
+    } else if (vmOwner === loggedInUser) {
+        action = 'Unclaim';
+    }
 
     const headers = React.useMemo(() => {
         return { 'Authorization': `Bearer ${accessToken}` };
@@ -22,13 +24,14 @@ export const OwnershipButton = (props) => {
 
     const asyncOnClick = useAsyncCallback(onClick);
 
-    return (
+    const button =
         <DefaultButton
             onClick={asyncOnClick.execute}
             disabled={asyncOnClick.loading || asyncOnClick.result}
             text={!asyncOnClick.result ? (action) : (`${action}ed!`)}
         >
             {asyncOnClick.loading && <Spinner />}
-        </DefaultButton>
-    );
+        </DefaultButton>;
+
+    return action ? button : <></>;
 }
