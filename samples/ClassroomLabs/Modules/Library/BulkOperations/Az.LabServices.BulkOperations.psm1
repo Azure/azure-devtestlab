@@ -104,11 +104,17 @@ function Import-LabsCsv {
         #   1.) New-AzLabsBulk calls New-AzLab to create a new lab.  When New-AzLab is called, it ignores this "SharedPassword" property value and defaults it to False because New-AzLab is expecting the property to be named "SharedPasswordEnabled".
         #   2.) New-AzLabsBulk then calls Set-AzLab.  When Set-AzLab is called, the value of this "SharedPassword" property is explicitly passed in as the "SharedPasswordEnabled" parameter.
         if (Get-Member -InputObject $_ -Name 'SharedPassword') {
-            if ([System.Convert]::ToBoolean($_.SharedPassword)) {
-                $_.SharedPassword = 'Enabled'
-            }
-            else {
-                $_.SharedPassword = 'Disabled'
+            # If blank assume disabled
+            if ($_.SharedPassword -eq "") {
+                $_SharedPassword = 'Disabled'
+            } elseif (($_SharedPassword -eq "True") -or ($_SharedPassword -eq "False")) {
+                # This is for backward compat that used True/False
+                if ([System.Convert]::ToBoolean($_.SharedPassword)) {
+                    $_.SharedPassword = 'Enabled'
+                }
+                else {
+                    $_.SharedPassword = 'Disabled'
+                }
             }
         }
         else {
@@ -145,7 +151,7 @@ function Import-LabsCsv {
         }
         else {
             #Assign to empty array since New-AzLab expects this property to exist, but this property should be optional in the csv
-            Add-Member -InputObject $_ -MemberType NoteProperty -Name "Schedules" -Value @() 
+            Add-Member -InputObject $_ -MemberType NoteProperty -Name "Schedules" -Value @() -Force
         }
 
     }
