@@ -104,40 +104,43 @@ function Import-LabsCsv {
         #   1.) New-AzLabsBulk calls New-AzLab to create a new lab.  When New-AzLab is called, it ignores this "SharedPassword" property value and defaults it to False because New-AzLab is expecting the property to be named "SharedPasswordEnabled".
         #   2.) New-AzLabsBulk then calls Set-AzLab.  When Set-AzLab is called, the value of this "SharedPassword" property is explicitly passed in as the "SharedPasswordEnabled" parameter.
         if (Get-Member -InputObject $_ -Name 'SharedPassword') {
-            # If blank assume disabled
-            if ($_.SharedPassword -eq "") {
-                $_SharedPassword = 'Disabled'
-            } elseif (($_SharedPassword -eq "True") -or ($_SharedPassword -eq "False")) {
-                # This is for backward compat that used True/False
-                if ([System.Convert]::ToBoolean($_.SharedPassword)) {
-                    $_.SharedPassword = 'Enabled'
-                }
-                else {
+            if (($_.SharedPassword -ne "Enabled") -or ($_.SharedPassword -ne "Disabled")) {
+                if (($_.SharedPassword -eq "True") -or ($_.SharedPassword -eq "False")) {
+                    if ([System.Convert]::ToBoolean($_.SharedPassword)) {
+                        $_.SharedPassword = 'Enabled'
+                    } else {
+                        $_.SharedPassword = 'Disabled'
+                    }
+                } else {
                     $_.SharedPassword = 'Disabled'
                 }
             }
-        }
-        else {
+        } else {
             Add-Member -InputObject $_ -MemberType NoteProperty -Name "SharedPassword" -Value 'Disabled'
         }
 
         if (Get-Member -InputObject $_ -Name 'GpuDriverEnabled') {
-            if ($_.GpuDriverEnabled) {
-                $_.GpuDriverEnabled = [System.Convert]::ToBoolean($_.GpuDriverEnabled)
+            if (($_.GpuDriverEnabled -eq "True") -or ($_.GpuDriverEnabled -eq "False")) {
+                if ([System.Convert]::ToBoolean($_.GpuDriverEnabled)) {
+                    $_.GpuDriverEnabled = $True
+                } else {
+                    $_.GpuDriverEnabled = $False
+                }
+            } else {
+                $_.GpuDriverEnabled = $False
             }
-            else {
-                $_.GpuDriverEnabled = $false
-            }
-        }
-        else {
+        } else {
             Add-Member -InputObject $_ -MemberType NoteProperty -Name "GpuDriverEnabled" -Value $false
         }
 
         if (Get-Member -InputObject $_ -Name 'LinuxRdp') {
-            if ($_.LinuxRdp) {
-                $_.LinuxRdp = [System.Convert]::ToBoolean($_.LinuxRdp)
-            }
-            else {
+            if (($_.LinuxRdp -eq "True") -or ($_.GpuDriverEnabled -eq "False")) {
+                if ([System.Convert]::ToBoolean($_.LinuxRdp)) {
+                    $_.LinuxRdp = $true
+                } else {
+                    $_.LinuxRdp = $false
+                }
+            } else {
                 $_.LinuxRdp = $false
             }
         }
