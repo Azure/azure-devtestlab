@@ -1144,6 +1144,102 @@ function Get-AzLabsRegistrationLinkBulk {
     }
 }
 
+function Send-AzLabsInvitationBulk {
+    param(
+        [parameter(Mandatory = $true, HelpMessage = "Array containing one line for each lab", ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        [psobject[]]
+        $labs,
+
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true)]
+        [int]
+        $ThrottleLimit = 5
+    )
+
+    begin {
+        # This patterns aggregates all the objects in the pipeline before performing an operation
+        # i.e. executes lab creation in parallel instead of sequentially
+        # This trick is to make it work both when the argument is passed as pipeline and as normal arg.
+        # I came up with this. Maybe there is a better way.
+        $aggregateLabs = @()
+    }
+    process {
+        # If passed through pipeline, $labs is a single object, otherwise it is the whole array
+        # It works because PS uses '+' to add objects or arrays to an array
+        $aggregateLabs += $labs
+    }
+    end {
+        $init = {
+        }
+
+        function Send-AzLabsInvitationBulk-Jobs {
+            [CmdletBinding()]
+            param(
+                [parameter(Mandatory = $true, ValueFromPipeline = $true)]
+                [psobject[]]
+                $ConfigObject
+            )
+
+            $block = {
+                param($path)
+
+                Set-StrictMode -Version Latest
+                $ErrorActionPreference = 'Stop'
+
+                $modulePath = Join-Path $path '..\Az.LabServices.psm1'
+                Import-Module $modulePath
+                $input.movenext() | Out-Null
+            
+                $obj = $input.current[0]
+
+                Write-Host "Sending invitations for $($obj.LabName)"
+                $la = Get-AzLabAccount -ResourceGroupName $obj.ResourceGroupName -LabAccountName $obj.LabAccountName
+                $lab = Get-AzLab -LabAccount $la -LabName $obj.LabName
+                # Write-Host "Sending Invitation emails for $($obj.LabName)."
+                $users = $lab | Get-AzLabUser
+                $users | ForEach-Object { $lab | Send-AzLabUserInvitationEmail -User $_ -InvitationText $obj.Invitation } | Out-Null
+                return "Sent"
+            }
+
+            $jobs = @()
+
+            $ConfigObject | ForEach-Object {
+                Write-Verbose "From config: $_"
+                $jobs += Start-ThreadJob  -InitializationScript $init -ScriptBlock $block -ArgumentList $PSScriptRoot -InputObject $_ -Name ("$($_.ResourceGroupName)+$($_.LabAccountName)+$($_.LabName)") -ThrottleLimit $ThrottleLimit
+            }
+
+            while (($jobs | Measure-Object).Count -gt 0) {
+                # If we have more jobs, wait for 60 sec before checking job status again
+                Start-Sleep -Seconds 20
+
+                $completedJobs = $jobs | Where-Object {($_.State -ieq "Completed") -or ($_.State -ieq "Failed")}
+                if (($completedJobs | Measure-Object).Count -gt 0) {
+                    # Write output for completed jobs, but one by one so output doesn't bleed 
+                    # together, also use "Continue" so we write the error but don't end the outer script
+                    $completedJobs | ForEach-Object {
+                        # For each completed job we write the result back to the appropriate Config object, using the "name" field to coorelate
+                        $jobName = $_.Name
+                        $jobState = $_.State
+                        $config = $ConfigObject | Where-Object {$_.ResourceGroupName -ieq $jobName.Split('+')[0] -and $_.LabAccountName -ieq $jobName.Split('+')[1] -and $_.LabName -ieq $jobName.Split('+')[2]}
+                        $state = $_ | Receive-Job -ErrorAction Continue
+
+                         Add-Member -InputObject $config -MemberType NoteProperty -Name "InvitationState" -Value $state
+                    }
+                    # Trim off the completed jobs from our list of jobs
+                    $jobs = $jobs | Where-Object {$_.Id -notin $completedJobs.Id}
+                    # Remove the completed jobs from memory
+                    $completedJobs | Remove-Job
+                }
+            }
+            # Return the objects with an additional property on the result of the operation
+            return $ConfigObject
+        }
+
+        # Get-RegistrationLink-Jobs returns the config object with an additional column, we need to leave it on the pipeline
+        Send-AzLabsInvitationBulk-Jobs -ConfigObject $aggregateLabs
+    }
+}
+
 function Reset-AzLabUserQuotaBulk {
     [CmdletBinding()]
     param(
@@ -1652,6 +1748,7 @@ Export-ModuleMember -Function   Import-LabsCsv,
                                 Sync-AzLabADUsersBulk,
                                 Get-AzLabsRegistrationLinkBulk,
                                 Reset-AzLabUserQuotaBulk,
+                                Send-AzLabsInvitationBulk,
                                 Confirm-AzLabsBulk,
                                 Set-AzRoleToLabAccountsBulk,
                                 Set-LabProperty,
