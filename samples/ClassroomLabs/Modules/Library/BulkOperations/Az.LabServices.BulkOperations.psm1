@@ -1197,7 +1197,11 @@ function Send-AzLabsInvitationBulk {
                 $lab = Get-AzLab -LabAccount $la -LabName $obj.LabName
                 # Write-Host "Sending Invitation emails for $($obj.LabName)."
                 $users = $lab | Get-AzLabUser
-                $users | ForEach-Object { $lab | Send-AzLabUserInvitationEmail -User $_ -InvitationText $obj.Invitation } | Out-Null
+
+                $users | ForEach-Object { 
+                    if ($_.Properties.registrationLinkEmailState -eq "NotSent") {
+                        $lab | Send-AzLabUserInvitationEmail -User $_ -InvitationText $obj.Invitation  | Out-Null
+                    }}
                 return "Sent"
             }
 
