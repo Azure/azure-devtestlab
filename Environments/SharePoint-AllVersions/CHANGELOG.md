@@ -1,6 +1,6 @@
 # Change log for Azure DevTest Labs template SharePoint-AllVersions
 
-## Unreleased
+## Enhancements & bug-fixes - Published in January 10, 2022
 
 * Add SharePoint Server Subscription and make it the default choice.
 * Change Windows image of VM DC to Windows Server 2022 Azure Edition.
