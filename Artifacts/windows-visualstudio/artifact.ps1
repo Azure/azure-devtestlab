@@ -1,6 +1,6 @@
 Param(
     [Parameter(Mandatory=$true)]
-    [ValidateSet("2015","2017")] 
+    [ValidateSet("2015","2017","2019","2022")] 
     [string] $version,
 
     [Parameter(Mandatory=$true)]
