@@ -18,7 +18,7 @@
     $ComputerName = Get-Content env:computername
     [String] $SPTrustedSitesName = "spsites"
     [String] $ADFSSiteName = "adfs"
-    [String] $AdfsOidcAGName = "SPS-OIDC"
+    [String] $AdfsOidcAGName = "SPS-Subscription-OIDC"
     [String] $AdfsOidcIdentifier = "fae5bd07-be63-4a64-a28c-7931a4ebf62b"
 
     Node localhost
@@ -286,7 +286,7 @@
                 Name                       = "$AdfsOidcAGName - Native application"
                 ApplicationGroupIdentifier = $AdfsOidcAGName
                 Identifier                 = $AdfsOidcIdentifier
-                RedirectUri                = "https://$SPTrustedSitesName.$DomainFQDN/"
+                RedirectUri                = "https://*.$DomainFQDN/"
                 DependsOn                  = "[AdfsApplicationGroup]OidcGroup"
             }
 
@@ -306,10 +306,26 @@
                 IssuanceTransformRules        = @(
                     MSFT_AdfsIssuanceTransformRule
                     {
-                        TemplateName = "CustomClaims"
-                        Name         = "Email"
-                        CustomRule   = 'c:[Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"]
-    => issue(claim = c);'
+                        TemplateName   = 'LdapClaims'
+                        Name           = 'Claims from Active Directory attributes'
+                        AttributeStore = 'Active Directory'
+                        LdapMapping    = @(
+                            MSFT_AdfsLdapMapping
+                            {
+                                LdapAttribute     = 'userPrincipalName'
+                                OutgoingClaimType = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn'
+                            }
+                            MSFT_AdfsLdapMapping
+                            {
+                                LdapAttribute     = 'mail'
+                                OutgoingClaimType = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'
+                            }
+                            MSFT_AdfsLdapMapping
+                            {
+                                LdapAttribute     = 'tokenGroups(longDomainQualifiedName)'
+                                OutgoingClaimType = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'
+                            }
+                        )
                     }
                     MSFT_AdfsIssuanceTransformRule
                     {
