@@ -1,6 +1,6 @@
 Param(
     [Parameter(Mandatory=$true)]
-    [ValidateSet("2015","2017")] 
+    [ValidateSet("2015","2017","2019","2022")] 
     [string] $version,
 
     [Parameter(Mandatory=$true)]
@@ -184,10 +184,83 @@ try
             $argumentList = $installerArgsList + $commonArgsList + $enterpriseModulesArgsList
             $downloadUrl = 'https://download.microsoft.com/download/F/3/4/F3478590-7B38-48B1-BB6E-3141A9A155E7/vs_Enterprise.exe'
         }
+    }    
+    elseif ($version -eq '2019')
+    {
+        $commonArgsList = @(
+            "--includeRecommended",
+            "--quiet",
+            "--norestart",
+            "--wait"
+        )
+
+        # Proffesional
+        $proffesionalModulesArgsList = @(
+            "--add Microsoft.VisualStudio.Workload.Azure",
+            "--add Microsoft.VisualStudio.Workload.Data",
+            "--add Microsoft.VisualStudio.Workload.ManagedDesktop",
+            "--add Microsoft.VisualStudio.Workload.NativeDesktop",
+            "--add Microsoft.VisualStudio.Workload.NetCoreTools",
+            "--add Microsoft.VisualStudio.Workload.NetWeb"
+        )
+
+        # Enterprise (includes all proffesional modules)
+        $enterpriseModulesArgsList = $proffesionalModulesArgsList + @(
+            "--add Component.GitHub.VisualStudio",
+            "--add Microsoft.VisualStudio.Component.TestTools.WebLoadTest",
+            "--add Microsoft.VisualStudio.Workload.NativeCrossPlat"
+        )
+
+        if ($sku -eq 'Professional')
+        {
+            $argumentList = $installerArgsList + $commonArgsList + $proffesionalModulesArgsList
+            $downloadUrl = 'https://aka.ms/vs/16/release/vs_professional.exe'
+        }
+        elseif ($sku -eq 'Enterprise')
+        {
+            $argumentList = $installerArgsList + $commonArgsList + $enterpriseModulesArgsList
+            $downloadUrl = 'https://aka.ms/vs/16/release/vs_enterprise.exe'
+        }
+    }
+    elseif ($version -eq '2022')
+    {
+        $commonArgsList = @(
+            "--includeRecommended",
+            "--quiet",
+            "--norestart",
+            "--wait"
+        )
+
+        # Proffesional
+        $proffesionalModulesArgsList = @(
+            "--add Microsoft.VisualStudio.Workload.Azure",
+            "--add Microsoft.VisualStudio.Workload.Data",
+            "--add Microsoft.VisualStudio.Workload.ManagedDesktop",
+            "--add Microsoft.VisualStudio.Workload.NativeDesktop",
+            "--add Microsoft.VisualStudio.Workload.NetWeb"
+        )
+
+        # Enterprise (includes all proffesional modules)
+        $enterpriseModulesArgsList = $proffesionalModulesArgsList + @(
+            "--add Component.GitHub.VisualStudio",
+            "--add Microsoft.VisualStudio.Component.TestTools.WebLoadTest",
+            "--add Microsoft.VisualStudio.Workload.NativeCrossPlat"
+        )
+
+        if ($sku -eq 'Professional')
+        {
+            $argumentList = $installerArgsList + $commonArgsList + $proffesionalModulesArgsList
+            $downloadUrl = 'https://aka.ms/vs/17/release/vs_professional.exe'
+        }
+        elseif ($sku -eq 'Enterprise')
+        {
+            $argumentList = $installerArgsList + $commonArgsList + $enterpriseModulesArgsList
+            $downloadUrl = 'https://aka.ms/vs/17/release/vs_enterprise.exe'
+        }
     }
     else
     {
-        throw "Version is not recognized - allowed values are 2015 and 2017. Specified value: $version"
+        throw "Version is not recognized - allowed values are 2015, 2017, 2019, and 2022. Specified value: $version"
     }
 
     $localFile = Join-Path $logFolder 'vsinstaller.exe'
