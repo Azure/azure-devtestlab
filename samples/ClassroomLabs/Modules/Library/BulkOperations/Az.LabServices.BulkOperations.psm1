@@ -35,8 +35,8 @@ function Import-LabsCsv {
     Write-Verbose ($labs | Format-Table | Out-String)
 
     # Validate that if a resource group\lab account appears more than once in the csv, that it also has the same SharedGalleryId and EnableSharedGalleryImages values.
-    $lacs = $labs | Select-Object -Property ResourceGroupName, LabAccountName, SharedGalleryId, EnableSharedGalleryImages | Sort-Object -Property ResourceGroupName, LabAccountName
-    $lacNames = $lacs | Select-Object -Property ResourceGroupName, LabAccountName -Unique
+    $lacs = $labs | Select-Object -Property ResourceGroupName, LabAccountName, SharedGalleryId, EnableSharedGalleryImages, Tags | Sort-Object -Property ResourceGroupName, LabAccountName
+    $lacNames = $lacs | Select-Object -Property ResourceGroupName, LabAccountName, Tags -Unique
   
     foreach ($lacName in $lacNames){
         $matchLacs = $lacs | Where-Object {$_.ResourceGroupName -eq $lacName.ResourceGroupName -and $_.LabAccountName -eq $lacName.LabAccountName}
@@ -261,13 +261,14 @@ function New-AzLabAccountsBulk {
                 $ConfigObject
             )
 
-            $Rgs = $ConfigObject | Select-Object -Property ResourceGroupName, Location -Unique
+            $Rgs = $ConfigObject | Select-Object -Property ResourceGroupName, Location, Tags -Unique
             Write-Verbose "Looking for the following resource groups:"
             $Rgs | Format-Table | Out-String | Write-Verbose
             
             $Rgs | ForEach-Object {
                 if (-not (Get-AzResourceGroup -ResourceGroupName $_.ResourceGroupName -EA SilentlyContinue)) {
-                    New-AzResourceGroup -ResourceGroupName $_.ResourceGroupName -Location $_.Location | Out-null
+                    $taghash = ConvertFrom-StringData -StringData ($_.Tags.Replace(";","`r`n"))
+                    New-AzResourceGroup -ResourceGroupName $_.ResourceGroupName -Location $_.Location -Tags $taghash | Out-null
                     Write-Host "$($_.ResourceGroupName) resource group didn't exist. Created it." -ForegroundColor Green
                 }
             }
@@ -298,7 +299,7 @@ function New-AzLabAccountsBulk {
                 $StartTime = Get-Date
 
                 Write-Host "Creating Lab Account: $($obj.LabAccountName)"
-                $labAccount = New-AzLabAccount -ResourceGroupName $obj.ResourceGroupName -LabAccountName $obj.LabAccountName
+                $labAccount = New-AzLabAccount -ResourceGroupName $obj.ResourceGroupName -LabAccountName $obj.LabAccountName -Tags $obj.Tags
                 
                 if ($obj.SharedGalleryId){
                     $gallery = $labAccount | Get-AzLabAccountSharedGallery
@@ -341,7 +342,7 @@ function New-AzLabAccountsBulk {
             }
 
             Write-Host "Starting creation of all lab accounts in parallel. Can take a while."
-            $lacs = $ConfigObject | Select-Object -Property ResourceGroupName, LabAccountName, SharedGalleryId, EnableSharedGalleryImages -Unique
+            $lacs = $ConfigObject | Select-Object -Property ResourceGroupName, LabAccountName, SharedGalleryId, EnableSharedGalleryImages, Tags -Unique
             
             Write-Verbose "Operating on the following Lab Accounts:"
             Write-Verbose ($lacs | Format-Table | Out-String)

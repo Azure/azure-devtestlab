@@ -500,7 +500,10 @@ function New-AzLabAccount {
 
         [parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true, HelpMessage = "Name of Lab Account to create")]
         [ValidateNotNullOrEmpty()]
-        $LabAccountName
+        $LabAccountName,
+
+        [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Tags")]
+        $Tags
     )
 
     begin { . BeginPreamble }
@@ -509,10 +512,22 @@ function New-AzLabAccount {
             foreach ($rgName in $ResourceGroupName) {
                 $rg = Get-AzureRmResourceGroup -name $rgName
                 $subscriptionId = (Get-AzureRmContext).Subscription.Id
+
                 $uri = "https://management.azure.com/subscriptions/$subscriptionId/resourcegroups/$rgName/providers/microsoft.labservices/labaccounts/$LabAccountName"
-                $body = @{
-                    location = $rg.Location
-                } | ConvertTo-Json -Depth 10
+                # Tag conversion
+                $body = $null
+                if ([string]::IsNullOrEmpty($Tags)){
+                    $body = @{
+                        location = $rg.Location
+                    } | ConvertTo-Json -Depth 10
+                } else {
+                    $taghash = ConvertFrom-StringData -StringData ($Tags.Replace(";","`r`n")) 
+                    $body = @{
+                        location = $rg.Location
+                        tags = $taghash
+                    } | ConvertTo-Json -Depth 10
+                }
+                
                 Write-Verbose "Creating Lab Account $LabAccountName REST call."
                 $lab = InvokeRest -Uri $uri -Method "Put" -Body $body
                 WaitProvisioning -uri $uri -delaySec 60 -retryCount 120 | Out-Null
@@ -855,7 +870,6 @@ function New-AzLab {
                         }
                     } | ConvertTo-Json) | Out-Null
                 } else {
-
                     InvokeRest -Uri $createUri -Method 'Post' -Body (@{
                         name = $LabName
                         labParameters = @{
