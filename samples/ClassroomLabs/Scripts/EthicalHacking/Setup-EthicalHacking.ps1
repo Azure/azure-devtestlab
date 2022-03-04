@@ -296,7 +296,7 @@ function Get-KaliLinuxDisk {
     }
 
     Write-Host "Extracting Kali Linux files from compressed file."
-    if ($null -eq (Get-ChildItem "$_kaliLinuxExtractedFilesFolder\$_kaliDownloadFileName" -Recurse | Select-Object -expand FullName)) {
+    if ($null -eq (Get-ChildItem "$_kaliLinuxExtractedFilesFolder\Kali-Linux-2021.4-vmware-amd64.vmwarevm" -Recurse | Select-Object -expand FullName)) {
         Invoke-Process -FileName $sevenZipExe -Arguments "x $kaliLinux7ZipFile -o$_kaliLinuxExtractedFilesFolder -r"
     }
     $vmdkFile = Get-ChildItem "$_kaliLinuxExtractedFilesFolder\Kali-Linux-2021.4-vmware-amd64.vmwarevm\Kali-Linux-2021.4-vmware-amd64.vmdk" -Recurse | Select-Object -expand FullName
