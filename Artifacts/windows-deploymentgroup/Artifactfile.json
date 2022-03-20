@@ -8,8 +8,8 @@
     "parameters": {
         "accountUrl": {
             "type": "string",
-            "displayName": "Azure DevOps account URL",
-            "description": "The URL for the Azure DevOps account, e.g. 'myorg' in https://dev.azure.com/myorg."
+            "displayName": "Azure DevOps organization URL",
+            "description": "The URL for the Azure DevOps organization, e.g. 'myorg' in https://dev.azure.com/myorg."
         },
         "projectName": {
             "type": "string",
