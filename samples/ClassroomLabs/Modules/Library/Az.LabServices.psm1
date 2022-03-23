@@ -19,6 +19,8 @@ $az = Get-Module -Name "Az.Accounts" -ListAvailable
 $justAz = $az -and -not ($azureRm -and $azureRm.Version.Major -ge 6)
 $justAzureRm = $azureRm -and (-not $az)
 
+$VerbosePreference = "continue"
+
 if ($azureRm -and $az) {
     Write-Warning "You have both Az and AzureRm module installed. That is not officially supported. For more read here: https://docs.microsoft.com/en-us/powershell/azure/migrate-from-azurerm-to-az"
 }
@@ -213,32 +215,50 @@ function Get-AzureRmCachedAccessToken() {
     $ErrorActionPreference = 'Stop'
     Set-StrictMode -Off
 
-    $azureRmProfile = [Microsoft.Azure.Commands.Common.Authentication.Abstractions.AzureRmProfileProvider]::Instance.Profile
-    if (-not $azureRmProfile.Accounts.Count) {
-        Write-Error "Ensure you have logged in before calling this function."
-    }
-
-    $profileClient = New-Object Microsoft.Azure.Commands.ResourceManager.Common.RMProfileClient($azureRmProfile)
-
-    $currentAzureContext = Get-AzureRmContext
-
-    if ($currentAzureContext) {
-        $tenantId = $currentAzureContext.Subscription.TenantId
+    if ("AzureAutomation/" -eq $env:AZUREPS_HOST_ENVIRONMENT) {
+        Write-Verbose "Running in Azure Automation environment..."
+        # We are running in Azure Automation - so need to get the token another way
+        # First, ensure that we're logged in
+        
+        $url = $env:IDENTITY_ENDPOINT
+        $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]" 
+        $headers.Add("X-IDENTITY-HEADER", $env:IDENTITY_HEADER) 
+        $headers.Add("Metadata", "True") 
+        $body = @{resource='https://management.azure.com/' } 
+        $accessToken = Invoke-RestMethod $url -Method 'POST' -Headers $headers -ContentType 'application/x-www-form-urlencoded' -Body $body
+        write-Verbose "Access token object:"
+        $accessToken | ConvertTo-Json -depth 10 | Out-String | Write-Verbose 
+        return $accessToken.access_token
     }
     else {
-        # There are cases where we don't have the context, like running in Azure Automation
-        # Fallback is to pull the tenant ID out of the AzureRmProfile if it's there
-        $tenantId = $azureRmProfile.DefaultContext.Tenant.Id
+
+        $azureRmProfile = [Microsoft.Azure.Commands.Common.Authentication.Abstractions.AzureRmProfileProvider]::Instance.Profile
+        if (-not $azureRmProfile.Accounts.Count) {
+            Write-Error "Ensure you have logged in before calling this function."
+        }
+
+        $profileClient = New-Object Microsoft.Azure.Commands.ResourceManager.Common.RMProfileClient($azureRmProfile)
+
+        $currentAzureContext = Get-AzureRmContext
+
+        if ($currentAzureContext) {
+            $tenantId = $currentAzureContext.Subscription.TenantId
+        }
+        else {
+            # There are cases where we don't have the context, like running in Azure Automation
+            # Fallback is to pull the tenant ID out of the AzureRmProfile if it's there
+            $tenantId = $azureRmProfile.DefaultContext.Tenant.Id
+        }
+
+        Write-Debug ("Getting access token for tenant" + $tenantId)
+        $token = $profileClient.AcquireAccessToken($tenantId)
+        return $token.AccessToken
     }
-
-    Write-Debug ("Getting access token for tenant" + $tenantId)
-    $token = $profileClient.AcquireAccessToken($tenantId)
-    return $token.AccessToken
-
 }
 
 function GetHeaderWithAuthToken {
 
+    Write-Verbose "Creating header with Auth Token..."
     $authToken = Get-AzureRmCachedAccessToken
     Write-Debug $authToken
 
@@ -687,7 +707,7 @@ function Get-AzLabAccount {
                 else {
                     # Wild RG forces query by subscription
                     $subscriptionId = (Get-AzureRmContext).Subscription.Id
-                    $uri = "https://management.azure.com/subscriptions/$SubscriptionId/providers/Microsoft.LabServices/labaccounts"
+                    $uri = "https://management.azure.com/subscriptions/$subscriptionId/providers/Microsoft.LabServices/labaccounts"
                     InvokeRest  -Uri $uri -Method 'Get' | Where-Object { ($_.name -like $LabAccountName ) -and ($_.id.Split('/')[4] -like $ResourceGroupName) }
                 }
             }
