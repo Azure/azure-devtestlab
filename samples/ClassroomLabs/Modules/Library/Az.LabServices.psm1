@@ -22,8 +22,6 @@ $az = Get-Module -Name "Az.Accounts" -ListAvailable
 $justAz = $az -and -not ($azureRm -and $azureRm.Version.Major -ge 6)
 $justAzureRm = $azureRm -and (-not $az)
 
-$VerbosePreference = "continue"
-
 if ($azureRm -and $az) {
     Write-Warning "You have both Az and AzureRm module installed. That is not officially supported. For more read here: https://docs.microsoft.com/en-us/powershell/azure/migrate-from-azurerm-to-az"
 }
