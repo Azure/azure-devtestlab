@@ -1,11 +1,14 @@
 # TODO: consider polling on the operation returned by the API in the header as less expensive for RP
 # TODO: consider creating proper PS1 documentation for each function
 
-# We are using strict mode for added safety
-Set-StrictMode -Version Latest
+# Only set these if not running under Azure Automation
+if ("AzureAutomation/" -ne $env:AZUREPS_HOST_ENVIRONMENT) {
+    # We are using strict mode for added safety
+    Set-StrictMode -Version Latest
 
-# We require a relatively new version of Powershell
-#requires -Version 3.0
+    # We require a relatively new version of Powershell
+    #requires -Version 3.0
+}
 
 # To understand the code below read here: https://docs.microsoft.com/en-us/powershell/azure/migrate-from-azurerm-to-az?view=azps-2.1.0
 # Having both the Az and AzureRm Module installed is not supported, but it is probably common. The library should work in such case, but warn.
