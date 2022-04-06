@@ -86,7 +86,7 @@ function Import-LabsCsv {
         }
         else {
             #Assign to empty array since New-AzLab expects this property to exist, but this property should be optional in the csv
-            Add-Member -InputObject $_ -MemberType NoteProperty -Name "Emails" -Value @() 
+            Add-Member -InputObject $_ -MemberType NoteProperty -Name "Emails" -Value @() -Force
         }
 
         if ((Get-Member -InputObject $_ -Name 'LabOwnerEmails') -and ($_.LabOwnerEmails)) {
@@ -94,7 +94,7 @@ function Import-LabsCsv {
         }
         else {
             #Assign to empty array since New-AzLab expects this property to exist, but this property should be optional in the csv
-            Add-Member -InputObject $_ -MemberType NoteProperty -Name "LabOwnerEmails" -Value @() 
+            Add-Member -InputObject $_ -MemberType NoteProperty -Name "LabOwnerEmails" -Value @() -Force
         }
 
         # TODO: There are two odd things about this code:
