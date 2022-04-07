@@ -451,7 +451,7 @@ function New-AzLabsBulk {
                 if ($lab) {
                     Write-Host "Lab already exists..  Updating properties instead."
 
-                    Set-AzLab -Lab $lab -MaxUsers $obj.MaxUsers -UserAccessMode $obj.UsageMode -SharedPasswordEnabled $obj.SharedPassword | Out-Null
+                    Set-AzLab -Lab $lab -MaxUsers $obj.MaxUsers -UserAccessMode $obj.UsageMode -SharedPasswordEnabled $obj.SharedPassword -UsageQuotaInHours $obj.UsageQuota | Out-Null
 
                     # In the case of AAD Group, we have to force sync users to update the MaxUsers property
                     if ((Get-Member -InputObject $obj -Name 'AadGroupId') -and ($obj.AadGroupId)) {

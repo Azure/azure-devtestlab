@@ -17,7 +17,7 @@ Import-Module ../Az.LabServices.BulkOperations.psm1 -Force
 
 $labAccountResults = $CsvConfigFile | 
         Import-LabsCsv |                                      # Import the CSV File into objects, including validation & transforms
-        New-AzLabAccountsBulk -ThrottleLimit $ThrottleLimit | # Create all the lab accounts
+        #New-AzLabAccountsBulk -ThrottleLimit $ThrottleLimit | # Create all the lab accounts
         New-AzLabsBulk -ThrottleLimit $ThrottleLimit |        # Create all labs
         Publish-AzLabsBulk -ThrottleLimit $ThrottleLimit      # Publish all the labs
 
