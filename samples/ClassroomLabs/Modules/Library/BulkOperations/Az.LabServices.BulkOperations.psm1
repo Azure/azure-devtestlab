@@ -94,7 +94,7 @@ function Import-LabsCsv {
         }
         else {
             #Assign to empty array since New-AzLab expects this property to exist, but this property should be optional in the csv
-            Add-Member -InputObject $_ -MemberType NoteProperty -Name "LabOwnerEmails" -Value @() 
+            Add-Member -InputObject $_ -MemberType NoteProperty -Name "LabOwnerEmails" -Value @() -Force
         }
 
         # TODO: There are two odd things about this code:
@@ -145,7 +145,7 @@ function Import-LabsCsv {
         }
         else {
             #Assign to empty array since New-AzLab expects this property to exist, but this property should be optional in the csv
-            Add-Member -InputObject $_ -MemberType NoteProperty -Name "Schedules" -Value @() 
+            Add-Member -InputObject $_ -MemberType NoteProperty -Name "Schedules" -Value @() -Force
         }
 
     }
@@ -463,9 +463,9 @@ function New-AzLabsBulk {
                 }
                 else {
                     # Try to get shared image and then gallery image
-                    $img = $la | Get-AzLabAccountSharedImage | Where-Object { $_.name -like $obj.ImageName }
+                    $img = $la | Get-AzLabAccountSharedImage | Where-Object { $_.name -eq $obj.ImageName }
                     if(-not $img) {
-                        $img = $la | Get-AzLabAccountGalleryImage | Where-Object { $_.name -like $obj.ImageName }
+                        $img = $la | Get-AzLabAccountGalleryImage | Where-Object { $_.name -eq $obj.ImageName }
                         if (-not $img -or @($img).Count -ne 1) { Write-Error "$($obj.ImageName) pattern doesn't match just one gallery image." }
                     }
 
