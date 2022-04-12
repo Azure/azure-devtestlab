@@ -1160,6 +1160,30 @@ function Publish-AzLab {
     end { }
 }
 
+function Get-AzLabPublishState {
+    [CmdletBinding()]
+    param(
+        [parameter(Mandatory = $true, HelpMessage = "Lab to get Publish state from", ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        $Lab
+    )
+
+    begin { . BeginPreamble }
+    process {
+        try {
+            foreach ($l in $Lab) {
+                $uri = (ConvertToUri -resource $l) + '/EnvironmentSettings/Default'
+                $res = InvokeRest -Uri $uri -Method 'Get'
+                return $res.properties.publishingState
+            }
+        }
+        catch {
+            Write-Error -ErrorRecord $_ -EA $callerEA
+        }
+    }
+    end { }
+}
+
 function Get-AzLabAccountSharedGallery {
     [CmdletBinding()]
     param(
@@ -2024,4 +2048,5 @@ Export-ModuleMember -Function   Get-AzLabAccount,
                                 Stop-AzLabStudentVm,
                                 Start-AzLabStudentVm,
                                 Sync-AzLabADUsers,
-                                Convert-UsageQuotaToHours
+                                Convert-UsageQuotaToHours,
+                                Get-AzLabPublishState

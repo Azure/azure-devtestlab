@@ -896,7 +896,10 @@ function Publish-AzLabsBulk {
                 Write-Host "Start publishing $($obj.LabName)"
                 $la = Get-AzLabAccount -ResourceGroupName $obj.ResourceGroupName -LabAccountName $obj.LabAccountName
                 $lab = Get-AzLab -LabAccount $la -LabName $obj.LabName
-                Publish-AzLab -Lab $lab | Out-null
+                if (Get-AzLabPublishState -ne "Published") {
+                    Publish-AzLab -Lab $lab | Out-null
+                }
+
                 Write-Host "Completed publishing of $($obj.LabName), total duration $([math]::Round(((Get-Date) - $StartTime).TotalMinutes, 1)) minutes" -ForegroundColor Green
 
             }
