@@ -282,8 +282,9 @@ function Get-KaliLinuxDisk {
 
     Write-Host "Downloading Kali Linux image compressed file. "
      $_kaliLinuxExtractedFilesFolder = Join-Path $env:TEMP 'KaliLinux'
-    #Download page is https://www.offensive-security.com/kali-linux-vm-vmware-virtualbox-image-download/
-    $kaliLinux7ZipFile = Get-WebFile -DownloadUrl 'https://images.kali.org/virtual-images/kali-linux-2020.4-vmware-amd64.7z' -TargetFilePath $(Join-Path $_kaliLinuxExtractedFilesFolder 'kali-linux-2020.4-vmware-amd64.7z') -SkipIfAlreadyExists $true
+    #Download page is https://www.kali.org/get-kali/#kali-virtual-machines
+    $_kaliDownloadedFileName = 'kali-linux-2021.4-vmware-amd64.7z'
+    $kaliLinux7ZipFile = Get-WebFile -DownloadUrl 'https://kali.download/virtual-images/kali-2021.4/kali-linux-2021.4-vmware-amd64.7z' -TargetFilePath $(Join-Path $_kaliLinuxExtractedFilesFolder $_kaliDownloadedFileName) -SkipIfAlreadyExists $true
  
     $sevenZipExe = Join-Path $env:ProgramFiles '7-zip\7z.exe'
     if (-not (Test-Path $sevenZipExe)) {
@@ -295,10 +296,11 @@ function Get-KaliLinuxDisk {
     }
 
     Write-Host "Extracting Kali Linux files from compressed file."
-    if ($null -eq (Get-ChildItem "$_kaliLinuxExtractedFilesFolder\Kali-Linux-2020.4-vmware-amd64.vmdk" -Recurse | Select-Object -expand FullName)) {
+    if ($null -eq (Get-ChildItem "$_kaliLinuxExtractedFilesFolder\Kali-Linux-2021.4-vmware-amd64.vmwarevm" -Recurse | Select-Object -expand FullName)) {
         Invoke-Process -FileName $sevenZipExe -Arguments "x $kaliLinux7ZipFile -o$_kaliLinuxExtractedFilesFolder -r"
     }
-    $vmdkFile = Get-ChildItem "$_kaliLinuxExtractedFilesFolder\Kali-Linux-2020.4-vmware-amd64.vmdk" -Recurse | Select-Object -expand FullName
+    $vmdkFile = Get-ChildItem "$_kaliLinuxExtractedFilesFolder\Kali-Linux-2021.4-vmware-amd64.vmwarevm\Kali-Linux-2021.4-vmware-amd64.vmdk" -Recurse | Select-Object -expand FullName
+    Write-Verbose "VmdkFile path: $vmdkFile"
 
     Write-Host "Converting downloading Kali Linux files to Hyper-V files."
     Convert-VdmkToVhdx -VmdkFilePath $vmdkFile -VhdxFilePath $vhdxPath

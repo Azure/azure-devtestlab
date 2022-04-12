@@ -72,6 +72,25 @@ function Write-ResourceInformation {
     Write-Host "Finished uploading $BlobName." 
 }
 
+<#
+Function returns true of $obj.$propertyName exists.
+#>
+function Get-PropertyExistance($obj, [string] $propertyName){
+    return $obj.properties.psobject.Properties[$propertyName]
+}
+
+<#
+Function returns the value of $obj.$propertyName if it exists,
+ $defaultReturnValue if it doesn't.
+#>
+function Get-PropertyIfExists ($obj, [string] $propertyName, $defaultReturnValue = ""){
+    if (Get-PropertyExistance $obj  $propertyName){
+        return $obj.properties.psobject.Properties[$propertyName].Value
+    }else{
+        return $defaultReturnValue
+    }
+}
+
 # ************************************************
 
 if ($env:FUNCTIONS_EXTENSION_VERSION) {
@@ -131,13 +150,13 @@ foreach ($labAccount in $labAccounts) {
             LabQuotaHours            = [System.Xml.XmlConvert]::ToTimeSpan($lab.properties.usageQuota).TotalHours
             LabLocation              = $lab.location
 
-            SharedPasswordEnabled    = $lab.properties.sharedPasswordEnabled
-            IdleShutdownMode         = $lab.properties.idleShutdownMode
-            IdleGracePeriod          = $lab.properties.idleGracePeriod
-            EnableDisconnectOnIdle   = $lab.properties.enableDisconnectOnIdle
-            IdleOsGracePeriod        = $lab.properties.idleOsGracePeriod
-            EnableNoConnectShutdown  = $lab.properties.enableNoConnectShutdown
-            IdleNoConnectGracePeriod = $lab.properties.idleNoConnectGracePeriod
+            SharedPasswordEnabled    = Get-PropertyIfExists $lab 'sharedPasswordEnabled'
+            IdleShutdownMode         = Get-PropertyIfExists $lab 'idleShutdownMode'
+            IdleGracePeriod          = Get-PropertyIfExists $lab 'idleGracePeriod'
+            EnableDisconnectOnIdle   = Get-PropertyIfExists $lab 'enableDisconnectOnIdle'
+            IdleOsGracePeriod        = Get-PropertyIfExists $lab 'idleOsGracePeriod' 
+            EnableNoConnectShutdown  = Get-PropertyIfExists $lab 'enableNoConnectShutdown'
+            IdleNoConnectGracePeriod = Get-PropertyIfExists $lab 'idleNoConnectGracePeriod'
         }
 
         #This API has price and vm size information for a lab
@@ -197,7 +216,7 @@ foreach ($labAccount in $labAccounts) {
                 VmUsageString     = $labVm.properties.totalUsage
 
                 #Warning: Below properties contain personally identifiable information
-                UserName          = if ($labVm.properties.psobject.Properties['claimedByUserName']) { $labVm.properties.claimedByUserName }
+                UserName          = Get-PropertyIfExists $labVm 'claimedByUserName'
                 UserPrincipal     = $labVm.UserPrincipal
                 IsClaimed         = $labVm.properties.isClaimed   
             }
@@ -245,13 +264,13 @@ foreach ($labAccount in $labAccounts) {
                     UserEmail         = $user.properties.email
                 }
 
-                if ($user.properties.psobject.Properties['totalUsage']) {
+                if (Get-PropertyExistance $user 'totalUsage') {
                     $details | Add-Member -Name "UserUsageString" -Value $user.properties.totalUsage -MemberType NoteProperty
                     $userUsageTimeSpan = [System.Xml.XmlConvert]::ToTimeSpan($user.properties.totalUsage)
                     $details | Add-Member -Name "UserUsageHours" -Value $([System.Math]::Floor($userUsageTimeSpan.TotalHours)) -MemberType NoteProperty
                     $details | Add-Member -Name "UserUsageMinutes" -Value $userUsageTimeSpan.Minutes -MemberType NoteProperty
                 }
-                if ($user.properties.psobject.Properties['additionalUsageQuota']) { 
+                if (Get-PropertyExistance $user 'additionalUsageQuota') { 
                     $userAdditionalQuotaTimeSpan = [System.Xml.XmlConvert]::ToTimeSpan($user.properties.additionalUsageQuota) 
                     $details | Add-Member -Name "UserAdditionalQuotaHours" -Value $userAdditionalQuotaTimeSpan.TotalHours -MemberType NoteProperty
                 }
