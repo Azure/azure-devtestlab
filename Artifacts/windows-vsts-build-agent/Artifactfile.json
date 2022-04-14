@@ -12,6 +12,11 @@
   "iconUri": "https://cdn.vsassets.io/content/icons/favicon.ico",
   "targetOsType": "Windows",
   "parameters": {
+    "vstsUrl": {
+      "type": "string",
+      "displayName": "Azure DevOps URL",
+      "description": "The URL of the Azure DevOps Server.   If this is not specified, then Azure DevOps Services is assumed."
+    },
     "vstsAccount": {
       "type": "string",
       "displayName": "Azure DevOps Organization Name",
