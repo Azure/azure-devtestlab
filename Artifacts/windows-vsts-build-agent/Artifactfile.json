@@ -22,7 +22,7 @@
       "displayName": "Azure DevOps Organization Name",
       "description": "The name of the Azure DevOps organization to add the agent to. This is the value in your Azure DevOps URL: e.g. 'myorg' in https://dev.azure.com/myorg."
     },
-    "vstsPassword": {
+    "vstsUserPassword": {
       "type": "securestring",
       "displayName": "Azure DevOps Personal Access Token",
       "description": "A personal access token with permissions to add agents. It will only be used to register the agent."
