@@ -3,12 +3,7 @@
   "title": "Azure Pipelines Agent",
   "publisher": "Microsoft",
   "description": "Downloads and installs the Azure Pipelines agent, registers with the specified Azure DevOps Services account, and adds the VM to the specified agent pool.",
-  "tags": [
-    "VSTS",
-    "Build",
-    "CI",
-    "Windows"
-  ],
+  "tags": ["VSTS", "Build", "CI", "Windows"],
   "iconUri": "https://cdn.vsassets.io/content/icons/favicon.ico",
   "targetOsType": "Windows",
   "parameters": {
@@ -71,7 +66,30 @@
       "maxLength": 1,
       "minLength": 1,
       "allowedValues": [
-        "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"
+        "C",
+        "D",
+        "E",
+        "F",
+        "G",
+        "H",
+        "I",
+        "J",
+        "K",
+        "L",
+        "M",
+        "N",
+        "O",
+        "P",
+        "Q",
+        "R",
+        "S",
+        "T",
+        "U",
+        "V",
+        "W",
+        "X",
+        "Y",
+        "Z"
       ]
     },
     "workDirectory": {
@@ -89,7 +107,7 @@
     }
   },
   "runCommand": {
-    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./vsts-agent-install.ps1', ' -vstsAccount ''', parameters('vstsAccount'), ''' -vstsUserPassword ', parameters('vstsPassword'), ' -agentName ''', parameters('agentName'), ''' -agentNameSuffix ''', parameters('agentNameSuffix'), ''' -poolName ''', parameters('poolName'), ''' -runAsAutoLogon $', parameters('runAsAutoLogon') , ' -windowsLogonAccount ''', parameters('windowsLogonAccount'), ''' -windowsLogonPassword ''', parameters('windowsLogonPassword'), ''' -driveLetter ', parameters('driveLetter'), ' -workDirectory ''', parameters('workDirectory'), ''' -replaceAgent $', parameters('replaceAgent') , '\"')]"
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./vsts-agent-install.ps1', ' -vstsAccount ''', parameters('vstsUrl'), ''' -vstsUrl ''', parameters('vstsAccount'), ''' -vstsUserPassword ', parameters('vstsPassword'), ' -agentName ''', parameters('agentName'), ''' -agentNameSuffix ''', parameters('agentNameSuffix'), ''' -poolName ''', parameters('poolName'), ''' -runAsAutoLogon $', parameters('runAsAutoLogon') , ' -windowsLogonAccount ''', parameters('windowsLogonAccount'), ''' -windowsLogonPassword ''', parameters('windowsLogonPassword'), ''' -driveLetter ', parameters('driveLetter'), ' -workDirectory ''', parameters('workDirectory'), ''' -replaceAgent $', parameters('replaceAgent') , '\"')]"
   },
   "postDeployActions": [
     {
