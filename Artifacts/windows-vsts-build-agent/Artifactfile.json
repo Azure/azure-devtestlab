@@ -107,7 +107,7 @@
     }
   },
   "runCommand": {
-    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./vsts-agent-install.ps1', ' -vstsAccount ''', parameters('vstsUrl'), ''' -vstsUrl ''', parameters('vstsAccount'), ''' -vstsUserPassword ', parameters('vstsPassword'), ' -agentName ''', parameters('agentName'), ''' -agentNameSuffix ''', parameters('agentNameSuffix'), ''' -poolName ''', parameters('poolName'), ''' -runAsAutoLogon $', parameters('runAsAutoLogon') , ' -windowsLogonAccount ''', parameters('windowsLogonAccount'), ''' -windowsLogonPassword ''', parameters('windowsLogonPassword'), ''' -driveLetter ', parameters('driveLetter'), ' -workDirectory ''', parameters('workDirectory'), ''' -replaceAgent $', parameters('replaceAgent') , '\"')]"
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./vsts-agent-install.ps1', ' -vstsUrl ''', parameters('vstsUrl'), ''' -vstsAccount ''', parameters('vstsAccount'), ''' -vstsUserPassword ', parameters('vstsPassword'), ' -agentName ''', parameters('agentName'), ''' -agentNameSuffix ''', parameters('agentNameSuffix'), ''' -poolName ''', parameters('poolName'), ''' -runAsAutoLogon $', parameters('runAsAutoLogon') , ' -windowsLogonAccount ''', parameters('windowsLogonAccount'), ''' -windowsLogonPassword ''', parameters('windowsLogonPassword'), ''' -driveLetter ', parameters('driveLetter'), ' -workDirectory ''', parameters('workDirectory'), ''' -replaceAgent $', parameters('replaceAgent') , '\"')]"
   },
   "postDeployActions": [
     {
