@@ -3,7 +3,12 @@
   "title": "Azure Pipelines Agent",
   "publisher": "Microsoft",
   "description": "Downloads and installs the Azure Pipelines agent, registers with the specified Azure DevOps Services account, and adds the VM to the specified agent pool.",
-  "tags": ["VSTS", "Build", "CI", "Windows"],
+  "tags": [
+    "VSTS",
+    "Build",
+    "CI",
+    "Windows"
+  ],
   "iconUri": "https://cdn.vsassets.io/content/icons/favicon.ico",
   "targetOsType": "Windows",
   "parameters": {
@@ -65,32 +70,7 @@
       "defaultValue": "C",
       "maxLength": 1,
       "minLength": 1,
-      "allowedValues": [
-        "C",
-        "D",
-        "E",
-        "F",
-        "G",
-        "H",
-        "I",
-        "J",
-        "K",
-        "L",
-        "M",
-        "N",
-        "O",
-        "P",
-        "Q",
-        "R",
-        "S",
-        "T",
-        "U",
-        "V",
-        "W",
-        "X",
-        "Y",
-        "Z"
-      ]
+      "allowedValues": ["C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
     },
     "workDirectory": {
       "type": "string",

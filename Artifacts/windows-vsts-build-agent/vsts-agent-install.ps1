@@ -1,5 +1,5 @@
-# Downloads the Visual Studio Online Build Agent, installs on the new machine, registers with the Visual
-# Studio Online account, and adds to the specified build agent pool
+# Downloads the Azure Dev Ops Pipeline Agent, installs on the new machine, 
+# registers with Azure Dev Ops, and adds to the specified build agent pool
 [CmdletBinding()]
 param(
     [string] $vstsUrl,
@@ -81,7 +81,6 @@ function Test-Parameters
 {
     [CmdletBinding()]
     param(
-        [string] $VstsUrl,
         [string] $VstsAccount,
         [string] $WorkDirectory
     )
@@ -94,15 +93,6 @@ function Test-Parameters
     if (![string]::IsNullOrWhiteSpace($WorkDirectory) -and !(Test-ValidPath -Path $WorkDirectory))
     {
         throw "Work directory '$WorkDirectory' is not a valid path."
-    }
-
-    if ($VstsUrl)
-    {
-        $serverUrl = $VstsUrl
-    }
-    else 
-    {
-        $serverUrl = "https://$VstsAccount.visualstudio.com"
     }
 }
 
@@ -175,7 +165,6 @@ function Get-AgentPackage
     New-Item -ItemType Directory -Force -Path $agentTempFolderName | Out-Null
 
     $agentPackagePath = "$agentTempFolderName\agent.zip"
-        
     $vstsAgentUrl = "$VstsUrl/_apis/distributedtask/packages/agent/win7-x64?`$top=1&api-version=3.0"
     $vstsUser = "AzureDevTestLabs"
 
@@ -428,7 +417,7 @@ try
         Test-AgentExists -InstallPath $agentInstallPath -AgentName $agentName
     }
 
-    Write-Host 'Downloading agent package'
+    Write-Host "Downloading agent package from $vstsUrlFull"
     $agentPackagePath = Get-AgentPackage -VstsUrl $vstsUrlFull -VstsUserPassword $vstsUserPassword
 
     Write-Host 'Extracting agent package contents'
