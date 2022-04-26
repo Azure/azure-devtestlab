@@ -2,6 +2,9 @@
 
 This folder contains sample ARM Templates, scripts and SDK projects to help demonstrate integration with Classroom Labs and DevTest Labs.
 
+>### Azure Lab Services April 2022 update (preview)
+>If you are using the update (with lab plans) the [Lab Services module](https://www.powershellgallery.com/packages/Az.LabServices/0.1.0) is available in the PowerShell gallery.  There is a dedicated [Lab Services repository](https://github.com/Azure/LabServices) with samples for the updated modules and the improved service.
+
 ## Awesome Lab Services
 
 A curated list of link with interesting information about Lab Services

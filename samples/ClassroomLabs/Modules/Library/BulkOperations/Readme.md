@@ -1,4 +1,9 @@
 # Bulk Lab Creation Module <!-- omit in toc -->
+
+>### Azure Lab Services April 2022 update (preview)
+>If you are using the update (with lab plans) the [Lab Services module](https://www.powershellgallery.com/packages/Az.LabServices/0.1.0) is available in the PowerShell gallery.  There is a dedicated [Lab Services repository](https://github.com/Azure/LabServices) with samples for the updated modules and the improved service.
+
+
 The [Az.LabServices.BulkOperations.psm1](https://github.com/Azure/azure-devtestlab/blob/master/samples/ClassroomLabs/Modules/Library/BulkOperations/Az.LabServices.BulkOperations.psm1) module enables bulk operations on **Resource Groups**, **Lab Accounts** and **Labs** via commandline based on declarative configuration information. The standard pattern of usage is by composing a pipeline as follows:
 
 `Load configuration info from db/csv/...` => `Transform configuration info` => `Publish the labs`
