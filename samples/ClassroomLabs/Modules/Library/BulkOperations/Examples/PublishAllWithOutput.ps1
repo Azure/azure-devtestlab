@@ -26,6 +26,6 @@ $labAccountResults = $CsvConfigFile |
         Publish-AzLabsBulk -ThrottleLimit $ThrottleLimit      # Publish all the labs
 
 # Write out the results
-$labAccountResults | Export-LabsCsv -Path $CsvOutputFile
+$labAccountResults | Export-LabsCsv -CsvConfigFile $CsvOutputFile
 
 Write-Host "Completed running Bulk Lab Creation script, total duration $(((Get-Date) - $outerScriptstartTime).TotalMinutes) minutes" -ForegroundColor Green
