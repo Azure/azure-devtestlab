@@ -1,11 +1,11 @@
 # TODO: consider polling on the operation returned by the API in the header as less expensive for RP
 # TODO: consider creating proper PS1 documentation for each function
 
-# We are using strict mode for added safety
-Set-StrictMode -Version Latest
-
-# We require a relatively new version of Powershell
-#requires -Version 3.0
+# Only set these if not running under Azure Automation
+if ("AzureAutomation/" -ne $env:AZUREPS_HOST_ENVIRONMENT) {
+    # We are using strict mode for added safety
+    Set-StrictMode -Version Latest
+}
 
 # To understand the code below read here: https://docs.microsoft.com/en-us/powershell/azure/migrate-from-azurerm-to-az?view=azps-2.1.0
 # Having both the Az and AzureRm Module installed is not supported, but it is probably common. The library should work in such case, but warn.
@@ -211,34 +211,41 @@ function ConvertFrom-ISO8601Duration {
 
 function Get-AzureRmCachedAccessToken() {
     $ErrorActionPreference = 'Stop'
-    Set-StrictMode -Off
+    Set-StrictMode -Off 
 
-    $azureRmProfile = [Microsoft.Azure.Commands.Common.Authentication.Abstractions.AzureRmProfileProvider]::Instance.Profile
-    if (-not $azureRmProfile.Accounts.Count) {
-        Write-Error "Ensure you have logged in before calling this function."
-    }
-
-    $profileClient = New-Object Microsoft.Azure.Commands.ResourceManager.Common.RMProfileClient($azureRmProfile)
-
-    $currentAzureContext = Get-AzureRmContext
-
-    if ($currentAzureContext) {
-        $tenantId = $currentAzureContext.Subscription.TenantId
+    if ("AzureAutomation/" -eq $env:AZUREPS_HOST_ENVIRONMENT) {
+        Write-Verbose "Running in Azure Automation environment..."
+        return (Get-AzAccessToken).Token
     }
     else {
-        # There are cases where we don't have the context, like running in Azure Automation
-        # Fallback is to pull the tenant ID out of the AzureRmProfile if it's there
-        $tenantId = $azureRmProfile.DefaultContext.Tenant.Id
+
+        $azureRmProfile = [Microsoft.Azure.Commands.Common.Authentication.Abstractions.AzureRmProfileProvider]::Instance.Profile
+        if (-not $azureRmProfile.Accounts.Count) {
+            Write-Error "Ensure you have logged in before calling this function."
+        }
+
+        $profileClient = New-Object Microsoft.Azure.Commands.ResourceManager.Common.RMProfileClient($azureRmProfile)
+
+        $currentAzureContext = Get-AzureRmContext
+
+        if ($currentAzureContext) {
+            $tenantId = $currentAzureContext.Subscription.TenantId
+        }
+        else {
+            # There are cases where we don't have the context, like running in Azure Automation
+            # Fallback is to pull the tenant ID out of the AzureRmProfile if it's there
+            $tenantId = $azureRmProfile.DefaultContext.Tenant.Id
+        }
+
+        Write-Debug ("Getting access token for tenant" + $tenantId)
+        $token = $profileClient.AcquireAccessToken($tenantId)
+        return $token.AccessToken
     }
-
-    Write-Debug ("Getting access token for tenant" + $tenantId)
-    $token = $profileClient.AcquireAccessToken($tenantId)
-    return $token.AccessToken
-
 }
 
 function GetHeaderWithAuthToken {
 
+    Write-Verbose "Creating header with Auth Token..."
     $authToken = Get-AzureRmCachedAccessToken
     Write-Debug $authToken
 
@@ -687,7 +694,7 @@ function Get-AzLabAccount {
                 else {
                     # Wild RG forces query by subscription
                     $subscriptionId = (Get-AzureRmContext).Subscription.Id
-                    $uri = "https://management.azure.com/subscriptions/$SubscriptionId/providers/Microsoft.LabServices/labaccounts"
+                    $uri = "https://management.azure.com/subscriptions/$subscriptionId/providers/Microsoft.LabServices/labaccounts"
                     InvokeRest  -Uri $uri -Method 'Get' | Where-Object { ($_.name -like $LabAccountName ) -and ($_.id.Split('/')[4] -like $ResourceGroupName) }
                 }
             }
