@@ -5,9 +5,6 @@
 if ("AzureAutomation/" -ne $env:AZUREPS_HOST_ENVIRONMENT) {
     # We are using strict mode for added safety
     Set-StrictMode -Version Latest
-
-    # We require a relatively new version of Powershell
-    #requires -Version 3.0
 }
 
 # To understand the code below read here: https://docs.microsoft.com/en-us/powershell/azure/migrate-from-azurerm-to-az?view=azps-2.1.0
@@ -214,22 +211,11 @@ function ConvertFrom-ISO8601Duration {
 
 function Get-AzureRmCachedAccessToken() {
     $ErrorActionPreference = 'Stop'
-    Set-StrictMode -Off
+    Set-StrictMode -Off 
 
     if ("AzureAutomation/" -eq $env:AZUREPS_HOST_ENVIRONMENT) {
         Write-Verbose "Running in Azure Automation environment..."
-        # We are running in Azure Automation - so need to get the token another way
-        # First, ensure that we're logged in
-        
-        $url = $env:IDENTITY_ENDPOINT
-        $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]" 
-        $headers.Add("X-IDENTITY-HEADER", $env:IDENTITY_HEADER) 
-        $headers.Add("Metadata", "True") 
-        $body = @{resource='https://management.azure.com/' } 
-        $accessToken = Invoke-RestMethod $url -Method 'POST' -Headers $headers -ContentType 'application/x-www-form-urlencoded' -Body $body
-        write-Verbose "Access token object:"
-        $accessToken | ConvertTo-Json -depth 10 | Out-String | Write-Verbose 
-        return $accessToken.access_token
+        return (Get-AzAccessToken).Token
     }
     else {
 
