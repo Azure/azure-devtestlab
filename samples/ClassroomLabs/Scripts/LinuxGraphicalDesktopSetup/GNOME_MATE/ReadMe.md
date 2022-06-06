@@ -43,7 +43,7 @@ sudo sh -c "$(curl -fsSL https://raw.githubusercontent.com/Azure/azure-devtestla
 ##### Install GNOME Desktop & Xrdp Server
 
 ```bash
-sudo sh -c "$(curl -fsSL https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/ClassroomLabs/Scripts/LinuxGraphicalDesktopSetup/GNOME_MATE/Ubuntu/xrdp-GNOME.sh)"
+sudo sh -c "$(curl -fsSL https://raw.githubusercontent.com/Azure/azure-devtestlab/master/samples/ClassroomLabs/Scripts/LinuxGraphicalDesktopSetup/GNOME_MATE/Ubuntu/xrdp-gnome.sh)"
 ```
 
 ### Install X2Go or RDP Client and Create a Session
