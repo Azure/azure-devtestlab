@@ -3,22 +3,25 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "existingLabName": {
-      "value": "MyLab1"
+      "value": "westeurope-test"
     },
     "existingVhdUri": {
-      "value": "https://MyStorageAccount1.vhd.blob.core.windows.net/uploads/MyImage1.vhd"
+      "value": "https://redacted.blob.core.windows.net/uploads/test.vhd"
     },
     "imageOsType": {
       "value": "windows"
     },
     "isVhdSysPrepped": {
-      "value": true
+      "value": false
     },
     "imageName": {
-      "value": "MyCustomImageFromVM1"
+      "value": "WindowsGen2Test"
     },
     "imageDescription": {
-      "value": "Some description for the custom image"
+      "value": "It's Gen2!!"
+    },
+    "hyperVGeneration": {
+      "value": "V2"
     }
   }
 }

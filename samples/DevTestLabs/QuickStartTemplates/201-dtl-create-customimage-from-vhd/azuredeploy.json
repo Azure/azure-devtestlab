@@ -40,6 +40,13 @@
       "metadata": {
         "description": "Details about the custom image being created or updated."
       }
+    },
+    "hyperVGeneration": {
+      "type": "string",
+      "defaultValue": "V1",
+      "metadata": {
+        "description": "The HyperV Generation for the VHD."
+      }
     }
   },
   "variables": {
@@ -55,7 +62,8 @@
         "vhd": {
           "imageName": "[parameters('existingVhdUri')]",
           "sysPrep": "[parameters('isVhdSysPrepped')]",
-          "osType": "[parameters('imageOsType')]"
+          "osType": "[parameters('imageOsType')]",
+          "hyperVGeneration": "[parameters('hyperVGeneration')]"
         },
         "description": "[parameters('imageDescription')]"
       }
