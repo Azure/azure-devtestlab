@@ -675,7 +675,7 @@
             "publisher": "[variables('vmDC').vmImagePublisher]",
             "offer": "[variables('vmDC').vmImageOffer]",
             "sku": "[variables('vmDC').vmImageSKU]",
-            "version": "latest"
+            "version": "20348.707.220505"
           },
           "osDisk": {
             "name": "[variables('vmDC').vmOSDiskName]",
@@ -828,7 +828,7 @@
             "publisher": "[variables('vmSQL').vmImagePublisher]",
             "offer": "[variables('vmSQL').vmImageOffer]",
             "sku": "[variables('vmSQL').vmImageSKU]",
-            "version": "latest"
+            "version": "15.0.220607"
           },
           "osDisk": {
             "name": "[variables('vmSQL').vmOSDiskName]",
@@ -1501,7 +1501,7 @@
             "publisher": "[variables('vmSPSubscription').vmImagePublisher]",
             "offer": "[variables('vmSPSubscription').vmImageOffer]",
             "sku": "[variables('vmSPSubscription').vmImageSKU]",
-            "version": "latest"
+            "version": "20348.707.220505"
           },
           "osDisk": {
             "name": "[variables('vmSPSubscription').vmOSDiskName]",
