@@ -1,5 +1,15 @@
 # Change log for Azure DevTest Labs template DTL-SharePoint-FullConfig
 
+## Enhancements & bug-fixes - Published in August 8, 2022
+
+* In SP SE, import site certificate in SharePoint, so it can manage the certificate itself.
+* Update LDAP security settings to mitigate CVE-2017-8563.
+* Remove tags on resources, as they did not bring any particular value.
+* Update apiVersion of resources to latest version.
+* Explicitly set the version of each DSC module used.
+* Update DSC modules used to latest version available.
+* Replace all resources xScript with Script and remove dependency on module xPSDesiredStateConfiguration.
+
 ## Enhancements & bug-fixes - Published in January 10, 2022
 
 * Add SharePoint Server Subscription and make it the default choice.
