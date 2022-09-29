@@ -21,7 +21,7 @@ configuration ConfigureSPVM
     Import-DscResource -ModuleName NetworkingDsc -ModuleVersion 9.0.0
     Import-DscResource -ModuleName ActiveDirectoryDsc -ModuleVersion 6.2.0
     Import-DscResource -ModuleName xCredSSP -ModuleVersion 1.3.0.0
-    Import-DscResource -ModuleName xWebAdministration -ModuleVersion 3.3.0
+    Import-DscResource -ModuleName WebAdministrationDsc -ModuleVersion 4.0.0
     Import-DscResource -ModuleName SharePointDsc -ModuleVersion 5.2.0
     Import-DscResource -ModuleName xDnsServer -ModuleVersion 2.0.0
     Import-DscResource -ModuleName CertificateDsc -ModuleVersion 5.1.0
@@ -46,7 +46,6 @@ configuration ConfigureSPVM
     if ([String]::Equals($SharePointVersion, "2013") -or [String]::Equals($SharePointVersion, "2016")) {
         $SPTeamSiteTemplate = "STS#0"
     }
-    [String] $AdfsOidcIdentifier = "fae5bd07-be63-4a64-a28c-7931a4ebf62b"
 
     Node localhost
     {
@@ -303,13 +302,13 @@ configuration ConfigureSPVM
         }
 
         # IIS cleanup cannot be executed earlier in SharePoint SE: It uses a base image of Windows Server without IIS (installed by SPInstallPrereqs)
-        xWebAppPool RemoveDotNet2Pool         { Name = ".NET v2.0";            Ensure = "Absent"; }
-        xWebAppPool RemoveDotNet2ClassicPool  { Name = ".NET v2.0 Classic";    Ensure = "Absent"; }
-        xWebAppPool RemoveDotNet45Pool        { Name = ".NET v4.5";            Ensure = "Absent"; }
-        xWebAppPool RemoveDotNet45ClassicPool { Name = ".NET v4.5 Classic";    Ensure = "Absent"; }
-        xWebAppPool RemoveClassicDotNetPool   { Name = "Classic .NET AppPool"; Ensure = "Absent"; }
-        xWebAppPool RemoveDefaultAppPool      { Name = "DefaultAppPool";       Ensure = "Absent"; }
-        xWebSite    RemoveDefaultWebSite      { Name = "Default Web Site";     Ensure = "Absent"; PhysicalPath = "C:\inetpub\wwwroot"; }
+        WebAppPool RemoveDotNet2Pool         { Name = ".NET v2.0";            Ensure = "Absent"; }
+        WebAppPool RemoveDotNet2ClassicPool  { Name = ".NET v2.0 Classic";    Ensure = "Absent"; }
+        WebAppPool RemoveDotNet45Pool        { Name = ".NET v4.5";            Ensure = "Absent"; }
+        WebAppPool RemoveDotNet45ClassicPool { Name = ".NET v4.5 Classic";    Ensure = "Absent"; }
+        WebAppPool RemoveClassicDotNetPool   { Name = "Classic .NET AppPool"; Ensure = "Absent"; }
+        WebAppPool RemoveDefaultAppPool      { Name = "DefaultAppPool";       Ensure = "Absent"; }
+        WebSite    RemoveDefaultWebSite      { Name = "Default Web Site";     Ensure = "Absent"; PhysicalPath = "C:\inetpub\wwwroot"; }
 
         #**********************************************************
         # Join AD forest
@@ -602,106 +601,31 @@ configuration ConfigureSPVM
                 DependsOn            = "[SPFarm]CreateSPFarm"
             }
 
-            if ($SharePointVersion -eq "SE") {
-                $apppoolUserName = $SPAppPoolCredsQualified.UserName
-                Script SetOidcCertificate
-                {
-                    SetScript = 
-                    {
-                        $apppoolUserName = $using:apppoolUserName
-                        # Import-Module SharePointServer | Out-Null
-                        # Setup farm properties to work with OIDC
-                        # Create a self-signed certificate in one SharePoint Server in the farm
-                        $cert = New-SelfSignedCertificate -CertStoreLocation Cert:\LocalMachine\My -Provider 'Microsoft Enhanced RSA and AES Cryptographic Provider' -Subject "CN=SharePoint Cookie Cert"
-    
-                        # Grant access to the certificate private key.
-                        $rsaCert = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($cert)
-                        $fileName = $rsaCert.key.UniqueName
-                        $path = "$env:ALLUSERSPROFILE\Microsoft\Crypto\RSA\MachineKeys\$fileName"
-                        $permissions = Get-Acl -Path $path
-                        $access_rule = New-Object System.Security.AccessControl.FileSystemAccessRule($apppoolUserName, 'Read', 'None', 'None', 'Allow')
-                        $permissions.AddAccessRule($access_rule)
-                        Set-Acl -Path $path -AclObject $permissions
-    
-                        # Set farm properties
-                        $f = Get-SPFarm
-                        $f.Farm.Properties['SP-NonceCookieCertificateThumbprint']=$cert.Thumbprint
-                        $f.Farm.Properties['SP-NonceCookieHMACSecretKey']='seed'
-                        $f.Farm.Update()
+            
+            SPTrustedIdentityTokenIssuer CreateSPTrust
+            {
+                Name                         = $DomainFQDN
+                Description                  = "Federation with $DomainFQDN"
+                Realm                        = "urn:sharepoint:spsites"
+                SignInUrl                    = "https://adfs.$DomainFQDN/adfs/ls/"
+                IdentifierClaim              = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn"
+                ClaimsMappings               = @(
+                    MSFT_SPClaimTypeMapping{
+                        Name = "upn"
+                        IncomingClaimType = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn"
                     }
-                    GetScript =  
-                    {
-                        # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
-                        return @{ "Result" = "false" }
+                    MSFT_SPClaimTypeMapping{
+                        Name = "Role"
+                        IncomingClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
                     }
-                    TestScript = 
-                    {
-                        # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
-                        # Import-Module SharePointServer | Out-Null
-                        # $f = Get-SPFarm
-                        # if ($f.Farm.Properties.ContainsKey('SP-NonceCookieCertificateThumbprint') -eq $false) {
-                        if ((Get-ChildItem -Path "cert:\LocalMachine\My\"| Where-Object{$_.Subject -eq "CN=SharePoint Cookie Cert"}) -eq $null) {
-                            return $false
-                        }
-                        else {
-                            return $true
-                        }
-                    }
-                    DependsOn            = "[SPFarm]CreateSPFarm"
-                    PsDscRunAsCredential = $SPSetupCredsQualified
-                }        
-    
-                SPTrustedIdentityTokenIssuer CreateSPTrust
-                {
-                    Name                         = $DomainFQDN
-                    Description                  = "Federation with $DomainFQDN"
-                    RegisteredIssuerName         = "https://adfs.$DomainFQDN/adfs"
-                    AuthorizationEndPointUri     = "https://adfs.$DomainFQDN/adfs/oauth2/authorize"
-                    SignOutUrl                   = "https://adfs.$DomainFQDN/adfs/oauth2/logout"
-                    DefaultClientIdentifier      = $AdfsOidcIdentifier
-                    IdentifierClaim              = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn"
-                    ClaimsMappings               = @(
-                        MSFT_SPClaimTypeMapping{
-                            Name = "upn"
-                            IncomingClaimType = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn"
-                        }
-                        MSFT_SPClaimTypeMapping{
-                            Name = "role"
-                            IncomingClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
-                        }
-                    )
-                    SigningCertificateFilePath   = "$SetupPath\Certificates\ADFS Signing.cer"
-                    UseWReplyParameter           = $true
-                    Ensure                       = "Present" 
-                    DependsOn                    = "[Script]SetOidcCertificate"
-                    PsDscRunAsCredential         = $SPSetupCredsQualified
-                }
-            } else {
-                SPTrustedIdentityTokenIssuer CreateSPTrust
-                {
-                    Name                         = $DomainFQDN
-                    Description                  = "Federation with $DomainFQDN"
-                    Realm                        = "urn:sharepoint:spsites"
-                    SignInUrl                    = "https://adfs.$DomainFQDN/adfs/ls/"
-                    IdentifierClaim              = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn"
-                    ClaimsMappings               = @(
-                        MSFT_SPClaimTypeMapping{
-                            Name = "upn"
-                            IncomingClaimType = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn"
-                        }
-                        MSFT_SPClaimTypeMapping{
-                            Name = "Role"
-                            IncomingClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
-                        }
-                    )
-                    SigningCertificateFilePath   = "$SetupPath\Certificates\ADFS Signing.cer"
-                    #ClaimProviderName           = "" # Should not be set if there is none
-                    ProviderSignOutUri          = "https://adfs.$DomainFQDN/adfs/ls/"
-                    UseWReplyParameter           = $true
-                    Ensure                       = "Present"
-                    DependsOn                    = "[SPFarm]CreateSPFarm"
-                    PsDscRunAsCredential         = $SPSetupCredsQualified
-                }
+                )
+                SigningCertificateFilePath   = "$SetupPath\Certificates\ADFS Signing.cer"
+                #ClaimProviderName           = "" # Should not be set if there is none
+                ProviderSignOutUri          = "https://adfs.$DomainFQDN/adfs/ls/"
+                UseWReplyParameter           = $true
+                Ensure                       = "Present"
+                DependsOn                    = "[SPFarm]CreateSPFarm"
+                PsDscRunAsCredential         = $SPSetupCredsQualified
             }
 
             # Update GPO to ensure the root certificate of the CA is present in "cert:\LocalMachine\Root\", otherwise certificate request will fail
@@ -761,91 +685,36 @@ configuration ConfigureSPVM
                 DependsOn            = "[SPWebApplicationExtension]ExtendMainWebApp"
             }
 
-            if ($SharePointVersion -eq "SE") {
-                # Use SharePoint SE to generate the CSR and give the private key so it can manage it
-                Script GenerateMainWebAppCertificate
+            CertReq GenerateMainWebAppCertificate
+            {
+                CARootName             = "$DomainNetbiosName-$DCName-CA"
+                CAServerFQDN           = "$DCName.$DomainFQDN"
+                Subject                = "$SPTrustedSitesName.$DomainFQDN"
+                SubjectAltName         = "dns=*.$DomainFQDN"
+                KeyLength              = '2048'
+                Exportable             = $true
+                ProviderName           = '"Microsoft RSA SChannel Cryptographic Provider"'
+                OID                    = '1.3.6.1.5.5.7.3.1'
+                KeyUsage               = '0xa0'
+                CertificateTemplate    = 'WebServer'
+                AutoRenew              = $true
+                DependsOn              = "[Script]UpdateGPOToTrustRootCACert", "[SPWebAppAuthentication]ConfigureMainWebAppAuthentication"
+                Credential             = $DomainAdminCredsQualified
+            }
+
+            Website SetHTTPSCertificate
+            {
+                Name                 = "SharePoint - 443"
+                BindingInfo          = DSC_WebBindingInformation
                 {
-                    SetScript =
-                    {
-                        $dcName = $using:DCName
-                        $dcSetupPath = $using:DCSetupPath
-                        $domainFQDN = $using:DomainFQDN
-                        $domainNetbiosName = $using:DomainNetbiosName
-                        $spTrustedSitesName = $using:SPTrustedSitesName
-
-                        # Generate CSR
-                        New-SPCertificate -FriendlyName "$spTrustedSitesName Certificate" -KeySize 2048 -CommonName "$spTrustedSitesName.$domainFQDN" -AlternativeNames @("*.$domainFQDN") -Organization "$domainNetbiosName" -Exportable -HashAlgorithm SHA256 -Path "$dcSetupPath\$spTrustedSitesName.csr"
-
-                        # Submit CSR to CA
-                        & certreq.exe -submit -config "$dcName.$domainFQDN\$domainNetbiosName-$dcName-CA" -attrib "CertificateTemplate:Webserver" "$dcSetupPath\$spTrustedSitesName.csr" "$dcSetupPath\$spTrustedSitesName.cer" "$dcSetupPath\$spTrustedSitesName.p7b" "$dcSetupPath\$spTrustedSitesName.ful"
-
-                        # Install certificate with its private key to certificate store
-                        # certreq -accept –machine "$dcSetupPath\$spTrustedSitesName.cer"
-
-                        # Find the certificate
-                        # Get-ChildItem -Path cert:\localMachine\my | Where-Object{ $_.Subject -eq "CN=$spTrustedSitesName.$domainFQDN, O=$domainNetbiosName" } | Select-Object Thumbprint
-
-                        # # Export private key of the certificate
-                        # certutil -f -p "superpasse" -exportpfx A74D118AABD5B42F23BCD9083D3F6A3EF3BFD904 "$dcSetupPath\$spTrustedSitesName.pfx"
-
-                        # # Import private key of the certificate into SharePoint
-                        # $password = ConvertTo-SecureString -AsPlainText -Force "<superpasse>"
-                        # Import-SPCertificate -Path "$dcSetupPath\$spTrustedSitesName.pfx" -Password $password -Exportable
-                        $spCert = Import-SPCertificate -Path "$dcSetupPath\$spTrustedSitesName.cer" -Exportable -Store EndEntity
-
-                        Set-SPWebApplication -Identity "http://$spTrustedSitesName" -Zone Intranet -Port 443 -Certificate $spCert `
-                            -SecureSocketsLayer:$true -AllowLegacyEncryption:$false -Url "https://$spTrustedSitesName.$domainFQDN"
-                    }
-                    GetScript            = { }
-                    TestScript           = 
-                    {
-                        $domainFQDN = $using:DomainFQDN
-                        $domainNetbiosName = $using:DomainNetbiosName
-                        $spTrustedSitesName = $using:SPTrustedSitesName
-                        
-                        # $cert = Get-ChildItem -Path cert:\localMachine\my | Where-Object{ $_.Subject -eq "CN=$spTrustedSitesName.$domainFQDN, O=$domainNetbiosName" }
-                        $cert = Get-SPCertificate -Identity "$spTrustedSitesName Certificate" -ErrorAction SilentlyContinue
-                        if ($null -eq $cert) {
-                            return $false   # Run SetScript
-                        } else {
-                            return $true    # Certificate is already created
-                        }
-                    }
-                    DependsOn            = "[Script]UpdateGPOToTrustRootCACert", "[SPWebAppAuthentication]ConfigureMainWebAppAuthentication"
-                    PsDscRunAsCredential = $DomainAdminCredsQualified
+                    Protocol             = "HTTPS"
+                    Port                 = 443
+                    CertificateStoreName = "My"
+                    CertificateSubject   = "$SPTrustedSitesName.$DomainFQDN"
                 }
-            } else {
-                CertReq GenerateMainWebAppCertificate
-                {
-                    CARootName             = "$DomainNetbiosName-$DCName-CA"
-                    CAServerFQDN           = "$DCName.$DomainFQDN"
-                    Subject                = "$SPTrustedSitesName.$DomainFQDN"
-                    SubjectAltName         = "dns=*.$DomainFQDN"
-                    KeyLength              = '2048'
-                    Exportable             = $true
-                    ProviderName           = '"Microsoft RSA SChannel Cryptographic Provider"'
-                    OID                    = '1.3.6.1.5.5.7.3.1'
-                    KeyUsage               = '0xa0'
-                    CertificateTemplate    = 'WebServer'
-                    AutoRenew              = $true
-                    DependsOn              = "[Script]UpdateGPOToTrustRootCACert", "[SPWebAppAuthentication]ConfigureMainWebAppAuthentication"
-                    Credential             = $DomainAdminCredsQualified
-                }
-
-                xWebsite SetHTTPSCertificate
-                {
-                    Name                 = "SharePoint - 443"
-                    BindingInfo          = MSFT_xWebBindingInformation
-                    {
-                        Protocol             = "HTTPS"
-                        Port                 = 443
-                        CertificateStoreName = "My"
-                        CertificateSubject   = "$SPTrustedSitesName.$DomainFQDN"
-                    }
-                    Ensure               = "Present"
-                    PsDscRunAsCredential = $DomainAdminCredsQualified
-                    DependsOn            = "[CertReq]GenerateMainWebAppCertificate"
-                }
+                Ensure               = "Present"
+                PsDscRunAsCredential = $DomainAdminCredsQualified
+                DependsOn            = "[CertReq]GenerateMainWebAppCertificate"
             }
 
             SPSite CreateRootSite
@@ -939,29 +808,27 @@ function Get-NetBIOSName
 }
 
 <#
-# Azure DSC extension logging: C:\WindowsAzure\Logs\Plugins\Microsoft.Powershell.DSC\2.83.1.0
-# Azure DSC extension configuration: C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.1.0\DSCWork
-
-Install-Module -Name PendingReboot
 help ConfigureSPVM
 
-$DomainAdminCreds = Get-Credential -Credential "yvand"
-$SPSetupCreds = Get-Credential -Credential "spsetup"
-$SPFarmCreds = Get-Credential -Credential "spfarm"
-$SPAppPoolCreds = Get-Credential -Credential "spapppool"
-$SPPassphraseCreds = Get-Credential -Credential "Passphrase"
+$password = ConvertTo-SecureString -String "mytopsecurepassword" -AsPlainText -Force
+$DomainAdminCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "yvand", $password
+$SPSetupCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "spsetup", $password
+$SPFarmCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "spfarm", $password
+$SPAppPoolCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "spapppool", $password
+$SPPassphraseCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "Passphrase", $password
 $DNSServer = "10.1.1.4"
 $DomainFQDN = "contoso.local"
 $DCName = "DC"
 $SQLName = "SQL"
 $SQLAlias = "SQLAlias"
-$SharePointVersion = "SE"
+$SharePointVersion = "2019"
 $ConfigureADFS = $true
 $EnableAnalysis = $true
 
-$outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.2.0\DSCWork\ConfigureSPVM.0\ConfigureSPVM"
+$outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.2.0\DSCWork\ConfigureSPLegacy.0\ConfigureSPVM"
 ConfigureSPVM -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPAppPoolCreds $SPAppPoolCreds -SPPassphraseCreds $SPPassphraseCreds -DNSServer $DNSServer -DomainFQDN $DomainFQDN -DCName $DCName -SQLName $SQLName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -ConfigureADFS $ConfigureADFS -EnableAnalysis $EnableAnalysis -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
 Set-DscLocalConfigurationManager -Path $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
 
+C:\WindowsAzure\Logs\Plugins\Microsoft.Powershell.DSC\2.83.2.0
 #>
