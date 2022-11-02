@@ -9,14 +9,21 @@ trigger:
 pool:
   vmImage: ubuntu-latest
 
+variables:
+  Codeql.Enabled: true
+
 steps:
 - task: NodeTool@0
   inputs:
     versionSpec: '10.x'
   displayName: 'Install Node.js'
 
+- task:  CodeQL3000Init@0
+
 - script: |
     npm install
     npm run package-build
   displayName: 'npm install and build'
   workingDirectory: tasks/Node
+
+- task: CodeQL3000Finalize@0
