@@ -10,6 +10,7 @@ configuration ConfigureSPVM
         [Parameter(Mandatory)] [String]$SharePointVersion,
         [Parameter(Mandatory)] [Boolean]$ConfigureADFS,
         [Parameter(Mandatory)] [Boolean]$EnableAnalysis,
+        [Parameter()] $SharePointBits,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$DomainAdminCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPSetupCreds,
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPFarmCreds,
@@ -20,12 +21,12 @@ configuration ConfigureSPVM
     Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 8.5.0
     Import-DscResource -ModuleName NetworkingDsc -ModuleVersion 9.0.0
     Import-DscResource -ModuleName ActiveDirectoryDsc -ModuleVersion 6.2.0
-    Import-DscResource -ModuleName xCredSSP -ModuleVersion 1.3.0.0
+    Import-DscResource -ModuleName xCredSSP -ModuleVersion 1.4.0
     Import-DscResource -ModuleName WebAdministrationDsc -ModuleVersion 4.0.0
-    Import-DscResource -ModuleName SharePointDsc -ModuleVersion 5.2.0
-    Import-DscResource -ModuleName xDnsServer -ModuleVersion 2.0.0
+    Import-DscResource -ModuleName SharePointDsc -ModuleVersion 5.3.0
+    Import-DscResource -ModuleName DnsServerDsc -ModuleVersion 3.0.0
     Import-DscResource -ModuleName CertificateDsc -ModuleVersion 5.1.0
-    Import-DscResource -ModuleName SqlServerDsc -ModuleVersion 15.2.0
+    Import-DscResource -ModuleName SqlServerDsc -ModuleVersion 16.0.0
     Import-DscResource -ModuleName cChoco -ModuleVersion 2.5.0.0    # With custom changes to implement retry on package downloads
 
     [String] $DomainNetbiosName = (Get-NetBIOSName -DomainFQDN $DomainFQDN)
@@ -240,68 +241,8 @@ configuration ConfigureSPVM
         #         Ensure               = "Present"
         #         DependsOn            = "[cChocoInstaller]InstallChoco"
         #     }
-        # }
+        # }        
 
-        if ($SharePointVersion -eq "SE") {
-            #**********************************************************
-            # Download and install for SharePoint
-            #**********************************************************
-            Script DownloadSharePoint
-            {
-                SetScript = {
-                    $count = 0
-                    $maxCount = 10
-                    $spIsoUrl = "https://go.microsoft.com/fwlink/?linkid=2171943"
-                    $dstFolder = Join-Path -Path $env:windir -ChildPath "Temp"
-                    $dstFile = Join-Path -Path $dstFolder -ChildPath "OfficeServer.iso"
-                    $spInstallFolder = Join-Path -Path $dstFolder -ChildPath "OfficeServer"
-                    $setupFile =  Join-Path -Path $spInstallFolder -ChildPath "setup.exe"
-                    while (($count -lt $maxCount) -and (-not(Test-Path $setupFile)))
-                    {
-                        try {
-                        # donwload the installation package
-                        Start-BitsTransfer -Source $spIsoUrl -Destination $dstFile
-                
-                        # mount the image file and copy to C:\windows\TEMP\OfficeServer folder
-                        $mountedIso = Mount-DiskImage -ImagePath $dstFile -PassThru
-                        $driverLetter =  (Get-Volume -DiskImage $mountedIso).DriveLetter
-                        Copy-Item -Path "${driverLetter}:\" -Destination $spInstallFolder -Recurse -Force -ErrorAction SilentlyContinue
-                        Dismount-DiskImage -DevicePath $mountedIso.DevicePath -ErrorAction SilentlyContinue
-                        
-                        (Get-ChildItem -Path $spInstallFolder -Recurse -File).FullName | Foreach-Object {Unblock-File $_}
-                        $count++
-                        }
-                        catch {
-                        $count++
-                        }
-                    }
-
-                    if (-not(Test-Path $setupFile)) {
-                        Write-Error -Message "Failed to download SharePoint installation package" 
-                    }
-                }
-                TestScript = { Test-Path "${env:windir}\Temp\OfficeServer\setup.exe" }
-                GetScript = { return @{ "Result" = "false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
-            }
-
-            SPInstallPrereqs InstallPrerequisites
-            {
-                IsSingleInstance  = "Yes"
-                InstallerPath     = "${env:windir}\Temp\OfficeServer\Prerequisiteinstaller.exe"
-                OnlineMode        = $true
-                DependsOn         = "[Script]DownloadSharePoint"
-            }
-
-            SPInstall InstallBinaries
-            {
-                IsSingleInstance = "Yes"
-                BinaryDir        = "${env:windir}\Temp\OfficeServer"
-                ProductKey       = "VW2FM-FN9FT-H22J4-WV9GT-H8VKF"
-                DependsOn        = "[SPInstallPrereqs]InstallPrerequisites"
-            }
-        }
-
-        # IIS cleanup cannot be executed earlier in SharePoint SE: It uses a base image of Windows Server without IIS (installed by SPInstallPrereqs)
         WebAppPool RemoveDotNet2Pool         { Name = ".NET v2.0";            Ensure = "Absent"; }
         WebAppPool RemoveDotNet2ClassicPool  { Name = ".NET v2.0 Classic";    Ensure = "Absent"; }
         WebAppPool RemoveDotNet45Pool        { Name = ".NET v4.5";            Ensure = "Absent"; }
@@ -388,13 +329,12 @@ configuration ConfigureSPVM
         # Do SharePoint pre-reqs that require membership in AD domain
         #**********************************************************
         # Create DNS entries used by SharePoint
-        xDnsRecord AddTrustedSiteDNS
+        DnsRecordCname AddTrustedSiteDNS
         {
             Name                 = $SPTrustedSitesName
-            Zone                 = $DomainFQDN
+            ZoneName             = $DomainFQDN
             DnsServer            = $DCName
-            Target               = "$ComputerName.$DomainFQDN"
-            Type                 = "CName"
+            HostNameAlias        = "$ComputerName.$DomainFQDN"
             Ensure               = "Present"
             PsDscRunAsCredential = $DomainAdminCredsQualified
             DependsOn            = "[PendingReboot]RebootOnSignalFromJoinDomain"
@@ -753,6 +693,40 @@ configuration ConfigureSPVM
                 PsDscRunAsCredential = $SPSetupCredsQualified
                 DependsOn            = "[SPWebAppAuthentication]ConfigureMainWebAppAuthentication"
             }
+        }
+
+        Script WarmupSites
+        {
+            SetScript =
+            {
+                $warmupJobBlock = {
+                    $uri = $args[0]
+                    try {
+                        Write-Verbose "Connecting to $uri..."
+                        # -UseDefaultCredentials: Does NTLM authN
+                        # -UseBasicParsing: Avoid exception because IE was not first launched yet
+                        # Expected traffic is HTTP 401/302/200, and $Response.StatusCode is 200
+                        $Response = Invoke-WebRequest -Uri $uri -UseDefaultCredentials -TimeoutSec 40 -UseBasicParsing -ErrorAction SilentlyContinue
+                        Write-Verbose "Connected successfully to $uri"
+                    }
+                    catch {
+                    }
+                }
+                $spsite = "http://$($using:ComputerName):5000/"
+                Write-Verbose "Warming up '$spsite'..."
+                $job1 = Start-Job -ScriptBlock $warmupJobBlock -ArgumentList @($spsite)
+                $spsite = "http://$($using:SPTrustedSitesName)/"
+                Write-Verbose "Warming up '$spsite'..."
+                $job2 = Start-Job -ScriptBlock $warmupJobBlock -ArgumentList @($spsite)
+                
+                # Must wait for the jobs to complete, otherwise they do not actually run
+                Receive-Job -Job $job1 -AutoRemoveJob -Wait
+                Receive-Job -Job $job2 -AutoRemoveJob -Wait
+            }
+            GetScript            = { return @{ "Result" = "false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
+            TestScript           = { return $false } # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
+            PsDscRunAsCredential = $DomainAdminCredsQualified
+            DependsOn            = "[SPSite]CreateRootSite"
         }
 
         # if ($EnableAnalysis) {
