@@ -52,9 +52,14 @@
         "description": "Specify if Azure Bastion should be provisioned. See https://azure.microsoft.com/en-us/services/azure-bastion for more information."
       }
     },
-    "addPublicIPAddressToEachVM": {
-      "type": "bool",
-      "defaultValue": true,
+    "addPublicIPAddress": {
+      "type": "string",
+      "defaultValue": "SharePointVMsOnly",
+      "allowedValues": [
+        "Yes",
+        "No",
+        "SharePointVMsOnly"
+      ],
       "metadata": {
         "description": "Specify if each VM should have a public IP and be reachable from Internet."
       }
@@ -64,7 +69,7 @@
       "defaultValue": "No",
       "minLength": 1,
       "metadata": {
-        "description": "Specify if RDP traffic is allowed to connect to the VMs:<br>- If 'No' (default): Firewall denies all incoming RDP traffic from Internet.<br>- If '*' or 'Internet': Firewall accepts all incoming RDP traffic from Internet.<br>- If 'ServiceTagName': Firewall accepts all incoming RDP traffic from the specified 'ServiceTagName'.<br>- If 'xx.xx.xx.xx': Firewall accepts incoming RDP traffic only from the IP 'xx.xx.xx.xx'."
+        "description": "Specify if RDP traffic is allowed:<br>- If 'No' (default): Firewall denies all incoming RDP traffic.<br>- If '*' or 'Internet': Firewall accepts all incoming RDP traffic from Internet.<br>- If CIDR notation (e.g. 192.168.99.0/24 or 2001:1234::/64) or IP address (e.g. 192.168.99.0 or 2001:1234::): Firewall accepts incoming RDP traffic from the IP addresses specified."
       }
     },
     "adminUserName": {
@@ -78,14 +83,14 @@
       "type": "securestring",
       "minLength": 8,
       "metadata": {
-        "description": "Input must meet password complexity requirements as documented for property 'adminPassword' in https://docs.microsoft.com/en-us/rest/api/compute/virtualmachines/virtualmachines-create-or-update"
+        "description": "Input must meet password complexity requirements as documented in https://learn.microsoft.com/azure/virtual-machines/windows/faq#what-are-the-password-requirements-when-creating-a-vm-"
       }
     },
     "serviceAccountsPassword": {
       "type": "securestring",
       "minLength": 8,
       "metadata": {
-        "description": "Password for all service account and SharePoint passphrase. It must meet password complexity requirements as documented for property 'adminPassword' in https://docs.microsoft.com/en-us/rest/api/compute/virtualmachines/virtualmachines-create-or-update"
+        "description": "Password for all service accounts and SharePoint passphrase. Input must meet password complexity requirements as documented in https://learn.microsoft.com/azure/virtual-machines/windows/faq#what-are-the-password-requirements-when-creating-a-vm-"
       }
     },
     "vmsTimeZone": {
@@ -352,7 +357,34 @@
       "spADDirSyncUserName": "spdirsync",
       "localAdminUserName": "[concat('local-', uniqueString(subscription().subscriptionId))]",
       "enableAnalysis": false,
-      "isSharePointvNext": "[if(startsWith(parameters('sharePointVersion'), 'subscription'), true(), false())]"
+      "isSharePointSubscription": "[if(startsWith(parameters('sharePointVersion'), 'subscription'), true(), false())]",
+      "sharePointSubscriptionBits" : [
+        {
+          "Label": "RTM",
+          "Packages": [
+            {
+              "DownloadUrl": "https://download.microsoft.com/download/3/f/5/3f5f8a7e-462b-41ff-a5b2-04bdf5821ceb/OfficeServer.iso",
+              "ChecksumType": "SHA256",
+              "Checksum": "C576B847C573234B68FC602A0318F5794D7A61D8149EB6AE537AF04470B7FC05"
+            }
+          ]
+        },
+        {
+          "Label": "22H2",
+          "Packages": [
+            {
+              "DownloadUrl": "https://download.microsoft.com/download/8/d/f/8dfcb515-6e49-42e5-b20f-5ebdfd19d8e7/wssloc-subscription-kb5002270-fullfile-x64-glb.exe",
+              "ChecksumType": "SHA256",
+              "Checksum": "7E496530EB873146650A9E0653DE835CB2CAD9AF8D154CBD7387BB0F2297C9FC"
+            },
+            {
+              "DownloadUrl": "https://download.microsoft.com/download/3/f/5/3f5b1ee0-3336-45d7-b2f4-1e6af977d574/sts-subscription-kb5002271-fullfile-x64-glb.exe",
+              "ChecksumType": "SHA256",
+              "Checksum": "247011443AC573D4F03B1622065A7350B8B3DAE04D6A5A6DC64C8270A3BE7636"
+            }
+          ]
+        }
+      ]
     },
     "networkSettings": {
       "vNetPrivateName": "[concat(resourceGroup().name, '-vnet')]",
@@ -416,9 +448,9 @@
       "shutdownResourceName": "[concat('shutdown-computevm-', variables('generalSettings').vmSQLName)]"
     },
     "vmSP": {
-      "vmImagePublisher": "[if(variables('generalSettings').isSharePointvNext, 'MicrosoftWindowsServer', 'MicrosoftSharePoint')]",
-      "vmImageOffer": "[if(variables('generalSettings').isSharePointvNext, 'WindowsServer', 'MicrosoftSharePointServer')]",
-      "vmImageSKU": "[if(variables('generalSettings').isSharePointvNext, '2022-datacenter-azure-edition', concat('sp', parameters('sharePointVersion')))]",
+      "vmImagePublisher": "[if(variables('generalSettings').isSharePointSubscription, 'MicrosoftWindowsServer', 'MicrosoftSharePoint')]",
+      "vmImageOffer": "[if(variables('generalSettings').isSharePointSubscription, 'WindowsServer', 'MicrosoftSharePointServer')]",
+      "vmImageSKU": "[if(variables('generalSettings').isSharePointSubscription, '2022-datacenter-azure-edition', concat('sp', parameters('sharePointVersion')))]",
       "vmOSDiskName": "Disk-SP-OS",
       "vmDataDiskName": "Disk-SP-Data",
       "vmVmSize": "[parameters('vmSPSize')]",
@@ -448,14 +480,15 @@
       "forceUpdateTag": "1.0"
     },
     "dscConfigureSPVM": {
-      "scriptFileUri": "[uri(variables('_artifactsLocationWithTrailingSlash'), concat(if(variables('generalSettings').isSharePointvNext, 'dsc/ConfigureSPSE.zip', 'dsc/ConfigureSPLegacy.zip'), parameters('_artifactsLocationSasToken')))]",
-      "script": "[if(variables('generalSettings').isSharePointvNext, 'ConfigureSPSE.ps1', 'ConfigureSPLegacy.ps1')]",
+      "scriptFileUri": "[uri(variables('_artifactsLocationWithTrailingSlash'), concat(if(variables('generalSettings').isSharePointSubscription, 'dsc/ConfigureSPSE.zip', 'dsc/ConfigureSPLegacy.zip'), parameters('_artifactsLocationSasToken')))]",
+      "script": "[if(variables('generalSettings').isSharePointSubscription, 'ConfigureSPSE.ps1', 'ConfigureSPLegacy.ps1')]",
       "function": "ConfigureSPVM",
-      "forceUpdateTag": "1.0"
+      "forceUpdateTag": "1.0",
+      "sharePointBitsSelected": "[if(variables('generalSettings').isSharePointSubscription, variables('generalSettings').sharePointSubscriptionBits, 'fake')]"
     },
     "dscConfigureFEVM": {
-      "scriptFileUri": "[uri(variables('_artifactsLocationWithTrailingSlash'), concat(if(variables('generalSettings').isSharePointvNext, 'dsc/ConfigureFESE.zip', 'dsc/ConfigureFELegacy.zip'), parameters('_artifactsLocationSasToken')))]",
-      "script": "[if(variables('generalSettings').isSharePointvNext, 'ConfigureFESE.ps1', 'ConfigureFELegacy.ps1')]",
+      "scriptFileUri": "[uri(variables('_artifactsLocationWithTrailingSlash'), concat(if(variables('generalSettings').isSharePointSubscription, 'dsc/ConfigureFESE.zip', 'dsc/ConfigureFELegacy.zip'), parameters('_artifactsLocationSasToken')))]",
+      "script": "[if(variables('generalSettings').isSharePointSubscription, 'ConfigureFESE.ps1', 'ConfigureFELegacy.ps1')]",
       "function": "ConfigureFEVM",
       "forceUpdateTag": "1.0"
     },
@@ -477,7 +510,7 @@
     {
       "name": "[variables('networkSettings').nsgSubnetDCName]",
       "type": "Microsoft.Network/networkSecurityGroups",
-      "apiVersion": "2022-01-01",
+      "apiVersion": "2022-05-01",
       "location": "[parameters('location')]",
       "properties": {
         "securityRules": "[if(equals(toLower(parameters('RDPTrafficAllowed')), 'no'), json('null'), variables('networkSettings').nsgRuleAllowIncomingTraffic)]"
@@ -486,7 +519,7 @@
     {
       "name": "[variables('networkSettings').nsgSubnetSQLName]",
       "type": "Microsoft.Network/networkSecurityGroups",
-      "apiVersion": "2022-01-01",
+      "apiVersion": "2022-05-01",
       "location": "[parameters('location')]",
       "properties": {
         "securityRules": "[if(equals(toLower(parameters('RDPTrafficAllowed')), 'no'), json('null'), variables('networkSettings').nsgRuleAllowIncomingTraffic)]"
@@ -495,7 +528,7 @@
     {
       "name": "[variables('networkSettings').nsgSubnetSPName]",
       "type": "Microsoft.Network/networkSecurityGroups",
-      "apiVersion": "2022-01-01",
+      "apiVersion": "2022-05-01",
       "location": "[parameters('location')]",
       "properties": {
         "securityRules": "[if(equals(toLower(parameters('RDPTrafficAllowed')), 'no'), json('null'), variables('networkSettings').nsgRuleAllowIncomingTraffic)]"
@@ -504,7 +537,7 @@
     {
       "name": "[variables('networkSettings').vNetPrivateName]",
       "type": "Microsoft.Network/virtualNetworks",
-      "apiVersion": "2022-01-01",
+      "apiVersion": "2022-05-01",
       "location": "[parameters('location')]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSettings').nsgSubnetDCName)]",
@@ -549,17 +582,17 @@
       }
     },
     {
-      "condition": "[equals(parameters('addPublicIPAddressToEachVM'), true())]",
+      "condition": "[equals(parameters('addPublicIPAddress'), 'Yes')]",
       "name": "[variables('vmDC').vmPublicIPName]",
       "type": "Microsoft.Network/publicIPAddresses",
-      "apiVersion": "2022-01-01",
+      "apiVersion": "2022-05-01",
       "location": "[parameters('location')]",
       "sku": {
-        "name": "Standard",
+        "name": "Basic",
         "tier": "Regional"
       },
       "properties": {
-        "publicIPAllocationMethod": "Static",
+        "publicIPAllocationMethod": "Dynamic",
         "dnsSettings": {
           "domainNameLabel": "[variables('vmDC').vmPublicIPDnsName]"
         }
@@ -568,7 +601,7 @@
     {
       "name": "[variables('vmDC').vmNicName]",
       "type": "Microsoft.Network/networkInterfaces",
-      "apiVersion": "2022-01-01",
+      "apiVersion": "2022-05-01",
       "location": "[parameters('location')]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetPrivateName)]",
@@ -584,7 +617,7 @@
               "subnet": {
                 "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').subnetDCName)]"
               },
-              "publicIPAddress": "[if(parameters('addPublicIPAddressToEachVM'), variables('networkSettings').vmDCPublicIPNicAssociation, json('null'))]"
+              "publicIPAddress": "[if(equals(parameters('addPublicIPAddress'), 'Yes'), variables('networkSettings').vmDCPublicIPNicAssociation, json('null'))]"
             }
           }
         ]
@@ -593,7 +626,7 @@
     {
       "name": "[variables('generalSettings').vmDCName]",
       "type": "Microsoft.Compute/virtualMachines",
-      "apiVersion": "2022-03-01",
+      "apiVersion": "2022-08-01",
       "location": "[parameters('location')]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/networkInterfaces', variables('vmDC').vmNicName)]"
@@ -648,7 +681,7 @@
           "name": "ConfigureDCVM",
           "type": "extensions",
           "location": "[parameters('location')]",
-          "apiVersion": "2022-03-01",
+          "apiVersion": "2022-08-01",
           "dependsOn": [
             "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmDCName)]"
           ],
@@ -690,17 +723,17 @@
       ]
     },
     {
-      "condition": "[equals(parameters('addPublicIPAddressToEachVM'), true())]",
+      "condition": "[equals(parameters('addPublicIPAddress'), 'Yes')]",
       "name": "[variables('vmSQL').vmPublicIPName]",
       "type": "Microsoft.Network/publicIPAddresses",
-      "apiVersion": "2022-01-01",
+      "apiVersion": "2022-05-01",
       "location": "[parameters('location')]",
       "sku": {
-        "name": "Standard",
+        "name": "Basic",
         "tier": "Regional"
       },
       "properties": {
-        "publicIPAllocationMethod": "Static",
+        "publicIPAllocationMethod": "Dynamic",
         "dnsSettings": {
           "domainNameLabel": "[variables('vmSQL').vmPublicIPDnsName]"
         }
@@ -709,7 +742,7 @@
     {
       "name": "[variables('vmSQL').vmNicName]",
       "type": "Microsoft.Network/networkInterfaces",
-      "apiVersion": "2022-01-01",
+      "apiVersion": "2022-05-01",
       "location": "[parameters('location')]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetPrivateName)]",
@@ -724,7 +757,7 @@
               "subnet": {
                 "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').subnetSQLName)]"
               },
-              "publicIPAddress": "[if(parameters('addPublicIPAddressToEachVM'), variables('networkSettings').vmSQLPublicIPNicAssociation, json('null'))]"
+              "publicIPAddress": "[if(equals(parameters('addPublicIPAddress'), 'Yes'), variables('networkSettings').vmSQLPublicIPNicAssociation, json('null'))]"
             }
           }
         ]
@@ -733,7 +766,7 @@
     {
       "name": "[variables('generalSettings').vmSQLName]",
       "type": "Microsoft.Compute/virtualMachines",
-      "apiVersion": "2022-03-01",
+      "apiVersion": "2022-08-01",
       "location": "[parameters('location')]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/networkInterfaces', variables('vmSQL').vmNicName)]"
@@ -786,17 +819,17 @@
       "resources": []
     },
     {
-      "condition": "[equals(parameters('addPublicIPAddressToEachVM'), true())]",
+      "condition": "[or(equals(parameters('addPublicIPAddress'), 'Yes'), equals(parameters('addPublicIPAddress'), 'SharePointVMsOnly'))]",
       "name": "[variables('vmSP').vmPublicIPName]",
       "type": "Microsoft.Network/publicIPAddresses",
-      "apiVersion": "2022-01-01",
+      "apiVersion": "2022-05-01",
       "location": "[parameters('location')]",
       "sku": {
-        "name": "Standard",
+        "name": "Basic",
         "tier": "Regional"
       },
       "properties": {
-        "publicIPAllocationMethod": "Static",
+        "publicIPAllocationMethod": "Dynamic",
         "dnsSettings": {
           "domainNameLabel": "[variables('vmSP').vmPublicIPDnsName]"
         }
@@ -805,7 +838,7 @@
     {
       "name": "[variables('vmSP').vmNicName]",
       "type": "Microsoft.Network/networkInterfaces",
-      "apiVersion": "2022-01-01",
+      "apiVersion": "2022-05-01",
       "location": "[parameters('location')]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetPrivateName)]",
@@ -820,7 +853,7 @@
               "subnet": {
                 "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').subnetSPName)]"
               },
-              "publicIPAddress": "[if(parameters('addPublicIPAddressToEachVM'), variables('networkSettings').vmSPPublicIPNicAssociation, json('null'))]"
+              "publicIPAddress": "[if(or(equals(parameters('addPublicIPAddress'), 'Yes'), equals(parameters('addPublicIPAddress'), 'SharePointVMsOnly')), variables('networkSettings').vmSPPublicIPNicAssociation, json('null'))]"
             }
           }
         ]
@@ -829,7 +862,7 @@
     {
       "name": "[variables('generalSettings').vmSPName]",
       "type": "Microsoft.Compute/virtualMachines",
-      "apiVersion": "2022-03-01",
+      "apiVersion": "2022-08-01",
       "location": "[parameters('location')]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/networkInterfaces', variables('vmSP').vmNicName)]"
@@ -886,7 +919,7 @@
       "name": "[concat(variables('generalSettings').vmSQLName,'/ConfigureSQLVM')]",
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "location": "[parameters('location')]",
-      "apiVersion": "2022-03-01",
+      "apiVersion": "2022-08-01",
       "dependsOn": [
         "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmSQLName)]"
       ],
@@ -933,7 +966,7 @@
       "name": "[concat(variables('generalSettings').vmSPName,'/ConfigureSPVM')]",
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "location": "[parameters('location')]",
-      "apiVersion": "2022-03-01",
+      "apiVersion": "2022-08-01",
       "dependsOn": [
         "[resourceId('Microsoft.Compute/virtualMachines', variables('generalSettings').vmSPName)]"
       ],
@@ -957,7 +990,8 @@
             "SQLName": "[variables('generalSettings').vmSQLName]",
             "SQLAlias": "[variables('generalSettings').sqlAlias]",
             "SharePointVersion": "[parameters('sharePointVersion')]",
-            "EnableAnalysis": "[variables('generalSettings').enableAnalysis]"
+            "EnableAnalysis": "[variables('generalSettings').enableAnalysis]",
+            "SharePointBits": "[variables('dscConfigureSPVM').sharePointBitsSelected]"
           },
           "privacy": {
             "dataCollection": "enable"
@@ -1006,21 +1040,21 @@
       }
     },
     {
-      "condition": "[and(greaterOrEquals(parameters('numberOfAdditionalFrontEnd'), 1), equals(parameters('addPublicIPAddressToEachVM'), true()))]",
+      "condition": "[and(greaterOrEquals(parameters('numberOfAdditionalFrontEnd'), 1), or(equals(parameters('addPublicIPAddress'), 'Yes'), equals(parameters('addPublicIPAddress'), 'SharePointVMsOnly')))]",
       "name": "[concat(variables('vmFE').vmPublicIPName, '-', copyIndex())]",
       "type": "Microsoft.Network/publicIPAddresses",
-      "apiVersion": "2022-01-01",
+      "apiVersion": "2022-05-01",
       "location": "[parameters('location')]",
       "copy": {
           "name": "frontendPublicIPAddresses",
           "count": "[parameters('numberOfAdditionalFrontEnd')]"
       },
       "sku": {
-        "name": "Standard",
+        "name": "Basic",
         "tier": "Regional"
       },
       "properties": {
-        "publicIPAllocationMethod": "Static",
+        "publicIPAllocationMethod": "Dynamic",
         "dnsSettings": {
           "domainNameLabel": "[concat(variables('vmFE').vmPublicIPDnsName, '-', copyIndex())]"
         }
@@ -1030,7 +1064,7 @@
       "condition": "[greaterOrEquals(parameters('numberOfAdditionalFrontEnd'), 1)]",
       "name": "[concat(variables('vmFE').vmNicName, '-', copyIndex())]",
       "type": "Microsoft.Network/networkInterfaces",
-      "apiVersion": "2022-01-01",
+      "apiVersion": "2022-05-01",
       "location": "[parameters('location')]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetPrivateName)]",
@@ -1049,7 +1083,7 @@
               "subnet": {
                 "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, variables('networkSettings').subnetSPName)]"
               },
-              "publicIPAddress": "[if(parameters('addPublicIPAddressToEachVM'), json(concat('{\"id\": \"', resourceId('Microsoft.Network/publicIPAddresses', concat(variables('vmFE').vmPublicIPName, '-', copyIndex())), '\" }')), json('null'))]"
+              "publicIPAddress": "[if(or(equals(parameters('addPublicIPAddress'), 'Yes'), equals(parameters('addPublicIPAddress'), 'SharePointVMsOnly')), json(concat('{\"id\": \"', resourceId('Microsoft.Network/publicIPAddresses', concat(variables('vmFE').vmPublicIPName, '-', copyIndex())), '\" }')), json('null'))]"
             }
           }
         ]
@@ -1059,7 +1093,7 @@
       "condition": "[greaterOrEquals(parameters('numberOfAdditionalFrontEnd'), 1)]",
       "name": "[concat(variables('generalSettings').vmFEName, '-', copyIndex())]",
       "type": "Microsoft.Compute/virtualMachines",
-      "apiVersion": "2022-03-01",
+      "apiVersion": "2022-08-01",
       "location": "[parameters('location')]",
       "dependsOn": [
         "frontendNetworkInterfaces"
@@ -1120,7 +1154,7 @@
       "name": "[concat(variables('generalSettings').vmFEName, '-', copyIndex(),'/ConfigureFEVM')]",
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "location": "[parameters('location')]",
-      "apiVersion": "2022-03-01",
+      "apiVersion": "2022-08-01",
       "dependsOn": [
         "frontendVirtualMachines"
       ],
@@ -1148,7 +1182,8 @@
             "SQLName": "[variables('generalSettings').vmSQLName]",
             "SQLAlias": "[variables('generalSettings').sqlAlias]",
             "SharePointVersion": "[parameters('sharePointVersion')]",
-            "EnableAnalysis": "[variables('generalSettings').enableAnalysis]"
+            "EnableAnalysis": "[variables('generalSettings').enableAnalysis]",
+            "SharePointBits": "[variables('dscConfigureSPVM').sharePointBitsSelected]"
           },
           "privacy": {
             "dataCollection": "enable"
@@ -1184,84 +1219,156 @@
       "location": "[parameters('location')]",
       "properties": {
         "securityRules": [
-          {
-            "name": "allow-443-internet",
-            "properties": {
-              "description": "Allow 443 Internet",
-              "direction": "Inbound",
-              "protocol": "Tcp",
-              "sourcePortRange": "*",
-              "destinationPortRange": "443",
-              "sourceAddressPrefix": "Internet",
-              "destinationAddressPrefix": "*",
-              "access": "Allow",
-              "priority": 120
+            {
+                "name": "AllowHttpsInBound",
+                "properties": {
+                    "protocol": "Tcp",
+                    "sourcePortRange": "*",
+                    "sourceAddressPrefix": "Internet",
+                    "destinationPortRange": "443",
+                    "destinationAddressPrefix": "*",
+                    "access": "Allow",
+                    "priority": 100,
+                    "direction": "Inbound"
+                }
+            },
+            {
+                "name": "AllowGatewayManagerInBound",
+                "properties": {
+                    "protocol": "Tcp",
+                    "sourcePortRange": "*",
+                    "sourceAddressPrefix": "GatewayManager",
+                    "destinationPortRange": "443",
+                    "destinationAddressPrefix": "*",
+                    "access": "Allow",
+                    "priority": 110,
+                    "direction": "Inbound"
+                }
+            },
+            {
+                "name": "AllowLoadBalancerInBound",
+                "properties": {
+                    "protocol": "Tcp",
+                    "sourcePortRange": "*",
+                    "sourceAddressPrefix": "AzureLoadBalancer",
+                    "destinationPortRange": "443",
+                    "destinationAddressPrefix": "*",
+                    "access": "Allow",
+                    "priority": 120,
+                    "direction": "Inbound"
+                }
+            },
+            {
+                "name": "AllowBastionHostCommunicationInBound",
+                "properties": {
+                    "protocol": "*",
+                    "sourcePortRange": "*",
+                    "sourceAddressPrefix": "VirtualNetwork",
+                    "destinationPortRanges": [
+                        "8080",
+                        "5701"
+                    ],
+                    "destinationAddressPrefix": "VirtualNetwork",
+                    "access": "Allow",
+                    "priority": 130,
+                    "direction": "Inbound"
+                }
+            },
+            {
+                "name": "DenyAllInBound",
+                "properties": {
+                    "protocol": "*",
+                    "sourcePortRange": "*",
+                    "sourceAddressPrefix": "*",
+                    "destinationPortRange": "*",
+                    "destinationAddressPrefix": "*",
+                    "access": "Deny",
+                    "priority": 1000,
+                    "direction": "Inbound"
+                }
+            },
+            {
+                "name": "AllowSshRdpOutBound",
+                "properties": {
+                    "protocol": "Tcp",
+                    "sourcePortRange": "*",
+                    "sourceAddressPrefix": "*",
+                    "destinationPortRanges": [
+                        "22",
+                        "3389"
+                    ],
+                    "destinationAddressPrefix": "VirtualNetwork",
+                    "access": "Allow",
+                    "priority": 100,
+                    "direction": "Outbound"
+                }
+            },
+            {
+                "name": "AllowAzureCloudCommunicationOutBound",
+                "properties": {
+                    "protocol": "Tcp",
+                    "sourcePortRange": "*",
+                    "sourceAddressPrefix": "*",
+                    "destinationPortRange": "443",
+                    "destinationAddressPrefix": "AzureCloud",
+                    "access": "Allow",
+                    "priority": 110,
+                    "direction": "Outbound"
+                }
+            },
+            {
+                "name": "AllowBastionHostCommunicationOutBound",
+                "properties": {
+                    "protocol": "*",
+                    "sourcePortRange": "*",
+                    "sourceAddressPrefix": "VirtualNetwork",
+                    "destinationPortRanges": [
+                        "8080",
+                        "5701"
+                    ],
+                    "destinationAddressPrefix": "VirtualNetwork",
+                    "access": "Allow",
+                    "priority": 120,
+                    "direction": "Outbound"
+                }
+            },
+            {
+                "name": "AllowGetSessionInformationOutBound",
+                "properties": {
+                    "protocol": "*",
+                    "sourcePortRange": "*",
+                    "sourceAddressPrefix": "*",
+                    "destinationAddressPrefix": "Internet",
+                    "destinationPortRanges": [
+                        "80",
+                        "443"
+                    ],
+                    "access": "Allow",
+                    "priority": 130,
+                    "direction": "Outbound"
+                }
+            },
+            {
+                "name": "DenyAllOutBound",
+                "properties": {
+                    "protocol": "*",
+                    "sourcePortRange": "*",
+                    "destinationPortRange": "*",
+                    "sourceAddressPrefix": "*",
+                    "destinationAddressPrefix": "*",
+                    "access": "Deny",
+                    "priority": 1000,
+                    "direction": "Outbound"
+                }
             }
-          },
-          {
-            "name": "allow-443-gatewaymanager",
-            "properties": {
-              "description": "Allow 443 GatewayManager ",
-              "direction": "Inbound",
-              "protocol": "Tcp",
-              "sourcePortRange": "*",
-              "destinationPortRange": "443",
-              "sourceAddressPrefix": "GatewayManager",
-              "destinationAddressPrefix": "*",
-              "access": "Allow",
-              "priority": 130
-            }
-          },
-          {
-            "name": "allow-rdp-outbound",
-            "properties": {
-              "description": "Allow RDP Outbound ",
-              "direction": "Outbound",
-              "protocol": "*",
-              "sourcePortRange": "*",
-              "destinationPortRange": "3389",
-              "sourceAddressPrefix": "*",
-              "destinationAddressPrefix": "VirtualNetwork",
-              "access": "Allow",
-              "priority": 120
-            }
-          },
-          {
-            "name": "allow-ssh-outbound",
-            "properties": {
-              "description": "Allow SSH Outbound",
-              "direction": "Outbound",
-              "protocol": "*",
-              "sourcePortRange": "*",
-              "destinationPortRange": "22",
-              "sourceAddressPrefix": "*",
-              "destinationAddressPrefix": "VirtualNetwork",
-              "access": "Allow",
-              "priority": 121
-            }
-          },
-          {
-            "name": "allow-azurecloud-outbound",
-            "properties": {
-              "description": "Allow AzureCloud Outbound ",
-              "direction": "Outbound",
-              "protocol": "TCP",
-              "sourcePortRange": "*",
-              "destinationPortRange": "443",
-              "sourceAddressPrefix": "*",
-              "destinationAddressPrefix": "AzureCloud",
-              "access": "Allow",
-              "priority": 130
-            }
-          }
-          ]
+        ]
       }
     },
     {
       "condition": "[equals(parameters('addAzureBastion'), true())]",
       "name": "[concat(variables('networkSettings').vNetPrivateName, '/', 'AzureBastionSubnet')]",
       "type": "Microsoft.Network/virtualNetworks/subnets",
-      "apiVersion": "2022-01-01",
+      "apiVersion": "2022-05-01",
       "location": "[parameters('location')]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualNetworks', variables('networkSettings').vNetPrivateName)]",
@@ -1278,7 +1385,7 @@
       "condition": "[equals(parameters('addAzureBastion'), true())]",
       "name": "PublicIP-Bastion",
       "type": "Microsoft.Network/publicIPAddresses",
-      "apiVersion": "2022-01-01",
+      "apiVersion": "2022-05-01",
       "location": "[parameters('location')]",
       "sku": {
         "name": "Standard",
@@ -1296,7 +1403,7 @@
       "name": "Bastion",
       "type": "Microsoft.Network/bastionHosts",
       "location": "[parameters('location')]",
-      "apiVersion": "2022-01-01",
+      "apiVersion": "2022-05-01",
       "dependsOn": [
         "[resourceId('Microsoft.Network/publicIPAddresses', 'PublicIP-Bastion')]",
         "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('networkSettings').vNetPrivateName, 'AzureBastionSubnet')]"
@@ -1321,12 +1428,12 @@
   ],
   "outputs": {
     "publicIPAddressSP": {
-      "condition": "[equals(parameters('addPublicIPAddressToEachVM'), true())]",
+      "condition": "[or(equals(parameters('addPublicIPAddress'), 'Yes'), equals(parameters('addPublicIPAddress'), 'SharePointVMsOnly'))]",
       "type": "string",
       "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('vmSP').vmPublicIPName)).dnsSettings.fqdn]"
     },
     "publicIPAddressFEs": {
-      "condition": "[and(greaterOrEquals(parameters('numberOfAdditionalFrontEnd'), 1), equals(parameters('addPublicIPAddressToEachVM'), true()))]",
+      "condition": "[and(greaterOrEquals(parameters('numberOfAdditionalFrontEnd'), 1), or(equals(parameters('addPublicIPAddress'), 'Yes'), equals(parameters('addPublicIPAddress'), 'SharePointVMsOnly')))]",
       "type": "array",
       "copy": {
         "count": "[parameters('numberOfAdditionalFrontEnd')]",
@@ -1334,12 +1441,12 @@
       }
     },
     "publicIPAddressSQL": {
-      "condition": "[equals(parameters('addPublicIPAddressToEachVM'), true())]",
+      "condition": "[equals(parameters('addPublicIPAddress'), 'Yes')]",
       "type": "string",
       "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('vmSQL').vmPublicIPName)).dnsSettings.fqdn]"
     },
     "publicIPAddressDC": {
-      "condition": "[equals(parameters('addPublicIPAddressToEachVM'), true())]",
+      "condition": "[equals(parameters('addPublicIPAddress'), 'Yes')]",
       "type": "string",
       "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('vmDC').vmPublicIPName)).dnsSettings.fqdn]"
     },

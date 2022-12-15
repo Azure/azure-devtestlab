@@ -12,39 +12,39 @@ Each SharePoint farm has a lightweight configuration to provision quickly: 1 web
 
 ## Remote access and security
 
-The template creates 1 virtual network with 3 subnets. All subnets are protected by a [Network Security Group](https://docs.microsoft.com/azure/virtual-network/network-security-groups-overview) with no custom rule by default.
+The template creates 1 virtual network with 3 subnets (+1 if [Azure Bastion](https://azure.microsoft.com/services/azure-bastion/) is enabled), and each subnet is protected by a [Network Security Group](https://docs.microsoft.com/azure/virtual-network/network-security-groups-overview) which denies all incoming traffic by default.  
+Use the following parameters to configure how to connect to the virtual machines, and the level of network security:
 
-The following parameters impact the remote access of the virtual machines, and the network security:
+- parameter `addPublicIPAddress`:
+  - if `"SharePointVMsOnly"` (default): Only SharePoint virtual machines get a public IP address with a DNS name and can be reached from Internet.
+  - If `"Yes"`: All virtual machines get a public IP address with a DNS name, and can be reached from Internet.
+  - if `"No"`: No public IP resource is created.
+  - The DNS name format of virtual machines is `"[dnsLabelPrefix]-[vm_name].[region].cloudapp.azure.com"` and is recorded as output in the state file.
+- parameter `RDPTrafficAllowed` specifies if RDP traffic is allowed:
+  - If `"No"` (default): Firewall denies all incoming RDP traffic.
+  - If `"*"` or `"Internet"`: Firewall accepts all incoming RDP traffic from Internet.
+  - If CIDR notation (e.g. `"192.168.99.0/24"` or `"2001:1234::/64"`) or IP address (e.g. `"192.168.99.0"` or `"2001:1234::"`): Firewall accepts incoming RDP traffic from the IP addresses specified.
+- parameter `addAzureBastion`:
+  - if `true`: Configure service [Azure Bastion](https://azure.microsoft.com/services/azure-bastion/) to allow a secure remote access to virtual machines.
+  - if `false` (default): Service [Azure Bastion](https://azure.microsoft.com/services/azure-bastion/) is not created.
 
-* Parameter 'addPublicIPAddressToEachVM':
-  * if true (default value): Each virtual machine gets a public IP, a DNS name, and may be reachable from Internet.
-  * if false: No public IP resource is created.
-* Parameter 'RDPTrafficAllowed':
-  * If 'No' (default value): Firewall denies all incoming RDP traffic from Internet.
-  * If '*' or 'Internet': Firewall accepts all incoming RDP traffic from Internet.
-  * If 'ServiceTagName': Firewall accepts all incoming RDP traffic from the specified 'ServiceTagName'.
-  * If 'xx.xx.xx.xx': Firewall accepts incoming RDP traffic only from the IP 'xx.xx.xx.xx'.
-* Parameter 'addAzureBastion':
-  * if true: Configure service [Azure Bastion](https://azure.microsoft.com/services/azure-bastion/) to allow a secure remote access.
-  * if false (default value): Service Azure Bastion is not created.
+## Cost of the resources deployed
 
-## Cost
-
-By default, virtual machines use [B-series burstable](https://docs.microsoft.com/azure/virtual-machines/sizes-b-series-burstable), ideal for such template and much cheaper than other comparable series.
+By default, virtual machines use [B-series burstable](https://docs.microsoft.com/azure/virtual-machines/sizes-b-series-burstable), ideal for such template and much cheaper than other comparable series.  
 Here is the default size and storage type per virtual machine role:
 
-* DC: Size [Standard_B2s](https://docs.microsoft.com/azure/virtual-machines/sizes-b-series-burstable) (2 vCPU / 4 GiB RAM) and OS disk is a 32 GiB [standard SSD E4](https://learn.microsoft.com/azure/virtual-machines/disks-types#standard-ssds).
-* SQL Server: Size [Standard_B2ms](https://docs.microsoft.com/azure/virtual-machines/sizes-b-series-burstable) (2 vCPU / 8 GiB RAM) and OS disk is a 128 GiB [standard SSD E10](https://learn.microsoft.com/azure/virtual-machines/disks-types#standard-ssds).
-* SharePoint: Size [Standard_B4ms](https://docs.microsoft.com/azure/virtual-machines/sizes-b-series-burstable) (4 vCPU / 16 GiB RAM) and OS disk is a 128 GiB [standard SSD E10](https://learn.microsoft.com/azure/virtual-machines/disks-types#standard-ssds).
+- DC: Size [Standard_B2s](https://docs.microsoft.com/azure/virtual-machines/sizes-b-series-burstable) (2 vCPU / 4 GiB RAM) and OS disk is a 32 GiB [standard SSD E4](https://learn.microsoft.com/azure/virtual-machines/disks-types#standard-ssds).
+- SQL Server: Size [Standard_B2ms](https://docs.microsoft.com/azure/virtual-machines/sizes-b-series-burstable) (2 vCPU / 8 GiB RAM) and OS disk is a 128 GiB [standard SSD E10](https://learn.microsoft.com/azure/virtual-machines/disks-types#standard-ssds).
+- SharePoint: Size [Standard_B4ms](https://docs.microsoft.com/azure/virtual-machines/sizes-b-series-burstable) (4 vCPU / 16 GiB RAM) and OS disk is a 128 GiB [standard SSD E10](https://learn.microsoft.com/azure/virtual-machines/disks-types#standard-ssds).
 
-You can visit <https://azure.com/e/c86a94bb7e3943fe96e2c71cf8ece33a> to view the monthly cost of the template when it is deployed using the default settings, in the region/currency of your choice.
+You can visit <https://azure.com/e/c86a94bb7e3943fe96e2c71cf8ece33a> to view the monthly cost of the template, assuming it is using the default settings and running 24*7, in the region/currency of your choice.
 
 ## More information
 
 Additional notes:
 
-* With the default settings, the deployment takes about 40 minutes to complete.
-* Once it is completed, the template will return valuable information in the 'Outputs' of the deployment.
-* For various (very good) reasons, the template sets the local (not domain) administrator name with a string that is unique to your subscription (e.g. 'local-q1w2e3r4t5'). You can find the name of the local admin in the 'Outputs' of the deployment once it is completed.
+- Using the default options, the complete deployment takes about 40 minutes.
+- Once it is completed, the template will return valuable information in the 'Outputs' of the deployment.
+- For various (very good) reasons, in SQL and SharePoint VMs, the name of the local (not domain) administrator is set with a string that is unique to your subscription (e.g. `"local-[q1w2e3r4t5]"`). It is recorded in the 'Outputs' of the deployment once it is completed.
 
 `Tags: Microsoft.Network/networkSecurityGroups, Microsoft.Network/virtualNetworks, Microsoft.Network/publicIPAddresses, Microsoft.Network/networkInterfaces, Microsoft.Compute/virtualMachines, extensions, DSC, Microsoft.Compute/virtualMachines/extensions, Microsoft.DevTestLab/schedules, Microsoft.Network/virtualNetworks/subnets, Microsoft.Network/bastionHosts`
