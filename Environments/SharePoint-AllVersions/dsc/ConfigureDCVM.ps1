@@ -1,14 +1,18 @@
 ﻿configuration ConfigureDCVM
-{    
+{
     param
     (
-        [Parameter(Mandatory)] [ValidateNotNullorEmpty()] [String]$DomainFQDN,
-        [Parameter(Mandatory)] [ValidateNotNullorEmpty()] [PSCredential]$Admincreds,
-        [Parameter(Mandatory)] [ValidateNotNullorEmpty()] [PSCredential]$AdfsSvcCreds,
-        [Parameter(Mandatory)] [ValidateNotNullorEmpty()] [String]$PrivateIP,
-        [Parameter(Mandatory)] [Boolean]$ConfigureADFS
+        [Parameter(Mandatory)] [String]$DomainFQDN,
+        [Parameter(Mandatory)] [String]$PrivateIP,
+        [Parameter(Mandatory)] [String]$SPServerName,
+        [Parameter(Mandatory)] [String]$SharePointSitesAuthority,
+        [Parameter(Mandatory)] [String]$SharePointCentralAdminPort,
+        [Parameter ()] [Boolean]$ApplyBrowserPolicies = $true,
+        [Parameter(Mandatory)] [Boolean]$ConfigureADFS,
+        [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$Admincreds,
+        [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$AdfsSvcCreds
     )
-    
+
     Import-DscResource -ModuleName ActiveDirectoryDsc -ModuleVersion 6.2.0
     Import-DscResource -ModuleName NetworkingDsc -ModuleVersion 9.0.0
     Import-DscResource -ModuleName ActiveDirectoryCSDsc -ModuleVersion 5.0.0
@@ -16,21 +20,187 @@
     Import-DscResource -ModuleName DnsServerDsc -ModuleVersion 3.0.0
     Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 8.5.0
     Import-DscResource -ModuleName AdfsDsc -ModuleVersion 1.1.0 # With custom changes in AdfsFarm to set certificates based on their names
-    
+
+    # Init
+    [String] $InterfaceAlias = (Get-NetAdapter | Where-Object Name -Like "Ethernet*" | Select-Object -First 1).Name
+    [String] $ComputerName = Get-Content env:computername
     [String] $DomainNetbiosName = (Get-NetBIOSName -DomainFQDN $DomainFQDN)
-    $Interface = Get-NetAdapter| Where-Object Name -Like "Ethernet*"| Select-Object -First 1
-    $InterfaceAlias = $($Interface.Name)
-    $ComputerName = Get-Content env:computername
-    [String] $SPTrustedSitesName = "spsites"
+
+    # Format credentials to be qualified by domain name: "domain\username"
+    [System.Management.Automation.PSCredential] $DomainCredsNetbios = New-Object System.Management.Automation.PSCredential ("${DomainNetbiosName}\$($Admincreds.UserName)", $Admincreds.Password)
+    [System.Management.Automation.PSCredential] $AdfsSvcCredsQualified = New-Object System.Management.Automation.PSCredential ("${DomainNetbiosName}\$($AdfsSvcCreds.UserName)", $AdfsSvcCreds.Password)
+
+    # ADFS settings
     [String] $ADFSSiteName = "adfs"
     [String] $AdfsOidcAGName = "SPS-Subscription-OIDC"
     [String] $AdfsOidcIdentifier = "fae5bd07-be63-4a64-a28c-7931a4ebf62b"
+    [String] $SAMLTrustRealm = "urn:sharepoint:spsites"
+    
+    # SharePoint settings
+    [String] $centralAdminUrl = "http://{0}:{1}/" -f $SPServerName, $SharePointCentralAdminPort
+    [String] $rootSiteDefaultZone = "http://{0}/" -f $SharePointSitesAuthority
+    [String] $rootSiteIntranetZone = "https://{0}.{1}/" -f $SharePointSitesAuthority, $DomainFQDN
+
+    # Browser policies
+    # Edge
+    [System.Object[]] $EdgePolicies = @(
+        @{
+            policyValueName = "HideFirstRunExperience";
+            policyCanBeRecommended = $false;
+            policyValueValue = 1;
+        },
+        @{
+            policyValueName = "TrackingPrevention";
+            policyCanBeRecommended = $false;
+            policyValueValue = 3;
+        },
+        @{
+            policyValueName = "AdsTransparencyEnabled";
+            policyCanBeRecommended = $false;
+            policyValueValue = 0;
+        },
+        @{
+            policyValueName = "BingAdsSuppression";
+            policyCanBeRecommended = $false;
+            policyValueValue = 1;
+        },
+        @{
+            policyValueName = "AdsSettingForIntrusiveAdsSites";
+            policyCanBeRecommended = $false;
+            policyValueValue = 2;
+        },
+        @{
+            policyValueName = "AskBeforeCloseEnabled";
+            policyCanBeRecommended = $true;
+            policyValueValue = 0;
+        },
+        @{
+            policyValueName = "BlockThirdPartyCookies";
+            policyCanBeRecommended = $true;
+            policyValueValue = 1;
+        },
+        @{
+            policyValueName = "ConfigureDoNotTrack";
+            policyCanBeRecommended = $false;
+            policyValueValue = 1;
+        },
+        @{
+            policyValueName = "DiagnosticData";
+            policyCanBeRecommended = $false;
+            policyValueValue = 0;
+        },
+        @{
+            policyValueName = "HubsSidebarEnabled";
+            policyCanBeRecommended = $true;
+            policyValueValue = 0;
+        },
+        @{
+            policyValueName = "HomepageIsNewTabPage";
+            policyCanBeRecommended = $true;
+            policyValueValue = 1;
+        },
+        @{
+            policyValueName = "HomepageLocation";
+            policyCanBeRecommended = $true;
+            policyValueValue = "edge://newtab";
+        },
+        @{
+            policyValueName = "ShowHomeButton";
+            policyCanBeRecommended = $true;
+            policyValueValue = 1;
+        },
+        @{
+            policyValueName = "NewTabPageLocation";
+            policyCanBeRecommended = $true;
+            policyValueValue = "about://blank";
+        },
+        @{
+            policyValueName = "NewTabPageQuickLinksEnabled";
+            policyCanBeRecommended = $false;
+            policyValueValue = 1;
+        },
+        @{
+            policyValueName = "NewTabPageContentEnabled";
+            policyCanBeRecommended = $false;
+            policyValueValue = 0;
+        },
+        @{
+            policyValueName = "NewTabPageAllowedBackgroundTypes";
+            policyCanBeRecommended = $false;
+            policyValueValue = 3;
+        },
+        @{
+            policyValueName = "NewTabPageAppLauncherEnabled";
+            policyCanBeRecommended = $false;
+            policyValueValue = 0;
+        },
+        @{
+            policyValueName = "ManagedFavorites";
+            policyCanBeRecommended = $false;
+            policyValueValue = "[{ ""toplevel_name"": ""SharePoint"" }, { ""name"": ""Central administration $SPServerName"", ""url"": ""$centralAdminUrl"" }, { ""name"": ""Root site $SPServerName - Default zone"", ""url"": ""$rootSiteDefaultZone"" }, { ""name"": ""Root site $SPServerName - Intranet zone"", ""url"": ""$rootSiteIntranetZone"" }]";
+        },
+        @{
+            policyValueName = "NewTabPageManagedQuickLinks";
+            policyCanBeRecommended = $true;
+            policyValueValue = "[{""pinned"": true, ""title"": ""Central administration $SPServerName"", ""url"": ""$centralAdminUrl"" }, { ""pinned"": true, ""title"": ""Root site $SPServerName - Default zone"", ""url"": ""$rootSiteDefaultZone"" }, { ""pinned"": true, ""title"": ""Root site $SPServerName - Intranet zone"", ""url"": ""$rootSiteIntranetZone"" }]";
+        }
+    )
+
+    [System.Object[]] $ChromePolicies = @(
+        @{
+            policyValueName = "MetricsReportingEnabled";
+            policyCanBeRecommended = $true;
+            policyValueValue = 0;
+        },
+        @{
+            policyValueName = "PromotionalTabsEnabled";
+            policyCanBeRecommended = $false;
+            policyValueValue = 0;
+        },
+        @{
+            policyValueName = "AdsSettingForIntrusiveAdsSites";
+            policyCanBeRecommended = $false;
+            policyValueValue = 2;
+        },
+        @{
+            policyValueName = "BlockThirdPartyCookies";
+            policyCanBeRecommended = $true;
+            policyValueValue = 1;
+        },
+        @{
+            policyValueName = "HomepageIsNewTabPage";
+            policyCanBeRecommended = $true;
+            policyValueValue = 1;
+        },
+        @{
+            policyValueName = "HomepageLocation";
+            policyCanBeRecommended = $true;
+            policyValueValue = "edge://newtab";
+        },
+        @{
+            policyValueName = "ShowHomeButton";
+            policyCanBeRecommended = $true;
+            policyValueValue = 1;
+        },
+        @{
+            policyValueName = "NewTabPageLocation";
+            policyCanBeRecommended = $false;
+            policyValueValue = "about://blank";
+        },
+        @{
+            policyValueName = "BookmarkBarEnabled";
+            policyCanBeRecommended = $true;
+            policyValueValue = 1;
+        },
+        @{
+            policyValueName = "ManagedBookmarks";
+            policyCanBeRecommended = $false;
+            policyValueValue = "[{ ""toplevel_name"": ""SharePoint"" }, { ""name"": ""Central administration $SPServerName"", ""url"": ""$centralAdminUrl"" }, { ""name"": ""Root site $SPServerName - Default zone"", ""url"": ""$rootSiteDefaultZone"" }, { ""name"": ""Root site $SPServerName - Intranet zone"", ""url"": ""$rootSiteIntranetZone"" }]";
+        }
+    )
 
     Node localhost
     {
-        [PSCredential] $DomainCredsNetbios = New-Object System.Management.Automation.PSCredential ("${DomainNetbiosName}\$($Admincreds.UserName)", $Admincreds.Password)
-        [PSCredential] $AdfsSvcCredsQualified = New-Object System.Management.Automation.PSCredential ("${DomainNetbiosName}\$($AdfsSvcCreds.UserName)", $AdfsSvcCreds.Password)
-
         LocalConfigurationManager
         {
             ConfigurationMode = 'ApplyOnly'
@@ -52,8 +222,8 @@
         ADDomain CreateADForest
         {
             DomainName                    = $DomainFQDN
-            Credential                    = $Admincreds
-            SafemodeAdministratorPassword = $Admincreds
+            Credential                    = $DomainCredsNetbios
+            SafemodeAdministratorPassword = $DomainCredsNetbios
             DatabasePath                  = "C:\NTDS"
             LogPath                       = "C:\NTDS"
             SysvolPath                    = "C:\SYSVOL"
@@ -76,6 +246,63 @@
             DependsOn               = "[PendingReboot]RebootOnSignalFromCreateADForest"
         }
 
+        if ($true -eq $ApplyBrowserPolicies) {
+            # Set browser policies asap, so that computers that join domain get them immediately, and  it runs very quickly (<5 secs)
+            # Edge - https://learn.microsoft.com/en-us/deployedge/microsoft-edge-policies
+            Script ConfigureEdgePolicies {
+                SetScript  = {
+                    $domain = Get-ADDomain -Current LocalComputer
+                    $registryKey = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Edge"
+                    $policies = $using:EdgePolicies
+                    $gpo = New-GPO -name "Edge_browser"
+                    New-GPLink -Guid $gpo.Id -Target $domain.DistinguishedName -order 1
+
+                    foreach ($policy in $policies) {
+                        $key = $registryKey
+                        if ($true -eq $policy.policyCanBeRecommended) {$key += "\Recommended"}
+                        $valueType = if ($policy.policyValueValue -is [int]) {"DWORD"} else {"STRING"}
+                        Set-GPRegistryValue -Guid $gpo.Id -key $key -ValueName $policy.policyValueName -Type $valueType -value $policy.policyValueValue
+                    }
+                }
+                GetScript  = { return @{ "Result" = "false" } }
+                TestScript = {
+                    $policy = Get-GPO -name "Edge_browser" -ErrorAction SilentlyContinue
+                    if ($null -eq $policy) {
+                        return $false
+                    } else {
+                        return $true
+                    }
+                }
+            }
+
+            # Chrome - https://chromeenterprise.google/intl/en_us/policies/
+            Script ConfigureChromePolicies {
+                SetScript  = {
+                    $domain = Get-ADDomain -Current LocalComputer
+                    $registryKey = "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Google\Chrome"
+                    $policies = $using:ChromePolicies
+                    $gpo = New-GPO -name "Chrome_browser"
+                    New-GPLink -Guid $gpo.Id -Target $domain.DistinguishedName -order 1
+
+                    foreach ($policy in $policies) {
+                        $key = $registryKey
+                        if ($true -eq $policy.policyCanBeRecommended) {$key += "\Recommended"}
+                        $valueType = if ($policy.policyValueValue -is [int]) {"DWORD"} else {"STRING"}
+                        Set-GPRegistryValue -Guid $gpo.Id -key $key -ValueName $policy.policyValueName -Type $valueType -value $policy.policyValueValue
+                    }
+                }
+                GetScript  = { return @{ "Result" = "false" } }
+                TestScript = {
+                    $policy = Get-GPO -name "Chrome_browser" -ErrorAction SilentlyContinue
+                    if ($null -eq $policy) {
+                        return $false
+                    } else {
+                        return $true
+                    }
+                }
+            }
+        }
+        
         #**********************************************************
         # Configuration needed by SharePoint farm
         #**********************************************************
@@ -94,21 +321,21 @@
         # Configure AD CS
         #**********************************************************
         WindowsFeature AddADCSFeature { Name = "ADCS-Cert-Authority"; Ensure = "Present"; DependsOn = "[WaitForADDomain]WaitForDCReady" }
-
+        
         ADCSCertificationAuthority CreateADCSAuthority
         {
             IsSingleInstance = "Yes"
-            CAType = "EnterpriseRootCA"
-            Ensure = "Present"
-            Credential = $DomainCredsNetbios
-            DependsOn = "[WindowsFeature]AddADCSFeature"
+            CAType           = "EnterpriseRootCA"
+            Ensure           = "Present"
+            Credential       = $DomainCredsNetbios
+            DependsOn        = "[WindowsFeature]AddADCSFeature"
         }
-        
+
         WaitForCertificateServices WaitAfterADCSProvisioning
         {
-            CAServerFQDN = "$ComputerName.$DomainFQDN"
-            CARootName = "$DomainNetbiosName-$ComputerName-CA"
-            DependsOn = '[ADCSCertificationAuthority]CreateADCSAuthority'
+            CAServerFQDN         = "$ComputerName.$DomainFQDN"
+            CARootName           = "$DomainNetbiosName-$ComputerName-CA"
+            DependsOn            = '[ADCSCertificationAuthority]CreateADCSAuthority'
             PsDscRunAsCredential = $DomainCredsNetbios
         }
 
@@ -257,10 +484,10 @@
 
             ADFSRelyingPartyTrust CreateADFSRelyingParty
             {
-                Name                       = $SPTrustedSitesName
-                Identifier                 = "urn:sharepoint:$($SPTrustedSitesName)"
+                Name                       = $SharePointSitesAuthority
+                Identifier                 = $SAMLTrustRealm
                 ClaimsProviderName         = @("Active Directory")
-                WSFedEndpoint              = "https://$SPTrustedSitesName.$DomainFQDN/_trust/"
+                WSFedEndpoint              = "https://$SharePointSitesAuthority.$DomainFQDN/_trust/"
                 ProtocolProfile            = "WsFed-SAML"
                 AdditionalWSFedEndpoint    = @("https://*.$DomainFQDN/")
                 IssuanceAuthorizationRules = '=> issue(Type = "http://schemas.microsoft.com/authorization/claims/permit", value = "true");'
@@ -297,7 +524,7 @@
             AdfsApplicationGroup OidcGroup
             {
                 Name        = $AdfsOidcAGName
-                Description = "OIDC setup for SharePoint"
+                Description = "OIDC for SharePoint Subscription"
                 PsDscRunAsCredential = $DomainCredsNetbios
                 DependsOn   = "[AdfsFarm]CreateADFSFarm"
             }
@@ -383,16 +610,21 @@
             SetScript  = {
                 $domain = Get-ADDomain -Current LocalComputer
                 $key = "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\NTDS\Parameters"
-                if ($null -eq (Get-GPO -Name "LDAP_LdapEnforceChannelBinding" -ErrorAction SilentlyContinue)) {
-                    New-GPO -name "LDAP_LdapEnforceChannelBinding" -comment "GPO For LdapEnforceChannelBinding" | Set-GPRegistryValue -key $key -ValueName "LdapEnforceChannelBinding" -Type DWORD -value 2 |New-GPLink -Target $domain.DomainControllersContainer -order 1
-                }
-                if ($null -eq (Get-GPO -Name "LDAP_LDAPServerIntegrity" -ErrorAction SilentlyContinue)) {
-                    New-GPO -name "LDAP_LDAPServerIntegrity" -comment "GPO For LDAPServerIntegrity" | Set-GPRegistryValue -key $key -ValueName "ldapserverintegrity" -Type DWORD -value 2 | New-GPLink -Target $domain.DomainControllersContainer -order 1
-                }
+                $gpo = New-GPO -name "EnforceLdapAuthOverTls"
+                New-GPLink -Guid $gpo.Id -Target $domain.DomainControllersContainer -order 1
+                Set-GPRegistryValue -Guid $gpo.Id -key $key -ValueName "LdapEnforceChannelBinding" -Type DWORD -value 2
+                Set-GPRegistryValue -Guid $gpo.Id -key $key -ValueName "ldapserverintegrity" -Type DWORD -value 2
             }
             GetScript  = { return @{ "Result" = "false" } }
-            TestScript = { return $false }
-          }
+            TestScript = {
+                $policy = Get-GPO -name "EnforceLdapAuthOverTls" -ErrorAction SilentlyContinue
+                if ($null -eq $policy) {
+                    return $false
+                } else {
+                    return $true
+                }
+            }
+        }
     }
 }
 
@@ -420,10 +652,9 @@ function Get-NetBIOSName
     }
 }
 
-
 <#
-# Azure DSC extension logging: C:\WindowsAzure\Logs\Plugins\Microsoft.Powershell.DSC\2.21.0.0
-# Azure DSC extension configuration: C:\Packages\Plugins\Microsoft.Powershell.DSC\2.21.0.0\DSCWork
+# Azure DSC extension logging: C:\WindowsAzure\Logs\Plugins\Microsoft.Powershell.DSC\2.80.0.0
+# Azure DSC extension configuration: C:\Packages\Plugins\Microsoft.Powershell.DSC\2.80.0.0\DSCWork
 
 Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
 Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
@@ -437,19 +668,19 @@ Install-Module -Name xNetworking
 
 help ConfigureDCVM
 
-$Admincreds = Get-Credential -Credential "yvand"
-$AdfsSvcCreds = Get-Credential -Credential "adfssvc"
+$password = ConvertTo-SecureString -String "mytopsecurepassword" -AsPlainText -Force
+$Admincreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "yvand", $password
+$AdfsSvcCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "adfssvc", $password
 $DomainFQDN = "contoso.local"
 $PrivateIP = "10.1.1.4"
+$SharePointSitesAuthority = "spsites"
+$SharePointCentralAdminPort = 5000
 $ConfigureADFS = $false
 
-$outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.1.0\DSCWork\ConfigureDCVM.0\ConfigureDCVM"
-ConfigureDCVM -Admincreds $Admincreds -AdfsSvcCreds $AdfsSvcCreds -DomainFQDN $DomainFQDN -PrivateIP $PrivateIP -ConfigureADFS $ConfigureADFS -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
+$outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.2.0\DSCWork\ConfigureDCVM.0\ConfigureDCVM"
+ConfigureDCVM -Admincreds $Admincreds -AdfsSvcCreds $AdfsSvcCreds -DomainFQDN $DomainFQDN -PrivateIP $PrivateIP -SharePointSitesAuthority $SharePointSitesAuthority -SharePointCentralAdminPort $SharePointCentralAdminPort -ConfigureADFS $ConfigureADFS -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
 Set-DscLocalConfigurationManager -Path $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
 
-https://github.com/PowerShell/xActiveDirectory/issues/27
-Uninstall-WindowsFeature "ADFS-Federation"
-https://msdn.microsoft.com/library/mt238290.aspx
-\\.\pipe\MSSQL$MICROSOFT##SSEE\sql\query
+C:\WindowsAzure\Logs\Plugins\Microsoft.Powershell.DSC\2.83.2.0
 #>

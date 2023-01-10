@@ -1,5 +1,17 @@
 # Change log for Azure DevTest Labs template SharePoint-AllVersions
 
+## Enhancements & bug-fixes - Published in January 10, 2023
+
+* Use a small disk (32 GB) on SharePoint Subscription and SharePoint 2019 VMs.
+* Updated SQL image to use SQL Server 2022 on Windows Server 2022.
+* Now the resource group's name is used in the virtual network and the public IP resources, but it is formatted to handle the restrictions on the characters allowed.
+* Apply browser policies for Edge and Chrome to get rid of noisy wizards / homepages / new tab content.
+* No longer explicitly install Edge browser on Windows Server 2022 VMs as it is present by default.
+* Reorganize the local template variables to be more consistent.
+* In SharePoint VMs: Install the latest version of Fiddler.
+* Update apiVersion of ARM resources to latest version available.
+* Update DSC modules to latest version available.
+
 ## Enhancements & bug-fixes - Published in November 28, 2022
 
 * Always install and configure AD CS.
