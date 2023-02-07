@@ -20,7 +20,7 @@ The following parameters configure how to connect to the virtual machines, and t
   - if `"SharePointVMsOnly"` (default): Only SharePoint virtual machines get a public IP address with a DNS name and can be reached from Internet.
   - If `"Yes"`: All virtual machines get a public IP address with a DNS name, and can be reached from Internet.
   - if `"No"`: No public IP resource is created.
-  - The DNS name format of virtual machines is `"[dnsLabelPrefix]-[vm_name].[region].cloudapp.azure.com"` and is recorded as output in the state file.
+  - The DNS name format of virtual machines is `"[resourceGroupName]-[vm_name].[region].cloudapp.azure.com"` and is recorded as output in the state file.
 - parameter `RDPTrafficAllowed` specifies if RDP traffic is allowed:
   - If `"No"` (default): Firewall denies all incoming RDP traffic.
   - If `"*"` or `"Internet"`: Firewall accepts all incoming RDP traffic from Internet.

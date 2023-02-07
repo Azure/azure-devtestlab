@@ -15,11 +15,12 @@
     },
     "provisionSharePointSubscription": {
       "type": "string",
-      "defaultValue": "Subscription-22H2",
+      "defaultValue": "Subscription-Latest",
       "allowedValues": [
         "No",
         "Subscription-RTM",
-        "Subscription-22H2"
+        "Subscription-22H2",
+        "Subscription-Latest"
       ],
       "metadata": {
         "description": "Specify if a SharePoint Subscription farm should be provisioned, and which version if so."
@@ -388,6 +389,17 @@
               "Checksum": "247011443AC573D4F03B1622065A7350B8B3DAE04D6A5A6DC64C8270A3BE7636"
             }
           ]
+        },
+        {
+          "Label" : "Latest",
+          "Packages" : [
+            {
+              "DownloadUrl" : "https://download.microsoft.com/download/d/6/d/d6dcc9e7-744e-43e1-b4be-206a6acd4f88/sts-subscription-kb5002331-fullfile-x64-glb.exe"
+            },
+            {
+              "DownloadUrl" : "https://download.microsoft.com/download/d/3/5/d354b6e2-fa16-48e0-b3f8-423f7ca279a0/wssloc-subscription-kb5002326-fullfile-x64-glb.exe"
+            }
+          ]
         }
       ]
     },
@@ -447,7 +459,7 @@
       "vmSP2016Name": "SP2016",
       "vmSP2013Name": "SP2013",
       "vmDCImage": "MicrosoftWindowsServer:WindowsServer:2022-datacenter-azure-edition-smalldisk:latest",
-      "vmSQLImage": "MicrosoftSQLServer:sql2022-ws2022:sqldev-gen2:latest",
+      "vmSQLImage": "MicrosoftSQLServer:sql2019-ws2022:sqldev-gen2:latest",
       "vmSPSubscriptionImage": "[variables('sharePointSettings').sharePointImagesList.Subscription]",
       "vmSP2019Image": "[variables('sharePointSettings').sharePointImagesList.sp2019]",
       "vmSP2016Image": "[variables('sharePointSettings').sharePointImagesList.sp2016]",

@@ -46,12 +46,13 @@ configuration ConfigureSPVM
     
     # Setup settings
     [String] $SetupPath = "C:\DSC Data"
-    [String] $RemoteSetupPath = "\\$DCServerName\C$\Setup"
+    [String] $DCSetupPath = "\\$DCServerName\C$\DSC Data"
     [String] $DscStatusFilePath = "$SetupPath\dsc-status-$ComputerName.log"
     [String] $SharePointBuildLabel = $SharePointVersion.Split("-")[1]
     [String] $SharePointBitsPath = Join-Path -Path $SetupPath -ChildPath "Binaries" #[environment]::GetEnvironmentVariable("temp","machine")
     [String] $SharePointIsoFullPath = Join-Path -Path $SharePointBitsPath -ChildPath "OfficeServer.iso"
     [String] $SharePointIsoDriveLetter = "S"
+    [String] $AdfsDnsEntryName = "adfs"
 
     # SharePoint settings
     [String] $SPDBPrefix = "SPSE_"
@@ -109,50 +110,18 @@ configuration ConfigureSPVM
         Registry SystemDefaultTlsVersions   { Key = 'HKLM:\SOFTWARE\Microsoft\.NETFramework\v4.0.30319';             ValueName = 'SystemDefaultTlsVersions'; ValueType = 'Dword'; ValueData = '1'; Ensure = 'Present' }
         Registry SystemDefaultTlsVersions32 { Key = 'HKLM:\SOFTWARE\Wow6432Node\Microsoft\.NETFramework\v4.0.30319'; ValueName = 'SystemDefaultTlsVersions'; ValueType = 'Dword'; ValueData = '1'; Ensure = 'Present' }
 
-        SqlAlias AddSqlAlias { Ensure = "Present"; Name = $SQLAlias; ServerName = $SQLServerName; Protocol = "TCP"; TcpPort= 1433 }
-
-        Script DisableIESecurity
-        {
-            TestScript = {
-                return $false   # If TestScript returns $false, DSC executes the SetScript to bring the node back to the desired state
-            }
-            SetScript = {
-                # Source: https://stackoverflow.com/questions/9368305/disable-ie-security-on-windows-server-via-powershell
-                $AdminKey = "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A7-37EF-4b3f-8CFC-4F3A74704073}"
-                #$UserKey = "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A8-37EF-4b3f-8CFC-4F3A74704073}"
-                Set-ItemProperty -Path $AdminKey -Name "IsInstalled" -Value 0
-                #Set-ItemProperty -Path $UserKey -Name "IsInstalled" -Value 0
-
-                if ($false -eq (Test-Path -Path "HKLM:\Software\Policies\Microsoft\Internet Explorer")) {
-                    New-Item -Path "HKLM:\Software\Policies\Microsoft" -Name "Internet Explorer"
-                }
-
-                # Disable the first run wizard of IE
-                $ieFirstRunKey = "HKLM:\Software\Policies\Microsoft\Internet Explorer\Main"
-                if ($false -eq (Test-Path -Path $ieFirstRunKey)) {
-                    New-Item -Path "HKLM:\Software\Policies\Microsoft\Internet Explorer" -Name "Main"
-                }
-                Set-ItemProperty -Path $ieFirstRunKey -Name "DisableFirstRunCustomize" -Value 1
-                
-                # Set new tabs to open "about:blank" in IE
-                $ieNewTabKey = "HKLM:\Software\Policies\Microsoft\Internet Explorer\TabbedBrowsing"
-                if ($false -eq (Test-Path -Path $ieNewTabKey)) {
-                    New-Item -Path "HKLM:\Software\Policies\Microsoft\Internet Explorer" -Name "TabbedBrowsing"
-                }
-                Set-ItemProperty -Path $ieNewTabKey -Name "NewTabPageShow" -Value 0
-            }
-            GetScript = { }
-        }
+        Registry DisableIESecurityRegKey1 { Key = 'HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A7-37EF-4b3f-8CFC-4F3A74704073}'; ValueName = 'IsInstalled'; ValueType = 'Dword'; ValueData = '0'; Force = $true ; Ensure = 'Present' }
+        Registry DisableIESecurityRegKey2 { Key = 'HKLM:\Software\Policies\Microsoft\Internet Explorer\Main'; ValueName = 'DisableFirstRunCustomize'; ValueType = 'Dword'; ValueData = '1'; Force = $true ; Ensure = 'Present' }
+        Registry DisableIESecurityRegKey3 { Key = 'HKLM:\Software\Policies\Microsoft\Internet Explorer\TabbedBrowsing'; ValueName = 'NewTabPageShow'; ValueType = 'Dword'; ValueData = '0'; Force = $true ; Ensure = 'Present' }
 
         # From https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=powershell :
         # Starting in Windows 10, version 1607, MAX_PATH limitations have been removed from common Win32 file and directory functions. However, you must opt-in to the new behavior.
-        Script SetLongPathsEnabled
-        {
-            GetScript = { }
-            TestScript = { return $false }
-            SetScript = { New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force }
-        }
+        Registry SetLongPathsEnabled { Key = "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem"; ValueName = "LongPathsEnabled"; ValueType = "DWORD"; ValueData = "1"; Force = $true; Ensure = "Present" }
+        
+        Registry ShowWindowsExplorerRibbon { Key = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer"; ValueName = "ExplorerRibbonStartsMinimized"; ValueType = "DWORD"; ValueData = "4"; Force = $true; Ensure = "Present" }
 
+        SqlAlias AddSqlAlias { Ensure = "Present"; Name = $SQLAlias; ServerName = $SQLServerName; Protocol = "TCP"; TcpPort= 1433 }
+        
         Script EnableFileSharing
         {
             GetScript = { }
@@ -315,8 +284,8 @@ configuration ConfigureSPVM
                 {
                     DestinationPath = $packageFilePath
                     Uri             = $packageUrl
-                    ChecksumType    = $package.ChecksumType
-                    Checksum        = $package.Checksum
+                    ChecksumType    = if ($null -ne $package.ChecksumType) { $package.ChecksumType } else { "None" }
+                    Checksum        = if ($null -ne $package.Checksum) { $package.Checksum } else { $null }
                     MatchSource     = $false
                 }
 
@@ -392,31 +361,58 @@ configuration ConfigureSPVM
             TestScript           = { return $false } # If the TestScript returns $false, DSC executes the SetScript to bring the node back to the desired state
         }
 
-        # If WaitForADDomain does not find the domain whtin "WaitTimeout" secs, it will signal a restart to DSC engine "RestartCount" times
-        WaitForADDomain WaitForDCReady
+        # DNS record for ADFS is created only after the ADFS farm was created and DC restarted (required by ADFS setup)
+        # This turns out to be a very reliable way to ensure that VM joins AD only when the DC is guaranteed to be ready
+        # This totally eliminates the random errors that occured in WaitForADDomain with the previous logic (and no more need of WaitForADDomain)
+        Script WaitForADFSFarmReady
         {
-            DomainName              = $DomainFQDN
-            WaitTimeout             = 1800
-            RestartCount            = 2
-            WaitForValidCredentials = $True
-            Credential              = $DomainAdminCredsQualified
-            DependsOn               = "[DnsServerAddress]SetDNS"
+            SetScript =
+            {
+                $dnsRecordFQDN = "$($using:AdfsDnsEntryName).$($using:DomainFQDN)"
+                $dnsRecordFound = $false
+                $sleepTime = 15
+                do {
+                    try {
+                        [Net.DNS]::GetHostEntry($dnsRecordFQDN)
+                        $dnsRecordFound = $true
+                    }
+                    catch [System.Net.Sockets.SocketException] {
+                        # GetHostEntry() throws SocketException "No such host is known" if DNS entry is not found
+                        Write-Host "DNS record '$dnsRecordFQDN' not found yet: $_"
+                        Start-Sleep -Seconds $sleepTime
+                    }
+                } while ($false -eq $dnsRecordFound)
+            }
+            GetScript            = { return @{ "Result" = "false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
+            TestScript           = { try { [Net.DNS]::GetHostEntry("$($using:AdfsDnsEntryName).$($using:DomainFQDN)"); return $true } catch { return $false } }
+            DependsOn            = "[DnsServerAddress]SetDNS"
         }
 
-        # WaitForADDomain sets reboot signal only if WaitForADDomain did not find domain within "WaitTimeout" secs
-        PendingReboot RebootOnSignalFromWaitForDCReady
-        {
-            Name             = "RebootOnSignalFromWaitForDCReady"
-            SkipCcmClientSDK = $true
-            DependsOn        = "[WaitForADDomain]WaitForDCReady"
-        }
+        # # If WaitForADDomain does not find the domain whtin "WaitTimeout" secs, it will signal a restart to DSC engine "RestartCount" times
+        # WaitForADDomain WaitForDCReady
+        # {
+        #     DomainName              = $DomainFQDN
+        #     WaitTimeout             = 1800
+        #     RestartCount            = 2
+        #     WaitForValidCredentials = $True
+        #     Credential              = $DomainAdminCredsQualified
+        #     DependsOn               = "[Script]WaitForADFSFarmReady"
+        # }
+
+        # # WaitForADDomain sets reboot signal only if WaitForADDomain did not find domain within "WaitTimeout" secs
+        # PendingReboot RebootOnSignalFromWaitForDCReady
+        # {
+        #     Name             = "RebootOnSignalFromWaitForDCReady"
+        #     SkipCcmClientSDK = $true
+        #     DependsOn        = "[WaitForADDomain]WaitForDCReady"
+        # }
 
         Computer JoinDomain
         {
             Name       = $ComputerName
             DomainName = $DomainFQDN
             Credential = $DomainAdminCredsQualified
-            DependsOn  = "[PendingReboot]RebootOnSignalFromWaitForDCReady"
+            DependsOn  = "[Script]WaitForADFSFarmReady"
         }
 
         PendingReboot RebootOnSignalFromJoinDomain
@@ -425,6 +421,8 @@ configuration ConfigureSPVM
             SkipCcmClientSDK = $true
             DependsOn        = "[Computer]JoinDomain"
         }
+
+        Registry ShowFileExtensions { Key = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; ValueName = "HideFileExt"; ValueType = "DWORD"; ValueData = "0"; Force = $true; Ensure = "Present"; PsDscRunAsCredential = $DomainAdminCredsQualified }
 
         # This script is still needed
         Script CreateWSManSPNsIfNeeded
@@ -653,7 +651,7 @@ configuration ConfigureSPVM
                 Ensure          = "Present"
                 Type            = "Directory"
                 Recurse         = $true
-                SourcePath      = "$RemoteSetupPath"
+                SourcePath      = "$DCSetupPath"
                 DestinationPath = "$SetupPath\Certificates"
                 Credential      = $DomainAdminCredsQualified
                 DependsOn       = "[PendingReboot]RebootOnSignalFromJoinDomain"
@@ -805,43 +803,51 @@ configuration ConfigureSPVM
                 SetScript =
                 {
                     $dcName = $using:DCServerName
-                    $RemoteSetupPath = $using:RemoteSetupPath
                     $domainFQDN = $using:DomainFQDN
                     $domainNetbiosName = $using:DomainNetbiosName
-                    $spTrustedSitesName = $using:SharePointSitesAuthority
+                    $sharePointSitesAuthority = $using:SharePointSitesAuthority
+                    $setupPath = Join-Path -Path $using:SetupPath -ChildPath "Certificates"                
+                    if (!(Test-Path $setupPath -PathType Container)) {
+                        New-Item -ItemType Directory -Force -Path $setupPath
+                    }
 
+                    Write-Host "Creating certificate request for CN=$sharePointSitesAuthority.$domainFQDN..."
                     # Generate CSR
-                    New-SPCertificate -FriendlyName "$spTrustedSitesName Certificate" -KeySize 2048 -CommonName "$spTrustedSitesName.$domainFQDN" -AlternativeNames @("*.$domainFQDN") -Organization "$domainNetbiosName" -Exportable -HashAlgorithm SHA256 -Path "$RemoteSetupPath\$spTrustedSitesName.csr"
+                    New-SPCertificate -FriendlyName "$sharePointSitesAuthority Certificate" -KeySize 2048 -CommonName "$sharePointSitesAuthority.$domainFQDN" -AlternativeNames @("*.$domainFQDN") -Organization "$domainNetbiosName" -Exportable -HashAlgorithm SHA256 -Path "$setupPath\$sharePointSitesAuthority.csr"
 
                     # Submit CSR to CA
-                    & certreq.exe -submit -config "$dcName.$domainFQDN\$domainNetbiosName-$dcName-CA" -attrib "CertificateTemplate:Webserver" "$RemoteSetupPath\$spTrustedSitesName.csr" "$RemoteSetupPath\$spTrustedSitesName.cer" "$RemoteSetupPath\$spTrustedSitesName.p7b" "$RemoteSetupPath\$spTrustedSitesName.ful"
+                    & certreq.exe -submit -config "$dcName.$domainFQDN\$domainNetbiosName-$dcName-CA" -attrib "CertificateTemplate:Webserver" "$setupPath\$sharePointSitesAuthority.csr" "$setupPath\$sharePointSitesAuthority.cer" "$setupPath\$sharePointSitesAuthority.p7b" "$setupPath\$sharePointSitesAuthority.rsp"
 
                     # Install certificate with its private key to certificate store
-                    # certreq -accept –machine "$RemoteSetupPath\$spTrustedSitesName.cer"
+                    # certreq -accept –machine "$setupPath\$sharePointSitesAuthority.cer"
 
                     # Find the certificate
-                    # Get-ChildItem -Path cert:\localMachine\my | Where-Object{ $_.Subject -eq "CN=$spTrustedSitesName.$domainFQDN, O=$domainNetbiosName" } | Select-Object Thumbprint
+                    # Get-ChildItem -Path cert:\localMachine\my | Where-Object{ $_.Subject -eq "CN=$sharePointSitesAuthority.$domainFQDN, O=$domainNetbiosName" } | Select-Object Thumbprint
 
                     # # Export private key of the certificate
-                    # certutil -f -p "superpasse" -exportpfx A74D118AABD5B42F23BCD9083D3F6A3EF3BFD904 "$RemoteSetupPath\$spTrustedSitesName.pfx"
+                    # certutil -f -p "superpasse" -exportpfx A74D118AABD5B42F23BCD9083D3F6A3EF3BFD904 "$setupPath\$sharePointSitesAuthority.pfx"
 
                     # # Import private key of the certificate into SharePoint
                     # $password = ConvertTo-SecureString -AsPlainText -Force "<superpasse>"
-                    # Import-SPCertificate -Path "$RemoteSetupPath\$spTrustedSitesName.pfx" -Password $password -Exportable
-                    $spCert = Import-SPCertificate -Path "$RemoteSetupPath\$spTrustedSitesName.cer" -Exportable -Store EndEntity
+                    # Import-SPCertificate -Path "$setupPath\$sharePointSitesAuthority.pfx" -Password $password -Exportable
+                    Write-Host "Adding certificate 'CN=$sharePointSitesAuthority.$domainFQDN' to SharePoint store EndEntity..."
+                    $spCert = Import-SPCertificate -Path "$setupPath\$sharePointSitesAuthority.cer" -Exportable -Store EndEntity
 
-                    Set-SPWebApplication -Identity "http://$spTrustedSitesName" -Zone Intranet -Port 443 -Certificate $spCert `
-                        -SecureSocketsLayer:$true -AllowLegacyEncryption:$false -Url "https://$spTrustedSitesName.$domainFQDN"
+                    Write-Host "Extending web application to HTTPS zone using certificate 'CN=$sharePointSitesAuthority.$domainFQDN'..."
+                    Set-SPWebApplication -Identity "http://$sharePointSitesAuthority" -Zone Intranet -Port 443 -Certificate $spCert `
+                        -SecureSocketsLayer:$true -AllowLegacyEncryption:$false -Url "https://$sharePointSitesAuthority.$domainFQDN"
+                    
+                    Write-Host "Finished."
                 }
                 GetScript            = { }
                 TestScript           = 
                 {
                     $domainFQDN = $using:DomainFQDN
                     $domainNetbiosName = $using:DomainNetbiosName
-                    $spTrustedSitesName = $using:SharePointSitesAuthority
+                    $sharePointSitesAuthority = $using:SharePointSitesAuthority
                     
-                    # $cert = Get-ChildItem -Path cert:\localMachine\my | Where-Object{ $_.Subject -eq "CN=$spTrustedSitesName.$domainFQDN, O=$domainNetbiosName" }
-                    $cert = Get-SPCertificate -Identity "$spTrustedSitesName Certificate" -ErrorAction SilentlyContinue
+                    # $cert = Get-ChildItem -Path cert:\localMachine\my | Where-Object{ $_.Subject -eq "CN=$sharePointSitesAuthority.$domainFQDN, O=$domainNetbiosName" }
+                    $cert = Get-SPCertificate -Identity "$sharePointSitesAuthority Certificate" -ErrorAction SilentlyContinue
                     if ($null -eq $cert) {
                         return $false   # Run SetScript
                     } else {
@@ -922,6 +928,38 @@ configuration ConfigureSPVM
             TestScript           = { return $false } # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
             PsDscRunAsCredential = $DomainAdminCredsQualified
             DependsOn            = "[SPSite]CreateRootSite"
+        }
+
+        Script CreateShortcuts
+        {
+            SetScript =
+            {
+                $WshShell = New-Object -comObject WScript.Shell
+                # Shortcut to the setup folder
+                $Shortcut = $WshShell.CreateShortcut("$Home\Desktop\Setup data.lnk")
+                $Shortcut.TargetPath = $using:SetupPath
+                $Shortcut.Save()
+
+                # Shortcut for SharePoint Central Administration
+                $Shortcut = $WshShell.CreateShortcut("$Home\Desktop\SharePoint Central Administration.lnk")
+                $Shortcut.TargetPath = "C:\Program Files\Common Files\microsoft shared\Web Server Extensions\16\BIN\psconfigui.exe"
+                $Shortcut.Arguments = "-cmd showcentraladmin"
+                $Shortcut.Save()
+
+                # Shortcut for SharePoint Products Configuration Wizard
+                $Shortcut = $WshShell.CreateShortcut("$Home\Desktop\SharePoint Products Configuration Wizard.lnk")
+                $Shortcut.TargetPath = "C:\Program Files\Common Files\microsoft shared\Web Server Extensions\16\BIN\psconfigui.exe"
+                $Shortcut.Save()
+
+                # Shortcut for SharePoint Management Shell
+                $Shortcut = $WshShell.CreateShortcut("$Home\Desktop\SharePoint Management Shell.lnk")
+                $Shortcut.TargetPath = "C:\Windows\System32\WindowsPowerShell\v1.0\PowerShell.exe"
+                $Shortcut.Arguments = " -NoExit -Command ""& 'C:\Program Files\WindowsPowerShell\Modules\SharePointServer\SharePoint.ps1'"
+                $Shortcut.Save()
+            }
+            GetScript            = { return @{ "Result" = "false" } } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
+            TestScript           = { return $false } # If it returns $false, the SetScript block will run. If it returns $true, the SetScript block will not run.
+            PsDscRunAsCredential = $DomainAdminCredsQualified
         }
 
         # if ($EnableAnalysis) {

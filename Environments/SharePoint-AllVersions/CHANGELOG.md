@@ -1,5 +1,28 @@
 # Change log for Azure DevTest Labs template SharePoint-AllVersions
 
+## Enhancements & bug-fixes - Published in February 07, 2023
+
+### Added
+
+- Template
+  - Added value `Subscription-latest` to parameter `sharePointVersion`, to install the January 2023 CU on SharePoint Subscription
+- Configuration for DC
+  - Create additional users in AD, in a dedicated OU `AdditionalUsers`
+- Configuration for SQL
+  - Install SQL module `SqlServer` (version 21.1.18256) as it is the preferred option of `SqlServerDsc`
+- Configuration for all SharePoint versions
+  - Create various desktop shortcuts
+  - Configure Windows explorer to always show file extensions and expand the ribbon
+
+### Changed
+
+- Template
+  - Revert SQL image to SQL Server 2019, due to reliability issues with SQL Server 2022 (SQL PowerShell modules not ready yet)
+- Configuration for DC
+  - Review the logic to allow the VM to restart after the AD FS farm was configured (as required), and before the other VMs attempt to join the domain
+- Configuration for all VMs except DC
+  - Review the logic to join the AD domain only after it is guaranteed that the DC is ready. This fixes the most common cause of random deployment errors
+
 ## Enhancements & bug-fixes - Published in January 10, 2023
 
 * Use a small disk (32 GB) on SharePoint Subscription and SharePoint 2019 VMs.

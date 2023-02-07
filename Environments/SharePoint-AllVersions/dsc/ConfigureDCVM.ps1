@@ -25,10 +25,13 @@
     [String] $InterfaceAlias = (Get-NetAdapter | Where-Object Name -Like "Ethernet*" | Select-Object -First 1).Name
     [String] $ComputerName = Get-Content env:computername
     [String] $DomainNetbiosName = (Get-NetBIOSName -DomainFQDN $DomainFQDN)
+    [String] $AdditionalUsersPath = "OU=AdditionalUsers,DC={0},DC={1}" -f $DomainFQDN.Split('.')[0], $DomainFQDN.Split('.')[1]
 
     # Format credentials to be qualified by domain name: "domain\username"
     [System.Management.Automation.PSCredential] $DomainCredsNetbios = New-Object System.Management.Automation.PSCredential ("${DomainNetbiosName}\$($Admincreds.UserName)", $Admincreds.Password)
     [System.Management.Automation.PSCredential] $AdfsSvcCredsQualified = New-Object System.Management.Automation.PSCredential ("${DomainNetbiosName}\$($AdfsSvcCreds.UserName)", $AdfsSvcCreds.Password)
+
+    [String] $SetupPath = "C:\DSC Data"
 
     # ADFS settings
     [String] $ADFSSiteName = "adfs"
@@ -199,12 +202,43 @@
         }
     )
 
+    [System.Object[]] $AdditionalUsers = @(
+        @{
+            DisplayName = "Marie Berthelette";
+            UserName = "MarieB"
+        },
+        @{
+            DisplayName = "Camille Cartier";
+            UserName = "CamilleC"
+        },
+        @{
+            DisplayName = "Elisabeth Arcouet";
+            UserName = "ElisabethA"
+        },
+        @{
+            DisplayName = "Ana Bowman";
+            UserName = "AnaB"
+        },
+        @{
+            DisplayName = "Olivia Wilson";
+            UserName = "OliviaW"
+        }
+    )
+
     Node localhost
     {
         LocalConfigurationManager
         {
             ConfigurationMode = 'ApplyOnly'
             RebootNodeIfNeeded = $true
+        }
+
+        # Fix emerging issue "WinRM cannot process the request. The following error with errorcode 0x80090350" while Windows Azure Guest Agent service initiates using https://stackoverflow.com/a/74015954/8669078
+        Script SetWindowsAzureGuestAgentDepndencyOnDNS
+        {
+            GetScript = { }
+            TestScript = { return $false }
+            SetScript = { Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Services\WindowsAzureGuestAgent' -Name "DependOnService" -Type MultiString -Value "DNS" }
         }
 
         #**********************************************************
@@ -416,17 +450,15 @@
             {
                 SetScript = 
                 {
-                    Write-Verbose -Message "Exporting the public key of the ADFS signing certifiacte and its issuer..."
-                    $ADFSSiteName = $using:ADFSSiteName
-                    $destinationPath = "C:\Setup"
-                    $adfsSigningCertFileName = "ADFS Signing.cer"
-                    $adfsSigningIssuerCertFileName = "ADFS Signing issuer.cer"
+                    $destinationPath = $using:SetupPath
+                    $adfsSigningCertName = "ADFS Signing.cer"
+                    $adfsSigningIssuerCertName = "ADFS Signing issuer.cer"
+                    Write-Host "Exporting public key of ADFS signing / signing issuer certificates..."
                     New-Item $destinationPath -Type directory -ErrorAction SilentlyContinue
-
-                    $signingCert = Get-ChildItem -Path "cert:\LocalMachine\My\" -DnsName "$ADFSSiteName.Signing"
-                    $signingCert| Export-Certificate -FilePath ([System.IO.Path]::Combine($destinationPath, $adfsSigningCertFileName))
-                    Get-ChildItem -Path "cert:\LocalMachine\Root\"| Where-Object{$_.Subject -eq  $signingCert.Issuer}| Select-Object -First 1| Export-Certificate -FilePath ([System.IO.Path]::Combine($destinationPath, $adfsSigningIssuerCertFileName))
-                    Write-Verbose -Message "Public key of the ADFS signing certifiacte and its issuer successfully exported"
+                    $signingCert = Get-ChildItem -Path "cert:\LocalMachine\My\" -DnsName "$using:ADFSSiteName.Signing"
+                    $signingCert| Export-Certificate -FilePath ([System.IO.Path]::Combine($destinationPath, $adfsSigningCertName))
+                    Get-ChildItem -Path "cert:\LocalMachine\Root\"| Where-Object{$_.Subject -eq  $signingCert.Issuer}| Select-Object -First 1| Export-Certificate -FilePath ([System.IO.Path]::Combine($destinationPath, $adfsSigningIssuerCertName))
+                    Write-Host "Public key of ADFS signing / signing issuer certificates successfully exported"
                 }
                 GetScript =  
                 {
@@ -453,14 +485,6 @@
                 DependsOn              = "[CertReq]GenerateADFSSiteCertificate", "[CertReq]GenerateADFSSigningCertificate", "[CertReq]GenerateADFSDecryptionCertificate"
             }
 
-            DnsRecordA AddADFSHostDNS {
-                Name        = $ADFSSiteName
-                ZoneName    = $DomainFQDN
-                IPv4Address = $PrivateIP
-                Ensure      = "Present"
-                DependsOn   = "[WaitForADDomain]WaitForDCReady"
-            }
-
             # https://docs.microsoft.com/en-us/windows-server/identity/ad-fs/deployment/configure-corporate-dns-for-the-federation-service-and-drs
             DnsRecordCname AddADFSDevideRegistrationAlias {
                 Name = "enterpriseregistration"
@@ -474,12 +498,22 @@
             {
                 FederationServiceName        = "$ADFSSiteName.$DomainFQDN"
                 FederationServiceDisplayName = "$ADFSSiteName.$DomainFQDN"
-                CertificateName              = "$ADFSSiteName.$DomainFQDN"
-                SigningCertificateName       = "$ADFSSiteName.Signing"
-                DecryptionCertificateName    = "$ADFSSiteName.Decryption"
+                CertificateDnsName           = "$ADFSSiteName.$DomainFQDN"
+                SigningCertificateDnsName    = "$ADFSSiteName.Signing"
+                DecryptionCertificateDnsName = "$ADFSSiteName.Decryption"
                 ServiceAccountCredential     = $AdfsSvcCredsQualified
                 Credential                   = $DomainCredsNetbios
                 DependsOn                    = "[WindowsFeature]AddADFS"
+            }
+
+            # This DNS record is tested by other VMs to join AD only after it was found
+            # It is added after DSC resource AdfsFarm, because it is the last operation that triggers a reboot of the DC
+            DnsRecordA AddADFSHostDNS {
+                Name        = $ADFSSiteName
+                ZoneName    = $DomainFQDN
+                IPv4Address = $PrivateIP
+                Ensure      = "Present"
+                DependsOn   = "[AdfsFarm]CreateADFSFarm"
             }
 
             ADFSRelyingPartyTrust CreateADFSRelyingParty
@@ -593,7 +627,16 @@
                 ScopeNames           = "openid"
                 DependsOn            = "[AdfsNativeClientApplication]OidcNativeApp", "[AdfsWebApiApplication]OidcWebApiApp"
             }
-            
+        } else {
+            # This DNS record is tested by other VMs to join AD only after it was found
+            # It is added after DSC resource AdfsFarm, because it is the last operation that triggers a reboot of the DC
+            DnsRecordA AddADFSHostDNS {
+                Name        = $ADFSSiteName
+                ZoneName    = $DomainFQDN
+                IPv4Address = $PrivateIP
+                Ensure      = "Present"
+                DependsOn   = "[WaitForADDomain]WaitForDCReady"
+            }
         }
 
         WindowsFeature AddADCSManagementTools { Name = "RSAT-ADCS-Mgmt";     Ensure = "Present"; }
@@ -623,6 +666,33 @@
                 } else {
                     return $true
                 }
+            }
+        }
+
+        ADOrganizationalUnit AdditionalUsersOU
+        {
+            Name                            = $AdditionalUsersPath.Split(',')[0].Substring(3)
+            Path                            = $AdditionalUsersPath.Substring($AdditionalUsersPath.IndexOf(',') + 1)
+            ProtectedFromAccidentalDeletion = $false
+            Ensure                          = 'Present'
+            DependsOn                       = "[WaitForADDomain]WaitForDCReady"
+        }
+
+        foreach ($AdditionalUser in $AdditionalUsers) {
+            ADUser "ExtraUser_$($AdditionalUser.UserName)"
+            {
+                DomainName           = $DomainFQDN
+                Path                 = $AdditionalUsersPath
+                UserName             = $AdditionalUser.UserName
+                EmailAddress         = "$($AdditionalUser.UserName)@$DomainFQDN"
+                UserPrincipalName    = "$($AdditionalUser.UserName)@$DomainFQDN"
+                DisplayName          = $AdditionalUser.DisplayName
+                GivenName            = $AdditionalUser.DisplayName.Split(' ')[0]
+                Surname              = $AdditionalUser.DisplayName.Split(' ')[1]
+                PasswordNeverExpires = $true
+                Password              = $AdfsSvcCreds
+                Ensure               = "Present"
+                DependsOn            = "[ADOrganizationalUnit]AdditionalUsersOU"
             }
         }
     }
