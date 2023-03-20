@@ -133,7 +133,7 @@
                         "value": "WindowsServer"
                     },
                     "vmImageSku": {
-                        "value": "2016-Datacenter-with-Containers"
+                        "value": "2022-datacenter"
                     },
                     "vmImageVersion": {
                         "value": "latest"
