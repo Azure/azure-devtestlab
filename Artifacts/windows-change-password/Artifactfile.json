@@ -11,7 +11,7 @@
         "userName": {
             "type": "string",
             "displayName": "User name",
-            "description": "The user account to reset)"
+            "description": "The user account to reset"
         },
         "password": {
             "type": "securestring",
