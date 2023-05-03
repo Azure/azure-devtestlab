@@ -61,6 +61,27 @@
             "metadata": {
                 "description": "Public accessible application port #2."
             }
+        },
+        "tenantId": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Tenant the cluster- and clientapplication belongs to. Required for Windows clusters."
+            }
+        },
+        "clusterApplication": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Client id of cluster application. Required for Windows clusters."
+            }
+        },
+        "clientapplication": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Client id of client application. Required for Windows clusters."
+            }
         }
     },
     "variables": {
@@ -158,6 +179,15 @@
                     },
                     "nodeDataDrive": {
                         "value": "OS"
+                    },
+                    "tenantId": {
+                        "value": "[parameters('tenantId')]"
+                    },
+                    "clusterApplication": {
+                        "value": "[parameters('clusterApplication')]"
+                    },
+                    "clientapplication": {
+                        "value": "[parameters('clientapplication')]"
                     }
                 }
             }
@@ -215,6 +245,9 @@
                     },
                     "nt0InstanceCount": {
                         "value": "[variables('nt0InstanceCount')]"
+                    },
+                    "storageAccountEndPoint": {
+                        "value": "[resourceGroup().location]"
                     }
                 }
             }
