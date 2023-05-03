@@ -76,7 +76,7 @@
                 "description": "Client id of cluster application. Required for Windows clusters."
             }
         },
-        "clientapplication": {
+        "clientApplication": {
             "type": "string",
             "defaultValue": "",
             "metadata": {
@@ -187,7 +187,7 @@
                         "value": "[parameters('clusterApplication')]"
                     },
                     "clientapplication": {
-                        "value": "[parameters('clientapplication')]"
+                        "value": "[parameters('clientApplication')]"
                     }
                 }
             }
