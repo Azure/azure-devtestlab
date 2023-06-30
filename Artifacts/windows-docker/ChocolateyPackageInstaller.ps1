@@ -180,6 +180,9 @@ function InstallChocolatey
         [ValidateNotNullOrEmpty()] $chocolateyInstallLog
     )
 
+    #Set static version of Chocolatey to 1.4.0, to not cause reboot w/ choco v2
+    $env:chocolateyVersion = '1.4.0'
+
     WriteLog 'Installing Chocolatey ...'
 
     Invoke-Expression ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1')) | Out-Null

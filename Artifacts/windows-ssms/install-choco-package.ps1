@@ -72,6 +72,9 @@ function Ensure-Chocolatey
         [string] $ChocoExePath
     )
 
+    #Set static version of Chocolatey to 1.4.0, to not cause reboot w/ choco v2
+    $env:chocolateyVersion = '1.4.0'
+
     if (-not (Test-Path "$ChocoExePath"))
     {
         Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))

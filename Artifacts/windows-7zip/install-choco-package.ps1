@@ -71,6 +71,7 @@ function Ensure-Chocolatey
     param(
         [string] $ChocoExePath
     )
+    
     #Set static version of Chocolatey to 1.4.0, to not cause reboot w/ choco v2
     $env:chocolateyVersion = '1.4.0'
 
