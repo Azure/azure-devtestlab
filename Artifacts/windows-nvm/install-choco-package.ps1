@@ -182,7 +182,7 @@ try
     Ensure-PowerShell -Version $PSVersionRequired
     Enable-PSRemoting -Force -SkipNetworkProfileCheck | Out-Null
 
-    Write-Host 'Ensuring latest Chocolatey version is installed.'
+    Write-Host 'Ensuring Chocolatey is installed.'
     Ensure-Chocolatey -ChocoExePath "$choco"
 
     Write-Host "Preparing to install Chocolatey packages: $Packages."
