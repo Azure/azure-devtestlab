@@ -1,5 +1,38 @@
 # Change log for Azure DevTest Labs template DTL-SharePoint-FullConfig
 
+## Enhancements & bug-fixes - Published in June 30, 2023
+
+### Fixed
+
+- Template
+  - The size of the OS disk is no longer hardcoded on SharePoint virtual machines, so now VMs for SharePoint Subscription and 2019 are really created with a 32 GB disk
+- Configuration for SP Legacy and FE Legacy (SharePoint 2019 / 2016 / 2013 VMs)
+  - Fixed the deployment error caused by DSC resource cChocoInstaller
+
+### Added
+
+- Template
+  - Added value `Subscription-23H1` to parameter `sharePointVersion`, to install SharePoint Subscription with 23H1 update
+
+### Changed
+
+- Template
+  - Value `Subscription-Latest` for parameter `sharePointVersion` now installs the June 2023 CU for SharePoint Subscription
+  - Updated SQL image to use SQL Server 2022 on Windows Server 2022.
+- Configuration for DC
+  - Update DSC module `AdfsDsc`
+- Configuration for all SharePoint versions
+  - Update DSC module `SharePointDsc`
+- Configuration for SharePoint Subscription
+  - Add domain administrator as a SharePoint shell admin (done by cmdlet `Add-SPShellAdmin`)
+  - For OIDC: Change the nonce secret key to a more unique value and rename the certificate used to sign the nonce
+- Configuration for all virtual machines
+  - Update DSC module `ComputerManagementDsc`
+- Configuration for all VMs except DC
+  - Update DSC module `SqlServerDsc`
+- Configuration for SPSE and FESE
+  - Update DSC module `StorageDsc`
+
 ## Enhancements & bug-fixes - Published in February 07, 2023
 
 ### Added

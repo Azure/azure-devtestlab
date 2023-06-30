@@ -20,16 +20,17 @@ configuration ConfigureSPVM
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPPassphraseCreds
     )
 
-    Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 8.5.0
+    Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 9.0.0 # Custom
     Import-DscResource -ModuleName NetworkingDsc -ModuleVersion 9.0.0
     Import-DscResource -ModuleName ActiveDirectoryDsc -ModuleVersion 6.2.0
     Import-DscResource -ModuleName xCredSSP -ModuleVersion 1.4.0
     Import-DscResource -ModuleName WebAdministrationDsc -ModuleVersion 4.1.0
-    Import-DscResource -ModuleName SharePointDsc -ModuleVersion 5.3.0
+    Import-DscResource -ModuleName SharePointDsc -ModuleVersion 5.4.0
     Import-DscResource -ModuleName DnsServerDsc -ModuleVersion 3.0.0
     Import-DscResource -ModuleName CertificateDsc -ModuleVersion 5.1.0
-    Import-DscResource -ModuleName SqlServerDsc -ModuleVersion 16.0.0
+    Import-DscResource -ModuleName SqlServerDsc -ModuleVersion 16.3.1
     Import-DscResource -ModuleName cChoco -ModuleVersion 2.5.0.0    # With custom changes to implement retry on package downloads
+    Import-DscResource -ModuleName xPSDesiredStateConfiguration -ModuleVersion 9.1.0
 
     # Init
     [String] $InterfaceAlias = (Get-NetAdapter | Where-Object Name -Like "Ethernet*" | Select-Object -First 1).Name
@@ -47,6 +48,7 @@ configuration ConfigureSPVM
     [String] $DCSetupPath = "\\$DCServerName\C$\DSC Data"
     [String] $DscStatusFilePath = "$SetupPath\dsc-status-$ComputerName.log"
     [String] $SAMLTrustRealm = "urn:sharepoint:spsites"
+    [String] $LDAPCPFileFullPath = Join-Path -Path $SetupPath -ChildPath "Binaries\LDAPCP.wsp"
     [String] $AdfsDnsEntryName = "adfs"
 
     # SharePoint settings
@@ -78,6 +80,10 @@ configuration ConfigureSPVM
             GetScript            = { } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
             TestScript           = { return $false } # If the TestScript returns $false, DSC executes the SetScript to bring the node back to the desired state
         }
+
+        # cChocoInstaller fails with this error: Get-FileDownload for 'https://chocolatey.org/install.ps1' failed on attempt 1 with this error: .NET Framework 4.8 was installed, but a reboot is required.  Please reboot the system and try to install/upgrade Chocolatey again.
+        # But running it right at the beginning eventually works, and somehow it does not propagate the error to the Azure DSC extension (and doing a reboot juste before has no effect)
+        cChocoInstaller InstallChoco             { InstallDir = "C:\Chocolatey"; }
 
         #**********************************************************
         # Initialization of VM - Do as much work as possible before waiting on AD domain to be available
@@ -117,6 +123,12 @@ configuration ConfigureSPVM
         
         Registry ShowWindowsExplorerRibbon { Key = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Explorer"; ValueName = "ExplorerRibbonStartsMinimized"; ValueType = "DWORD"; ValueData = "4"; Force = $true; Ensure = "Present" }
 
+        if ($SharePointVersion -eq "2019") {
+            # Allow OneDrive NGSC to connect to SharePoint Subscription / 2019 - https://learn.microsoft.com/en-us/sharepoint/install/configure-syncing-with-the-onedrive-sync-app
+            Registry SetOneDriveUrl { Key = "HKLM:\Software\Policies\Microsoft\OneDrive"; ValueName = "SharePointOnPremFrontDoorUrl"; ValueType = "String"; ValueData = "http://{0}" -f $SharePointSitesAuthority; Ensure = "Present" }
+            Registry SetOneDriveName { Key = "HKLM:\Software\Policies\Microsoft\OneDrive"; ValueName = "SharePointOnPremTenantName"; ValueType = "String"; ValueData = "{0} - {1}" -f $DomainNetbiosName, $SharePointSitesAuthority; Ensure = "Present" }
+        }
+
         if ($SharePointVersion -eq "2013") {
             # Those 2 registry keys are required in SPS 2013 image to fix the psconfigui timeout error - https://support.microsoft.com/en-us/topic/some-document-conversion-services-in-sharepoint-server-are-not-secure-when-they-run-in-a-particular-environment-c39cd633-1e6a-18b1-9f2f-d0e7073a26bd
             Registry FixDocumentConversionKeyMissing  { Key = "HKLM:\SOFTWARE\Microsoft\Office Server\15.0\LauncherSettings";     ValueName = "AcknowledgedRunningOnAppServer"; ValueData = "1"; ValueType = "Dword"; Ensure = "Present" }
@@ -142,7 +154,7 @@ configuration ConfigureSPVM
             GetScript = { }
         }
 
-        # Create the rules in the firewall required for the distributed cache
+        # Create the rules in the firewall required for the distributed cache - https://learn.microsoft.com/en-us/sharepoint/administration/plan-for-feeds-and-the-distributed-cache-service#firewall
         Script CreateFirewallRulesForDistributedCache
         {
             TestScript = {
@@ -198,11 +210,6 @@ configuration ConfigureSPVM
             TestScript           = { return $false } # If the TestScript returns $false, DSC executes the SetScript to bring the node back to the desired state
         }
 
-        cChocoInstaller InstallChoco
-        {
-            InstallDir = "C:\Chocolatey"
-        }
-
         cChocoPackageInstaller InstallEdge
         {
             Name                 = "microsoft-edge"
@@ -225,14 +232,21 @@ configuration ConfigureSPVM
         }
 
         cChocoPackageInstaller InstallVscode
-        {
-            Name                 = "vscode.portable"
+        {   # Install takes about 30 secs
+            Name                 = "vscode"
+            Ensure               = "Present"
+            DependsOn            = "[cChocoInstaller]InstallChoco"
+        }
+
+        cChocoPackageInstaller InstallAzureDataStudio
+        {   # Install takes about 40 secs
+            Name                 = "azure-data-studio"
             Ensure               = "Present"
             DependsOn            = "[cChocoInstaller]InstallChoco"
         }
 
         # if ($EnableAnalysis) {
-        #     # This resource is for  of dsc logs only and totally optionnal
+        #     # This resource is only for analyzing dsc logs using a custom Python script
         #     cChocoPackageInstaller InstallPython
         #     {
         #         Name                 = "python"

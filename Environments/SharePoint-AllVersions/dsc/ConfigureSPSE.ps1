@@ -20,17 +20,17 @@ configuration ConfigureSPVM
         [Parameter(Mandatory)] [System.Management.Automation.PSCredential]$SPPassphraseCreds
     )
 
-    Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 8.5.0
+    Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 9.0.0 # Custom
     Import-DscResource -ModuleName NetworkingDsc -ModuleVersion 9.0.0
     Import-DscResource -ModuleName ActiveDirectoryDsc -ModuleVersion 6.2.0
     Import-DscResource -ModuleName xCredSSP -ModuleVersion 1.4.0
     Import-DscResource -ModuleName WebAdministrationDsc -ModuleVersion 4.1.0
-    Import-DscResource -ModuleName SharePointDsc -ModuleVersion 5.3.0
+    Import-DscResource -ModuleName SharePointDsc -ModuleVersion 5.4.0
     Import-DscResource -ModuleName DnsServerDsc -ModuleVersion 3.0.0
     Import-DscResource -ModuleName CertificateDsc -ModuleVersion 5.1.0
-    Import-DscResource -ModuleName SqlServerDsc -ModuleVersion 16.0.0
+    Import-DscResource -ModuleName SqlServerDsc -ModuleVersion 16.3.1
     Import-DscResource -ModuleName cChoco -ModuleVersion 2.5.0.0    # With custom changes to implement retry on package downloads
-    Import-DscResource -ModuleName StorageDsc -ModuleVersion 5.0.1
+    Import-DscResource -ModuleName StorageDsc -ModuleVersion 5.1.0
     Import-DscResource -ModuleName xPSDesiredStateConfiguration -ModuleVersion 9.1.0
     
     # Init
@@ -97,7 +97,7 @@ configuration ConfigureSPVM
         # Allow NTLM on HTTPS sites when site host name is different than the machine name - https://docs.microsoft.com/en-US/troubleshoot/windows-server/networking/accessing-server-locally-with-fqdn-cname-alias-denied
         Registry DisableLoopBackCheck { Key = "HKLM:\System\CurrentControlSet\Control\Lsa"; ValueName = "DisableLoopbackCheck"; ValueData = "1"; ValueType = "Dword"; Ensure = "Present" }
 
-        # Enable TLS 1.2 - https://docs.microsoft.com/en-us/azure/active-directory/manage-apps/application-proxy-add-on-premises-application#tls-requirements
+        # Enable TLS 1.2 - https://learn.microsoft.com/en-us/azure/active-directory/app-proxy/application-proxy-add-on-premises-application#tls-requirements
         # It's a best practice, and mandatory with Windows 2012 R2 (SharePoint 2013) to allow xRemoteFile to download releases from GitHub: https://github.com/PowerShell/xPSDesiredStateConfiguration/issues/405           
         Registry EnableTLS12RegKey1 { Key = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.2\Client'; ValueName = 'DisabledByDefault'; ValueType = 'Dword'; ValueData = '0'; Ensure = 'Present' }
         Registry EnableTLS12RegKey2 { Key = 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.2\Client'; ValueName = 'Enabled';           ValueType = 'Dword'; ValueData = '1'; Ensure = 'Present' }
@@ -129,7 +129,7 @@ configuration ConfigureSPVM
             SetScript = { Set-NetFirewallRule -DisplayGroup "File And Printer Sharing" -Enabled True -Profile Domain -Confirm:$false }
         }
 
-        # Create the rules in the firewall required for the distributed cache
+        # Create the rules in the firewall required for the distributed cache - https://learn.microsoft.com/en-us/sharepoint/administration/plan-for-feeds-and-the-distributed-cache-service#firewall
         Script CreateFirewallRulesForDistributedCache
         {
             TestScript = {
@@ -205,14 +205,21 @@ configuration ConfigureSPVM
         }
 
         cChocoPackageInstaller InstallVscode
-        {
-            Name                 = "vscode.portable"
+        {   # Install takes about 30 secs
+            Name                 = "vscode"
+            Ensure               = "Present"
+            DependsOn            = "[cChocoInstaller]InstallChoco"
+        }
+
+        cChocoPackageInstaller InstallAzureDataStudio
+        {   # Install takes about 40 secs
+            Name                 = "azure-data-studio"
             Ensure               = "Present"
             DependsOn            = "[cChocoInstaller]InstallChoco"
         }
 
         # if ($EnableAnalysis) {
-        #     # This resource is for  of dsc logs only and totally optionnal
+        #     # This resource is only for analyzing dsc logs using a custom Python script
         #     cChocoPackageInstaller InstallPython
         #     {
         #         Name                 = "python"
@@ -298,15 +305,15 @@ configuration ConfigureSPVM
                         
                         $exitRebootCodes = @(3010, 17022)
                         $needReboot = $false
-                        Write-Verbose -Message "Starting installation of SharePoint update '$SharePointBuildLabel', file '$($packageFile.Name)'..."
+                        Write-Host "Starting installation of SharePoint update '$SharePointBuildLabel', file '$($packageFile.Name)'..."
                         Unblock-File -Path $packageFile -Confirm:$false
                         $process = Start-Process $packageFile.FullName -ArgumentList '/passive /quiet /norestart' -PassThru -Wait
                         if ($exitRebootCodes.Contains($process.ExitCode)) {
                             $needReboot = $true
                         }
-                        Write-Verbose -Message "Finished installation of SharePoint update '$($packageFile.Name)'. Exit code: $($process.ExitCode); needReboot: $needReboot"
+                        Write-Host "Finished installation of SharePoint update '$($packageFile.Name)'. Exit code: $($process.ExitCode); needReboot: $needReboot"
                         New-Item -Path "HKLM:\SOFTWARE\DscScriptExecution\flag_spupdate_$($SharePointBuildLabel)_$($packageFile.Name)" -Force
-                        Write-Verbose -Message "Finished installation of SharePoint build '$SharePointBuildLabel'. needReboot: $needReboot"
+                        Write-Host "Finished installation of SharePoint build '$SharePointBuildLabel'. needReboot: $needReboot"
 
                         if ($true -eq $needReboot) {
                             $global:DSCMachineStatus = 1
@@ -351,6 +358,7 @@ configuration ConfigureSPVM
         #**********************************************************
         # Join AD forest
         #**********************************************************
+        
         Script DscStatus_WaitForDCReady
         {
             SetScript =
@@ -360,7 +368,7 @@ configuration ConfigureSPVM
             GetScript            = { } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
             TestScript           = { return $false } # If the TestScript returns $false, DSC executes the SetScript to bring the node back to the desired state
         }
-
+        
         # DNS record for ADFS is created only after the ADFS farm was created and DC restarted (required by ADFS setup)
         # This turns out to be a very reliable way to ensure that VM joins AD only when the DC is guaranteed to be ready
         # This totally eliminates the random errors that occured in WaitForADDomain with the previous logic (and no more need of WaitForADDomain)
@@ -439,7 +447,7 @@ configuration ConfigureSPVM
                 # Create SPNs WSMAN/SP and WSMAN/sp.contoso.local
                 $domainFQDN = $using:DomainFQDN
                 $computerName = $using:ComputerName
-                Write-Verbose -Message "Adding SPNs 'WSMAN/$computerName' and 'WSMAN/$computerName.$domainFQDN' to computer '$computerName'"
+                Write-Host "Adding SPNs 'WSMAN/$computerName' and 'WSMAN/$computerName.$domainFQDN' to computer '$computerName'"
                 setspn.exe -S "WSMAN/$computerName" "$computerName"
                 setspn.exe -S "WSMAN/$computerName.$domainFQDN" "$computerName"
             }
@@ -480,16 +488,16 @@ configuration ConfigureSPVM
         # Provision required accounts for SharePoint
         #**********************************************************
         ADUser CreateSPSetupAccount
-        {
-            DomainName                    = $DomainFQDN
-            UserName                      = $SPSetupCreds.UserName
-            Password                      = $SPSetupCreds
-            UserPrincipalName             = "$($SPSetupCreds.UserName)@$DomainFQDN"
-            PasswordNeverExpires          = $true
-            Ensure                        = "Present"
+        {   # Both SQL and SharePoint DSCs run this SPSetupAccount AD account creation
+            DomainName           = $DomainFQDN
+            UserName             = $SPSetupCreds.UserName
+            UserPrincipalName    = "$($SPSetupCreds.UserName)@$DomainFQDN"
+            Password             = $SPSetupCreds
+            PasswordNeverExpires = $true
+            Ensure               = "Present"
             PsDscRunAsCredential = $DomainAdminCredsQualified
-            DependsOn                     = "[PendingReboot]RebootOnSignalFromJoinDomain"
-        }        
+            DependsOn            = "[PendingReboot]RebootOnSignalFromJoinDomain"
+        }
 
         ADUser CreateSParmAccount
         {
@@ -562,6 +570,16 @@ configuration ConfigureSPVM
             DependsOn            = "[cChocoInstaller]InstallChoco"
         }
 
+        Script DscStatus_WaitForSQL
+        {
+            SetScript =
+            {
+                "$(Get-Date -Format u)`t$($using:ComputerName)`tWait for SQL Server to be ready..." | Out-File -FilePath $using:DscStatusFilePath -Append
+            }
+            GetScript            = { } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
+            TestScript           = { return $false } # If the TestScript returns $false, DSC executes the SetScript to bring the node back to the desired state
+        }
+
         Script WaitForSQL
         {
             SetScript =
@@ -574,12 +592,12 @@ configuration ConfigureSPVM
                     $sqlConnection = New-Object System.Data.SqlClient.SqlConnection "Data Source=$server;Initial Catalog=$db;Integrated Security=True;Enlist=False;Connect Timeout=3"
                     try {
                         $sqlConnection.Open()
-                        Write-Verbose "Connection to SQL Server $server succeeded"
+                        Write-Host "Connection to SQL Server $server succeeded"
                         $sqlConnection.Close()
                         $retry = $false
                     }
                     catch {
-                        Write-Verbose "SQL connection to $server failed, retry in $retrySleep secs..."
+                        Write-Host "SQL connection to $server failed, retry in $retrySleep secs..."
                         Start-Sleep -s $retrySleep
                     }
                 }
@@ -593,6 +611,16 @@ configuration ConfigureSPVM
         #**********************************************************
         # Create SharePoint farm
         #**********************************************************
+        Script DscStatus_CreateSPFarm
+        {
+            SetScript =
+            {
+                "$(Get-Date -Format u)`t$($using:ComputerName)`tCreate SharePoint farm..." | Out-File -FilePath $using:DscStatusFilePath -Append
+            }
+            GetScript            = { } # This block must return a hashtable. The hashtable must only contain one key Result and the value must be of type String.
+            TestScript           = { return $false } # If the TestScript returns $false, DSC executes the SetScript to bring the node back to the desired state
+        }
+
         SPFarm CreateSPFarm
         {
             DatabaseServer            = $SQLAlias
@@ -644,6 +672,20 @@ configuration ConfigureSPVM
             DependsOn              = "[SPFarm]CreateSPFarm"
         }
 
+        SPShellAdmins AddShellAdmins
+        {
+            IsSingleInstance = "Yes"
+            Members          = @($DomainAdminCredsQualified.UserName)
+            Databases        = @(
+                @(MSFT_SPDatabasePermissions {
+                    Name    = $SPDBPrefix + "Content_80"
+                    Members = @($DomainAdminCredsQualified.UserName)
+                })
+            )
+            PsDscRunAsCredential = $SPSetupCredsQualified
+            DependsOn            = "[SPWebApplication]CreateMainWebApp"
+        }
+
         if ($ConfigureADFS -eq $true) {
             # Delay this operation significantly, so that DC has time to generate and copy the certificates
             File CopyCertificatesFromDC
@@ -666,16 +708,32 @@ configuration ConfigureSPVM
                 DependsOn            = "[SPFarm]CreateSPFarm"
             }
 
+
             $apppoolUserName = $SPAppPoolCredsQualified.UserName
-            Script SetOidcCertificate
+            $domainAdminUserName = $DomainAdminCredsQualified.UserName
+            Script SetFarmPropertiesForOIDC
             {
                 SetScript = 
                 {
                     $apppoolUserName = $using:apppoolUserName
-                    # Import-Module SharePointServer | Out-Null
+                    $domainAdminUserName = $using:domainAdminUserName
+                    $setupPath = Join-Path -Path $using:SetupPath -ChildPath "Certificates"
+                    if (!(Test-Path $setupPath -PathType Container)) {
+                        New-Item -ItemType Directory -Force -Path $setupPath
+                    }
+                    $DCSetupPath = Join-Path -Path $using:DCSetupPath -ChildPath "Certificates"
+                    if (!(Test-Path $DCSetupPath -PathType Container)) {
+                        New-Item -ItemType Directory -Force -Path $DCSetupPath
+                    }
+                    
                     # Setup farm properties to work with OIDC
-                    # Create a self-signed certificate in one SharePoint Server in the farm
-                    $cert = New-SelfSignedCertificate -CertStoreLocation Cert:\LocalMachine\My -Provider 'Microsoft Enhanced RSA and AES Cryptographic Provider' -Subject "CN=SharePoint Cookie Cert"
+                    # Create a self-signed certificate in 1st SharePoint Server of the farm
+                    $cookieCertificateName = "SharePoint OIDC nonce cert"
+                    $cookieCertificateFilePath = Join-Path -Path $setupPath -ChildPath "$cookieCertificateName"
+                    $cert = New-SelfSignedCertificate -KeyUsage None -KeyUsageProperty None -CertStoreLocation Cert:\LocalMachine\My -Provider 'Microsoft Enhanced RSA and AES Cryptographic Provider' -Subject "CN=$cookieCertificateName"
+                    Export-Certificate -Cert $cert -FilePath "$cookieCertificateFilePath.cer"
+                    Export-PfxCertificate -Cert $cert -FilePath "$cookieCertificateFilePath.pfx" -ProtectTo "$domainAdminUserName"
+                    Export-PfxCertificate -Cert $cert -FilePath "$DCSetupPath\$cookieCertificateName.pfx" -ProtectTo "$domainAdminUserName"
 
                     # Grant access to the certificate private key.
                     $rsaCert = [System.Security.Cryptography.X509Certificates.RSACertificateExtensions]::GetRSAPrivateKey($cert)
@@ -688,8 +746,8 @@ configuration ConfigureSPVM
 
                     # Set farm properties
                     $f = Get-SPFarm
-                    $f.Farm.Properties['SP-NonceCookieCertificateThumbprint']=$cert.Thumbprint
-                    $f.Farm.Properties['SP-NonceCookieHMACSecretKey']='seed'
+                    $f.Farm.Properties['SP-NonceCookieCertificateThumbprint'] = $cert.Thumbprint
+                    $f.Farm.Properties['SP-NonceCookieHMACSecretKey'] = "randomString$domainAdminUserName"
                     $f.Farm.Update()
                 }
                 GetScript =  
@@ -711,8 +769,8 @@ configuration ConfigureSPVM
                     }
                 }
                 DependsOn            = "[SPFarm]CreateSPFarm"
-                PsDscRunAsCredential = $SPSetupCredsQualified
-            }        
+                PsDscRunAsCredential = $DomainAdminCredsQualified
+            }
 
             SPTrustedIdentityTokenIssuer CreateSPTrust
             {
@@ -736,7 +794,7 @@ configuration ConfigureSPVM
                 SigningCertificateFilePath   = "$SetupPath\Certificates\ADFS Signing.cer"
                 UseWReplyParameter           = $true
                 Ensure                       = "Present" 
-                DependsOn                    = "[Script]SetOidcCertificate"
+                DependsOn                    = "[Script]SetFarmPropertiesForOIDC"
                 PsDscRunAsCredential         = $SPSetupCredsQualified
             }
 
@@ -1035,18 +1093,17 @@ $password = ConvertTo-SecureString -String "mytopsecurepassword" -AsPlainText -F
 $DomainAdminCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "yvand", $password
 $SPSetupCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "spsetup", $password
 $SPFarmCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "spfarm", $password
-$SPSvcCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "spsvc", $password
 $SPAppPoolCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "spapppool", $password
-$SPADDirSyncCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "spaddirsync", $password
 $SPPassphraseCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "Passphrase", $password
-$SPSuperUserCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "spSuperUser", $password
-$SPSuperReaderCreds = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "spSuperReader", $password
 $DNSServerIP = "10.1.1.4"
 $DomainFQDN = "contoso.local"
 $DCServerName = "DC"
 $SQLServerName = "SQL"
 $SQLAlias = "SQLAlias"
 $SharePointVersion = "Subscription-22H2"
+$SharePointSitesAuthority = "spsitesse"
+$SharePointCentralAdminPort = "5000"
+$ConfigureADFS = $true
 $EnableAnalysis = $true
 $SharePointBits = @(
     @{
@@ -1064,8 +1121,8 @@ $SharePointBits = @(
     }
 )
 
-$outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.2.0\DSCWork\ConfigureSPSE.0\ConfigureSPVM"
-ConfigureSPVM -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPSvcCreds $SPSvcCreds -SPAppPoolCreds $SPAppPoolCreds -SPADDirSyncCreds $SPADDirSyncCreds -SPPassphraseCreds $SPPassphraseCreds -SPSuperUserCreds $SPSuperUserCreds -SPSuperReaderCreds $SPSuperReaderCreds -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DCServerName $DCServerName -SQLServerName $SQLServerName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -EnableAnalysis $EnableAnalysis -SharePointBits $SharePointBits -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
+$outputPath = "C:\Packages\Plugins\Microsoft.Powershell.DSC\2.83.5\DSCWork\ConfigureSPSE.0\ConfigureSPVM"
+ConfigureSPVM -DomainAdminCreds $DomainAdminCreds -SPSetupCreds $SPSetupCreds -SPFarmCreds $SPFarmCreds -SPAppPoolCreds $SPAppPoolCreds -SPPassphraseCreds $SPPassphraseCreds -DNSServerIP $DNSServerIP -DomainFQDN $DomainFQDN -DCServerName $DCServerName -SQLServerName $SQLServerName -SQLAlias $SQLAlias -SharePointVersion $SharePointVersion -SharePointSitesAuthority $SharePointSitesAuthority -SharePointCentralAdminPort $SharePointCentralAdminPort -ConfigureADFS $ConfigureADFS -EnableAnalysis $EnableAnalysis -SharePointBits $SharePointBits -ConfigurationData @{AllNodes=@(@{ NodeName="localhost"; PSDscAllowPlainTextPassword=$true })} -OutputPath $outputPath
 Set-DscLocalConfigurationManager -Path $outputPath
 Start-DscConfiguration -Path $outputPath -Wait -Verbose -Force
 
