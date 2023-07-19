@@ -1,5 +1,5 @@
 <#
-IMPORTANT: This script for AD joining lab VMs is being deprecated - we do *not* recommend that these scripts be used with either the version of Azure Lab Services that uses Lab Accounts, or the newer version that uses Lab Plans. 
+WARNING: This script for AD joining lab VMs is being deprecated - we do *not* recommend that these scripts be used with either the version of Azure Lab Services that uses Lab Accounts, or the newer version that uses Lab Plans. 
 For more information, please see the blog post [Use labs without registering/joining to AD/AAD](TODO).
 
 The MIT License (MIT)
