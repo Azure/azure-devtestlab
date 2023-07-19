@@ -1,4 +1,8 @@
-# Azure Lab Services - Active Directory Domain Join
+
+> **IMPORTANT**
+> The README and scripts for AD joining lab VMs are being deprecated - we do *not* recommend that they be used with either the version of Azure Lab Services that uses Lab Accounts, or the newer version that uses Lab Plans. For more information, please see the blog post [Use labs without registering/joining to AD/AAD](TODO).
+
+# Azure Lab Services - Active Directory Domain Join (deprecated)
 
 These scripts can be used to join Lab Services VMs to an Active Directory Domain.
 VMs can be joined to:
