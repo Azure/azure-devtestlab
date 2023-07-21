@@ -1,4 +1,7 @@
 <#
+WARNING: This script for domain joining lab VMs is being deprecated - we do *not* recommend that these scripts be used with either the version of Azure Lab Services that uses Lab Accounts, or the newer version that uses Lab Plans. 
+For more information, please see the blog post [Use labs without registering/joining to AD/AAD](https://techcommunity.microsoft.com/t5/azure-lab-services-blog/use-labs-without-registering-joining-to-ad-aad/ba-p/3880261).
+
 The MIT License (MIT)
 Copyright (c) Microsoft Corporation  
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -14,7 +17,7 @@ TODO Ideally this can be abstracted based on the MDM Service, e.g Intune (on-clo
 
 ###################################################################################################
 
-# Default exit code
+# Default exit code 
 $ExitCode = 0
 
 try {
