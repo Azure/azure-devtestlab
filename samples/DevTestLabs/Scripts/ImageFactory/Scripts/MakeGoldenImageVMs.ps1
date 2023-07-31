@@ -1,6 +1,6 @@
 ﻿param
 (
-    [Parameter(Mandatory=$true, HelpMessage="The location of the factory configuration files")]
+    [Parameter(Mandatory=$false, HelpMessage="The location of the factory configuration files")]
     [string] $ConfigurationLocation,
     
     [Parameter(Mandatory=$true, HelpMessage="The name of the lab")]
