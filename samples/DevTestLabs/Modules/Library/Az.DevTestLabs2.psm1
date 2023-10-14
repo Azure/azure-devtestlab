@@ -713,6 +713,43 @@ function Set-AzDtlLabSharedImageGallery {
   }
 }
 
+function Get-AzDtlVirtualNetworks {
+  [CmdletBinding()]
+  param(
+    [parameter(Mandatory=$true, ValueFromPipeline=$true, HelpMessage="Lab object to get the Virtual Network from")]
+    [ValidateNotNullOrEmpty()]
+    $Lab,
+
+    [parameter(Mandatory=$false, ValueFromPipeline=$true, HelpMessage="If set, get the Expanded Resource from the std VNet object")]
+    $ExpandResource
+  )
+
+  begin {. BeginPreamble}
+  process {
+    try {
+      foreach($lab in $Lab) {
+
+        $lab = $lab | Get-AzDtlLab
+
+        $dtlLabVNets = Get-AzureRmResource `
+                          -ResourceGroupName $lab.ResourceGroupName `
+                          -ResourceType Microsoft.DevTestLab/labs/virtualnetworks `
+                          -ResourceName $lab.Name `
+                          -ApiVersion 2018-09-15 
+        
+        if ($ExpandResource) {
+          foreach($dtlLabVNet in $dtlLabVNets) {
+            Get-AzureRmVirtualNetwork -ResourceGroupName $dtlLabVNet.ResourceGroupName -Name $dtlLabVNet.Name -ExpandResource $ExpandResource
+          }   
+        }
+      }
+    } catch {
+      Write-Error -ErrorRecord $_ -EA $callerEA
+    }
+  }
+  end {}
+}
+
 function Get-AzDtlLabSharedImageGalleryImages {
   [CmdletBinding()]
   param(
@@ -3183,6 +3220,8 @@ New-Alias -Name 'UnClaim-AzureRmDtlVm'    -Value Invoke-AzDtlVmUnClaim
 New-Alias -Name 'Dtl-NewEnvironment'      -Value New-AzDtlLabEnvironment
 New-Alias -Name 'Dtl-GetEnvironment'      -Value Get-AzDtlLabEnvironment
 
+New-Alias -Name 'Dtl-GetVirtualNetworks'  -Value Get-AzDtlVirtualNetworks
+
 Export-ModuleMember -Function New-AzDtlLab,
                               Remove-AzDtlLab,
                               Get-AzDtlLab,
@@ -3220,7 +3259,8 @@ Export-ModuleMember -Function New-AzDtlLab,
                               Get-AzDtlVmArtifact,
                               Import-AzDtlCustomImageFromUri,
                               Get-AzDtlCustomImage,
-                              New-AzDtlCustomImageFromVm
+                              New-AzDtlCustomImageFromVm,
+                              Get-AzDtlVirtualNetworks
 
 Export-ModuleMember -Alias *
 #endregion
