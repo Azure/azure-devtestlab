@@ -1,5 +1,21 @@
 # Change log for Azure DevTest Labs template DTL-SharePoint-FullConfig
 
+## Enhancements & bug-fixes - Published in October 16, 2023
+
+### Changed
+
+- Template
+  - Value `Subscription-Latest` for parameter `sharePointVersion` now installs the October 2023 CU for SharePoint Subscription
+  - Added value `Subscription-23H2` to parameter `sharePointVersion`, to install SharePoint Subscription with 23H2 update
+  - Value `Subscription-Latest` for parameter `sharePointVersion` now installs the September 2023 CU for SharePoint Subscription (23H2 update)
+  - Changed the prefix of the built-in administrator from `local-` to `l-` so it does not exceed 15 characters, because the reset password feature in Azure requires that it has 15 characters maximum.
+
+### Fixed
+- All SharePoint configurations
+  - Fixed regression with installation of Chocolatey
+- Configuration for SPSE
+  - When doing a slipstream install of SharePoint using 2022-10 CU or newer: Fixed the SharePoint configuration wizard hanging at 10% of step 10/10, when executed after installing a CU
+
 ## Enhancements & bug-fixes - Published in June 30, 2023
 
 ### Fixed
