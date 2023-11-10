@@ -235,9 +235,24 @@ function Extract-AgentPackage
         [string] $PackagePath,
         [string] $Destination
     )
-  
+
+    # Identify a new folder in the temp path to extract
+    $TempFolder = $Env:TEMP
+    Do
+    {
+        $TempFileName = "$(Get-Random).tmp"
+        $TempAgentPath = Join-Path $TempFolder $TempFileName
+    }
+    Until (-not (Test-Path -LiteralPath $TempAgentPath))
+
+    # Extract the agent zip
+    Write-Host "Extracting Agent: $TempAgentPath"
     Add-Type -AssemblyName System.IO.Compression.FileSystem 
-    [System.IO.Compression.ZipFile]::ExtractToDirectory("$PackagePath", "$Destination")
+    [System.IO.Compression.ZipFile]::ExtractToDirectory("$PackagePath", "$TempAgentPath")
+
+    # Copy the extract content to the agent folder
+    Write-Host "Copying Agent to Destination: $Destination"
+    Copy-Item -Recurse -Force -LiteralPath $TempAgentPath -Destination $Destination
 }
 
 function Prep-MachineForAutologon
@@ -297,9 +312,16 @@ function Prep-MachineForAutologon
     # Check if the registry key required for enabling autologon is present on the machine, if not wait for 120 seconds in case the user profile is still getting created
     while ($timeout -ge 0 -and $canCheckRegistry)
     {
-        $objUser = New-Object System.Security.Principal.NTAccount($Config.WindowsLogonAccount)
-        $securityId = $objUser.Translate([System.Security.Principal.SecurityIdentifier])
-        $securityId = $securityId.Value
+        try
+        {
+          $objUser = New-Object System.Security.Principal.NTAccount($Config.WindowsLogonAccount)
+          $securityId = $objUser.Translate([System.Security.Principal.SecurityIdentifier])
+          $securityId = $securityId.Value
+        }
+        catch
+        {
+            throw "Login '$($Config.WindowsLogonAccount)' could not be mapped to a SID.  Please verify account."
+        }
 
         if (Test-Path "HKU:\\$securityId")
         {
