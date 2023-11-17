@@ -252,7 +252,7 @@ function Extract-AgentPackage
 
     # Copy the extract content to the agent folder
     Write-Host "Copying Agent to Destination: $Destination"
-    Copy-Item -Recurse -Force -LiteralPath $TempAgentPath -Destination $Destination
+    Copy-Item -Recurse -Force -Path "$TempAgentPath\*" -Destination $Destination
 }
 
 function Prep-MachineForAutologon
