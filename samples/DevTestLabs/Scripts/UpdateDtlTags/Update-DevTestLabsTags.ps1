@@ -39,10 +39,6 @@ param
 
 $ErrorActionPreference = "Stop"
 
-# Debug values
-$ResourceGroupName = "dtltagstesting-rg"
-$DevTestLabName = "DtlTagsTesting"
-
 # Get the DevTest Lab
 $lab = Get-AzResource -ResourceGroupName $ResourceGroupName -ResourceType "Microsoft.DevTestLab/labs" -ResourceName $DevTestLabName
 
