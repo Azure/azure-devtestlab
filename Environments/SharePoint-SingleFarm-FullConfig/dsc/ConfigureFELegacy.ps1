@@ -19,12 +19,12 @@ configuration ConfigureFEVM
 
     Import-DscResource -ModuleName ComputerManagementDsc -ModuleVersion 9.0.0 # Custom
     Import-DscResource -ModuleName NetworkingDsc -ModuleVersion 9.0.0
-    Import-DscResource -ModuleName ActiveDirectoryDsc -ModuleVersion 6.2.0
+    Import-DscResource -ModuleName ActiveDirectoryDsc -ModuleVersion 6.3.0
     Import-DscResource -ModuleName WebAdministrationDsc -ModuleVersion 4.1.0
     Import-DscResource -ModuleName SharePointDsc -ModuleVersion 5.4.0
     Import-DscResource -ModuleName DnsServerDsc -ModuleVersion 3.0.0
     Import-DscResource -ModuleName CertificateDsc -ModuleVersion 5.1.0
-    Import-DscResource -ModuleName SqlServerDsc -ModuleVersion 16.3.1
+    Import-DscResource -ModuleName SqlServerDsc -ModuleVersion 16.5.0
     Import-DscResource -ModuleName cChoco -ModuleVersion 2.6.0.0    # With custom changes to implement retry on package downloads
 
     # Init
@@ -266,6 +266,32 @@ configuration ConfigureFEVM
         #         DependsOn            = "[cChocoInstaller]InstallChoco"
         #     }
         # }
+
+        Script CreateSPLOGSFileShare {
+            SetScript  = 
+            { 
+                $foldername = "C:\Program Files\Common Files\Microsoft Shared\Web Server Extensions\16\LOGS"
+                $shareName = "SPLOGS"
+                # if (!(Get-WmiObject Win32_Share -Filter "name='$sharename'")) {
+                $shares = [WMICLASS]"WIN32_Share"
+                if ($shares.Create($foldername, $sharename, 0).ReturnValue -ne 0) {
+                    Write-Host "Failed to create file share '$sharename' for folder '$foldername'"
+                } else {
+                    Write-Host "Created file share '$sharename' for folder '$foldername'"
+                }
+                # }
+            }
+            GetScript  = { }
+            TestScript = 
+            {
+                $shareName = "SPLOGS"
+                if (!(Get-WmiObject Win32_Share -Filter "name='$sharename'")) {
+                    return $false
+                } else {
+                    return $true
+                }
+            }
+        }
 
         #**********************************************************
         # Join AD forest
