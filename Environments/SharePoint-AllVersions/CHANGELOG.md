@@ -1,5 +1,13 @@
 # Change log for Azure DevTest Labs template SharePoint-AllVersions
 
+## Enhancements & bug-fixes - Published in February 26, 2024
+
+- Template
+  - Value `Subscription-Latest` for parameter `sharePointVersion` now installs the February 2024 CU for SharePoint Subscription
+  - Remove SharePoint 2013
+- Configuration for most VMs
+    - Bump DSC deps
+
 ## Enhancements & bug-fixes - Published in October 16, 2023
 
 ### Changed

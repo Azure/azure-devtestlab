@@ -1,7 +1,7 @@
 {
-  "itemDisplayName": "SharePoint Subscription / 2019 / 2016 / 2013 with a lightweight configuration",
-  "description": "Deploy SharePoint Subscription / 2019 / 2016 / 2013 with a lightweight configuration. Each version is independent and may or may not be deployed.",
-  "summary": "Deploy SharePoint Subscription / 2019 / 2016 / 2013 with a lightweight configuration. Each version is independent and may or may not be deployed.",
+  "itemDisplayName": "SharePoint Subscription / 2019 / 2016 with a lightweight configuration",
+  "description": "Deploy SharePoint Subscription / 2019 / 2016 with a lightweight configuration. Each version is independent and may or may not be deployed.",
+  "summary": "Deploy SharePoint Subscription / 2019 / 2016 with a lightweight configuration. Each version is independent and may or may not be deployed.",
   "githubUsername": "Yvand",
-  "dateUpdated": "2023-10-16"
+  "dateUpdated": "2024-02-26"
 }
