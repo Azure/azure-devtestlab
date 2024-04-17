@@ -12,8 +12,7 @@
     "AccountURL": {
       "type": "string",
       "displayName": "Account URL",
-      "description": "The URL of the drop service to download the Azure Artifacts Drop from (e.g. https://dev.azure.com/contoso)",
-      "defaultValue": "https://dev.azure.com/contoso"
+      "description": "The URL of the drop service to download the Azure Artifacts Drop from (e.g. https://dev.azure.com/contoso)"
     },
     "DropName": {
       "type": "string",
