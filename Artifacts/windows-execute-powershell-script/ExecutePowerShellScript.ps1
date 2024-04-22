@@ -19,12 +19,12 @@ param(
     [hashtable]
     $EnvironmentVariables = @{},
 
-    [Parameter(Mandatory, ParameterSetName='NoLogging')]
-    [Parameter(Mandatory, ParameterSetName='UploadLogAccessToken')]
-    [Parameter(Mandatory, ParameterSetName='UploadLogManagedIdentity')]
+    [Parameter(ParameterSetName='NoLogging')]
+    [Parameter(ParameterSetName='UploadLogAccessToken')]
+    [Parameter(ParameterSetName='UploadLogManagedIdentity')]
     [ValidateNotNullOrEmpty()]
     [System.IO.DirectoryInfo]
-    $LogsDirectory,
+    $LogsDirectory = "$env:SystemDrive\DevTestLabs\Artifacts\Logs",
 
     # Logs drop service URL
     [Parameter(Mandatory, ParameterSetName='UploadLogAccessToken')]
