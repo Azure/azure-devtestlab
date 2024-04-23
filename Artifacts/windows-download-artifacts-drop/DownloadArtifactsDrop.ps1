@@ -50,15 +50,15 @@ param(
     [string]
     $ManagedIdentityClientID,
 
-    [Parameter(Mandatory, ParameterSetName='DownloadDropAccessToken_UploadLogAccessToken')]
-    [Parameter(Mandatory, ParameterSetName='DownloadDropAccessToken_UploadLogManagedIdentity')]
-    [Parameter(Mandatory, ParameterSetName='DownloadDropAccessToken_NoLogging')]
-    [Parameter(Mandatory, ParameterSetName='DownloadDropManagedIdentity_UploadLogAccessToken')]
-    [Parameter(Mandatory, ParameterSetName='DownloadDropManagedIdentity_UploadLogManagedIdentity')]
-    [Parameter(Mandatory, ParameterSetName='DownloadDropManagedIdentity_NoLogging')]
+    [Parameter(ParameterSetName='DownloadDropAccessToken_UploadLogAccessToken')]
+    [Parameter(ParameterSetName='DownloadDropAccessToken_UploadLogManagedIdentity')]
+    [Parameter(ParameterSetName='DownloadDropAccessToken_NoLogging')]
+    [Parameter(ParameterSetName='DownloadDropManagedIdentity_UploadLogAccessToken')]
+    [Parameter(ParameterSetName='DownloadDropManagedIdentity_UploadLogManagedIdentity')]
+    [Parameter(ParameterSetName='DownloadDropManagedIdentity_NoLogging')]
     [ValidateNotNullOrEmpty()]
     [System.IO.DirectoryInfo]
-    $LogsDirectory,
+    $LogsDirectory = (Join-Path $env:DevTestLabsArtifactsPath 'Logs'),
 
     # Logs drop service URL
     [Parameter(Mandatory, ParameterSetName='DownloadDropAccessToken_UploadLogAccessToken')]

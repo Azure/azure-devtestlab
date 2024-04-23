@@ -745,7 +745,7 @@ function Start-ArtifactLogging {
 
     # Set up transcript
     if (-not (Test-Path -Path $LogFile.Directory -PathType Container)) {
-        New-Item -Path $LogFile.Directory -ItemType Directory -Force
+        New-Item -Path $LogFile.Directory -ItemType Directory -Force | Out-Null
     }
     Start-Transcript -Path $LogFile
 }
