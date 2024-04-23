@@ -58,7 +58,7 @@ param(
     [Parameter(ParameterSetName='DownloadDropManagedIdentity_NoLogging')]
     [ValidateNotNullOrEmpty()]
     [System.IO.DirectoryInfo]
-    $LogsDirectory = (Join-Path $env:DevTestLabsArtifactsPath 'Logs'),
+    $LogsDirectory = "$env:SystemDrive\DevTestLabs\Artifacts\Logs",
 
     # Logs drop service URL
     [Parameter(Mandatory, ParameterSetName='DownloadDropAccessToken_UploadLogAccessToken')]
