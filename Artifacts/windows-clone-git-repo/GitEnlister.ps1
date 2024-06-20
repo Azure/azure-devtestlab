@@ -418,10 +418,10 @@ function CloneGitRepo
     WriteLog $($gitExeLocation + " " + $args)
 
     # Run the git clone operation
-    $p = Start-Process -FilePath $gitExeLocation -ArgumentList $args -RedirectStandardOutput $stdOutLogfile -RedirectStandardError $stdErrLogfile -PassThru -Wait
+    & cmd /c "git $args 2>&1"
 
     # Was the clone operation successful?
-    if ($p.ExitCode -ne 0)
+    if ($LASTEXITCODE -ne 0)
     {
         $errMsg = $("Error! Git clone failed with exit code " + $p.ExitCode + ". Please see the log file: " + $stdErrLogfile)
         WriteLog $errMsg
