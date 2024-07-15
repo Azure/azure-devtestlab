@@ -1,5 +1,8 @@
 # Azure Lab Services Community
 
+> [!IMPORTANT]  
+> Azure Lab Services will be retired on June 28, 2027. [Click here](https://aka.ms/azlabs-retirementguide) for more information. We will not be taking any future requests or fixes. Note that this does NOT affect Azure DevTest Labs.
+
 This is a public, community-contributed repository that contains:
 
 - **Artifacts for Azure DevTest Labs:** These [artifacts](https://docs.microsoft.com/en-us/azure/lab-services/devtest-lab-concepts#artifacts) can be deployed onto virtual machines in Azure DevTest Labs via the Azure Portal or through scripts.
