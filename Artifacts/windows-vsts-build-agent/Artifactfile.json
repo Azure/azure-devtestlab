@@ -12,6 +12,11 @@
   "iconUri": "https://cdn.vsassets.io/content/icons/favicon.ico",
   "targetOsType": "Windows",
   "parameters": {
+    "vstsUrl": {
+      "type": "string",
+      "displayName": "Azure DevOps URL",
+      "description": "The URL of the Azure DevOps Server.   If this is not specified, then Azure DevOps Services is assumed."
+    },
     "vstsAccount": {
       "type": "string",
       "displayName": "Azure DevOps Organization Name",
@@ -84,7 +89,7 @@
     }
   },
   "runCommand": {
-    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./vsts-agent-install.ps1', ' -vstsAccount ''', parameters('vstsAccount'), ''' -vstsUserPassword ', parameters('vstsPassword'), ' -agentName ''', parameters('agentName'), ''' -agentNameSuffix ''', parameters('agentNameSuffix'), ''' -poolName ''', parameters('poolName'), ''' -runAsAutoLogon $', parameters('runAsAutoLogon') , ' -windowsLogonAccount ''', parameters('windowsLogonAccount'), ''' -windowsLogonPassword ''', parameters('windowsLogonPassword'), ''' -driveLetter ', parameters('driveLetter'), ' -workDirectory ''', parameters('workDirectory'), ''' -replaceAgent $', parameters('replaceAgent') , '\"')]"
+    "commandToExecute": "[concat('powershell.exe -ExecutionPolicy bypass \"& ./vsts-agent-install.ps1', ' -vstsUrl ''', parameters('vstsUrl'), ''' -vstsAccount ''', parameters('vstsAccount'), ''' -vstsUserPassword ', parameters('vstsPassword'), ' -agentName ''', parameters('agentName'), ''' -agentNameSuffix ''', parameters('agentNameSuffix'), ''' -poolName ''', parameters('poolName'), ''' -runAsAutoLogon $', parameters('runAsAutoLogon') , ' -windowsLogonAccount ''', parameters('windowsLogonAccount'), ''' -windowsLogonPassword ''', parameters('windowsLogonPassword'), ''' -driveLetter ', parameters('driveLetter'), ' -workDirectory ''', parameters('workDirectory'), ''' -replaceAgent $', parameters('replaceAgent') , '\"')]"
   },
   "postDeployActions": [
     {
