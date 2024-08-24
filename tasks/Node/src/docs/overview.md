@@ -10,7 +10,9 @@ This extension provides several build / release tasks to allow you to integrate 
 1. [Delete Environment](#delete-environment)
 
 You can find more details about Azure DevTest Labs [here](https://azure.microsoft.com/en-us/services/devtest-lab/).
-# Details
+# Warning
+When deleting any resources connected to the lab or the lab itself this is a permanent and hard deletion.  At this time we do not support restoring any deleted resources.
+
 
 ## Create VM
 The task allows you to create a lab VM using an ARM template generated from your Lab.
