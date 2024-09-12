@@ -53,8 +53,5 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/Azure/azure-devtestlab.git"
-  },
-  "overrides": {
-    "@xmldom/xmldom": "^0.7.7"
   }
 }
