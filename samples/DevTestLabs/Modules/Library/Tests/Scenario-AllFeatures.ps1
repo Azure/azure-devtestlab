@@ -32,7 +32,8 @@ Describe  'Scenario Tests' {
                 | Import-Csv `
                 | New-AzDtlLab -AsJob `
                 | Receive-Job -Wait
-        
+        $Password = Read-Host -Prompt "Please enter a secure password"
+
         $labs `
           | Add-AzDtlLabUser -UserEmail 'lucabol@microsoft.com' `
           | Set-AzDtlLabAnnouncement -Title 'I am here' -AnnouncementMarkDown 'yep' `
@@ -43,7 +44,7 @@ Describe  'Scenario Tests' {
           | Set-AzDtlLabStartupSchedule -StartupTime '21:00' -TimeZoneId 'UTC' -WeekDays @('Monday') `
           | Add-AzDtlLabArtifactRepository -ArtifactRepoUri 'https://github.com/lucabol/DTLWorkshop.git' `
               -artifactRepoSecurityToken '196ad1f5b5464de4de6d47705bbcab0ce7d323fe' `
-          | New-AzDtlVm -VmName ("vm" + (Get-Random)) -Size 'Standard_A4_v2' -Claimable -UserName 'bob' -Password 'aPassword341341' `
+          | New-AzDtlVm -VmName ("vm" + (Get-Random)) -Size 'Standard_A4_v2' -Claimable -UserName 'bob' -Password $Password `
               -OsType Windows -Sku '2012-R2-Datacenter' -Publisher 'MicrosoftWindowsServer' -Offer 'WindowsServer' `
               -AsJob `
           | Receive-Job -Wait `
@@ -58,7 +59,7 @@ Describe  'Scenario Tests' {
         $labs | Get-AzDtlLabSchedule -ScheduleType 'AutoShutdown' | Out-Null
         
         $customImage = $labs[0] `
-          | New-AzDtlVm -VmName ("cvm" + (Get-Random)) -Size 'Standard_A4_v2' -Claimable -UserName 'bob' -Password 'aPassword341341' `
+          | New-AzDtlVm -VmName ("cvm" + (Get-Random)) -Size 'Standard_A4_v2' -Claimable -UserName 'bob' -Password $Password`
             -OsType Windows -Sku '2012-R2-Datacenter' -Publisher 'MicrosoftWindowsServer' -Offer 'WindowsServer' `
           | New-AzDtlCustomImageFromVm -ImageName ("im" + (Get-Random)) -ImageDescription 'Created using Azure DevTest Labs PowerShell library.'
         

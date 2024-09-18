@@ -121,7 +121,6 @@
     },
     "password": {
       "type": "securestring",
-      "defaultValue": "<3DevTestLabs!",
       "metadata": {
         "description": "The password for the local account that will be created on all the new VMs."
       }

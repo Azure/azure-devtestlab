@@ -8,9 +8,11 @@ $labs = @(
     [pscustomobject]@{Name=('DtlLibrary-VmPipeline-' + (Get-Random)); ResourceGroupName=('DtlLibrary-VmPipelineRg-' + (Get-Random)); Location='eastus'}
 )
 
+$Password = Read-Host -Prompt "Please enter a secure password"
+
 $vms = @(
-    [pscustomobject]@{VmName=('Vm-' + (Get-Random)); Size='Standard_B4ms'; UserName='bob'; Password='aPassword341341'; OsType='Windows'; Sku='2012-R2-Datacenter'; Publisher='MicrosoftWindowsServer'; Offer='WindowsServer'}
-    [pscustomobject]@{VmName=('Vm-' + (Get-Random)); Size='Standard_B4ms'; UserName='bob'; Password='aPassword341341'; OsType='Windows'; Sku='2012-R2-Datacenter'; Publisher='MicrosoftWindowsServer'; Offer='WindowsServer'}
+    [pscustomobject]@{VmName=('Vm-' + (Get-Random)); Size='Standard_B4ms'; UserName='bob'; Password=$Password; OsType='Windows'; Sku='2012-R2-Datacenter'; Publisher='MicrosoftWindowsServer'; Offer='WindowsServer'}
+    [pscustomobject]@{VmName=('Vm-' + (Get-Random)); Size='Standard_B4ms'; UserName='bob'; Password=$Password; OsType='Windows'; Sku='2012-R2-Datacenter'; Publisher='MicrosoftWindowsServer'; Offer='WindowsServer'}
 )
 
 Describe 'VM Management' {

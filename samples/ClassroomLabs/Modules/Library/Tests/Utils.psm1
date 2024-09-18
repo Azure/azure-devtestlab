@@ -10,7 +10,7 @@ $usageQuota = 300
 $shPsswd = $true
 $size = 'Standard'
 $userName = 'test0000'
-$password = 'Test00000000'
+$password = Read-Host -Prompt "Please enter a secure password" -AsSecureString
 $linuxRdp = $true
 
 function Get-FastResourceGroup {
