@@ -38,8 +38,8 @@ param
     [Parameter(Mandatory=$false, HelpMessage="The name of the container")]
     [string] $containerName="content",
 
-    [Parameter(Mandatory=$false, HelpMessage="The name of the SAS token")]
-    [string] $SASToken="?sv=2016-05-31&ss=b&srt=sco&sp=r&se=2025-04-06T21:13:00Z&st=2017-04-06T10:00:00Z&spr=https,http&sig=Snb5dfr2c%2FGHZQM6k7996AS6BzpRh2%2BRxgosuH5D3fA%3D",
+    [Parameter(Mandatory=$true, HelpMessage="The name of the SAS token")]
+    [string] $SASToken,
 
     [Parameter(Mandatory=$false, HelpMessage="The name of the destination folder for the XML file")]
     [string] $folder = "C:\Users\SuperUser\Documents\WindowsPowerShell",
