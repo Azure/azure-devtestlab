@@ -41,7 +41,7 @@
   <Actions Context="Author">
     <Exec>
       <Command>powershell.exe</Command>
-      <Arguments>-file "C:\Users\SuperUser\Documents\WindowsPowerShell\LoadIdleScript.ps1" -StorageAccountName "vlabresources" -containerName "content" -SASToken "?sv=2016-05-31&amp;ss=b&amp;srt=sco&amp;sp=r&amp;se=2025-04-06T21:13:00Z&amp;st=2017-04-06T10:00:00Z&amp;spr=https,http&amp;sig=Snb5dfr2c%2FGHZQM6k7996AS6BzpRh2%2BRxgosuH5D3fA%3D"</Arguments>
+      <Arguments>-file "C:\Users\SuperUser\Documents\WindowsPowerShell\LoadIdleScript.ps1" -StorageAccountName "vlabresources" -containerName "content" -SASToken ""</Arguments>
     </Exec>
   </Actions>
 </Task>

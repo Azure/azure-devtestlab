@@ -19,7 +19,6 @@
     },
     "adminPassword": {
       "type": "securestring",
-      "defaultValue": "Password123!",
       "metadata": {
         "description": "Password for the Virtual Machine."
       }
@@ -119,7 +118,10 @@
           {
             "name": "[variables('subnetName')]",
             "properties": {
-              "addressPrefix": "[variables('subnetPrefix')]"
+              "addressPrefix": "[variables('subnetPrefix')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
+              }
             }
           }
         ]

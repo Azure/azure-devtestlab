@@ -100,7 +100,10 @@ There are many possible ways to create a VM in DevTest Labs. This is reflected b
 You can then form chains of functions to operate over the just created VM, as in the following example.
 
 ```powershell
-$lab | New-AzDtlVm -VmName ("vm" + (Get-Random)) -Size 'Standard_A4_v2' -Claimable -UserName 'bob' -Password 'aPassword341341' `
+# Prompt for password
+$Password = Read-Host -Prompt "Please enter a secure password"
+
+$lab | New-AzDtlVm -VmName ("vm" + (Get-Random)) -Size 'Standard_A4_v2' -Claimable -UserName 'bob' -Password $Password `
       -OsType Windows -Sku '2012-R2-Datacenter' -Publisher 'MicrosoftWindowsServer' -Offer 'WindowsServer' `
       -AsJob `
   | Receive-Job -Wait `
@@ -123,9 +126,12 @@ Most 'expensive' commands in the library support the `-asJob` parameter so they 
 The library supports the creation and use of custom images, as in the code snippet below. Read more about them [here](https://docs.microsoft.com/en-us/azure/lab-services/devtest-lab-create-custom-image-from-vm-using-portal).
 
 ```powershell
-$customImage = $lab `
-  | New-AzDtlVm -VmName ("cvm" + (Get-Random)) -Size 'Standard_A4_v2' -Claimable -UserName 'bob' -Password 'aPassword341341' `
-    -OsType Windows -Sku '2012-R2-Datacenter' -Publisher 'MicrosoftWindowsServer' -Offer 'WindowsServer' `
+# Prompt for password
+$Password = Read-Host -Prompt "Please enter a secure password"
+
+$customImage = $lab ` 
+  | New-AzDtlVm -VmName ("cvm" + (Get-Random)) -Size 'Standard_A4_v2' -Claimable -UserName 'bob' -Password $Password ` 
+    -OsType Windows -Sku '2012-R2-Datacenter' -Publisher 'MicrosoftWindowsServer' -Offer 'WindowsServer' ` 
   | New-AzDtlCustomImageFromVm -ImageName ("im" + (Get-Random)) -ImageDescription 'Created using Azure DevTest Labs PowerShell library.'
 
 $lab | New-AzDtlVm -CustomImage $customImage -VmName ('cvm2' + (Get-Random)) -Size 'Standard_A4_v2' -OsType Windows | Out-Null

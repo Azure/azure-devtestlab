@@ -16,7 +16,7 @@ This script will help create a Lab Account on your Azure account from your local
      > NOTE: There are optional parameters you can pass to this script
      > - **Email** - *Provide an email address of someone else who should have contributor rights to the lab account*.
      > - **Username** - *Default is **AdminUser** but you can specify another username for the template VM*.
-     > - **Password** - *Default is **P@ssword1** but you can specify another password for the template VM*.
+     > - **Password** - *Default is not set and you can specify a password for the template VM*.
      > - **Location** - *Default is **centralus** but you can specify another Azure location for where this lab account should live*.
      > - **ClassName** - *Default is **EthicalHacking** but you can specify another class name which will be a pre-fix used on Azure resources created by this script*.
 1. Open the [Labs Portal](https://labs.azure.com) and login with your Azure credentials (or the [optional] e-mail address parameter if used) to see the lab account and lab created by this script.

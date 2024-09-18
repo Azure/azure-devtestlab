@@ -87,6 +87,10 @@ namespace DtlClient
             var virtualNetwork = client.VirtualNetworks.Get(labResourceGroupName, labName, labVirtualNetworkName);
             Console.WriteLine("Virtual network ID: " + virtualNetwork.Id);
 
+            // Prompt for the password
+            Console.Write("Please enter a secure password: ");
+            string password = Console.ReadLine();
+
             Console.WriteLine($"Bulk-creating {vmCount} virtual machines...");
             client.Labs.CreateEnvironment(labResourceGroupName, labName, new LabVirtualMachineCreationParameter
             {
@@ -100,7 +104,7 @@ namespace DtlClient
                 Name = "testvm1",
                 Size = "Standard_DS1_V2",
                 UserName = "testuserfoo",
-                Password = "password123!@#",
+                Password = password,
                 LabVirtualNetworkId = virtualNetwork.Id,
                 LabSubnetName = virtualNetworkSubnetName,
                 StorageType = StorageType.Premium,

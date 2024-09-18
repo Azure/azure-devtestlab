@@ -6,8 +6,9 @@ param(
     [parameter(Mandatory = $false, HelpMessage = "Default username for all VMs")]
     [string]$Username = "AdminUser",
 
-    [parameter(Mandatory = $false, HelpMessage = "Default password for all VMs")]
-    [string]$Password = "P@ssword1!",
+    # Set default password
+    [parameter(Mandatory = $true, HelpMessage = "Default password for all VMs")]
+    [string]$Password ,
 
     [parameter(Mandatory = $false, HelpMessage = "Default location for lab account")]
     [string]$Location = "centralus",
