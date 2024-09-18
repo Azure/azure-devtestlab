@@ -259,7 +259,10 @@
           {
             "name": "[variables('snetName')]",
             "properties": {
-              "addressPrefix": "[variables('snetPrefix')]"
+              "addressPrefix": "[variables('snetPrefix')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
+              }
             }
           }
         ]

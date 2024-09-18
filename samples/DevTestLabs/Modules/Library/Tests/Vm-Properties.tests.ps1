@@ -7,8 +7,10 @@ $lab = @(
     [pscustomobject]@{Name=('DtlLibrary-VmProperties-' + (Get-Random)); ResourceGroupName=('DtlLibrary-VmProperties-rg-' + (Get-Random)); Location='westus'}
 )
 
+$Password = Read-Host -Prompt "Please enter a secure password"
+
 $vm = @(
-    [pscustomobject]@{VmName=('Vm-' + (Get-Random)); Size='Standard_B4ms'; UserName='bob'; Password='aPassword341341'; OsType='Windows'; Sku='2012-R2-Datacenter'; Publisher='MicrosoftWindowsServer'; Offer='WindowsServer'}
+    [pscustomobject]@{VmName=('Vm-' + (Get-Random)); Size='Standard_B4ms'; UserName='bob'; Password= $Password; OsType='Windows'; Sku='2012-R2-Datacenter'; Publisher='MicrosoftWindowsServer'; Offer='WindowsServer'}
 )
 
 Describe 'Virtual Machine Management' {
