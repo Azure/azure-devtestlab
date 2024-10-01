@@ -12,7 +12,7 @@
     "@azure/storage-blob": "^12.5.0",
     "azure-pipelines-task-lib": "^3.1.2",
     "isomorphic-fetch": "^3.0.0",
-    "minimist": "^1.2.6",
+    "minimist": "^1.2.5",
     "tough-cookie": "^4.0.0",
     "axios": "^0.21.4"
   },
@@ -53,8 +53,5 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/Azure/azure-devtestlab.git"
-  },
-  "overrides": {
-    "@xmldom/xmldom": "^0.7.7"
   }
 }
