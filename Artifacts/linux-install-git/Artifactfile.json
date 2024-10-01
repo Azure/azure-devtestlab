@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/schemas/2016-11-28/dtlArtifacts.json",
+  "title": "Git",
+  "publisher": "Microsoft",
+  "description": "Install Git on Linux",
+  "tags": [
+      "Git",
+      "Linux"
+  ],
+  "iconUri": "https://raw.githubusercontent.com/Azure/azure-devtestlab/master/Artifacts/linux-install-git/gitArtifact.png",
+  "targetOsType": "Linux",
+  "runCommand": {
+      "commandToExecute": "['sh linux_install_git_v1.sh']"
+  }
+}
