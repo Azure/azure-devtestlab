@@ -1,7 +1,8 @@
-# Downloads the Visual Studio Online Build Agent, installs on the new machine, registers with the Visual
-# Studio Online account, and adds to the specified build agent pool
+# Downloads the Azure Dev Ops Pipeline Agent, installs on the new machine, 
+# registers with Azure Dev Ops, and adds to the specified build agent pool
 [CmdletBinding()]
 param(
+    [string] $vstsUrl,
     [string] $vstsAccount,
     [string] $vstsUserPassword,
     [string] $agentName,
@@ -95,6 +96,26 @@ function Test-Parameters
     }
 }
 
+function Set-ServerUrl
+{
+    [CmdletBinding()]
+    param(
+        [string] $VstsUrl,
+        [string] $VstsAccount        
+    )
+
+    if ($VstsUrl)
+    {
+        $serverUrl = "$VstsUrl/$VstsAccount"
+    }
+    else 
+    {
+        $serverUrl = "https://$VstsAccount.visualstudio.com"
+    }
+
+    return $serverUrl
+}
+
 function Test-ValidPath
 {
     param(
@@ -135,7 +156,7 @@ function Get-AgentPackage
 {
     [CmdletBinding()]
     param(
-        [string] $VstsAccount,
+        [string] $VstsUrl,
         [string] $VstsUserPassword
     )
 
@@ -144,8 +165,7 @@ function Get-AgentPackage
     New-Item -ItemType Directory -Force -Path $agentTempFolderName | Out-Null
 
     $agentPackagePath = "$agentTempFolderName\agent.zip"
-    $serverUrl = "https://$VstsAccount.visualstudio.com"
-    $vstsAgentUrl = "$serverUrl/_apis/distributedtask/packages/agent/win7-x64?`$top=1&api-version=3.0"
+    $vstsAgentUrl = "$VstsUrl/_apis/distributedtask/packages/agent/win7-x64?`$top=1&api-version=3.0"
     $vstsUser = "AzureDevTestLabs"
 
     $maxRetries = 3
@@ -407,6 +427,9 @@ try
     Write-Host 'Validating parameters'
     Test-Parameters -VstsAccount $vstsAccount -WorkDirectory $workDirectory
 
+    Write-Host 'Setting ServerUrl'
+    $vstsUrlFull = Set-ServerUrl -VstsUrl $vstsUrl -VstsAccount $vstsAccount
+
     Write-Host 'Preparing agent installation location'
     $agentInstallPath = New-AgentInstallPath -DriveLetter $driveLetter -AgentName $agentName
 
@@ -416,8 +439,8 @@ try
         Test-AgentExists -InstallPath $agentInstallPath -AgentName $agentName
     }
 
-    Write-Host 'Downloading agent package'
-    $agentPackagePath = Get-AgentPackage -VstsAccount $vstsAccount -VstsUserPassword $vstsUserPassword
+    Write-Host "Downloading agent package from $vstsUrlFull"
+    $agentPackagePath = Get-AgentPackage -VstsUrl $vstsUrlFull -VstsUserPassword $vstsUserPassword
 
     Write-Host 'Extracting agent package contents'
     Extract-AgentPackage -PackagePath $agentPackagePath -Destination $agentInstallPath
@@ -435,7 +458,7 @@ try
         PoolName = $poolName
         ReplaceAgent = $replaceAgent
         RunAsAutoLogon = $runAsAutoLogon
-        ServerUrl = "https://$VstsAccount.visualstudio.com"
+        ServerUrl = $vstsUrlFull
         VstsUserPassword = $vstsUserPassword
         WindowsLogonAccount = $windowsLogonAccount
         WindowsLogonPassword = $windowsLogonPassword
