@@ -281,7 +281,7 @@ function Prep-MachineForAutologon
       $userName = $Config.WindowsLogonAccount
     }
 
-    $credentials = New-Object System.Management.Automation.PSCredential("$domain\\$userName", $password)
+    $credentials = New-Object System.Management.Automation.PSCredential("$domain\$userName", $password)
     Enter-PSSession -ComputerName $computerName -Credential $credentials
     Exit-PSSession
 
