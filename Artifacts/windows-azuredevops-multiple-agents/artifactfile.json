@@ -56,7 +56,7 @@
         "Overwrite": {
             "type": "bool",
             "displayName": "Overwrite if agent with same name exists",
-            "defaultValue": "true",
+            "defaultValue": true,
             "description": "If the folder with the agent name already exists, and this is true, the agent will be overwritten, otherwise installation will fail."
         }
     },
