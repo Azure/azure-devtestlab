@@ -40,7 +40,7 @@ There are some differences in the configuration, depending on the SharePoint ver
 ## Outbound access to internet
 
 During the provisionning, virtual machines require an outbound access to internet to be able to download and apply their configuration.  
-The outbound access method depends on variable `outboundAccessMethod`:
+The outbound access method depends on the parameter `outboundAccessMethod`:
 - `PublicIPAddress`: Virtual machines use a [Public IP](https://learn.microsoft.com/en-us/azure/virtual-network/ip-services/virtual-network-public-ip-address), associated to their network card.
 - `AzureFirewallProxy`: Virtual machines use [Azure Firewall](https://azure.microsoft.com/en-us/products/azure-firewall/) as an [HTTP proxy](https://learn.microsoft.com/en-us/azure/firewall/explicit-proxy).
 
@@ -52,15 +52,15 @@ The remote access to the virtual machines depends on the following parameters:
     - `No` (default): No rule is created, RDP traffic is blocked.
     - `*` or `Internet`: RDP traffic is allowed from everywhere.
     - CIDR notation (e.g. `192.168.99.0/24` or `2001:1234::/64`) or an IP address (e.g. `192.168.99.0` or `2001:1234::`): RDP traffic is allowed from the IP address / pattern specified.
-- parameter `enable_azure_bastion`:
+- Parameter `enable_azure_bastion`:
   - if `true`: Configure service [Azure Bastion](https://azure.microsoft.com/services/azure-bastion/) to allow a secure remote access to virtual machines.
   - if `false` (default): Service [Azure Bastion](https://azure.microsoft.com/services/azure-bastion/) is not created.
 
-IMPORTANT: If you set variable `outboundAccessMethod` to `AzureFirewallProxy`, you have to either enable Azure Bastion, or manually add a public IP address later, to be able to connect to a virtual machine.
+IMPORTANT: If you set parameter `outboundAccessMethod` to `AzureFirewallProxy`, you have to either enable Azure Bastion, or manually add a public IP address later, to be able to connect to a virtual machine.
 
-### Input parameters
+## Input parameters
 
-- parameter `sharePointVersion` lets you choose which version of SharePoint to install:
+- Parameter `sharePointVersion` lets you choose which version of SharePoint to install:
   - `Subscription-Latest` (default): Same as `Subscription-RTM`, then installs the latest cumulative update available at the time of publishing this version: December 2024 ([KB5002658](https://support.microsoft.com/help/5002658)).
   - `Subscription-24H2`: Same as `Subscription-RTM`, then installs the [Feature Update 24H2](https://learn.microsoft.com/en-us/sharepoint/what-s-new/new-and-improved-features-in-sharepoint-server-subscription-edition-24h2-release) (September 2024 CU / [kb5002640](https://support.microsoft.com/help/5002640)).
   - `Subscription-24H1`: Same as `Subscription-RTM`, then installs the [Feature Update 24H1](https://learn.microsoft.com/en-us/sharepoint/what-s-new/new-and-improved-features-in-sharepoint-server-subscription-edition-24h1-release) (March 2024 CU / [KB5002564](https://support.microsoft.com/help/5002564)).
@@ -70,8 +70,8 @@ IMPORTANT: If you set variable `outboundAccessMethod` to `AzureFirewallProxy`, y
   - `Subscription-RTM`: Uses a fresh Windows Server 2022 image, on which SharePoint Subscription RTM is downloaded and installed.
   - `2019`: Uses an image built and maintained by SharePoint Engineering, with SharePoint 2019 bits already installed.
   - `2016`: Uses an image built and maintained by SharePoint Engineering, with SharePoint 2016 bits already installed.
-- Variable `frontEndServersCount` lets you add up to 4 additional SharePoint servers to the farm with the [MinRole Front-end](https://learn.microsoft.com/en-us/sharepoint/install/planning-for-a-minrole-server-deployment-in-sharepoint-server).
-- Variable `enableHybridBenefitServerLicenses` allows you to enable Azure Hybrid Benefit to use your on-premises Windows Server licenses and reduce cost, if you are eligible. See [this page](https://docs.microsoft.com/azure/virtual-machines/windows/hybrid-use-benefit-licensing) for more information..
+- Parameter `frontEndServersCount` lets you add up to 4 additional SharePoint servers to the farm with the [MinRole Front-end](https://learn.microsoft.com/en-us/sharepoint/install/planning-for-a-minrole-server-deployment-in-sharepoint-server).
+- Parameter `enableHybridBenefitServerLicenses` allows you to enable Azure Hybrid Benefit to use your on-premises Windows Server licenses and reduce cost, if you are eligible. See [this page](https://docs.microsoft.com/azure/virtual-machines/windows/hybrid-use-benefit-licensing) for more information..
 
 ## Outputs
 
