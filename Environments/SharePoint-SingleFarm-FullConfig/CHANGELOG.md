@@ -1,5 +1,35 @@
 # Change log for Azure DevTest Labs template DTL-SharePoint-FullConfig
 
+## Enhancements & bug-fixes - Published in December 27, 2024
+
+### Added
+
+- Template
+  - Add parameter `outboundAccessMethod`, to choose how the virtual machines connect to internet. Now, they can connect through either a public IP, or using Azure Firewall as an HTTP proxy
+  - Add value `Subscription-24H1` to parameter `sharePointVersion`, to install SharePoint Subscription with 24H1 update
+  - Add value `Subscription-24H2` to parameter `sharePointVersion`, to install SharePoint Subscription with 24H2 update
+
+### Changed
+
+- Template
+  - Convert the template to Bicep
+  - Update the default size of the virtual machines to use the [Basv2 series](https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/general-purpose/basv2-series?tabs=sizebasic). It is newer, cheaper and more performant than the [Bv1 series](https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/general-purpose/bv1-series?tabs=sizebasic) used until now.
+  - [BREAKING CHANGE] Rename most of the parameters
+  - Update the display name of most of the resources to be more consistent and reflect their relationship with each other
+  - Value `Subscription-Latest` for parameter `sharePointVersion` now installs the December 2024 CU for SharePoint Subscription
+- All DSC configurations
+  - Add a firewall rule to all virtual machines to allow remote event viewer connections
+  - Updated DSC module `ActiveDirectoryDsc` to 6.4.0
+  - Updated DSC module `ComputerManagementDsc` to 9.1.0
+  - Updated DSC module `SharePointDSC` to 5.5.0
+- DSC Configuration for DC
+  - Updated DSC module `AdfsDsc` to 1.4.0
+
+### Fixed
+
+- Template
+  - Stopped using the Windows Server's [small disk](https://azure.microsoft.com/en-us/blog/new-smaller-windows-server-iaas-image/) image for SharePoint Subscription VMs, as SharePoint updates no longer have enough free disk space to be installed.
+
 ## Enhancements & bug-fixes - Published in February 26, 2024
 
 - Template
