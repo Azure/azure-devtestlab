@@ -1,0 +1,48 @@
+{
+  "name": "simple_dtl_ui",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@azure/msal-browser": "^2.18.0",
+    "@azure/msal-react": "^1.1.0",
+    "@fluentui/react": "^7.155.3",
+    "react": "^16.0.0",
+    "react-async-hook": "^4.0.0",
+    "react-dom": "^16.0.0",
+    "react-scripts": "^3.4.1",
+    "rimraf": "^2.6.2"
+  },
+  "devDependencies": {
+    "ajv": "^6.9.1",
+    "cross-env": "^5.2.0",
+    "eslint": "^6.8.0",
+    "eslint-config-react-app": "^5.2.0",
+    "eslint-plugin-flowtype": "^4.6.0",
+    "eslint-plugin-import": "^2.20.1",
+    "eslint-plugin-jsx-a11y": "^6.2.3",
+    "eslint-plugin-react": "^7.18.3",
+    "nan": "^2.14.1"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "scripts": {
+    "start": "rimraf ./build && react-scripts start",
+    "build": "react-scripts build",
+    "test": "cross-env CI=true react-scripts test --env=jsdom",
+    "eject": "react-scripts eject",
+    "lint": "eslint ./src/"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
