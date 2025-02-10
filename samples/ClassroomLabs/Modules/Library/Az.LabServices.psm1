@@ -810,7 +810,7 @@ function New-AzLab {
 
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Idle Shutdown Grace Period (0 is off)")]
         [int]
-        $idleGracePeriod = 15,
+        $idleGracePeriod = 0,
 
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Disconnect on Idle Grace Period (0 is off)")]
         [int]
@@ -818,7 +818,7 @@ function New-AzLab {
 
         [parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Shutdown on No Connect Grace Period (0 is off)")]
         [int]
-        $idleNoConnectGracePeriod = 15,
+        $idleNoConnectGracePeriod = 0,
         
         [Parameter(Mandatory = $false, ValueFromPipelineByPropertyName = $true, HelpMessage = "Enabled AAD connected labs.  NOTE:  If this Id is a teams team than the lab will be marked as a teams lab.")]
         [string] $AadGroupId,
