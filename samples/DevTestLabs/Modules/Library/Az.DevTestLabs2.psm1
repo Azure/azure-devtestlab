@@ -1073,7 +1073,7 @@ function Invoke-AzDtlVmUnClaim {
   process {
     try {
       foreach($v in $Vm) {
-        Invoke-AzureRmResourceAction -ResourceId $v.ResourceId -Action "claim" -Force | Out-Null
+        Invoke-AzureRmResourceAction -ResourceId $v.ResourceId -Action "unclaim" -Force | Out-Null
         $v  | Get-AzDtlVm
       }
     } catch {
