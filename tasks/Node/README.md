@@ -17,7 +17,7 @@ The following are tools used to create these tasks and are recommended.
 
 * The latest version of [Visual Studio Code](https://code.visualstudio.com/).
 * The latest version of [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest).
-* The latest version of [Node.js](https://nodejs.org/en/download/).
+* [Node.js](https://nodejs.org/en/download/) v24 LTS or later.
 * [Typescript Compiler](https://www.npmjs.com/package/typescript) v2.2.0 or later.
   * This should already be part of the dependencies, when configuring the project for the first time.
   * If you have problems running it, simply install it globally: `npm install typescript -g`

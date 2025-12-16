@@ -180,7 +180,7 @@
         }
     ],
     "execution": {
-        "Node10": {
+        "Node24": {
             "target": "task.js"
         }
     }
