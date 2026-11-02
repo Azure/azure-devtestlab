@@ -1,6 +1,6 @@
 {
-    "$schema": "http://schema.management.azure.com/schemas/2014-04-01-preview/deploymentTemplate.json#",
-    "contentVersion": "1.0.0.0",
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "2.0.0.0",
     "parameters": {
         "Database Administrator Login": {
             "type": "string",
@@ -21,12 +21,10 @@
         "siteName": "[toLower(concat(variables('resourceNamePrefix'), '-', take(uniqueString(resourceGroup().id), 6)))]",
         "serverName": "[toLower(concat(variables('resourceNamePrefix'), '-', take(uniqueString(resourceGroup().id), 6), '-db'))]",
         "databaseName": "[concat('db', uniqueString(resourceGroup().id, variables('siteName')))]",
-        "databaseVersion": "5.7",
-        "databaseDTU": 2,
-        "databaseSkuName": "B_Gen5_2",
-        "databaseSkuSizeMB": 51200,
-        "databaseSkuTier": "Basic",
-        "databaseSkuFamily": "Gen5"
+        "databaseVersion": "8.0.21",
+        "databaseSkuName": "Standard_B1ms",
+        "databaseStorageSizeGB": 32,
+        "databaseSkuTier": "Burstable"
     },
     "resources": [
         {
@@ -65,56 +63,65 @@
             "apiVersion": "2015-04-01",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "[resourceId('Microsoft.DBforMySQL/servers', variables('serverName'))]"
+                "[resourceId('Microsoft.Web/sites', variables('siteName'))]",
+                "[resourceId('Microsoft.DBforMySQL/flexibleServers/databases', variables('serverName'), variables('databaseName'))]",
+                "[resourceId('Microsoft.DBforMySQL/flexibleServers/firewallRules', variables('serverName'), 'AllowAzureServices')]"
             ],
             "properties": {
                 "defaultConnection": {
-                    "value": "[concat('Database=', variables('databaseName'), ';Data Source=', variables('serverName'), '.mysql.database.azure.com;User Id=', parameters('Database Administrator Login'),'@', variables('serverName'),';Password=', parameters('Database Administrator Login Password'))]",
+                    "value": "[concat('Database=', variables('databaseName'), ';Data Source=', reference(resourceId('Microsoft.DBforMySQL/flexibleServers', variables('serverName')), '2024-12-30').fullyQualifiedDomainName, ';User Id=', parameters('Database Administrator Login'), ';Password=\"', replace(parameters('Database Administrator Login Password'), '\"', '\"\"'), '\";SslMode=VerifyFull;')]",
                     "type": "MySQL"
                 }
             }
         },
         {
             "name": "[variables('serverName')]",
-            "type": "Microsoft.DBforMySQL/servers",
-            "apiVersion": "2017-12-01-preview",
+            "type": "Microsoft.DBforMySQL/flexibleServers",
+            "apiVersion": "2024-12-30",
             "location": "[resourceGroup().location]",
-            "kind": "",
             "properties": {
+                "createMode": "Default",
                 "version": "[variables('databaseVersion')]",
                 "administratorLogin": "[parameters('Database Administrator Login')]",
                 "administratorLoginPassword": "[parameters('Database Administrator Login Password')]",
-                "storageMB": "[variables('databaseSkuSizeMB')]"
+                "storage": {
+                    "storageSizeGB": "[variables('databaseStorageSizeGB')]",
+                    "autoGrow": "Enabled"
+                },
+                "backup": {
+                    "backupRetentionDays": 7,
+                    "geoRedundantBackup": "Disabled"
+                },
+                "highAvailability": {
+                    "mode": "Disabled"
+                },
+                "network": {
+                    "publicNetworkAccess": "Enabled"
+                }
             },
             "sku": {
                 "name": "[variables('databaseSkuName')]",
-                "tier": "[variables('databaseSkuTier')]",
-                "capacity": "[variables('databaseDTU')]",
-                "size": "[variables('databaseSkuSizeMB')]",
-                "family": "[variables('databaseSkuFamily')]"
+                "tier": "[variables('databaseSkuTier')]"
             },
             "resources": [
                 {
-                    "name": "[concat(variables('serverName'),'-firewall')]",
-                    "type": "firewallrules",
-                    "apiVersion": "2017-12-01-preview",
-                    "location": "[resourceGroup().location]",
+                    "name": "AllowAzureServices",
+                    "type": "firewallRules",
+                    "apiVersion": "2024-12-30",
                     "dependsOn": [
-                        "[concat('Microsoft.DBforMySQL/servers/', variables('serverName'), '/databases/' , variables('databaseName'))]",
-                        "[concat('Microsoft.DBforMySQL/servers/', variables('serverName'))]"
+                        "[resourceId('Microsoft.DBforMySQL/flexibleServers', variables('serverName'))]"
                     ],
                     "properties": {
                         "startIpAddress": "0.0.0.0",
-                        "endIpAddress": "255.255.255.255"
+                        "endIpAddress": "0.0.0.0"
                     }
                 },
                 {
                     "name": "[variables('databaseName')]",
                     "type": "databases",
-                    "apiVersion": "2017-12-01-preview",
-                    "location": "[resourceGroup().location]",
+                    "apiVersion": "2024-12-30",
                     "dependsOn": [
-                        "[concat('Microsoft.DBforMySQL/servers/', variables('serverName'))]"
+                        "[resourceId('Microsoft.DBforMySQL/flexibleServers', variables('serverName'))]"
                     ],
                     "properties": {
                         "charset": "utf8",
